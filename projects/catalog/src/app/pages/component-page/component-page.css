@@ -75,6 +75,10 @@
   max-width: none;
 }
 
+.for-claude mat-icon {
+  flex: none;
+}
+
 .for-claude {
   display: flex;
   align-items: flex-start;

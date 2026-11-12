@@ -50,8 +50,10 @@
           <div class="doc">
             <p class="for-claude">
               <mat-icon aria-hidden="true">smart_toy</mat-icon>
-              Instructions for Claude: how to use this piece and what never to do with it. Claude reads the same file,
-              <code>{{ doc.ai }}</code>.
+              <span>
+                Instructions for Claude: how to use this piece and what never to do with it. Claude reads the same file,
+                <code>{{ doc.ai }}</code>.
+              </span>
             </p>
             @if (ai.error()) {
               <kit-status-message kind="error" [text]="failure('the AI notes', ai.error())" />

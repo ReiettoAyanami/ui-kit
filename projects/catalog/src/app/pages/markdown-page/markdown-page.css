@@ -5,6 +5,10 @@
   padding: 16px 16px 64px;
 }
 
+.for-claude mat-icon {
+  flex: none;
+}
+
 .for-claude {
   display: flex;
   align-items: flex-start;
