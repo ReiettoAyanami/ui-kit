@@ -8,80 +8,11 @@
     </p>
   </header>
 
-  <div class="actions" role="region" aria-label="Changes">
-    <span class="state">
-      @if (changed()) {
-        {{ changed() }} {{ changed() === 1 ? 'change' : 'changes' }} not saved
-      } @else {
-        No change
-      }
-    </span>
-    <span class="buttons">
-      <button mat-button type="button" [disabled]="!changed()" (click)="copyCss()">Copy as CSS</button>
-      <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>
-      <button mat-flat-button type="button" [disabled]="!changed() || !canSave() || saving()" (click)="save()">Save to the kit</button>
-    </span>
-    @if (tokens.hasValue() && !canSave()) {
-      <p class="hint">Saving needs the development server (<code>npm start</code>): here the changes stay in this browser.</p>
-    }
-    @if (saveError(); as message) {
-      <p class="error" role="alert">{{ message }}</p>
-    }
-  </div>
-
   @if (failure(); as failure) {
     <lenzi-status-message kind="error" [text]="failure" />
   } @else if (tokens.hasValue()) {
     <div class="layout">
-      <div class="groups">
-        @for (group of tokens.value().groups; track group.id) {
-          <section class="group" [id]="group.id">
-            <h2 class="group-title">{{ group.label }}</h2>
-            <p class="group-description">{{ group.description }}</p>
-            @for (token of group.tokens; track token.name) {
-              <div class="token" [class.changed]="isChanged(token)">
-                <div class="token-head">
-                  <span class="token-names">
-                    <span class="token-label">{{ token.label }}</span>
-                    <code class="token-name">{{ token.name }}</code>
-                  </span>
-                  @if (isChanged(token)) {
-                    <button mat-icon-button type="button" [matTooltip]="'Back to ' + token.value" [attr.aria-label]="'Back to ' + token.value" (click)="reset(token)">
-                      <mat-icon>undo</mat-icon>
-                    </button>
-                  }
-                </div>
-
-                @if (isNumeric(token)) {
-                  <div class="number">
-                    <mat-slider [min]="token.min ?? 0" [max]="token.max ?? 100" [step]="token.step ?? 1">
-                      <input matSliderThumb [value]="numberOf(token)" [attr.aria-label]="token.label" (valueChange)="setNumber(token, $event)" />
-                    </mat-slider>
-                    <span class="number-value">{{ value(token) }}</span>
-                  </div>
-                } @else if (token.type === 'color') {
-                  <div class="color">
-                    <input type="color" [value]="value(token)" [attr.aria-label]="token.label" (input)="set(token, $any($event.target).value)" />
-                    <span class="swatch" [style.background]="value(token)"></span>
-                    <span class="number-value">{{ value(token) }}</span>
-                  </div>
-                } @else {
-                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="easing">
-                    <mat-select [value]="value(token)" [attr.aria-label]="token.label" (selectionChange)="set(token, $event.value)">
-                      @for (easing of easings; track easing.value) {
-                        <mat-option [value]="easing.value">{{ easing.label }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                }
-
-                <p class="token-description">{{ token.description }}</p>
-                <p class="token-why">{{ token.why }}</p>
-              </div>
-            }
-          </section>
-        }
-      </div>
+      <app-token-panel class="groups" sticky [groups]="tokens.value().groups" label="The global variables" (saved)="tokens.reload()" />
 
       <aside class="preview" aria-label="Preview">
         <h2 class="group-title">Preview</h2>

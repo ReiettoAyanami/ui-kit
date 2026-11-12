@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, shareReplay } from 'rxjs';
+import { Observable, of, shareReplay } from 'rxjs';
 
 /**
  * The kit's own files, as the catalog serves them (angular.json copies projects/kit to `kit-src/`):
@@ -22,6 +22,11 @@ export class KitFiles {
       this.cache.set(path, file);
     }
     return file;
+  }
+
+  /** A file just saved: its new text, without asking for it again. */
+  remember(path: string, text: string): void {
+    this.cache.set(path, of(text));
   }
 
   json<T>(path: string): Observable<T> {

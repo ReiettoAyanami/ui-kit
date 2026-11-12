@@ -17,6 +17,18 @@
   max-width: 100%;
 }
 
+/* A file changed and not saved: a violet dot after its name. */
+.files .changed ::ng-deep .mat-button-toggle-label-content::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: var(--mat-sys-primary);
+}
+
 .path {
   margin: 12px 0 8px;
   font: var(--mat-sys-body-small);
@@ -24,15 +36,28 @@
   overflow-wrap: anywhere;
 }
 
-.code {
-  margin: 0;
-  padding: 14px 16px;
-  max-height: 70dvh;
-  overflow: auto;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--lenzi-panel-radius);
-  background: var(--mat-sys-surface-container-lowest);
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+
+.state {
   font: var(--mat-sys-body-medium);
-  line-height: 1.55;
-  tab-size: 2;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hint {
+  margin: 8px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
 }

@@ -60,6 +60,12 @@ export class LiveTokens {
     this.update({});
   }
 
+  /** All the changes at once (an editor of the variables as CSS). */
+  replace(overrides: Record<string, string>): void {
+    // the object itself: whoever passed it knows the change is its own
+    this.update(overrides);
+  }
+
   private update(overrides: Record<string, string>): void {
     this.overrides.set(overrides);
     writePreference(KEY, JSON.stringify(overrides));

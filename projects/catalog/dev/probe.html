@@ -25,9 +25,35 @@
       frame.style.height = `${height}px`;
       // shot=1: only the page, at its size, for a screenshot (a headless window has a least width).
       if (params.get('shot') === '1') document.getElementById('out').style.display = 'none';
+      // clean=1: what the catalog keeps in this browser goes first (changed variables, choices).
+      if (params.get('clean') === '1') localStorage.clear();
+      // do=[{"fill": "selector", "text": "…"}, {"click": "selector"}, {"wait": 500}]: done on the page, in
+      // order, before measuring (a selector "a >>> b" looks inside the frame a).
+      const actions = JSON.parse(params.get('do') || '[]');
+      const pick = (selector) => {
+        let scope = frame.contentDocument;
+        const parts = selector.split('>>>').map((part) => part.trim());
+        for (const part of parts.slice(0, -1)) scope = scope.querySelector(part)?.contentDocument ?? scope;
+        return scope.querySelector(parts[parts.length - 1]);
+      };
+      const act = async () => {
+        for (const action of actions) {
+          if (action.fill) {
+            const field = pick(action.fill);
+            if (field) {
+              field.value = action.text;
+              field.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          } else if (action.click) {
+            pick(action.click)?.click();
+          }
+          await new Promise((resolve) => setTimeout(resolve, action.wait ?? 400));
+        }
+      };
       frame.src = url;
       frame.onload = () =>
-        setTimeout(() => {
+        setTimeout(async () => {
+          await act();
           const page = frame.contentDocument;
           const root = page.documentElement;
           const clipped = (element) => {
@@ -54,6 +80,18 @@
             outside,
             headings: [...page.querySelectorAll('h1, h2')].slice(0, 8).map((h) => h.textContent.trim()),
             alerts: [...page.querySelectorAll('[role="alert"]')].map((a) => a.textContent.trim()),
+            // read=sel|prop,…: what these say (a property of the element, its text by default).
+            read: Object.fromEntries(
+              (params.get('read') || '')
+                .split(',')
+                .filter(Boolean)
+                .map((entry) => {
+                  const [selector, property] = entry.split('|');
+                  const element = pick(selector);
+                  const value = !element ? null : property?.startsWith('--') ? getComputedStyle(element).getPropertyValue(property).trim() : property ? (element[property] ?? element.getAttribute(property)) : element.textContent.trim();
+                  return [entry, value];
+                }),
+            ),
             // q=.a,.b: where each of these is (the first match), in px of the frame.
             boxes: Object.fromEntries(
               (params.get('q') || '')

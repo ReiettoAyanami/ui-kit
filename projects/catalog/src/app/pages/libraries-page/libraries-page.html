@@ -2,8 +2,7 @@
   <h1 class="title">Libraries</h1>
   @if (failure(); as failure) {
     <lenzi-status-message kind="error" [text]="failure" />
-  } @else if (libraries.hasValue()) {
-    @let data = libraries.value();
+  } @else if (shown(); as data) {
     <p class="lead" [innerHTML]="inline(data.about)"></p>
     @for (group of data.groups; track group.id) {
       <section class="group">
@@ -33,6 +32,30 @@
         </div>
       </section>
     }
+    <mat-expansion-panel class="file">
+      <mat-expansion-panel-header>
+        <mat-panel-title>libraries.json</mat-panel-title>
+        <mat-panel-description>The file this page is drawn from</mat-panel-description>
+      </mat-expansion-panel-header>
+      <p class="hint">Edit it: the page above follows what you write. Save writes it into the kit.</p>
+      <app-code-editor [value]="source()" (valueChange)="source.set($event); message.set(null)" language="json" label="libraries.json" [readonly]="server.canSave() !== true" />
+      @if (jsonError(); as error) {
+        <p class="hint warn" role="alert">Not valid JSON: {{ error }}</p>
+      }
+      @if (server.canSave()) {
+        <div class="bar">
+          <span class="buttons">
+            <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>
+            <button mat-flat-button type="button" [disabled]="!changed() || !!jsonError() || saving()" (click)="save()">Save to the kit</button>
+          </span>
+        </div>
+      } @else if (server.canSave() === false) {
+        <p class="hint">Changing it needs the development server (<code>npm start</code>): here it can be read and copied.</p>
+      }
+      @if (message(); as message) {
+        <p class="hint" role="status">{{ message }}</p>
+      }
+    </mat-expansion-panel>
   } @else {
     <lenzi-status-message kind="loading" />
   }

@@ -1,0 +1,36 @@
+<div class="top">
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Read or edit" [value]="mode()" (change)="mode.set($event.value)">
+    <mat-button-toggle value="read">Read</mat-button-toggle>
+    <mat-button-toggle value="edit">Edit</mat-button-toggle>
+  </mat-button-toggle-group>
+  <code class="path">projects/kit/{{ path() }}</code>
+</div>
+
+@if (failure(); as failure) {
+  <lenzi-status-message kind="error" [text]="failure" />
+} @else if (draft(); as text) {
+  @if (changed() || mode() === 'edit') {
+    <div class="bar">
+      <span class="state">{{ changed() ? 'Changed, not saved' : 'Edit the Markdown: Read shows it as it will read' }}</span>
+      @if (server.canSave()) {
+        <span class="buttons">
+          <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>
+          <button mat-flat-button type="button" [disabled]="!changed() || saving()" (click)="save()">Save to the kit</button>
+        </span>
+      }
+    </div>
+  }
+  @if (server.canSave() === false && mode() === 'edit') {
+    <p class="hint">Saving needs the development server (<code>npm start</code>): here the changes stay on this page.</p>
+  }
+  @if (message(); as message) {
+    <p class="hint" role="status">{{ message }}</p>
+  }
+  @if (mode() === 'edit') {
+    <app-code-editor [value]="text" (valueChange)="edited($event)" language="markdown" [label]="'Markdown of ' + what()" />
+  } @else {
+    <app-markdown [source]="text" />
+  }
+} @else {
+  <lenzi-status-message kind="loading" />
+}

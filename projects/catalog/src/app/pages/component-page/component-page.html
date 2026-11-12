@@ -25,7 +25,17 @@
                   {{ copied() ? 'Copied' : 'Copy' }}
                 </button>
               </div>
-              <app-markdown [source]="usageMarkdown()" />
+              <app-code-editor [value]="usage()" (valueChange)="usageEdited($event)" [language]="usageLanguage()" label="Usage code" maxHeight="60dvh" />
+              <p class="hint">
+                @if (coded().length) {
+                  Edit the code: {{ coded().join(', ') }} follow what you write, and the demo with them.
+                } @else {
+                  The code to copy: nothing of the demo is in it.
+                }
+              </p>
+              @for (note of usageNotes(); track note) {
+                <p class="hint warn" role="status">{{ note }}</p>
+              }
             </section>
           </div>
         </ng-template>
@@ -34,13 +44,7 @@
       <mat-tab label="Rules">
         <ng-template matTabContent>
           <div class="doc">
-            @if (readme.error()) {
-              <lenzi-status-message kind="error" [text]="failure('the rules', readme.error())" />
-            } @else if (readme.hasValue()) {
-              <app-markdown [source]="readme.value()" />
-            } @else {
-              <lenzi-status-message kind="loading" />
-            }
+            <app-doc-view [path]="doc.readme" what="the rules" />
           </div>
         </ng-template>
       </mat-tab>
@@ -50,18 +54,9 @@
           <div class="doc">
             <p class="for-claude">
               <mat-icon aria-hidden="true">smart_toy</mat-icon>
-              <span>
-                Instructions for Claude: how to use this piece and what never to do with it. Claude reads the same file,
-                <code>{{ doc.ai }}</code>.
-              </span>
+              <span>Instructions for Claude: how to use this piece and what never to do with it. Claude reads this very file.</span>
             </p>
-            @if (ai.error()) {
-              <lenzi-status-message kind="error" [text]="failure('the AI notes', ai.error())" />
-            } @else if (ai.hasValue()) {
-              <app-markdown [source]="ai.value()" />
-            } @else {
-              <lenzi-status-message kind="loading" />
-            }
+            <app-doc-view [path]="doc.ai" what="the AI notes" />
           </div>
         </ng-template>
       </mat-tab>
@@ -82,14 +77,10 @@
             } @else if (variables.hasValue()) {
               @if (variables.value().length) {
                 <p class="intro">
-                  The global variables its styles read. Change them on the <a routerLink="/variables">Variables</a> page: every
-                  piece that uses them changes with it.
+                  The global variables its styles read: change one and every piece that uses it changes at once, here and in
+                  the demo. All of them are on the <a routerLink="/variables">Variables</a> page.
                 </p>
-                <lenzi-figure-grid>
-                  @for (token of variables.value(); track token.name) {
-                    <lenzi-figure [label]="token.label" [value]="token.value + ' (' + token.name + ')'" [description]="token.description" />
-                  }
-                </lenzi-figure-grid>
+                <app-token-panel [groups]="variables.value()" [label]="'Variables of ' + doc.name" (saved)="variables.reload()" />
               } @else {
                 <lenzi-status-message text="Its styles use no global variable of the kit: only Material's own." />
               }

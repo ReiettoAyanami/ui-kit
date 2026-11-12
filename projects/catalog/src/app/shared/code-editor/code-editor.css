@@ -1,0 +1,91 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+/* A dark panel with the border of every surface: the line numbers, then the code. The box scrolls
+   (both ways), never the textarea: the textarea is as tall and as wide as its code. */
+.editor {
+  display: flex;
+  overflow: auto;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+  background: var(--mat-sys-surface-container-lowest);
+}
+
+.editor:focus-within {
+  border-color: var(--mat-sys-primary);
+}
+
+.editor.readonly:focus-within {
+  border-color: var(--mat-sys-outline);
+}
+
+.gutter,
+.layer,
+.input {
+  font: var(--mat-sys-body-medium);
+  font-family: 'Roboto Mono', monospace;
+  line-height: 1.55;
+  tab-size: 2;
+}
+
+.gutter {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-height: 100%;
+  padding: 14px 10px 14px 12px;
+  text-align: right;
+  color: var(--mat-sys-outline);
+  background: var(--mat-sys-surface-container-lowest);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  user-select: none;
+}
+
+.code {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The coloured code under the textarea, at the very same place, letter for letter. */
+.layer {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 14px 16px;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.layer code {
+  font: inherit;
+}
+
+/* The textarea on top: its letters transparent (the colours are the layer's), its caret and selection
+   the browser's. */
+.input {
+  position: relative;
+  display: block;
+  box-sizing: content-box;
+  min-width: calc(100% - 32px);
+  margin: 0;
+  padding: 14px 16px;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--mat-sys-on-surface);
+}
+
+.input::selection {
+  background: color-mix(in srgb, var(--mat-sys-primary) 35%, transparent);
+  color: transparent;
+}

@@ -8,13 +8,15 @@ import { combineLatest, map, of } from 'rxjs';
 
 import { LenziFigure, LenziFigureGrid, LenziNotFound, LenziStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
 
+import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { CodeView } from '../../shared/code-view/code-view';
 import { ControlsPanel } from '../../shared/controls-panel/controls-panel';
 import { DemoStage } from '../../shared/demo-stage/demo-stage';
 import { KitFiles } from '../../shared/kit-files';
-import { Markdown } from '../../shared/markdown/markdown';
-import { TokensApi } from '../../shared/tokens-api';
-import { DOCS, Values, defaults, docById } from '../../registry';
+import { DocView } from '../../shared/doc-view/doc-view';
+import { TokenPanel } from '../../shared/token-panel/token-panel';
+import { TokenGroup, TokensApi } from '../../shared/tokens-api';
+import { DOCS, KitDoc, Values, codedControls, defaults, docById, readUsage } from '../../registry';
 
 const TABS = ['playground', 'rules', 'ai', 'code', 'variables'] as const;
 type Tab = (typeof TABS)[number];
@@ -27,18 +29,20 @@ type Tab = (typeof TABS)[number];
 @Component({
   selector: 'app-component-page',
   imports: [
+    CodeEditor,
     CodeView,
+    DocView,
     ControlsPanel,
     DemoStage,
     LenziFigure,
     LenziFigureGrid,
     LenziNotFound,
     LenziStatusMessage,
-    Markdown,
     MatButtonModule,
     MatIconModule,
     MatTabsModule,
     RouterLink,
+    TokenPanel,
   ],
   templateUrl: './component-page.html',
   styleUrl: './component-page.css',
@@ -65,23 +69,39 @@ export class ComponentPage {
     return { previous: DOCS[index - 1] ?? null, next: DOCS[index + 1] ?? null };
   });
 
-  protected readonly readme = rxResource({ params: () => this.doc()?.readme, stream: ({ params }) => this.files.text(params) });
-  protected readonly ai = rxResource({ params: () => this.doc()?.ai, stream: ({ params }) => this.files.text(params) });
 
-  protected readonly usage = computed(() => {
-    const doc = this.doc();
-    return doc ? doc.usage(this.values()) : '';
+  /**
+   * The usage code: written from the parameters, and kept as typed while it is the code that moved
+   * them (editing it moves the parameters back: readUsage).
+   */
+  private valuesFromCode: Values | null = null;
+  protected readonly usage = linkedSignal<{ doc: KitDoc | undefined; values: Values }, string>({
+    source: () => ({ doc: this.doc(), values: this.values() }),
+    computation: (source, previous) => {
+      if (previous && source.values === this.valuesFromCode && source.doc === previous.source.doc) return previous.value;
+      return source.doc ? source.doc.usage(source.values) : '';
+    },
   });
-  protected readonly usageMarkdown = computed(() => '```' + (this.doc()?.usageLanguage ?? '') + '\n' + this.usage() + '\n```');
+  protected readonly usageNotes = signal<string[]>([]);
+  protected readonly coded = computed(() => {
+    const doc = this.doc();
+    return doc ? codedControls(doc).map((control) => control.label) : [];
+  });
+  protected readonly usageLanguage = computed(() => {
+    const language = this.doc()?.usageLanguage ?? 'typescript';
+    return language === 'html' ? 'xml' : language;
+  });
 
-  /** The global variables the styles of this piece use, with what they are now. */
+  /** The global variables the styles of this piece use, in their groups. */
   protected readonly variables = rxResource({
     params: () => this.doc()?.files.filter((file) => /\.(s?css)$/.test(file)),
     stream: ({ params }) =>
       combineLatest([params.length ? combineLatest(params.map((file) => this.files.text(file))) : of([] as string[]), this.tokensApi.load()]).pipe(
-        map(([styles, document]) => {
+        map(([styles, document]): TokenGroup[] => {
           const used = new Set(styles.join('\n').match(/--lenzi-[a-z0-9-]+/g) ?? []);
-          return document.groups.flatMap((group) => group.tokens.filter((token) => used.has(token.name)).map((token) => ({ ...token, group: group.id })));
+          return document.groups
+            .map((group) => ({ ...group, tokens: group.tokens.filter((token) => used.has(token.name)) }))
+            .filter((group) => group.tokens.length > 0);
         }),
       ),
   });
@@ -98,6 +118,19 @@ export class ComponentPage {
   protected resetValues(): void {
     const doc = this.doc();
     if (doc) this.values.set(defaults(doc));
+    this.usageNotes.set([]);
+  }
+
+  /** The code was edited: the parameters it carries follow it, the demo with them. */
+  protected usageEdited(text: string): void {
+    const doc = this.doc();
+    if (!doc) return;
+    this.usage.set(text);
+    const { values, notes } = readUsage(doc, text);
+    const next = { ...this.values(), ...values };
+    this.valuesFromCode = next;
+    this.values.set(next);
+    this.usageNotes.set(notes);
   }
 
   protected async copyUsage(): Promise<void> {

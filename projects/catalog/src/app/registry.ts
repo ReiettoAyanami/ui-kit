@@ -6,20 +6,42 @@ import { Type } from '@angular/core';
 
 export type ControlType = 'text' | 'number' | 'boolean' | 'select' | 'color';
 
+export type Value = string | number | boolean;
+
+/**
+ * How a parameter is written in the usage code, so that editing the code moves it back (lenzi,
+ * 2026-11-12: code you can edit, "and they will take effect"):
+ * - nothing given: an attribute named as the parameter: `label="…"`, `[label]="'…'"`, `[n]="3"`, a bare
+ *   `compact`, or a property `label: '…'`, `n: 3`;
+ * - `attr`: the same, with another name; `match`: the regex's first group (a boolean: whether it
+ *   matches); `absent`: a boolean, true when the regex does NOT match; `all`: every match, joined;
+ *   `nth`: the n-th match; `false`: the code does not carry it (the GUI alone sets it).
+ * `otherwise`: its value when the code does not have it (default: the control's default; a boolean false).
+ */
+export type CodeSpec =
+  | false
+  | { attr: string; otherwise?: Value }
+  | { match: RegExp; otherwise?: Value }
+  | { absent: RegExp }
+  | { all: RegExp; join: string; otherwise?: Value }
+  | { nth: RegExp; index: number; otherwise?: Value };
+
 /** One parameter of a demo, as the GUI shows it. */
 export interface Control {
   key: string;
   label: string;
   type: ControlType;
-  default: string | number | boolean;
+  default: Value;
   options?: readonly { value: string; label: string }[];
   min?: number;
   max?: number;
   step?: number;
   hint?: string;
+  /** How the usage code writes it; nothing: an attribute with its key's name. */
+  code?: CodeSpec;
 }
 
-export type Values = Record<string, string | number | boolean>;
+export type Values = Record<string, Value>;
 
 export const CATEGORIES = [
   'Foundations',
@@ -93,13 +115,14 @@ export const DOCS: readonly KitDoc[] = [
           { value: 'colours', label: 'Colours' },
           { value: 'typography', label: 'Typography' },
         ],
+        code: false,
       },
     ],
-    usage: () => `// angular.json, "styles" (the kit's look, then the app's own):
+    usage: () => `// angular.json, "styles" (ng add puts them there): the kit's look, then the app's own
 "node_modules/@lenzi/ui-kit/styles/kit.scss",
 "node_modules/@lenzi/ui-kit/styles/fonts.css",
 "src/styles.css"`,
-    usageLanguage: 'json',
+usageLanguage: 'json',
     height: 620,
   },
   {
@@ -114,13 +137,18 @@ export const DOCS: readonly KitDoc[] = [
     ...styleDocs('glass-motion'),
     demo: () => import('./demos/glass-motion-demo/glass-motion-demo').then((m) => m.GlassMotionDemo),
     controls: [
-      { key: 'reduce', label: 'Reduce transparency', type: 'boolean', default: false },
-      { key: 'glass', label: 'Window opacity (%)', type: 'number', default: 56, min: 0, max: 100, step: 1 },
-      { key: 'blur', label: 'Glass blur (px)', type: 'number', default: 24, min: 0, max: 64, step: 1 },
+      { key: 'reduce', label: 'Reduce transparency', type: 'boolean', default: false, code: { match: /setReduceTransparency\(true\)/ } },
+      { key: 'glass', label: 'Window opacity (%)', type: 'number', default: 56, min: 0, max: 100, step: 1, code: { match: /--lenzi-glass:\s*(-?[\d.]+)%/ } },
+      { key: 'blur', label: 'Glass blur (px)', type: 'number', default: 24, min: 0, max: 64, step: 1, code: { match: /--lenzi-glass-blur:\s*(-?[\d.]+)px/ } },
     ],
-    usage: () => `// A window: open it with LenziDialogs (its own history entry); the glass and the rise are global.
-const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'lenzi-dialog-raised' });`,
-    usageLanguage: 'typescript',
+    usage: (v) => `/* The glass is global: these variables (the Variables page saves them into the kit) */
+:root {
+  --lenzi-glass: ${v['glass']}%;
+  --lenzi-glass-blur: ${v['blur']}px;
+}
+
+/* Reduce transparency, a choice of the browser: LenziAppearance.setReduceTransparency(${v['reduce']}) */`,
+usageLanguage: 'scss',
     height: 480,
   },
   {
@@ -134,12 +162,18 @@ const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'lenz
     files: ['src/styles/global.css', 'src/styles/tokens.json'],
     ...styleDocs('borders-shape'),
     demo: () => import('./demos/borders-shape-demo/borders-shape-demo').then((m) => m.BordersShapeDemo),
-    controls: [{ key: 'border', label: 'Border width (px)', type: 'number', default: 2, min: 1, max: 4, step: 1 }],
-    usage: () => `.my-sub-card {
+    controls: [
+      { key: 'border', label: 'Border width (px)', type: 'number', default: 2, min: 1, max: 4, step: 1, code: { match: /--lenzi-border:\s*(-?[\d.]+)px/ } },
+    ],
+    usage: (v) => `:root {
+  --lenzi-border: ${v['border']}px;
+}
+
+.my-sub-card {
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: var(--lenzi-panel-radius);
 }`,
-    usageLanguage: 'scss',
+usageLanguage: 'scss',
     height: 460,
   },
   // Material, the kit's way --------------------------------------------------------------------
@@ -155,8 +189,14 @@ const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'lenz
     ...styleDocs('toggle-group'),
     demo: () => import('./demos/toggle-group-demo/toggle-group-demo').then((m) => m.ToggleGroupDemo),
     controls: [
-      { key: 'options', label: 'Choices (comma separated)', type: 'text', default: 'last,average' },
-      { key: 'indicator', label: 'Check mark on the chosen one', type: 'boolean', default: false },
+      {
+        key: 'options',
+        label: 'Choices (comma separated)',
+        type: 'text',
+        default: 'last,average',
+        code: { all: /<mat-button-toggle value="([^"]+)">/g, join: ',' },
+      },
+      { key: 'indicator', label: 'Check mark on the chosen one', type: 'boolean', default: false, code: { absent: /hideSingleSelectionIndicator/ } },
     ],
     usage: (v) => {
       const options = String(v['options']).split(',').map((o) => o.trim()).filter(Boolean);
@@ -164,7 +204,7 @@ const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'lenz
 ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>`).join('\n')}
 </mat-button-toggle-group>`;
     },
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 260,
   },
   {
@@ -178,7 +218,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     files: ['src/styles/global.css'],
     ...styleDocs('menus-selects'),
     demo: () => import('./demos/menus-selects-demo/menus-selects-demo').then((m) => m.MenusSelectsDemo),
-    controls: [{ key: 'described', label: 'Options with a description', type: 'boolean', default: false }],
+    controls: [{ key: 'described', label: 'Options with a description', type: 'boolean', default: false, code: { match: /lenzi-described-options/ } }],
     usage: (v) =>
       v['described']
         ? `<mat-select panelClass="lenzi-described-options" [(value)]="metric">
@@ -195,7 +235,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     <mat-option [value]="30">Last 30 days</mat-option>
   </mat-select>
 </mat-form-field>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 420,
   },
   {
@@ -210,14 +250,14 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     ...styleDocs('tooltips'),
     demo: () => import('./demos/tooltips-demo/tooltips-demo').then((m) => m.TooltipsDemo),
     controls: [
-      { key: 'text', label: 'First line', type: 'text', default: 'Peroni 6-pack' },
-      { key: 'second', label: 'Second line', type: 'text', default: '€1.20/bottiglia' },
+      { key: 'text', label: 'First line', type: 'text', default: 'Peroni 6-pack', code: { match: /(?:matTooltip="|\[matTooltip\]="')([^'"\\]*)/ } },
+      { key: 'second', label: 'Second line', type: 'text', default: '€1.20/bottiglia', code: { match: /\\n([^'"]*)'/, otherwise: '' } },
     ],
     usage: (v) =>
       v['second']
         ? `<span [matTooltip]="'${v['text']}\\n${v['second']}'" matTooltipClass="lenzi-tooltip-lines">…</span>`
         : `<button mat-icon-button matTooltip="${v['text']}" aria-label="${v['text']}">…</button>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 300,
   },
   {
@@ -232,8 +272,14 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     ...styleDocs('expansion-panels'),
     demo: () => import('./demos/expansion-panels-demo/expansion-panels-demo').then((m) => m.ExpansionPanelsDemo),
     controls: [
-      { key: 'flat', label: 'Flat', type: 'boolean', default: false },
-      { key: 'description', label: 'Header description', type: 'text', default: 'Last 30 days' },
+      { key: 'flat', label: 'Flat', type: 'boolean', default: false, code: { match: /class="lenzi-flat"/ } },
+      {
+        key: 'description',
+        label: 'Header description',
+        type: 'text',
+        default: 'Last 30 days',
+        code: { match: /<mat-panel-description>([^<]*)<\/mat-panel-description>/, otherwise: '' },
+      },
     ],
     usage: (v) => `<mat-expansion-panel${v['flat'] ? ' class="lenzi-flat"' : ''}>
   <mat-expansion-panel-header>
@@ -242,7 +288,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
   </mat-expansion-panel-header>
   …
 </mat-expansion-panel>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 380,
   },
   // Layout ---------------------------------------------------------------------------------------
@@ -258,11 +304,11 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     ...docs('src/lib/app-shell'),
     demo: () => import('./demos/app-shell-demo/app-shell-demo').then((m) => m.AppShellDemo),
     controls: [
-      { key: 'title', label: 'Title', type: 'text', default: 'Consumptions' },
-      { key: 'actions', label: 'A bell in the top bar', type: 'boolean', default: true },
-      { key: 'banner', label: 'A bar above it (Viewing as)', type: 'boolean', default: false },
-      { key: 'below', label: 'A bar under it (Offline)', type: 'boolean', default: false },
-      { key: 'bare', label: 'Bare (the page alone)', type: 'boolean', default: false },
+      { key: 'title', label: 'Title', type: 'text', default: 'Consumptions', code: { attr: 'title', otherwise: '' } },
+      { key: 'actions', label: 'A bell in the top bar', type: 'boolean', default: true, code: { match: /lenziShellActions/ } },
+      { key: 'banner', label: 'A bar above it (Viewing as)', type: 'boolean', default: false, code: { match: /lenziShellBanner/ } },
+      { key: 'below', label: 'A bar under it (Offline)', type: 'boolean', default: false, code: { match: /lenziShellBelow/ } },
+      { key: 'bare', label: 'Bare (the page alone)', type: 'boolean', default: false, code: { match: /\[bare\]="true"/ } },
     ],
     usage: (v) => `<lenzi-app-shell${attr('title', v['title'])}${v['bare'] ? ' [bare]="true"' : ''}>
   <lenzi-nav-list lenziShellNav appName="Substance tracker" [pages]="pages" [bottom]="bottom" />${
@@ -273,7 +319,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
   <router-outlet />
 </lenzi-app-shell>
 <lenzi-version-label [version]="version()" />`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 560,
   },
   {
@@ -289,8 +335,8 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     demo: () => import('./demos/nav-list-demo/nav-list-demo').then((m) => m.NavListDemo),
     controls: [
       { key: 'appName', label: 'App name', type: 'text', default: 'Substance tracker' },
-      { key: 'subtitle', label: 'Signed in as', type: 'text', default: 'lenzi' },
-      { key: 'bottom', label: 'Entries at the bottom', type: 'boolean', default: true },
+      { key: 'subtitle', label: 'Signed in as', type: 'text', default: 'lenzi', code: { attr: 'subtitle', otherwise: '' } },
+      { key: 'bottom', label: 'Entries at the bottom', type: 'boolean', default: true, code: { match: /\[bottom\]/ } },
     ],
     usage: (v) => `<lenzi-nav-list lenziShellNav${attr('appName', v['appName'])}${attr('subtitle', v['subtitle'])} [pages]="pages"${
       v['bottom'] ? ' [bottom]="bottom" (pressed)="action($event)"' : ''
@@ -304,7 +350,7 @@ bottom: LenziNavEntry[] = [
   { label: 'Sign out', icon: 'logout', id: 'sign-out' },
   { label: 'Settings', icon: 'settings', link: '/settings' },
 ];`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 520,
   },
   {
@@ -323,12 +369,11 @@ bottom: LenziNavEntry[] = [
       { key: 'text', label: 'Text', type: 'text', default: 'There is nothing at this address.' },
       { key: 'linkLabel', label: 'Way out', type: 'text', default: 'Go to the tickets' },
     ],
-    usage: (v) => `// app.routes.ts: the last route
-{ path: '**', title: 'Not found', component: NotFoundPage }
-
-// not-found-page.html
-<lenzi-not-found${attr('title', v['title'] === 'Page not found' ? '' : v['title'])}${attr('linkLabel', v['linkLabel'])} link="/" />`,
-    usageLanguage: 'typescript',
+    usage: (v) => `<!-- the app's last route: { path: '**', component: NotFoundPage } -->
+<lenzi-not-found${v['title'] === 'Page not found' ? '' : attr('title', v['title'])}${
+      v['text'] === 'There is nothing at this address.' ? '' : attr('text', v['text'])
+    }${attr('linkLabel', v['linkLabel'])} link="/" />`,
+usageLanguage: 'typescript',
     height: 420,
   },
   {
@@ -343,12 +388,9 @@ bottom: LenziNavEntry[] = [
     ...docs('src/lib/version-label'),
     demo: () => import('./demos/version-label-demo/version-label-demo').then((m) => m.VersionLabelDemo),
     controls: [{ key: 'version', label: 'Version', type: 'text', default: 'dev26.0.0.0002' }],
-    usage: () => `<!-- app.html, after the shell -->
-<lenzi-version-label [version]="version.value() ?? null" />
-
-// app.ts: the API says which version runs
-protected readonly version = rxResource({ stream: () => this.versionApi.getVersion() });`,
-    usageLanguage: 'html',
+    usage: (v) => `<lenzi-version-label version="${v['version']}" />
+<!-- in an app, the version the API says: [version]="version.value() ?? null" -->`,
+usageLanguage: 'html',
     height: 240,
   },
   // Actions and inputs --------------------------------------------------------------------------
@@ -380,18 +422,18 @@ protected readonly version = rxResource({ stream: () => this.versionApi.getVersi
     ...docs('src/lib/pill-toggle'),
     demo: () => import('./demos/pill-toggle-demo/pill-toggle-demo').then((m) => m.PillToggleDemo),
     controls: [
-      { key: 'first', label: 'First state', type: 'text', default: 'price' },
-      { key: 'second', label: 'Second state', type: 'text', default: 'qty' },
+      { key: 'first', label: 'First state', type: 'text', default: 'price', code: { nth: /\{ value: '[^']*', label: '([^']*)' \}/g, index: 0 } },
+      { key: 'second', label: 'Second state', type: 'text', default: 'qty', code: { nth: /\{ value: '[^']*', label: '([^']*)' \}/g, index: 1 } },
     ],
     usage: (v) => `<lenzi-pill-toggle [options]="measures" [(value)]="measure" />
-<span class="figure">{{ measure() === '${v['first']}' ? price : quantity }}</span>
+<span class="figure">{{ measure() === 'first' ? price : quantity }}</span>
 
 measures: LenziPillOption<string>[] = [
-  { value: '${v['first']}', label: '${v['first']}' },
-  { value: '${v['second']}', label: '${v['second']}' },
+  { value: 'first', label: '${v['first']}' },
+  { value: 'second', label: '${v['second']}' },
 ];
-measure = signal('${v['first']}');`,
-    usageLanguage: 'html',
+measure = signal('first');`,
+usageLanguage: 'html',
     height: 240,
   },
   {
@@ -425,13 +467,13 @@ measure = signal('${v['first']}');`,
     ...docs('src/lib/period-picker'),
     demo: () => import('./demos/period-picker-demo/period-picker-demo').then((m) => m.PeriodPickerDemo),
     controls: [
-      { key: 'period', label: 'Choose the period', type: 'boolean', default: true },
-      { key: 'scale', label: 'Choose the scale', type: 'boolean', default: true },
+      { key: 'period', label: 'Choose the period', type: 'boolean', default: true, code: { match: /\[period\]/ } },
+      { key: 'scale', label: 'Choose the scale', type: 'boolean', default: true, code: { match: /\[scale\]/ } },
     ],
     usage: (v) => `<div class="choices">
   <lenzi-period-picker${v['period'] ? ' [period]="days()" (periodChange)="days.set($event)"' : ''}${v['scale'] ? ' [scale]="per()" (scaleChange)="per.set($event)"' : ''} />
 </div>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 360,
   },
   {
@@ -446,8 +488,8 @@ measure = signal('${v['first']}');`,
     ...docs('src/lib/card-menu'),
     demo: () => import('./demos/card-menu-demo/card-menu-demo').then((m) => m.CardMenuDemo),
     controls: [
-      { key: 'delete', label: 'A destructive action', type: 'boolean', default: true },
-      { key: 'label', label: 'Accessible name', type: 'text', default: 'Actions for Birra' },
+      { key: 'delete', label: 'A destructive action', type: 'boolean', default: true, code: { match: /id: 'delete'/ } },
+      { key: 'label', label: 'Accessible name', type: 'text', default: 'Actions for Birra', code: { match: /<lenzi-card-menu[^>]*\slabel="([^"]*)"/, otherwise: '' } },
     ],
     usage: (v) => `<mat-card appearance="outlined" class="card" (click)="open()">
   <lenzi-card-menu class="menu"${attr('label', v['label'])} [actions]="actions" (action)="act($event)" />
@@ -457,7 +499,7 @@ measure = signal('${v['first']}');`,
 actions: LenziMenuAction[] = [
   { id: 'edit', label: 'Edit', icon: 'edit' },${v['delete'] ? "\n  { id: 'delete', label: 'Delete', icon: 'delete', destructive: true }," : ''}
 ];`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 340,
   },
   // Data -----------------------------------------------------------------------------------------
@@ -474,14 +516,14 @@ actions: LenziMenuAction[] = [
     demo: () => import('./demos/figure-demo/figure-demo').then((m) => m.FigureDemo),
     controls: [
       { key: 'label', label: 'What it is', type: 'text', default: 'Stock' },
-      { key: 'value', label: 'Value', type: 'text', default: '264 / 391 capsula' },
-      { key: 'explain', label: 'Description under it', type: 'boolean', default: false },
+      { key: 'value', label: 'Value', type: 'text', default: '264 / 391 capsula', code: { attr: 'value', otherwise: '' } },
+      { key: 'explain', label: 'Description under it', type: 'boolean', default: false, code: { match: /\sdescription="/ } },
     ],
     usage: (v) => `<lenzi-figure-grid>
   <lenzi-figure${attr('label', v['label'])}${attr('value', v['value'])}${v['explain'] ? ' description="What is left of the active batches."' : ''} />
   <lenzi-figure label="Spent" [value]="spent()" />
 </lenzi-figure-grid>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 300,
   },
   {
@@ -497,7 +539,7 @@ actions: LenziMenuAction[] = [
     demo: () => import('./demos/delta-demo/delta-demo').then((m) => m.DeltaDemo),
     controls: [
       { key: 'ratio', label: 'Ratio (the API’s)', type: 'number', default: -0.3333, min: -1, max: 1, step: 0.0001 },
-      { key: 'none', label: 'Nothing to compare (—)', type: 'boolean', default: false },
+      { key: 'none', label: 'Nothing to compare (—)', type: 'boolean', default: false, code: { match: /\[ratio\]="null"/ } },
       {
         key: 'good',
         label: 'Good when it goes',
@@ -508,11 +550,13 @@ actions: LenziMenuAction[] = [
           { value: 'down', label: 'down' },
           { value: 'none', label: 'no colours' },
         ],
+        code: { attr: 'good', otherwise: 'up' },
       },
-      { key: 'label', label: 'Word', type: 'text', default: 'delta:' },
+      { key: 'label', label: 'Word', type: 'text', default: 'delta:', code: { attr: 'label', otherwise: 'delta:' } },
     ],
-    usage: (v) => `<lenzi-delta [ratio]="${v['none'] ? 'null' : `'${v['ratio']}'`}"${v['good'] === 'up' ? '' : ` good="${v['good']}"`}${v['label'] === 'delta:' ? '' : attr('label', v['label'])} />`,
-    usageLanguage: 'html',
+    usage: (v) =>
+      `<lenzi-delta [ratio]="${v['none'] ? 'null' : `'${v['ratio']}'`}"${v['good'] === 'up' ? '' : ` good="${v['good']}"`}${v['label'] === 'delta:' ? '' : attr('label', v['label'])} />`,
+usageLanguage: 'html',
     height: 220,
   },
   {
@@ -527,7 +571,7 @@ actions: LenziMenuAction[] = [
     ...docs('src/lib/identity-dot'),
     demo: () => import('./demos/identity-colour-demo/identity-colour-demo').then((m) => m.IdentityColourDemo),
     controls: [
-      { key: 'count', label: 'Ids shown', type: 'number', default: 12, min: 1, max: 40, step: 1 },
+      { key: 'count', label: 'Ids shown', type: 'number', default: 12, min: 1, max: 40, step: 1, code: false },
       {
         key: 'offset',
         label: 'Kind of entity',
@@ -537,11 +581,12 @@ actions: LenziMenuAction[] = [
           { value: '0', label: 'first kind (offset 0)' },
           { value: '0.5', label: 'second kind (offset 0.5)' },
         ],
+        code: { match: /\[offset\]="([\d.]+)"/, otherwise: '0' },
       },
     ],
     usage: (v) => `<lenzi-identity-dot [id]="substance.id"${v['offset'] === '0' ? '' : ` [offset]="${v['offset']}"`} /> {{ substance.name }}
 <span [style.background-color]="batch.id | lenziIdentityColor${v['offset'] === '0' ? '' : `: ${v['offset']}`}"></span>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 380,
   },
   {
@@ -556,15 +601,15 @@ actions: LenziMenuAction[] = [
     ...docs('src/lib/segmented-bar'),
     demo: () => import('./demos/segmented-bar-demo/segmented-bar-demo').then((m) => m.SegmentedBarDemo),
     controls: [
-      { key: 'count', label: 'Segments', type: 'number', default: 4, min: 1, max: 12, step: 1 },
-      { key: 'used', label: 'Used up (%)', type: 'number', default: 30, min: 0, max: 100, step: 1 },
-      { key: 'selectable', label: 'Selectable', type: 'boolean', default: true },
-      { key: 'only', label: 'Only the first, alone', type: 'boolean', default: false },
+      { key: 'count', label: 'Segments', type: 'number', default: 4, min: 1, max: 12, step: 1, code: false },
+      { key: 'used', label: 'Used up (%)', type: 'number', default: 30, min: 0, max: 100, step: 1, code: false },
+      { key: 'selectable', label: 'Selectable', type: 'boolean', default: true, code: { match: /\sselectable[\s/>]/ } },
+      { key: 'only', label: 'Only the first, alone', type: 'boolean', default: false, code: { match: /\[only\]/ } },
     ],
     usage: (v) => `<lenzi-segmented-bar label="Stock: 272 capsula" [segments]="segments" [max]="stockBarMax"${v['only'] ? ' [only]="selected()"' : ''}${
       v['selectable'] ? ' selectable (segmentSelect)="select($event)"' : ''
     } [colorOffset]="0.5" />`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 260,
   },
   {
@@ -579,8 +624,8 @@ actions: LenziMenuAction[] = [
     ...docs('src/lib/data-table'),
     demo: () => import('./demos/data-table-demo/data-table-demo').then((m) => m.DataTableDemo),
     controls: [
-      { key: 'rows', label: 'Rows', type: 'number', default: 5, min: 0, max: 12, step: 1 },
-      { key: 'details', label: 'Details under the names', type: 'boolean', default: true },
+      { key: 'rows', label: 'Rows', type: 'number', default: 5, min: 0, max: 12, step: 1, code: false },
+      { key: 'details', label: 'Details under the names', type: 'boolean', default: true, code: false },
     ],
     usage: () => `<lenzi-data-table
   nameHeader="Substance"
@@ -593,7 +638,7 @@ actions: LenziMenuAction[] = [
   (sortChange)="order($event)"
   (opened)="open($event)"
 />`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 420,
   },
   {
@@ -610,15 +655,15 @@ actions: LenziMenuAction[] = [
     controls: [
       { key: 'title', label: 'Title', type: 'text', default: 'Spent' },
       { key: 'icon', label: 'Icon', type: 'select', default: 'payments', options: ICONS },
-      { key: 'subtitle', label: 'Subtitle', type: 'text', default: '' },
-      { key: 'scales', label: 'Interval toggle', type: 'boolean', default: true },
+      { key: 'subtitle', label: 'Subtitle', type: 'text', default: '', code: { attr: 'subtitle', otherwise: '' } },
+      { key: 'scales', label: 'Interval toggle', type: 'boolean', default: true, code: { match: /\[scales\]/ } },
     ],
     usage: (v) => `<lenzi-widget-card${attr('title', v['title'])}${attr('icon', v['icon'])}${attr('subtitle', v['subtitle'])}${
       v['scales'] ? ' [scales]="[\'day\', \'week\', \'month\']" [scale]="scale()" (scaleChange)="choose($event)"' : ''
     }>
   <lenzi-chart [data]="series()" type="stacked-bar" [format]="money" />
 </lenzi-widget-card>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 480,
   },
   {
@@ -639,11 +684,12 @@ actions: LenziMenuAction[] = [
         type: 'select',
         default: 'stacked-bar',
         options: ['bar', 'stacked-bar', 'line', 'donut', 'treemap', 'radar'].map((value) => ({ value, label: value })),
+        code: { match: /<lenzi-chart[^>]*\stype="([^"]+)"/ },
       },
-      { key: 'lines', label: 'Lines', type: 'number', default: 3, min: 1, max: 6, step: 1 },
-      { key: 'periods', label: 'Periods', type: 'number', default: 8, min: 2, max: 24, step: 1 },
-      { key: 'current', label: 'Last period in progress', type: 'boolean', default: true },
-      { key: 'filters', label: 'Chips to hide lines', type: 'boolean', default: true },
+      { key: 'lines', label: 'Lines', type: 'number', default: 3, min: 1, max: 6, step: 1, code: false },
+      { key: 'periods', label: 'Periods', type: 'number', default: 8, min: 2, max: 24, step: 1, code: false },
+      { key: 'current', label: 'Last period in progress', type: 'boolean', default: true, code: { match: /current: \d+/ } },
+      { key: 'filters', label: 'Chips to hide lines', type: 'boolean', default: true, code: { absent: /\[filters\]="false"/ } },
     ],
     usage: (v) => `import { LenziChart, LenziChartData } from '@lenzi/ui-kit/charts';
 
@@ -653,7 +699,7 @@ data: LenziChartData = {
   periods: ['W38', 'W39', 'W40'],${v['current'] ? '\n  current: 2, // the period still in progress' : ''}
   lines: [{ key: 'birra', name: 'Birra', color: identityColor(1), values: ['2.000', '3.500', '1.000'] }],
 };`,
-    usageLanguage: 'typescript',
+usageLanguage: 'typescript',
     height: 460,
   },
   // Feedback -------------------------------------------------------------------------------------
@@ -679,15 +725,16 @@ data: LenziChartData = {
           { value: 'empty', label: 'empty' },
           { value: 'error', label: 'error' },
         ],
+        code: { attr: 'kind', otherwise: 'empty' },
       },
-      { key: 'text', label: 'Text', type: 'text', default: 'Could not load the substances: Not found (404)' },
-      { key: 'compact', label: 'Compact (inside a list)', type: 'boolean', default: false },
+      { key: 'text', label: 'Text', type: 'text', default: 'Could not load the substances: Not found (404)', code: { attr: 'text', otherwise: '' } },
+      { key: 'compact', label: 'Compact (inside a list)', type: 'boolean', default: false, code: { match: /\scompact[\s/>]/ } },
     ],
     usage: (v) =>
-      v['kind'] === 'error'
-        ? `<lenzi-status-message kind="error" [text]="couldNotLoad('the substances', list.error())"${v['compact'] ? ' compact' : ''} />`
-        : `<lenzi-status-message kind="${v['kind']}"${attr('text', v['text'])}${v['compact'] ? ' compact' : ''} />`,
-    usageLanguage: 'html',
+      `<lenzi-status-message${v['kind'] === 'empty' ? '' : attr('kind', v['kind'])}${attr('text', v['text'])}${v['compact'] ? ' compact' : ''} />${
+        v['kind'] === 'error' ? `\n<!-- in a page, the error of its resource: [text]="couldNotLoad('the substances', list.error())" -->` : ''
+      }`,
+usageLanguage: 'html',
     height: 240,
   },
   {
@@ -702,7 +749,7 @@ data: LenziChartData = {
     ...docs('src/lib/info-bar'),
     demo: () => import('./demos/info-bar-demo/info-bar-demo').then((m) => m.InfoBarDemo),
     controls: [
-      { key: 'tone', label: 'Tone', type: 'select', default: 'tertiary', options: TONES },
+      { key: 'tone', label: 'Tone', type: 'select', default: 'tertiary', options: TONES, code: { attr: 'tone', otherwise: 'neutral' } },
       {
         key: 'icon',
         label: 'Icon',
@@ -710,13 +757,13 @@ data: LenziChartData = {
         default: 'visibility',
         options: ['visibility', 'cloud_off', 'system_update', 'info'].map((value) => ({ value, label: value })),
       },
-      { key: 'text', label: 'Text', type: 'text', default: 'Viewing as lenzi' },
-      { key: 'action', label: 'Action', type: 'text', default: 'Exit' },
+      { key: 'text', label: 'Text', type: 'text', default: 'Viewing as lenzi', code: { match: />([^<]*)<\/lenzi-info-bar>/, otherwise: '' } },
+      { key: 'action', label: 'Action', type: 'text', default: 'Exit', code: { attr: 'actionLabel', otherwise: '' } },
     ],
     usage: (v) => `<lenzi-info-bar${attr('icon', v['icon'])}${v['tone'] === 'neutral' ? '' : attr('tone', v['tone'])}${attr('actionLabel', v['action'])}${
       v['action'] ? ' (action)="exit()"' : ''
     }>${v['text']}</lenzi-info-bar>`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 220,
   },
   {
@@ -733,8 +780,14 @@ data: LenziChartData = {
     controls: [
       { key: 'icon', label: 'Icon', type: 'select', default: 'system_update', options: ['system_update', 'dns', 'lock'].map((value) => ({ value, label: value })) },
       { key: 'title', label: 'Title', type: 'text', default: 'Update required' },
-      { key: 'text', label: 'Text', type: 'text', default: 'This app (a26.0.0.0001) is older than your server and cannot work with it.' },
-      { key: 'action', label: 'Way out', type: 'text', default: 'Download the update' },
+      {
+        key: 'text',
+        label: 'Text',
+        type: 'text',
+        default: 'This app (a26.0.0.0001) is older than your server and cannot work with it.',
+        code: { match: /<lenzi-blocking-screen[^>]*>\s*([^<]*?)\s*<\/lenzi-blocking-screen>/, otherwise: '' },
+      },
+      { key: 'action', label: 'Way out', type: 'text', default: 'Download the update', code: { attr: 'actionLabel', otherwise: '' } },
       {
         key: 'kind',
         label: 'Way out style',
@@ -744,6 +797,7 @@ data: LenziChartData = {
           { value: 'flat', label: 'flat (the one to take)' },
           { value: 'stroked', label: 'stroked (the only one)' },
         ],
+        code: { attr: 'actionKind', otherwise: 'flat' },
       },
     ],
     usage: (v) => `@if (standing() === 'app-older') {
@@ -753,7 +807,7 @@ data: LenziChartData = {
     ${v['text']}
   </lenzi-blocking-screen>
 }`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 480,
   },
   {
@@ -767,8 +821,10 @@ data: LenziChartData = {
     files: component('pull-to-refresh'),
     ...docs('src/lib/pull-to-refresh'),
     demo: () => import('./demos/pull-to-refresh-demo/pull-to-refresh-demo').then((m) => m.PullToRefreshDemo),
-    controls: [{ key: 'duration', label: 'Refresh takes (ms)', type: 'number', default: 1200, min: 0, max: 5000, step: 100 }],
-    usage: () => `<lenzi-app-shell>
+    controls: [
+      { key: 'duration', label: 'Refresh takes (ms)', type: 'number', default: 1200, min: 0, max: 5000, step: 100, code: { match: /setTimeout\(resolve, (\d+)\)/ } },
+    ],
+    usage: (v) => `<lenzi-app-shell>
   …
   @if (inApp) {
     <lenzi-pull-to-refresh lenziShellBelow [refresh]="refresh" />
@@ -776,8 +832,9 @@ data: LenziChartData = {
   <router-outlet />
 </lenzi-app-shell>
 
-refresh = () => this.pageRefresh.pull();`,
-    usageLanguage: 'html',
+// in an app: refresh = () => this.pageRefresh.pull();
+refresh = () => new Promise((resolve) => setTimeout(resolve, ${v['duration']}));`,
+usageLanguage: 'typescript',
     height: 420,
   },
   {
@@ -792,11 +849,11 @@ refresh = () => this.pageRefresh.pull();`,
     ...docs('src/lib/notification-bell'),
     demo: () => import('./demos/notification-bell-demo/notification-bell-demo').then((m) => m.NotificationBellDemo),
     controls: [
-      { key: 'count', label: 'Arrived', type: 'number', default: 3, min: 0, max: 8, step: 1 },
-      { key: 'noun', label: 'They are called', type: 'text', default: 'tickets' },
+      { key: 'count', label: 'Arrived', type: 'number', default: 3, min: 0, max: 8, step: 1, code: false },
+      { key: 'noun', label: 'They are called', type: 'text', default: 'tickets', code: { attr: 'noun', otherwise: 'notifications' } },
     ],
     usage: (v) => `<lenzi-notification-bell lenziShellActions${attr('noun', v['noun'])} [items]="news()" (opened)="markSeen($event)" />`,
-    usageLanguage: 'html',
+usageLanguage: 'html',
     height: 420,
   },
   // Dialogs --------------------------------------------------------------------------------------
@@ -815,7 +872,7 @@ refresh = () => this.pageRefresh.pull();`,
       { key: 'title', label: 'Question', type: 'text', default: 'Delete this consumption?' },
       { key: 'message', label: 'What it costs', type: 'text', default: 'Its quantity goes back to its batch.' },
       { key: 'confirm', label: 'Confirm button', type: 'text', default: 'Delete' },
-      { key: 'destructive', label: 'Destructive', type: 'boolean', default: true },
+      { key: 'destructive', label: 'Destructive', type: 'boolean', default: true, code: { absent: /destructive: false/ } },
       {
         key: 'outcome',
         label: 'The action',
@@ -826,6 +883,7 @@ refresh = () => this.pageRefresh.pull();`,
           { value: 'slow', label: 'takes 2 s' },
           { value: 'failure', label: 'fails (409)' },
         ],
+        code: false,
       },
     ],
     usage: (v) => `const deleted = await this.dialogs.open<LenziConfirmDialog, LenziConfirmData, true>(LenziConfirmDialog, {
@@ -834,7 +892,7 @@ refresh = () => this.pageRefresh.pull();`,
   confirm: '${v['confirm']}',${v['destructive'] ? '' : '\n  destructive: false,'}
   action: () => this.ledger.deleteConsumption(id),
 });`,
-    usageLanguage: 'typescript',
+usageLanguage: 'typescript',
     height: 360,
   },
   // Services -------------------------------------------------------------------------------------
@@ -885,6 +943,7 @@ export const appConfig: ApplicationConfig = {
           { value: 'plain', label: '500 without a body' },
           { value: 'down', label: 'nothing (network down)' },
         ],
+        code: false,
       },
     ],
     usage: () => `import { ApiError, lenziErrorInterceptor, provideLenziHttp } from '@lenzi/ui-kit/http';
@@ -893,7 +952,7 @@ providers: [
   provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
   provideLenziHttp({ problemTypePrefix: 'urn:substance-tracker:problem:' }),
 ]`,
-    usageLanguage: 'typescript',
+usageLanguage: 'typescript',
     height: 420,
   },
   {
@@ -912,12 +971,15 @@ providers: [
       { key: 'title', label: 'Title', type: 'text', default: 'Conflict' },
       { key: 'detail', label: 'Detail', type: 'text', default: 'Batch 8 is finished' },
     ],
-    usage: () => `// a list that keeps its rows while the next page loads (no shrinking, no blank)
+    usage: (v) => `// one line for a failure: "${v['detail'] || v['title']}${v['status'] ? ` (${v['status']})` : ''}"
+describeError({ status: ${v['status']}, title: '${v['title']}', detail: '${v['detail']}' });
+
+// a list that keeps its rows while the next page loads (no shrinking, no blank)
 readonly rows = keptValue(this.list, () => this.filter().substanceId);
 
 // a choice of this browser, remembered
 readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? v : null), 'week'));`,
-    usageLanguage: 'typescript',
+usageLanguage: 'typescript',
     height: 360,
   },
   // 3D -------------------------------------------------------------------------------------------
@@ -933,16 +995,17 @@ readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? 
     ...docs('three/src/three-canvas'),
     demo: () => import('./demos/three-canvas-demo/three-canvas-demo').then((m) => m.ThreeCanvasDemo),
     controls: [
-      { key: 'animate', label: 'Turning', type: 'boolean', default: true },
-      { key: 'speed', label: 'Speed', type: 'number', default: 0.6, min: 0, max: 3, step: 0.1 },
-      { key: 'detail', label: 'Detail', type: 'number', default: 1, min: 0, max: 4, step: 1 },
-      { key: 'wireframe', label: 'Wireframe', type: 'boolean', default: false },
+      { key: 'animate', label: 'Turning', type: 'boolean', default: true, code: { absent: /\[animate\]="false"/ } },
+      { key: 'speed', label: 'Speed', type: 'number', default: 0.6, min: 0, max: 3, step: 0.1, code: { match: /delta \* ([\d.]+)\)/ } },
+      { key: 'detail', label: 'Detail', type: 'number', default: 1, min: 0, max: 4, step: 1, code: { match: /IcosahedronGeometry\(1\.4, (\d+)\)/ } },
+      { key: 'wireframe', label: 'Wireframe', type: 'boolean', default: false, code: { match: /wireframe: true/ } },
       {
         key: 'color',
         label: 'Colour',
         type: 'select',
         default: '--mat-sys-primary',
         options: ['--mat-sys-primary', '--mat-sys-tertiary', '--mat-sys-secondary', '--lenzi-status-good'].map((value) => ({ value, label: value })),
+        code: { match: /color\('([^']+)'\)/ },
       },
     ],
     usage: (v) => `import { LenziThreeCanvas, LenziThreeSetup } from '@lenzi/ui-kit/three';
@@ -955,7 +1018,7 @@ scene: LenziThreeSetup = ({ scene, color }) => {
   scene.add(shape, new AmbientLight(0xffffff, 0.6), new DirectionalLight(0xffffff, 2.4));
   return { frame: (delta) => (shape.rotation.y += delta * ${v['speed']}) };
 };`,
-    usageLanguage: 'typescript',
+usageLanguage: 'typescript',
     height: 420,
   },
 ];
@@ -968,4 +1031,78 @@ export function docById(id: string): KitDoc | undefined {
 /** The values a demo starts with: every control's default. */
 export function defaults(doc: KitDoc): Values {
   return Object.fromEntries(doc.controls.map((control) => [control.key, control.default]));
+}
+
+const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** What the usage code says a parameter is, or undefined when it says nothing usable. */
+function readControl(control: Control, spec: Exclude<CodeSpec, false>, text: string, notes: string[]): Value | undefined {
+  const otherwise = 'otherwise' in spec && spec.otherwise !== undefined ? spec.otherwise : control.type === 'boolean' ? false : control.default;
+  const coerce = (raw: string): Value | undefined => {
+    if (control.type === 'number') {
+      const number = Number(raw);
+      if (Number.isNaN(number)) return undefined;
+      const clamped = Math.min(control.max ?? number, Math.max(control.min ?? number, number));
+      if (clamped !== number) notes.push(`${control.label}: ${raw} is out of its range, ${clamped} used`);
+      return clamped;
+    }
+    if (control.type === 'select' && control.options && !control.options.some((option) => option.value === raw)) {
+      notes.push(`${control.label}: "${raw}" is not one of ${control.options.map((option) => option.value).join(', ')}`);
+      return undefined;
+    }
+    return raw;
+  };
+  if ('absent' in spec) return !spec.absent.test(text);
+  if ('all' in spec) {
+    const found = [...text.matchAll(spec.all)].map((match) => match[1] ?? '');
+    return found.length ? found.join(spec.join) : otherwise;
+  }
+  if ('nth' in spec) {
+    const match = [...text.matchAll(spec.nth)][spec.index];
+    return match ? coerce(match[1] ?? '') : otherwise;
+  }
+  if ('match' in spec) {
+    const match = spec.match.exec(text);
+    if (control.type === 'boolean') return match !== null;
+    return match ? coerce(match[1] ?? '') : otherwise;
+  }
+  const name = escapeRegex(spec.attr);
+  if (control.type === 'boolean') {
+    const bound = new RegExp(`\\[${name}\\]="(true|false)"`).exec(text) ?? new RegExp(`(?<![\\w.-])${name}: (true|false)`).exec(text);
+    if (bound) return bound[1] === 'true';
+    return new RegExp(`(?<![\\w\\[.-])${name}(?=[\\s/>])(?!\\s*[=:])`).test(text) ? true : otherwise;
+  }
+  const patterns = [
+    new RegExp(`(?<![\\w\\[.-])${name}="([^"]*)"`),
+    new RegExp(`\\[${name}\\]="'([^']*)'"`),
+    new RegExp(`\\[${name}\\]="(-?[\\d.]+)"`),
+    new RegExp(`(?<![\\w.-])${name}: '([^']*)'`),
+    new RegExp(`(?<![\\w.-])${name}: (-?[\\d.]+)`),
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(text);
+    if (match) return coerce(match[1] ?? '');
+  }
+  return otherwise;
+}
+
+/**
+ * The parameters an edited usage code sets: what the GUI and the demo follow. Parameters the code
+ * does not carry (`code: false`) are left out; `notes` says what could not be used.
+ */
+export function readUsage(doc: KitDoc, text: string): { values: Values; notes: string[] } {
+  const values: Values = {};
+  const notes: string[] = [];
+  for (const control of doc.controls) {
+    const spec = control.code ?? { attr: control.key };
+    if (spec === false) continue;
+    const value = readControl(control, spec, text, notes);
+    if (value !== undefined) values[control.key] = value;
+  }
+  return { values, notes };
+}
+
+/** The parameters the usage code carries (the others only the GUI sets). */
+export function codedControls(doc: KitDoc): Control[] {
+  return doc.controls.filter((control) => control.code !== false);
 }

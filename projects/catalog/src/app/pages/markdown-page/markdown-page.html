@@ -5,11 +5,5 @@
       <span>Instructions for Claude, the same file Claude reads before any frontend work: <code>projects/kit/{{ file() }}</code>.</span>
     </p>
   }
-  @if (failure(); as failure) {
-    <lenzi-status-message kind="error" [text]="failure" />
-  } @else if (document.hasValue()) {
-    <app-markdown [source]="document.value()" />
-  } @else {
-    <lenzi-status-message kind="loading" />
-  }
+  <app-doc-view [path]="file()" [what]="kind() === 'ai' ? 'the AI rules' : 'the rules'" />
 </main>

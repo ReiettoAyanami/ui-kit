@@ -1,0 +1,25 @@
+<div class="editor" [class.readonly]="readonly()" [style.max-height]="maxHeight()">
+  <div class="gutter" aria-hidden="true">
+    @for (number of numbers(); track number) {
+      <span>{{ number }}</span>
+    }
+  </div>
+  <div class="code">
+    <pre class="layer" aria-hidden="true"><code class="hljs" [innerHTML]="coloured()"></code></pre>
+    <textarea
+      #area
+      class="input"
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+      wrap="off"
+      [readOnly]="readonly()"
+      [attr.aria-label]="label()"
+      [rows]="lines()"
+      [style.width.ch]="columns()"
+      [value]="value()"
+      (input)="typed(area.value)"
+      (keydown)="key($event)"
+    ></textarea>
+  </div>
+</div>

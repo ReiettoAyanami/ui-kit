@@ -1,7 +1,7 @@
 <div class="head">
-  <mat-button-toggle-group class="files" hideSingleSelectionIndicator aria-label="File" [value]="chosen()" (change)="chosen.set($event.value)">
+  <mat-button-toggle-group class="files" hideSingleSelectionIndicator aria-label="File" [value]="chosen()" (change)="choose($event.value)">
     @for (path of files(); track path) {
-      <mat-button-toggle [value]="path">{{ name(path) }}</mat-button-toggle>
+      <mat-button-toggle [value]="path" [class.changed]="path in drafts()">{{ name(path) }}</mat-button-toggle>
     }
   </mat-button-toggle-group>
   <button mat-button type="button" class="copy" (click)="copy()" [disabled]="!file.hasValue()">
@@ -15,5 +15,25 @@
 } @else if (file.isLoading() && !file.hasValue()) {
   <lenzi-status-message kind="loading" compact />
 } @else {
-  <pre class="code"><code class="hljs" [innerHTML]="coloured()"></code></pre>
+  <app-code-editor
+    [value]="text()"
+    (valueChange)="edited($event)"
+    [language]="language()"
+    [readonly]="server.canSave() !== true"
+    [label]="'Code of ' + name(chosen())"
+  />
+  @if (server.canSave()) {
+    <div class="bar">
+      <span class="state">{{ changed() ? 'Changed, not saved' : 'Edit the code: save it and the catalog rebuilds with it' }}</span>
+      <span class="buttons">
+        <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>
+        <button mat-flat-button type="button" [disabled]="!changed() || saving()" (click)="save()">Save to the kit</button>
+      </span>
+    </div>
+  } @else if (server.canSave() === false) {
+    <p class="hint">Changing the code needs the development server (<code>npm start</code>): here it can be read and copied.</p>
+  }
+  @if (message(); as message) {
+    <p class="hint" role="status">{{ message }}</p>
+  }
 }

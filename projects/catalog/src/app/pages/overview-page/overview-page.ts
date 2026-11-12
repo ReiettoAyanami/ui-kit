@@ -5,13 +5,13 @@ import { RouterLink } from '@angular/router';
 
 import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
 
-import { Markdown } from '../../shared/markdown/markdown';
+import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { CATEGORIES, DOCS } from '../../registry';
 
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [LenziFigure, LenziFigureGrid, Markdown, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })
@@ -36,5 +36,5 @@ ng add "@lenzi/ui-kit@file:../ui-kit/dist/lenzi-ui-kit-0.1.0.tgz"
 # and provideLenziKit({ appId }) with the API errors' interceptor in app.config.ts;
 # then: import { LenziAppShell, LenziNavList } from '@lenzi/ui-kit';`;
 
-  protected readonly startMarkdown = '```markdown\n' + this.start + '\n```';
+
 }

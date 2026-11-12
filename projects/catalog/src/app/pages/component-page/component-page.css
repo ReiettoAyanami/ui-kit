@@ -55,6 +55,16 @@
   }
 }
 
+.hint {
+  margin: 8px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hint.warn {
+  color: var(--mat-sys-error);
+}
+
 .usage-head {
   display: flex;
   align-items: center;
