@@ -2,6 +2,7 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import {
   Component,
+  DestroyRef,
   ElementRef,
   Injector,
   afterNextRender,
@@ -19,6 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LenziHsv, hexToHsv, hsvToHex, parseHexColor, toHexColor } from './color';
@@ -51,6 +53,11 @@ type EyeDropperWindow = Window & { EyeDropper: new () => { open(): Promise<{ sRG
  * hue, the hex, a pick from the screen where the browser has one, and the colours the app offers.
  * The colour follows the selector at once (`[(value)]`); `picked` says the final one when the
  * selector closes. Its click never reaches what is around it (a card that opens on a tap).
+ *
+ * There is always a way back (lenzi, 2026-11-12: "Need a way to go back and put a snackbar asking sum
+ * like "U sure?" because now i changed a color without a wai to go back"): in the selector, a button
+ * goes back to the colour it opened with; when it closes with another colour, a snackbar asks to keep
+ * it and its action goes back.
  */
 @Component({
   selector: 'lenzi-color-picker',
@@ -68,11 +75,17 @@ export class LenziColorPicker {
   /** The swatch's diameter, in px. */
   readonly size = input(32);
   readonly disabled = input(false, { transform: booleanAttribute });
-  /** The colour when the selector closes, if it changed: the moment to save it. */
+  /**
+   * When the selector closes with another colour, a snackbar asks to keep it and offers the way back.
+   * Off only where the app gives its own way back.
+   */
+  readonly confirm = input(true, { transform: booleanAttribute });
+  /** The colour when the selector closes, if it changed, and again when the snackbar goes back: the moment to save it. */
   readonly picked = output<string>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly swatch = viewChild.required<ElementRef<HTMLButtonElement>>('swatch');
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
   private readonly area = viewChild<ElementRef<HTMLElement>>('area');
@@ -98,9 +111,19 @@ export class LenziColorPicker {
   protected readonly wrong = computed(() => parseHexColor(this.text()) === null);
   protected readonly offered = computed(() => this.choices().map((choice) => ({ ...choice, hex: toHexColor(choice.value, this.host.nativeElement) })));
 
-  /** The colour when the selector opened. */
-  private before = '';
+  /** The colour when the selector opened: where its "back" goes. */
+  protected readonly before = signal('');
   private dragging: 'area' | 'hue' | null = null;
+  /** The question on screen, if any; it leaves with the picker (its way back would lead nowhere). */
+  private asked: MatSnackBarRef<TextOnlySnackBar> | null = null;
+  private gone = false;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      this.gone = true;
+      this.asked?.dismiss();
+    });
+  }
 
   protected percent(part: number): number {
     return Math.round(part * 100);
@@ -116,20 +139,45 @@ export class LenziColorPicker {
       this.close();
       return;
     }
-    this.before = this.hex();
+    this.before.set(this.hex());
     this.open.set(true);
     afterNextRender(() => this.area()?.nativeElement.focus(), { injector: this.injector });
   }
 
-  /** Closed by a click outside, Escape, or the swatch again: the focus goes back, the final colour goes out. */
+  /**
+   * Closed by a click outside, Escape, or the swatch again: the focus goes back to the swatch; if the
+   * colour is another one, it goes out and a snackbar asks to keep it.
+   */
   protected close(): void {
     if (!this.open()) return;
     const active = document.activeElement;
     const insideOrNowhere = !active || active === document.body || this.panel()?.nativeElement.contains(active) === true;
     this.open.set(false);
     if (insideOrNowhere) this.swatch().nativeElement.focus();
+    const before = this.before();
     const hex = this.hex();
-    if (hex !== this.before) this.picked.emit(hex);
+    if (hex === before) return;
+    this.picked.emit(hex);
+    if (this.confirm()) this.ask(before, hex);
+  }
+
+  /** In the selector: back to the colour it opened with. */
+  protected back(): void {
+    this.choose(this.before());
+  }
+
+  /** "Keep it?": the action goes back to the colour before, unless the colour moved again meanwhile. */
+  private ask(before: string, now: string): void {
+    const asked = this.snackBar.open(`${this.label()} is now ${now}. Keep it?`, 'Go back', { duration: 8000 });
+    this.asked = asked;
+    asked.onAction().subscribe(() => {
+      if (this.gone || this.hex() !== now) return;
+      this.choose(before);
+      this.picked.emit(before);
+    });
+    asked.afterDismissed().subscribe(() => {
+      if (this.asked === asked) this.asked = null;
+    });
   }
 
   protected press(part: 'area' | 'hue', event: PointerEvent): void {

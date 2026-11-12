@@ -5,6 +5,9 @@
 - Give it a `label` that says what the colour is ("Shift colour"), not "colour picker".
 - Save on `(picked)` (the selector closed with another colour), not on every `valueChange`: the value moves
   at each step of a drag.
+- Leave its question on (`confirm`): the snackbar's "Go back" is the user's way back. `(picked)` fires again
+  with the colour before when it is used: the same handler saves it. Turn it off only where the app has its
+  own way back, and never show a snackbar of the app's on `(picked)`: it would take the question's place.
 - Offer the app's own colours with `[choices]` when it has a palette; decide the palette once, in the app's
   design, and name each colour.
 - It works in opaque sRGB hex: a colour with transparency loses it. Do not use it for an identity colour,

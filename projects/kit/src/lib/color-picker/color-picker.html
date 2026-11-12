@@ -81,6 +81,17 @@
           <mat-hint>Six digits, like #d5baff</mat-hint>
         }
       </mat-form-field>
+      <button
+        mat-icon-button
+        type="button"
+        class="back"
+        [disabled]="hex() === before()"
+        [matTooltip]="'Back to ' + before()"
+        [attr.aria-label]="'Back to ' + before()"
+        (click)="back()"
+      >
+        <mat-icon>undo</mat-icon>
+      </button>
       @if (canSample) {
         <button mat-icon-button type="button" matTooltip="Pick a colour from the screen" aria-label="Pick a colour from the screen" (click)="sample()">
           <mat-icon>colorize</mat-icon>

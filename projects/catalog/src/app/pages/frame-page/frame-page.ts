@@ -8,7 +8,8 @@ import { Values, defaults, docById } from '../../registry';
 
 /**
  * A demo alone, inside the frame of its component page (`/frame/<id>`): the shell around it is gone
- * (route data `bare`). It starts with the values in the address and follows the page's messages.
+ * (route data `bare`). It starts with the values in the address and follows the page's messages: the
+ * values, and how much of the frame is under the window's edge (styles.css keeps a snackbar above it).
  */
 @Component({
   selector: 'app-frame-page',
@@ -43,9 +44,13 @@ export class FramePage {
     });
 
     const listener = (event: MessageEvent<FrameMessage>) => {
-      if (event.origin !== window.location.origin || event.data?.type !== 'kit-values') return;
-      this.values.set(event.data.values);
-      this.document.body.classList.toggle('catalog-pattern', event.data.pattern);
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'kit-values') {
+        this.values.set(event.data.values);
+        this.document.body.classList.toggle('catalog-pattern', event.data.pattern);
+      } else if (event.data?.type === 'kit-frame-cut') {
+        this.document.documentElement.style.setProperty('--catalog-frame-cut', `${event.data.bottom}px`);
+      }
     };
     window.addEventListener('message', listener);
     inject(DestroyRef).onDestroy(() => window.removeEventListener('message', listener));

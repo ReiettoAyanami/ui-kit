@@ -104,15 +104,18 @@
   top: 50%;
 }
 
+/* The hex, the way back (always there, so the field never moves; off while nothing changed), the pick
+   from the screen. */
 .row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
 }
 
 .hex {
   flex: 1;
   min-width: 0;
+  margin-right: 4px;
 }
 
 /* The colours the app offers: small swatches, the one in use ringed in the accent. */

@@ -1,5 +1,8 @@
 @if (show() === 'colours') {
-  <p class="hint">Click a colour to change it: it applies everywhere at once. Save it from the Variables tab.</p>
+  <p class="hint">
+    Click a colour to change it: it applies everywhere at once. A snackbar asks to keep it, with the way back; later, save it or
+    discard it from the Variables tab.
+  </p>
   <div class="swatches">
     @for (role of roles; track role.variable) {
       <div class="swatch">
@@ -8,9 +11,20 @@
           [label]="role.name"
           [size]="36"
           (valueChange)="apply(role.variable, $event)"
-          (picked)="picked(role.name, $event)"
+          (picked)="picked(role.variable, role.name, $event)"
         />
         <lenzi-figure [label]="role.name" [value]="colours()[role.variable]" />
+        @if (changed(role.variable)) {
+          <button
+            mat-icon-button
+            type="button"
+            [matTooltip]="'Back to the saved ' + role.name"
+            [attr.aria-label]="'Back to the saved ' + role.name"
+            (click)="back(role.variable, role.name)"
+          >
+            <mat-icon>undo</mat-icon>
+          </button>
+        }
       </div>
     }
   </div>

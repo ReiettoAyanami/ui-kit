@@ -7,12 +7,20 @@ import { LenziColorChoice, LenziColorPicker } from './color-picker';
 @Component({
   imports: [LenziColorPicker],
   template: `<div (click)="outside = outside + 1">
-    <lenzi-color-picker label="Shift colour" [(value)]="colour" [choices]="choices" [disabled]="disabled()" (picked)="picked.push($event)" />
+    <lenzi-color-picker
+      label="Shift colour"
+      [(value)]="colour"
+      [choices]="choices"
+      [disabled]="disabled()"
+      [confirm]="confirm()"
+      (picked)="picked.push($event)"
+    />
   </div>`,
 })
 class Host {
   readonly colour = signal('#ff0000');
   readonly disabled = signal(false);
+  readonly confirm = signal(true);
   readonly choices: LenziColorChoice[] = [
     { value: '#00dddd', label: 'Cyan' },
     { value: 'rgb(110, 216, 137)', label: 'Green' },
@@ -45,6 +53,7 @@ describe('LenziColorPicker', () => {
     swatch().click();
     await settle();
   };
+  const question = () => document.querySelector<HTMLElement>('mat-snack-bar-container');
 
   beforeEach(async () => {
     fixture = TestBed.createComponent(Host);
@@ -179,6 +188,73 @@ describe('LenziColorPicker', () => {
     expect(panel()).not.toBeNull();
     await openIt();
     expect(panel()).toBeNull();
+  });
+
+  it('has a way back in the selector: to the colour it opened with', async () => {
+    await openIt();
+    const back = part<HTMLButtonElement>('button.back');
+    expect(back.disabled).toBe(true);
+
+    key(part('.area'), 'ArrowLeft', true);
+    key(part('.hue'), 'ArrowRight', true);
+    await settle();
+    expect(host.colour()).not.toBe('#ff0000');
+    expect(back.disabled).toBe(false);
+    expect(back.getAttribute('aria-label')).toBe('Back to #ff0000');
+
+    back.click();
+    await settle();
+    expect(host.colour()).toBe('#ff0000');
+    expect(back.disabled).toBe(true);
+    expect(panel()).not.toBeNull();
+
+    key(part('.area'), 'Escape');
+    await settle();
+    expect(host.picked).toEqual([]);
+    expect(question()).toBeNull();
+  });
+
+  it('asks to keep the new colour when it closes; "Go back" brings the one before, and says so', async () => {
+    await openIt();
+    key(part('.area'), 'ArrowLeft', true);
+    key(part('.area'), 'Escape');
+    await settle();
+    const changed = host.colour();
+    expect(changed).not.toBe('#ff0000');
+    expect(question()!.textContent).toContain(`Shift colour is now ${changed}. Keep it?`);
+
+    const goBack = question()!.querySelector<HTMLButtonElement>('button')!;
+    expect(goBack.textContent?.trim()).toBe('Go back');
+    goBack.click();
+    await settle();
+    expect(host.colour()).toBe('#ff0000');
+    expect(host.picked).toEqual([changed, '#ff0000']);
+    expect(swatch().getAttribute('aria-label')).toBe('Shift colour: #ff0000');
+  });
+
+  it('"Go back" leaves a colour that moved again alone', async () => {
+    await openIt();
+    key(part('.area'), 'ArrowLeft', true);
+    key(part('.area'), 'Escape');
+    await settle();
+    const goBack = question()!.querySelector<HTMLButtonElement>('button')!;
+
+    host.colour.set('#00dddd');
+    await settle();
+    goBack.click();
+    await settle();
+    expect(host.colour()).toBe('#00dddd');
+    expect(host.picked.length).toBe(1);
+  });
+
+  it('does not ask where the app has its own way back', async () => {
+    host.confirm.set(false);
+    await openIt();
+    key(part('.area'), 'ArrowLeft', true);
+    key(part('.area'), 'Escape');
+    await settle();
+    expect(host.picked.length).toBe(1);
+    expect(question()).toBeNull();
   });
 
   it('does not open when it is disabled', async () => {

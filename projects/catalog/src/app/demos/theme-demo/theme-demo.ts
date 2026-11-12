@@ -1,5 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LenziColorPicker, LenziFigure } from '@lenzi/ui-kit';
 
@@ -35,11 +38,11 @@ const TYPE = ['display-small', 'headline-medium', 'headline-small', 'title-large
 /**
  * The theme's colour roles and the type scale. Every colour is its picker (LenziColorPicker): a click
  * opens the selector and the colour changes at once, everywhere (it is a global variable); it is
- * saved from the Variables tab or page.
+ * saved from the Variables tab or page. A colour that is not the saved one keeps a way back beside it.
  */
 @Component({
   selector: 'app-theme-demo',
-  imports: [LenziColorPicker, LenziFigure],
+  imports: [LenziColorPicker, LenziFigure, MatButtonModule, MatIconModule, MatTooltipModule],
   templateUrl: './theme-demo.html',
   styleUrl: './theme-demo.css',
 })
@@ -69,8 +72,19 @@ export class ThemeDemo {
     else this.live.set(variable, hex);
   }
 
-  /** The selector closed with another colour. */
-  protected picked(name: string, hex: string): void {
-    this.events.log(`${name}: ${hex}, applied everywhere (save it from the Variables tab)`);
+  /** Not the saved colour: it shows its way back. */
+  protected changed(variable: string): boolean {
+    return variable in this.live.overrides();
+  }
+
+  protected back(variable: string, name: string): void {
+    this.live.reset(variable);
+    this.events.log(`${name}: back to the saved colour`);
+  }
+
+  /** The selector closed with another colour, or its question brought the one before back. */
+  protected picked(variable: string, name: string, hex: string): void {
+    if (this.changed(variable)) this.events.log(`${name}: ${hex}, applied everywhere (save it or discard it from the Variables tab)`);
+    else this.events.log(`${name}: back to the saved colour`);
   }
 }

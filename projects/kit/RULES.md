@@ -119,6 +119,9 @@ the rule says what, the variable says how much.
   cliccare sul colore e mostrare un selector di colore"): wherever a colour the user may change is shown,
   it is a round swatch that opens the colour selector at a click, a glass panel like a menu's (the shade,
   the hue, the hex, the colours the app offers). `LenziColorPicker`; never the browser's own colour input.
+  **A changed colour always has a way back** (lenzi, 2026-11-12: "Need a way to go back and put a snackbar
+  asking sum like "U sure?""): a button in the selector, and a snackbar that asks to keep the new colour
+  when the selector closes, with "Go back".
 - **No tap highlight** (lenzi, 2026-10-10): Material's own state layers are the feedback.
 
 ## Cards

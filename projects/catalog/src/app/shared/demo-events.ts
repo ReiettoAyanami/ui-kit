@@ -10,7 +10,9 @@ export interface DemoEvent {
 export type FrameMessage =
   | { type: 'kit-frame-ready' }
   | { type: 'kit-values'; values: Record<string, string | number | boolean>; pattern: boolean }
-  | { type: 'kit-event'; text: string };
+  | { type: 'kit-event'; text: string }
+  /** How many px of the frame are under the window's bottom edge: what the demo opens at its bottom stays above them. */
+  | { type: 'kit-frame-cut'; bottom: number };
 
 /**
  * What the demos say happened (an output fired, a dialog closed): inside a demo's frame each event

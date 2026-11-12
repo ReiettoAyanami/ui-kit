@@ -10,6 +10,13 @@ body.catalog-frame {
   background: var(--mat-sys-surface);
 }
 
+/* What a demo opens at the bottom of its frame (a snackbar) stays in the part of the frame the page
+   shows: FramePage keeps --catalog-frame-cut, how much of the frame is under the window's edge. */
+body.catalog-frame .cdk-global-overlay-wrapper {
+  box-sizing: border-box;
+  padding-bottom: var(--catalog-frame-cut, 0px);
+}
+
 /* "Pattern": a busy background behind a demo, to see what the glass does. */
 body.catalog-frame.catalog-pattern {
   background:

@@ -6,7 +6,15 @@
   </span>
 </div>
 <div class="entry">
-  <lenzi-color-picker [label]="label()" [(value)]="colour" [size]="size()" [choices]="choices()" [disabled]="disabled()" (picked)="picked($event)" />
+  <lenzi-color-picker
+    [label]="label()"
+    [(value)]="colour"
+    [size]="size()"
+    [choices]="choices()"
+    [confirm]="confirm()"
+    [disabled]="disabled()"
+    (picked)="picked($event)"
+  />
   <span class="lines">
     <span class="name">Morning shift</span>
     <span class="value">{{ colour() }}</span>

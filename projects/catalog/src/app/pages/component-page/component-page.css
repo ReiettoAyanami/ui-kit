@@ -37,9 +37,11 @@
   margin-top: 8px;
 }
 
-/* The demo with its parameters beside it on a wide screen, under it on a phone. */
+/* The demo with its parameters beside it on a wide screen, under it on a phone. One column that
+   never grows past the page: a long line of the usage code scrolls inside its editor. */
 .playground {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   padding-top: 16px;
 }

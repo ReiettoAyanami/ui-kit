@@ -97,6 +97,18 @@
             clientWidth: root.clientWidth,
             horizontalScroll: root.scrollWidth > root.clientWidth,
             outside,
+            // What scrolls sideways inside the page (wider inside than it is): a code box may, a tab's body or a card must not.
+            scrollers: [...page.querySelectorAll('body *')]
+              .filter((element) => element.scrollWidth > element.clientWidth + 1 && element.clientWidth > 0 && getComputedStyle(element).overflowX !== 'visible')
+              .slice(0, 12)
+              .map((element) => `${element.tagName.toLowerCase()}${element.className && typeof element.className === 'string' ? '.' + element.className.trim().split(/\s+/).join('.') : ''} ${element.clientWidth}<${element.scrollWidth}`),
+            // over=selector: what inside it reaches past its right edge (the reason it scrolls sideways).
+            over: params.get('over')
+              ? [...(page.querySelector(params.get('over'))?.querySelectorAll('*') ?? [])]
+                  .filter((element) => element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().right > page.querySelector(params.get('over')).getBoundingClientRect().right + 0.5)
+                  .slice(0, 12)
+                  .map((element) => `${element.tagName.toLowerCase()}${element.className && typeof element.className === 'string' ? '.' + element.className.trim().split(/\s+/).join('.') : ''} right=${Math.round(element.getBoundingClientRect().right)} w=${Math.round(element.getBoundingClientRect().width)}`)
+              : undefined,
             headings: [...page.querySelectorAll('h1, h2')].slice(0, 8).map((h) => h.textContent.trim()),
             alerts: [...page.querySelectorAll('[role="alert"]')].map((a) => a.textContent.trim()),
             // read=sel|prop,…: what these say (a property of the element, its text by default).

@@ -25,6 +25,11 @@ selector di colore").
   the hex, a pick from the screen where the browser has one (Chromium), then the colours the app offers.
 - **The colour follows the selector at once** (`[(value)]`): what it colours changes while the thumb moves.
   **`picked` says the final colour** when the selector closes, if it changed: that is the moment to save.
+- **There is always a way back** (lenzi, 2026-11-12: "Need a way to go back and put a snackbar asking sum
+  like "U sure?" because now i changed a color without a wai to go back"). In the selector, the ↶ button
+  goes back to the colour it opened with. When it closes with another colour, a snackbar asks "… is now
+  #rrggbb. Keep it?" for 8 seconds: **Go back** brings the colour before (and `picked` says it), doing
+  nothing keeps the new one.
 - **It closes** on a click outside, on Escape, on the swatch again; the focus goes back to the swatch.
 - **Keyboard**: the focus starts on the shade; arrows move it by 1% (the hue by 1°), with Shift by 10; Home and
   End go to the ends of the hue; Tab walks the selector and stays in it.
@@ -42,7 +47,8 @@ selector di colore").
 | input | `choices` | `LenziColorChoice[]` (`{ value, label }`) | the app's palette, offered under the selector; none by default |
 | input | `size` | `number` | the swatch's diameter in px; 32 |
 | input | `disabled` | `boolean` | |
-| output | `picked` | `string` | the final `#rrggbb` when the selector closes, if it changed |
+| input | `confirm` | `boolean` | the snackbar that asks to keep the new colour; `true`. Off only where the app gives its own way back |
+| output | `picked` | `string` | the final `#rrggbb` when the selector closes, if it changed; again, with the colour before, when the snackbar goes back |
 
 Also exported: `parseHexColor()`, `toHexColor()` (any CSS colour to `#rrggbb`), `hexToHsv()`, `hsvToHex()`.
 

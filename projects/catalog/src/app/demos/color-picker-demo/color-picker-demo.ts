@@ -30,6 +30,7 @@ export class ColorPickerDemo {
   protected readonly size = computed(() => Number(this.values()['size'] ?? 32));
   protected readonly disabled = computed(() => this.values()['disabled'] === true);
   protected readonly choices = computed(() => (this.values()['choices'] === false ? [] : PALETTE));
+  protected readonly confirm = computed(() => this.values()['confirm'] !== false);
   /** The colour: the parameter's, until the selector moves it. */
   protected readonly colour = linkedSignal(() => String(this.values()['value'] ?? '#d5baff'));
 
