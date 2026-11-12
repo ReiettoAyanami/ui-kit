@@ -39,30 +39,28 @@ the catalog is always deployable.
 | `npm start` | the catalog in development, with the server that saves the variables |
 | `npm test` | the library's tests, the catalog's, the server's, and that every page has its files |
 | `npm run build` | the package (`dist/kit`) and the catalog (`dist/catalog`) |
-| `npm run pack` | the package as a tarball (`dist/lenzi-ui-kit-<version>.tgz`) for an app to install |
+| `npm run pack` | the package as a tarball (`dist/lenzi-ui-kit-<version>.tgz`), for `ng add` |
 | `npm run tokens` | `tokens.css` again from `tokens.json` |
 | `npm run libraries` | the versions in `libraries.json`, read again from the kit, substance-tracker and vtiger-reader |
 | `npm run serve:prod` | the built catalog served as in Docker, on port 8080 |
 
 ## How an app takes the kit
 
+Like Angular Material: one command sets it up.
+
 ```sh
-npm install ../ui-kit/dist/lenzi-ui-kit-0.1.0.tgz     # after `npm run pack`; later from its git release
+ng add @lenzi/ui-kit                # from a registry, once it is published
+ng add "@lenzi/ui-kit@file:../ui-kit/dist/lenzi-ui-kit-0.1.0.tgz"   # today, after `npm run pack`
 ```
 
-```jsonc
-// angular.json, "styles": the kit's look first
-"node_modules/@lenzi/ui-kit/styles/kit.scss",
-"node_modules/@lenzi/ui-kit/styles/fonts.css",
-```
+`ng add` (the kit's schematic, `projects/kit/schematics/ng-add`) adds the peer dependencies that are
+missing (Material, the CDK, the fonts), puts the kit's styles first in `angular.json`, and adds
+`provideLenziKit({ appId })` and `provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor]))`
+to `app.config.ts`. Run twice, it changes nothing. Then it is a classic Angular library:
 
 ```ts
-// app.config.ts
-providers: [
-  provideRouter(routes, withComponentInputBinding()),
-  provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
-  provideLenziKit({ appId: 'my-app' }),
-]
+import { LenziAppShell, LenziNavList, LenziAddButton } from '@lenzi/ui-kit';
+import { LenziChart } from '@lenzi/ui-kit/charts';
 ```
 
 Entry points: `@lenzi/ui-kit` (components, services, utilities), `@lenzi/ui-kit/charts` (ECharts),

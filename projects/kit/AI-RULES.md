@@ -17,6 +17,12 @@ installed the kit, the same files are in `node_modules/@lenzi/ui-kit/` (`docs/`,
 3. **Name the pieces in your plan**: "the page is a LenziAppShell route with a LenziSearchBar, a
    LenziDataTable and a LenziAddButton", before code.
 
+## A new app
+
+`ng add @lenzi/ui-kit` (or `ng add "@lenzi/ui-kit@file:<tarball>"` before it is published): it sets up the
+styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the app's shell is a
+`LenziAppShell` with a `LenziNavList`, and every page is a lazy route.
+
 ## Kit first
 
 - **Compose, do not invent.** A page is the kit's components and Material's, laid out with a little CSS

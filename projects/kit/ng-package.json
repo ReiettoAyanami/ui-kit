@@ -40,6 +40,11 @@
       "input": ".",
       "glob": "libraries.json",
       "output": "."
+    },
+    {
+      "input": "schematics",
+      "glob": "**/*.json",
+      "output": "schematics"
     }
   ]
 }

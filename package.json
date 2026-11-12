@@ -4,12 +4,13 @@
   "scripts": {
     "ng": "ng",
     "start": "node tools/dev.mjs",
-    "build": "ng build kit && ng build catalog",
+    "build": "npm run build:kit && ng build catalog",
     "test": "ng test kit --watch=false && ng test catalog --watch=false && node --test 'server/*.test.mjs' 'tools/*.test.mjs'",
     "tokens": "node server/tokens.mjs",
     "libraries": "node tools/libraries.mjs",
     "serve:prod": "PUBLIC_DIR=dist/catalog/browser PORT=8080 node server/server.mjs",
-    "pack": "ng build kit && cd dist/kit && npm pack --pack-destination ../"
+    "pack": "npm run build:kit && cd dist/kit && npm pack --pack-destination ../",
+    "build:kit": "ng build kit && tsc -p projects/kit/tsconfig.schematics.json"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

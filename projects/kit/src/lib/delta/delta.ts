@@ -7,7 +7,8 @@ export type LenziDeltaDirection = 'up' | 'down' | null;
 /**
  * A change from the one before, as text (substance-tracker `ui/consumption-figures`; lenzi,
  * 2026-10-09): "delta: -33.3%", the word dim, the change in the colour of where it went, after
- * Material's triangle. Which way is good is the page's to say (`good`): for spending, a fall.
+ * Material's triangle. Which way is good is the page's to say (`good`): normally a rise (the
+ * default: up green, down red, lenzi 2026-11-12); for spending, a fall (`good="down"`).
  * No change ("0%") and no change to show ("—", with its reason as a tooltip) are neither colour.
  * The ratio is the API's: the page never computes it.
  */
@@ -22,8 +23,8 @@ export class LenziDelta {
   readonly ratio = input.required<string | number | null>();
   /** The word before it. */
   readonly label = input('delta:');
-  /** Which way is good: 'down' (spending, the default), 'up' (savings), or 'none' (no colours). */
-  readonly good = input<'down' | 'up' | 'none'>('down');
+  /** Which way is good: 'up' (the default: a rise is green), 'down' (spending: a fall is green), or 'none' (no colours). */
+  readonly good = input<'down' | 'up' | 'none'>('up');
   /** Why there is no change to show: the tooltip of "—". */
   readonly noneReason = input<string | null>(null);
   /** The locale of the percentage. */

@@ -1,8 +1,14 @@
 <dl class="figure">
   <dt class="label">{{ label() }}</dt>
   <dd class="value">
-    {{ value() ?? '—' }}
-    <ng-content />
+    @if (hasValue()) {
+      <span class="text">{{ value() }}</span>
+    }
+    <span class="slot"><ng-content /></span>
+    @if (!hasValue()) {
+      <!-- "—" only when nothing is projected either (figure.css) -->
+      <span class="none">—</span>
+    }
   </dd>
   @if (description(); as description) {
     <dd class="description">{{ description }}</dd>

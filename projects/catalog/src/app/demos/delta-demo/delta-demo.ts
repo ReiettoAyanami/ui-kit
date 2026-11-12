@@ -13,5 +13,5 @@ import { Values } from '../../registry';
 export class DeltaDemo {
   readonly values = input<Values>({});
   protected readonly ratio = computed(() => (this.values()['none'] ? null : String(this.values()['ratio'])));
-  protected readonly good = computed(() => String(this.values()['good'] ?? 'down') as 'down' | 'up' | 'none');
+  protected readonly good = computed(() => String(this.values()['good'] ?? 'up') as 'down' | 'up' | 'none');
 }

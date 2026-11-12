@@ -5,15 +5,15 @@ lenzi's Angular component kit: Angular Material 3, heavily modified (dark violet
 
 ## Use
 
-```jsonc
-// angular.json, "styles"
-"node_modules/@lenzi/ui-kit/styles/kit.scss",
-"node_modules/@lenzi/ui-kit/styles/fonts.css",
+```sh
+ng add @lenzi/ui-kit
 ```
 
+It adds the peer dependencies, puts `styles/kit.scss` and `styles/fonts.css` first in the app's styles,
+and adds `provideLenziKit({ appId })` and the API errors' interceptor to `app.config.ts`. Then:
+
 ```ts
-// app.config.ts
-providers: [provideLenziKit({ appId: 'my-app' }), provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor]))]
+import { LenziAppShell, LenziNavList } from '@lenzi/ui-kit';
 ```
 
 | Entry point | What |

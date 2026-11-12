@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * One figure: what it is on top, bold, and its value under it (RULES.md, "Figures"; lenzi,
@@ -20,4 +20,9 @@ export class LenziFigure {
   readonly value = input<string | number | null | undefined>(undefined);
   /** A sentence under it that explains it (a metric's description), smaller. */
   readonly description = input<string | null>(null);
+
+  protected readonly hasValue = computed(() => {
+    const value = this.value();
+    return value !== null && value !== undefined && value !== '';
+  });
 }

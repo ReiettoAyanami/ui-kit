@@ -1,6 +1,13 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { LenziFigure } from './figure';
+
+@Component({
+  imports: [LenziFigure],
+  template: `<lenzi-figure label="Last price"><span class="inside">delta: -6%</span></lenzi-figure>`,
+})
+class WithContent {}
 
 describe('LenziFigure', () => {
   function figure(inputs: Record<string, unknown>) {
@@ -21,5 +28,14 @@ describe('LenziFigure', () => {
     const element = figure({ label: 'Average per day', value: null, description: 'What was used on an average day of the period.' });
     expect(element.querySelector('dd.value')?.textContent?.trim()).toBe('—');
     expect(element.querySelector('.description')?.textContent?.trim()).toBe('What was used on an average day of the period.');
+  });
+
+  it('something projected is the value: no "—" beside it', () => {
+    const fixture = TestBed.createComponent(WithContent);
+    fixture.detectChanges();
+    const value = (fixture.nativeElement as HTMLElement).querySelector('dd.value')!;
+    expect(value.querySelector('.inside')?.textContent).toBe('delta: -6%');
+    const dash = value.querySelector<HTMLElement>('.none');
+    expect(dash === null || getComputedStyle(dash).display === 'none').toBe(true);
   });
 });

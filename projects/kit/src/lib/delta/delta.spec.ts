@@ -18,15 +18,15 @@ describe('LenziDelta', () => {
     };
   }
 
-  it('a fall: the triangle down, good when falling is good (the default)', () => {
-    expect(delta({ ratio: '-0.3333' })).toEqual({ text: 'delta: arrow_drop_down -33.3%', tone: 'good', arrow: 'arrow_drop_down', title: null });
+  it('by default it reads normally: a rise is good (green), a fall bad (red)', () => {
+    expect(delta({ ratio: '0.05' })).toEqual({ text: 'delta: arrow_drop_up +5%', tone: 'good', arrow: 'arrow_drop_up', title: null });
+    expect(delta({ ratio: '-0.3333' })).toEqual({ text: 'delta: arrow_drop_down -33.3%', tone: 'bad', arrow: 'arrow_drop_down', title: null });
   });
 
-  it('a rise: the triangle up, bad by default, good when rising is good', () => {
-    expect(delta({ ratio: '0.05' }).tone).toBe('bad');
-    expect(delta({ ratio: '0.05', good: 'up' }).tone).toBe('good');
+  it('where falling is good (spending), good="down" turns it round; good="none" has no colours', () => {
+    expect(delta({ ratio: '-0.3333', good: 'down' }).tone).toBe('good');
+    expect(delta({ ratio: '0.05', good: 'down' }).tone).toBe('bad');
     expect(delta({ ratio: '0.05', good: 'none' }).tone).toBeNull();
-    expect(delta({ ratio: '0.05' }).text).toBe('delta: arrow_drop_up +5%');
   });
 
   it('no change and nothing to show are neither colour nor direction', () => {

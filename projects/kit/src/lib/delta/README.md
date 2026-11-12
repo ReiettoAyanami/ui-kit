@@ -7,8 +7,11 @@ red if it's positive"; "an arrow up if it's positive and a triangle down if nega
 ## Rules
 
 - **The ratio is the API's** ("-0.3333" is -33.3%): the page never computes a change.
-- **Which way is good is the page's to say** (`good`): spending, a fall (the default); savings, a rise;
-  neither: no colours.
+- **By default it reads normally** (lenzi, 2026-11-12): a rise is green, a fall red. **Which way is good
+  is the page's to say** (`good`): where a fall is good (spending, substance-tracker) `good="down"`;
+  neither: `good="none"`, no colours.
+- **It is a little application-specific** (lenzi, 2026-11-12): kept in the kit because two apps show
+  changes this way; its words and its sense of "good" come from the page.
 - **Green and red are the status colours** (`--lenzi-status-good`, `--lenzi-status-bad`), the only colours with a
   meaning.
 - **No change ("0%") and no change to show ("—")** are neither colour nor direction; "—" says why in its
@@ -23,7 +26,7 @@ red if it's positive"; "an arrow up if it's positive and a triangle down if nega
 | --- | --- | --- | --- |
 | input | `ratio` | `string \| number \| null` | required (null: "—") |
 | input | `label` | `string` | `'delta:'` |
-| input | `good` | `'down' \| 'up' \| 'none'` | `'down'` |
+| input | `good` | `'up' \| 'down' \| 'none'` | `'up'` |
 | input | `noneReason` | `string \| null` | `null` |
 | input | `locale` | `string` | `'en-GB'` |
 

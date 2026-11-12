@@ -31,6 +31,15 @@
   overflow-wrap: anywhere;
 }
 
+/* Something projected (a delta) is the value: no "—" then. */
+.slot:empty {
+  display: none;
+}
+
+.slot:not(:empty) ~ .none {
+  display: none;
+}
+
 .description {
   margin: 4px 0 0;
   font: var(--mat-sys-body-small);

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "lenzi-ui-kit-ng-add",
+  "title": "Set up @lenzi/ui-kit",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The app to set up.",
+      "$default": { "$source": "projectName" }
+    },
+    "appId": {
+      "type": "string",
+      "description": "The name this app's browser preferences are kept under (provideLenziKit({ appId })). The project's name when not given."
+    }
+  }
+}

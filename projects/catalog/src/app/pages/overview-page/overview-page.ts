@@ -27,21 +27,14 @@ export class OverviewPage {
     { link: '/libraries', icon: 'inventory_2', title: 'Libraries', text: 'Every frontend library the apps use, its version and its rules.' },
   ];
 
-  protected readonly start = `// 1. install it (the tarball of a release, or the folder while developing)
-npm install @lenzi/ui-kit
+  protected readonly start = `# like Angular Material: one command sets it up
+ng add @lenzi/ui-kit
+# today, from the package built here (npm run pack)
+ng add "@lenzi/ui-kit@file:../ui-kit/dist/lenzi-ui-kit-0.1.0.tgz"
 
-// 2. angular.json, "styles": the kit's look before the app's own
-"node_modules/@lenzi/ui-kit/styles/kit.scss",
-"node_modules/@lenzi/ui-kit/styles/fonts.css",
+# it adds the peer dependencies, the kit's styles first in angular.json,
+# and provideLenziKit({ appId }) with the API errors' interceptor in app.config.ts;
+# then: import { LenziAppShell, LenziNavList } from '@lenzi/ui-kit';`;
 
-// 3. app.config.ts
-providers: [provideLenziKit({ appId: 'my-app' }), provideHttpClient(withInterceptors([lenziErrorInterceptor]))]
-
-// 4. app.html
-<lenzi-app-shell>
-  <lenzi-nav-list lenziShellNav appName="My app" [pages]="pages" />
-  <router-outlet />
-</lenzi-app-shell>`;
-
-  protected readonly startMarkdown = '```typescript\n' + this.start + '\n```';
+  protected readonly startMarkdown = '```markdown\n' + this.start + '\n```';
 }

@@ -39,5 +39,9 @@
     "./styles/*": {
       "default": "./styles/*"
     }
+  },
+  "schematics": "./schematics/collection.json",
+  "ng-add": {
+    "save": "dependencies"
   }
 }

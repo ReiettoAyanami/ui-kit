@@ -1,0 +1,19 @@
+/* The schematics (ng add) are compiled apart from the library: CommonJS (.cts → .cjs, whatever "type" the
+   package has), as the Angular CLI loads them. */
+{
+  "compilerOptions": {
+    "lib": ["es2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2022",
+    "outDir": "../../dist/kit/schematics",
+    "rootDir": "schematics",
+    "declaration": false,
+    "sourceMap": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["schematics/**/*.cts"],
+  "exclude": []
+}

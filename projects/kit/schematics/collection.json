@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "ng-add": {
+      "description": "Sets up @lenzi/ui-kit in an Angular app, like `ng add @angular/material`: its styles and fonts in angular.json, provideLenziKit() and the API errors' interceptor in the app's providers, its peer dependencies.",
+      "factory": "./ng-add/index.cjs#ngAdd",
+      "schema": "./ng-add/schema.json"
+    }
+  }
+}
