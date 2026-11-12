@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 
 /**
  * Figures side by side (substance-tracker's metrics panel): one per line on a phone, two columns
- * from 600 px. Put KitFigure elements inside it.
+ * from 600 px. Put LenziFigure elements inside it.
  */
 @Component({
-  selector: 'kit-figure-grid',
+  selector: 'lenzi-figure-grid',
   imports: [],
   templateUrl: './figure-grid.html',
   styleUrl: './figure-grid.css',
 })
-export class KitFigureGrid {}
+export class LenziFigureGrid {}

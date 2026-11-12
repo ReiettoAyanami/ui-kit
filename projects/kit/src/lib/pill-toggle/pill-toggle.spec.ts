@@ -1,16 +1,16 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { KitPillOption, KitPillToggle } from './pill-toggle';
+import { LenziPillOption, LenziPillToggle } from './pill-toggle';
 
 type Measure = 'quantity' | 'price';
 
 @Component({
-  imports: [KitPillToggle],
-  template: `<div (click)="outside = outside + 1"><kit-pill-toggle [options]="options" [(value)]="measure" /></div>`,
+  imports: [LenziPillToggle],
+  template: `<div (click)="outside = outside + 1"><lenzi-pill-toggle [options]="options" [(value)]="measure" /></div>`,
 })
 class Host {
-  readonly options: KitPillOption<Measure>[] = [
+  readonly options: LenziPillOption<Measure>[] = [
     { value: 'price', label: 'price', ariaLabel: 'price. Show the quantity' },
     { value: 'quantity', label: 'qty', ariaLabel: 'qty, the quantity. Show the price' },
   ];
@@ -18,7 +18,7 @@ class Host {
   outside = 0;
 }
 
-describe('KitPillToggle', () => {
+describe('LenziPillToggle', () => {
   it('reads the state shown, switches it at a tap, and the tap goes no further', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
@@ -38,7 +38,7 @@ describe('KitPillToggle', () => {
   });
 
   it('says what a tap does when no accessible name is given', () => {
-    const fixture = TestBed.createComponent(KitPillToggle<string>);
+    const fixture = TestBed.createComponent(LenziPillToggle<string>);
     fixture.componentRef.setInput('options', [
       { value: 'a', label: 'total' },
       { value: 'b', label: 'per unit' },

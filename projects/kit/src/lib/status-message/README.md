@@ -1,6 +1,6 @@
 # Status message
 
-`<kit-status-message>`: what a list or a panel says instead of its content: "…" while it loads, a short
+`<lenzi-status-message>`: what a list or a panel says instead of its content: "…" while it loads, a short
 sentence when there is nothing, and why it failed, so a failure is never a blank page.
 
 ## Rules
@@ -24,11 +24,11 @@ sentence when there is nothing, and why it failed, so a failure is never a blank
 
 ```html
 @if (list.error()) {
-  <kit-status-message kind="error" [text]="couldNotLoad('the substances', list.error())" />
+  <lenzi-status-message kind="error" [text]="couldNotLoad('the substances', list.error())" />
 } @else if (rows(); as rows) {
-  @for (row of rows; track row.id) { … } @empty { <kit-status-message text="No substances" /> }
+  @for (row of rows; track row.id) { … } @empty { <lenzi-status-message text="No substances" /> }
 } @else {
-  <kit-status-message kind="loading" />
+  <lenzi-status-message kind="loading" />
 }
 ```
 

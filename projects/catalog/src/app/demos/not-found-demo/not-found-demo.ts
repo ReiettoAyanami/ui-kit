@@ -1,12 +1,12 @@
 import { Component, input } from '@angular/core';
 
-import { KitNotFound } from '@lenzi/ui-kit';
+import { LenziNotFound } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-not-found-demo',
-  imports: [KitNotFound],
+  imports: [LenziNotFound],
   templateUrl: './not-found-demo.html',
   styleUrl: './not-found-demo.css',
 })

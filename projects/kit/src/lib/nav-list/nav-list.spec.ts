@@ -2,18 +2,18 @@ import { TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { Router, provideRouter } from '@angular/router';
 
-import { KitAppShell } from '../app-shell/app-shell';
-import { KitNavEntry, KitNavList } from './nav-list';
+import { LenziAppShell } from '../app-shell/app-shell';
+import { LenziNavEntry, LenziNavList } from './nav-list';
 
 @Component({ template: '' })
 class Blank {}
 
-describe('KitNavList', () => {
-  const pages: KitNavEntry[] = [
+describe('LenziNavList', () => {
+  const pages: LenziNavEntry[] = [
     { label: 'Consumptions', icon: 'history', link: '/' },
     { label: 'Substances', icon: 'inventory_2', link: '/substances' },
   ];
-  const bottom: KitNavEntry[] = [
+  const bottom: LenziNavEntry[] = [
     { label: 'Sign out', icon: 'logout', id: 'sign-out' },
     { label: 'Settings', icon: 'settings', link: '/settings' },
   ];
@@ -29,11 +29,11 @@ describe('KitNavList', () => {
           { path: 'substances/:id', component: Blank },
           { path: 'settings', component: Blank },
         ]),
-        { provide: KitAppShell, useValue: { closeNav: () => closed++ } },
+        { provide: LenziAppShell, useValue: { closeNav: () => closed++ } },
       ],
     });
     await TestBed.inject(Router).navigateByUrl(url);
-    const fixture = TestBed.createComponent(KitNavList);
+    const fixture = TestBed.createComponent(LenziNavList);
     fixture.componentRef.setInput('appName', 'Substance tracker');
     fixture.componentRef.setInput('subtitle', 'lenzi');
     fixture.componentRef.setInput('pages', pages);

@@ -2,13 +2,13 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { identityColor } from '../identity-dot/identity-color';
-import { KitOnlySegment, KitSegment, KitSegmentedBar } from './segmented-bar';
+import { LenziOnlySegment, LenziSegment, LenziSegmentedBar } from './segmented-bar';
 
 @Component({
-  imports: [KitSegmentedBar],
+  imports: [LenziSegmentedBar],
   template: `
     <div (click)="parent = parent + 1">
-      <kit-segmented-bar
+      <lenzi-segmented-bar
         label="Stock: 150 g"
         [segments]="segments"
         max="200"
@@ -21,17 +21,17 @@ import { KitOnlySegment, KitSegment, KitSegmentedBar } from './segmented-bar';
   `,
 })
 class Host {
-  segments: KitSegment[] = [
+  segments: LenziSegment[] = [
     { id: 1, value: '100.000', label: 'Peroni', detail: '€1.20/bottiglia' },
     { id: 2, value: '50', label: null },
   ];
-  only: KitOnlySegment | null = null;
+  only: LenziOnlySegment | null = null;
   selectable = false;
   selected: (string | number)[] = [];
   parent = 0;
 }
 
-describe('KitSegmentedBar', () => {
+describe('LenziSegmentedBar', () => {
   function bar(change: (host: Host) => void = () => undefined) {
     const fixture = TestBed.createComponent(Host);
     change(fixture.componentInstance);

@@ -6,16 +6,16 @@ import { MatIconModule } from '@angular/material/icon';
  * A bar that stands out from every page, never in glass (RULES.md, "Bars"; substance-tracker's
  * offline bar, "Viewing as" bar and update bar, the same shape three times): an icon, a sentence,
  * at most one action. It cannot be closed: it goes when what it says stops being true. In the app
- * shell it sits above the top bar (`kitShellBanner`: "Viewing as") or under it (`kitShellBelow`:
+ * shell it sits above the top bar (`lenziShellBanner`: "Viewing as") or under it (`lenziShellBelow`:
  * "Offline · data from 14:32", "A new version is available").
  */
 @Component({
-  selector: 'kit-info-bar',
+  selector: 'lenzi-info-bar',
   imports: [MatButtonModule, MatIconModule],
   templateUrl: './info-bar.html',
   styleUrl: './info-bar.css',
 })
-export class KitInfoBar {
+export class LenziInfoBar {
   /** A Material icon: "cloud_off", "visibility", "system_update". */
   readonly icon = input<string | null>(null);
   /**

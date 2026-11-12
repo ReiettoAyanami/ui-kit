@@ -1,15 +1,15 @@
 # Info bar
 
-`<kit-info-bar>`: a bar that stands out from every page, never in glass: an icon, a sentence, at most one
+`<lenzi-info-bar>`: a bar that stands out from every page, never in glass: an icon, a sentence, at most one
 action. It cannot be closed: it goes when what it says stops being true.
 
 ## Uses
 
 | Use | Tone | Where in the shell | Example |
 | --- | --- | --- | --- |
-| a state of the app | `neutral` | `kitShellBelow` | "Offline · data from 14:32" |
-| news | `secondary` | `kitShellBelow` | "A new version of the app is available" · Download |
-| something unusual not to forget | `tertiary` | `kitShellBanner` | "Viewing as lenzi" · Exit |
+| a state of the app | `neutral` | `lenziShellBelow` | "Offline · data from 14:32" |
+| news | `secondary` | `lenziShellBelow` | "A new version of the app is available" · Download |
+| something unusual not to forget | `tertiary` | `lenziShellBanner` | "Viewing as lenzi" · Exit |
 
 ## Rules
 
@@ -17,7 +17,7 @@ action. It cannot be closed: it goes when what it says stops being true.
 - **One sentence**, cut with "…" when it does not fit.
 - **At most one action**, a whole word, bold, in the bar's own colour; disabled while it runs.
 - **Not closable.**
-- A bar above the top bar (`kitShellBanner`) sticks with it.
+- A bar above the top bar (`lenziShellBanner`) sticks with it.
 
 ## API
 

@@ -12,13 +12,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { firstValueFrom, of } from 'rxjs';
 
 import {
-  KitConfirmDialog,
-  KitDelta,
-  KitPillOption,
-  KitPillToggle,
-  KitSearchBar,
-  KitSegmentedBar,
-  KitStatusMessage,
+  LenziConfirmDialog,
+  LenziDelta,
+  LenziPillOption,
+  LenziPillToggle,
+  LenziSearchBar,
+  LenziSegmentedBar,
+  LenziStatusMessage,
   couldNotLoad,
   describeError,
 } from '@lenzi/ui-kit';
@@ -50,11 +50,11 @@ function split(value: string): { number: number; unit: string } {
 @Component({
   selector: 'app-variables-page',
   imports: [
-    KitDelta,
-    KitPillToggle,
-    KitSearchBar,
-    KitSegmentedBar,
-    KitStatusMessage,
+    LenziDelta,
+    LenziPillToggle,
+    LenziSearchBar,
+    LenziSegmentedBar,
+    LenziStatusMessage,
     MatButtonModule,
     MatButtonToggleModule,
     MatIconModule,
@@ -83,7 +83,7 @@ export class VariablesPage {
 
   // The preview's own state.
   protected readonly measure = signal('price');
-  protected readonly measures: KitPillOption<string>[] = [
+  protected readonly measures: LenziPillOption<string>[] = [
     { value: 'price', label: 'price' },
     { value: 'qty', label: 'qty' },
   ];
@@ -163,7 +163,7 @@ export class VariablesPage {
 
   // Preview: the real windows, in the variables as they are now.
   protected openDialog(): void {
-    this.dialog.open(KitConfirmDialog, {
+    this.dialog.open(LenziConfirmDialog, {
       width: '400px',
       maxWidth: 'calc(100vw - 32px)',
       data: { title: 'Delete this consumption?', message: 'A window in the glass of the variables.', confirm: 'Delete', action: () => of(true) },

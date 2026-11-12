@@ -1,7 +1,7 @@
 import { NgComponentOutlet } from '@angular/common';
 import { Component, DOCUMENT, DestroyRef, Type, computed, effect, inject, input, signal } from '@angular/core';
 
-import { KitStatusMessage } from '@lenzi/ui-kit';
+import { LenziStatusMessage } from '@lenzi/ui-kit';
 
 import { FrameMessage } from '../../shared/demo-events';
 import { Values, defaults, docById } from '../../registry';
@@ -12,7 +12,7 @@ import { Values, defaults, docById } from '../../registry';
  */
 @Component({
   selector: 'app-frame-page',
-  imports: [KitStatusMessage, NgComponentOutlet],
+  imports: [LenziStatusMessage, NgComponentOutlet],
   templateUrl: './frame-page.html',
   styleUrl: './frame-page.css',
 })
@@ -45,11 +45,11 @@ export class FramePage {
     const listener = (event: MessageEvent<FrameMessage>) => {
       if (event.origin !== window.location.origin || event.data?.type !== 'kit-values') return;
       this.values.set(event.data.values);
-      this.document.body.classList.toggle('kit-pattern', event.data.pattern);
+      this.document.body.classList.toggle('catalog-pattern', event.data.pattern);
     };
     window.addEventListener('message', listener);
     inject(DestroyRef).onDestroy(() => window.removeEventListener('message', listener));
-    this.document.body.classList.add('kit-frame');
+    this.document.body.classList.add('catalog-frame');
     window.parent?.postMessage({ type: 'kit-frame-ready' } satisfies FrameMessage, window.location.origin);
   }
 }

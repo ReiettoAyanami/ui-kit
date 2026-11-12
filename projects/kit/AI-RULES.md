@@ -14,8 +14,8 @@ installed the kit, the same files are in `node_modules/@lenzi/ui-kit/` (`docs/`,
    Most of what a page needs is already there.
 2. **Read the rules of the pieces you use**: their README (what, when, rules, API) and their AI notes
    (how to wire them, what never to do).
-3. **Name the pieces in your plan**: "the page is a KitAppShell route with a KitSearchBar, a
-   KitDataTable and a KitAddButton", before code.
+3. **Name the pieces in your plan**: "the page is a LenziAppShell route with a LenziSearchBar, a
+   LenziDataTable and a LenziAddButton", before code.
 
 ## Kit first
 
@@ -31,19 +31,19 @@ installed the kit, the same files are in `node_modules/@lenzi/ui-kit/` (`docs/`,
     and an entry in the catalog's registry (`projects/catalog/src/app/registry.ts`); then use it.
   - specific to one app (a substance card): build it in the app, from kit pieces and the theme's
     variables, following `RULES.md`.
-- **Values come from variables**: `var(--mat-sys-…)` for colours and type, `var(--kit-…)` for the
+- **Values come from variables**: `var(--mat-sys-…)` for colours and type, `var(--lenzi-…)` for the
   kit's sizes, radii, glass, motion. Never a hex colour or a magic number that a variable already has.
 
 ## The rules that are easiest to get wrong
 
-- Figures: **name bold on top, value under** (`KitFigure`); **never two data on one line joined by "·"**.
+- Figures: **name bold on top, value under** (`LenziFigure`); **never two data on one line joined by "·"**.
 - **Whole words** on every button and toggle; the interface in the app's language (English so far).
 - **Dark only.** Do not add a light theme or follow the system's.
-- **One "+" per page** (`KitAddButton`), bottom right, for its one way of adding.
-- **Toggles: 32 px pills**; search bars: elongated circles (`KitSearchBar`), and only search bars.
-- **Dialogs open with `KitDialogs`** (the back button closes them); destructive actions with
-  `KitConfirmDialog`; save buttons disabled on tap.
-- **Empty, loading, failed**: `KitStatusMessage`, with `couldNotLoad()` for failures.
+- **One "+" per page** (`LenziAddButton`), bottom right, for its one way of adding.
+- **Toggles: 32 px pills**; search bars: elongated circles (`LenziSearchBar`), and only search bars.
+- **Dialogs open with `LenziDialogs`** (the back button closes them); destructive actions with
+  `LenziConfirmDialog`; save buttons disabled on tap.
+- **Empty, loading, failed**: `LenziStatusMessage`, with `couldNotLoad()` for failures.
 - **The server computes**: never derive a domain number in the browser; extend the API.
 - **Comfortable at 390 px**, never a horizontal scroll of the page.
 

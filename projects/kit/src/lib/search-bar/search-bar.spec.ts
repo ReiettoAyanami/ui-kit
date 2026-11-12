@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitSearchBar } from './search-bar';
+import { LenziSearchBar } from './search-bar';
 
-describe('KitSearchBar', () => {
+describe('LenziSearchBar', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
   function bar() {
-    const fixture = TestBed.createComponent(KitSearchBar);
+    const fixture = TestBed.createComponent(LenziSearchBar);
     fixture.componentRef.setInput('placeholder', 'Search substances and batches');
     const searched: string[] = [];
     fixture.componentInstance.search.subscribe((text) => searched.push(text));
@@ -26,7 +26,7 @@ describe('KitSearchBar', () => {
     const { input } = bar();
     expect(input.placeholder).toBe('Search substances and batches');
     expect(input.getAttribute('aria-label')).toBe('Search substances and batches');
-    expect(input.closest('mat-form-field')?.classList.contains('kit-search-bar')).toBe(true);
+    expect(input.closest('mat-form-field')?.classList.contains('lenzi-search-bar')).toBe(true);
   });
 
   it('searches once the typing pauses, with the last text only', () => {

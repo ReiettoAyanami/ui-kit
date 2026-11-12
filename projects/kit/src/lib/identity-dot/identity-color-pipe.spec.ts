@@ -1,5 +1,5 @@
 import { identityColor } from './identity-color';
-import { KitIdentityColorPipe } from './identity-color-pipe';
+import { LenziIdentityColorPipe } from './identity-color-pipe';
 
 // These values freeze the algorithm (RULES.md, "Identity colours"; substance-tracker's own test,
 // all violet since 2026-10-02): changing them would repaint every entity of every app.
@@ -35,9 +35,9 @@ describe('identityColor', () => {
   });
 });
 
-describe('KitIdentityColorPipe', () => {
+describe('LenziIdentityColorPipe', () => {
   it('is the same colour as the function', () => {
-    const pipe = new KitIdentityColorPipe();
+    const pipe = new LenziIdentityColorPipe();
     expect(pipe.transform(1)).toBe(identityColor(1));
     expect(pipe.transform(2, 0.5)).toBe(identityColor(2, 0.5));
   });

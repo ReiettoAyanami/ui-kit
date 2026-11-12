@@ -3,8 +3,8 @@ import { Component, EnvironmentInjector, computed, inject, input, runInInjection
 import { MatButtonModule } from '@angular/material/button';
 import { Observable, throwError } from 'rxjs';
 
-import { KitFigure, KitFigureGrid, describeError } from '@lenzi/ui-kit';
-import { ApiError, isUnreachable, kitErrorInterceptor } from '@lenzi/ui-kit/http';
+import { LenziFigure, LenziFigureGrid, describeError } from '@lenzi/ui-kit';
+import { ApiError, isUnreachable, lenziErrorInterceptor } from '@lenzi/ui-kit/http';
 
 import { Markdown } from '../../shared/markdown/markdown';
 import { DemoEvents } from '../../shared/demo-events';
@@ -30,10 +30,10 @@ function answer(kind: string): HttpErrorResponse {
   }
 }
 
-/** A failed request through kitErrorInterceptor: the ApiError the page gets, and how it reads. */
+/** A failed request through lenziErrorInterceptor: the ApiError the page gets, and how it reads. */
 @Component({
   selector: 'app-http-demo',
-  imports: [KitFigure, KitFigureGrid, Markdown, MatButtonModule],
+  imports: [LenziFigure, LenziFigureGrid, Markdown, MatButtonModule],
   templateUrl: './http-demo.html',
   styleUrl: './http-demo.css',
 })
@@ -51,7 +51,7 @@ export class HttpDemo {
     const kind = String(this.values()['answer'] ?? 'validation');
     const request = new HttpRequest('POST', '/api/consumptions', {});
     const next = (): Observable<HttpResponse<unknown>> => throwError(() => answer(kind));
-    runInInjectionContext(this.injector, () => kitErrorInterceptor(request, next as never)).subscribe({
+    runInInjectionContext(this.injector, () => lenziErrorInterceptor(request, next as never)).subscribe({
       error: (error: ApiError) => {
         this.error.set(error);
         this.events.log(`failed: ${describeError(error)}`);

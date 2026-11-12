@@ -6,7 +6,7 @@ import { NavigationStart, Router } from '@angular/router';
 
 /** Marks the history entry pushed while a dialog is open. */
 interface DialogHistoryState {
-  kitDialog?: true;
+  lenziDialog?: true;
 }
 
 /** An address without its query and fragment: the page it shows. */
@@ -23,7 +23,7 @@ const pageOf = (url: string) => url.split(/[?#]/)[0] ?? url;
 @Injectable({
   providedIn: 'root',
 })
-export class KitDialogs {
+export class LenziDialogs {
   private readonly dialog = inject(MatDialog);
   private readonly location = inject(Location);
   private readonly router = inject(Router);
@@ -41,7 +41,7 @@ export class KitDialogs {
       data,
     });
     const page = this.location.path();
-    this.location.go(page, '', { kitDialog: true } satisfies DialogHistoryState);
+    this.location.go(page, '', { lenziDialog: true } satisfies DialogHistoryState);
 
     // A navigation to another page while the dialog is open: done again in place of the dialog's
     // entry, and the dialog closes. A back (popstate) and a change of the same page's query do not
@@ -61,7 +61,7 @@ export class KitDialogs {
       ref.afterClosed().subscribe((result) => {
         navigations.unsubscribe();
         // Left for another page (its entry is replaced) or closed by a back (gone already).
-        if (leftForAnotherPage || !(this.location.getState() as DialogHistoryState | null)?.kitDialog) {
+        if (leftForAnotherPage || !(this.location.getState() as DialogHistoryState | null)?.lenziDialog) {
           resolve(result);
           return;
         }

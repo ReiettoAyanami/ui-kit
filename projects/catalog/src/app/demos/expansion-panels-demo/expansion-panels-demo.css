@@ -12,7 +12,7 @@
 .window {
   max-width: 480px;
   padding: 20px 24px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 28px;
   background: var(--mat-sys-surface-container-high);
 }

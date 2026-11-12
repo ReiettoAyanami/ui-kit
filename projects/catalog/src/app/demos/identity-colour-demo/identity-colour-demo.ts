@@ -1,13 +1,13 @@
 import { Component, computed, input } from '@angular/core';
 
-import { KitIdentityDot, identityColor } from '@lenzi/ui-kit';
+import { LenziIdentityDot, identityColor } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
 /** The identity colours of the first ids: name bold on top, its colour under it. */
 @Component({
   selector: 'app-identity-colour-demo',
-  imports: [KitIdentityDot],
+  imports: [LenziIdentityDot],
   templateUrl: './identity-colour-demo.html',
   styleUrl: './identity-colour-demo.css',
 })

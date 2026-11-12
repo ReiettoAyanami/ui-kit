@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 
-import { KitPeriodPicker, kitPeriodLabel } from './period-picker';
+import { LenziPeriodPicker, lenziPeriodLabel } from './period-picker';
 
-describe('KitPeriodPicker', () => {
+describe('LenziPeriodPicker', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [{ provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } }] }));
 
   async function picker(inputs: Record<string, unknown>) {
-    const fixture = TestBed.createComponent(KitPeriodPicker);
+    const fixture = TestBed.createComponent(LenziPeriodPicker);
     for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -35,7 +35,7 @@ describe('KitPeriodPicker', () => {
   });
 
   it('names a period that is not in the list', () => {
-    expect(kitPeriodLabel(0)).toBe('All time');
-    expect(kitPeriodLabel(14)).toBe('Last 14 days');
+    expect(lenziPeriodLabel(0)).toBe('All time');
+    expect(lenziPeriodLabel(14)).toBe('Last 14 days');
   });
 });

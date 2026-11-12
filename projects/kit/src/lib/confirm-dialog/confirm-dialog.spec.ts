@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { EMPTY, Observable, Subject, of, throwError } from 'rxjs';
 
-import { KitConfirmData, KitConfirmDialog } from './confirm-dialog';
+import { LenziConfirmData, LenziConfirmDialog } from './confirm-dialog';
 
 // From substance-tracker's confirm-dialog.spec.ts.
-describe('KitConfirmDialog', () => {
-  let fixture: ComponentFixture<KitConfirmDialog>;
+describe('LenziConfirmDialog', () => {
+  let fixture: ComponentFixture<LenziConfirmDialog>;
   let closedWith: unknown[];
   let runs: number;
 
@@ -14,10 +14,10 @@ describe('KitConfirmDialog', () => {
   const button = (label: string) =>
     Array.from(element().querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.trim() === label)!;
 
-  async function open(answer: () => Observable<unknown> | Promise<unknown>, extra: Partial<KitConfirmData> = {}): Promise<void> {
+  async function open(answer: () => Observable<unknown> | Promise<unknown>, extra: Partial<LenziConfirmData> = {}): Promise<void> {
     closedWith = [];
     runs = 0;
-    const data: KitConfirmData = {
+    const data: LenziConfirmData = {
       title: 'Delete this consumption?',
       message: 'Its quantity goes back to its batch.',
       confirm: 'Delete',
@@ -28,13 +28,13 @@ describe('KitConfirmDialog', () => {
       },
     };
     TestBed.configureTestingModule({
-      imports: [KitConfirmDialog],
+      imports: [LenziConfirmDialog],
       providers: [
         { provide: MatDialogRef, useValue: { close: (value?: unknown) => closedWith.push(value) } },
         { provide: MAT_DIALOG_DATA, useValue: data },
       ],
     });
-    fixture = TestBed.createComponent(KitConfirmDialog);
+    fixture = TestBed.createComponent(LenziConfirmDialog);
     await fixture.whenStable();
   }
 

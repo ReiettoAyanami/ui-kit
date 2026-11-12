@@ -1,6 +1,6 @@
 # Pill toggle
 
-`<kit-pill-toggle>`: one pill that reads what the figure beside it shows ("price", "qty"), and switches it at
+`<lenzi-pill-toggle>`: one pill that reads what the figure beside it shows ("price", "qty"), and switches it at
 a tap (lenzi, 2026-10-09: "a toggle on the left for price/qty (pill that changes state not ( 1 | 2 )").
 
 ## When to use
@@ -14,7 +14,7 @@ a tap (lenzi, 2026-10-09: "a toggle on the left for price/qty (pill that changes
 ## Rules
 
 - **Drawn as the chosen side of a toggle group**: 32 px high, round ends, `secondary-container`, the 2 px
-  outline; 10 px at the sides of the word (`--kit-pill-padding`).
+  outline; 10 px at the sides of the word (`--lenzi-pill-padding`).
 - **Its tap never reaches what is around it** (a card that opens on a tap).
 - **The figure does not move** when it switches: Material's least button width makes "qty" as wide as
   "price".
@@ -25,19 +25,19 @@ a tap (lenzi, 2026-10-09: "a toggle on the left for price/qty (pill that changes
 
 | | Name | Type | |
 | --- | --- | --- |
-| input | `options` | `KitPillOption<T>[]` (`{ value, label, ariaLabel? }`) | in the order a tap walks them |
+| input | `options` | `LenziPillOption<T>[]` (`{ value, label, ariaLabel? }`) | in the order a tap walks them |
 | model | `value` | `T` | `[(value)]` |
 
 ## Example
 
 ```html
-<kit-pill-toggle [options]="measures" [(value)]="measure" />
+<lenzi-pill-toggle [options]="measures" [(value)]="measure" />
 <span class="figure">{{ measure() === 'price' ? price : quantity }}</span>
 ```
 
 ## Variables
 
-`--kit-toggle-height`, `--kit-pill-padding`.
+`--lenzi-toggle-height`, `--lenzi-pill-padding`.
 
 ## Origin
 

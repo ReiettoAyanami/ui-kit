@@ -1,18 +1,18 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { KitWidgetCard } from './widget-card';
+import { LenziWidgetCard } from './widget-card';
 
 @Component({
-  imports: [KitWidgetCard],
-  template: `<kit-widget-card title="Spent" icon="payments" [scales]="scales" scale="week" (scaleChange)="chosen.push($event)"><p class="inside">chart</p></kit-widget-card>`,
+  imports: [LenziWidgetCard],
+  template: `<lenzi-widget-card title="Spent" icon="payments" [scales]="scales" scale="week" (scaleChange)="chosen.push($event)"><p class="inside">chart</p></lenzi-widget-card>`,
 })
 class Host {
   scales = ['day', 'week', 'month'];
   chosen: string[] = [];
 }
 
-describe('KitWidgetCard', () => {
+describe('LenziWidgetCard', () => {
   it('shows its icon, title and content, with a toggle of its intervals', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();

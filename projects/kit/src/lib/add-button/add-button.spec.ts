@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitAddButton } from './add-button';
+import { LenziAddButton } from './add-button';
 
-describe('KitAddButton', () => {
+describe('LenziAddButton', () => {
   it('is a "+" with the label for screen readers, and says when it is pressed', () => {
-    const fixture = TestBed.createComponent(KitAddButton);
+    const fixture = TestBed.createComponent(LenziAddButton);
     fixture.componentRef.setInput('label', 'Add substance');
     let presses = 0;
     fixture.componentInstance.pressed.subscribe(() => presses++);
@@ -18,7 +18,7 @@ describe('KitAddButton', () => {
   });
 
   it('sits where its host puts it when inline', () => {
-    const fixture = TestBed.createComponent(KitAddButton);
+    const fixture = TestBed.createComponent(LenziAddButton);
     fixture.componentRef.setInput('label', 'Add');
     fixture.componentRef.setInput('placement', 'inline');
     fixture.detectChanges();

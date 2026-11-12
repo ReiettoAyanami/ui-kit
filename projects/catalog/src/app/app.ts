@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { KitAppShell, KitNavEntry, KitNavList, KitVersionLabel } from '@lenzi/ui-kit';
+import { LenziAppShell, LenziNavEntry, LenziNavList, LenziVersionLabel } from '@lenzi/ui-kit';
 
 import kitPackage from '../../../kit/package.json';
 import { LiveTokens } from './shared/live-tokens';
@@ -12,14 +12,14 @@ import { LiveTokens } from './shared/live-tokens';
  */
 @Component({
   selector: 'app-root',
-  imports: [KitAppShell, KitNavList, KitVersionLabel, RouterOutlet],
+  imports: [LenziAppShell, LenziNavList, LenziVersionLabel, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
   protected readonly version = kitPackage.version;
 
-  protected readonly pages: KitNavEntry[] = [
+  protected readonly pages: LenziNavEntry[] = [
     { label: 'Overview', icon: 'home', link: '/' },
     { label: 'Components', icon: 'widgets', link: '/components' },
     { label: 'Rules', icon: 'rule', link: '/rules' },

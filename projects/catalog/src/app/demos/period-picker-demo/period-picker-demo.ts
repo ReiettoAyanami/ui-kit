@@ -1,13 +1,13 @@
 import { Component, inject, input, signal } from '@angular/core';
 
-import { KitPeriodPicker, kitPeriodLabel } from '@lenzi/ui-kit';
+import { LenziPeriodPicker, lenziPeriodLabel } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-period-picker-demo',
-  imports: [KitPeriodPicker],
+  imports: [LenziPeriodPicker],
   templateUrl: './period-picker-demo.html',
   styleUrl: './period-picker-demo.css',
 })
@@ -17,11 +17,11 @@ export class PeriodPickerDemo {
 
   protected readonly days = signal(30);
   protected readonly per = signal('week');
-  protected readonly label = kitPeriodLabel;
+  protected readonly label = lenziPeriodLabel;
 
   protected period(days: number): void {
     this.days.set(days);
-    this.events.log(`period: ${kitPeriodLabel(days)}`);
+    this.events.log(`period: ${lenziPeriodLabel(days)}`);
   }
 
   protected scale(per: string): void {

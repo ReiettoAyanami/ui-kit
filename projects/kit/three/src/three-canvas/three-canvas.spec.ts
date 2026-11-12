@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitThreeCanvas } from './three-canvas';
+import { LenziThreeCanvas } from './three-canvas';
 
-describe('KitThreeCanvas', () => {
+describe('LenziThreeCanvas', () => {
   it('without WebGL says so, keeps its label as an image, and never runs the setup', async () => {
     let setups = 0;
-    const fixture = TestBed.createComponent(KitThreeCanvas);
+    const fixture = TestBed.createComponent(LenziThreeCanvas);
     fixture.componentRef.setInput('label', 'A violet icosahedron, turning');
     fixture.componentRef.setInput('setup', () => {
       setups++;

@@ -1,6 +1,6 @@
 # Not found
 
-`<kit-not-found>`: an address that does not exist. An old address, a typo, a page of someone else all look
+`<lenzi-not-found>`: an address that does not exist. An old address, a typo, a page of someone else all look
 the same: a card in the middle of the page, "404", "Page not found", and one way out.
 
 ## Rules
@@ -24,7 +24,7 @@ A second action goes inside it (`<ng-content>`).
 ## Example
 
 ```ts
-{ path: '**', title: 'Not found', component: KitNotFound, data: { linkLabel: 'Go to the tickets', link: '/' } }
+{ path: '**', title: 'Not found', component: LenziNotFound, data: { linkLabel: 'Go to the tickets', link: '/' } }
 ```
 
 (with `withComponentInputBinding()`, route data become its inputs).

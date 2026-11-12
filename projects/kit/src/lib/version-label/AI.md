@@ -1,6 +1,6 @@
 # AI notes: Version label
 
-- One, in `app.html`, after `kit-app-shell`. Its value comes from the app's version endpoint
+- One, in `app.html`, after `lenzi-app-shell`. Its value comes from the app's version endpoint
   (`rxResource`), shown as the API gives it.
 - substance-tracker's version format (`dev26.0.0.0002`) is the app's rule, not the kit's: show what the API
   says.

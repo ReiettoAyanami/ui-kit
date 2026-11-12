@@ -1,7 +1,7 @@
 import { Component, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
-import { KitPullToRefresh } from '@lenzi/ui-kit';
+import { LenziPullToRefresh } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -12,7 +12,7 @@ import { Values } from '../../registry';
  */
 @Component({
   selector: 'app-pull-to-refresh-demo',
-  imports: [KitPullToRefresh, MatButtonModule],
+  imports: [LenziPullToRefresh, MatButtonModule],
   templateUrl: './pull-to-refresh-demo.html',
   styleUrl: './pull-to-refresh-demo.css',
 })

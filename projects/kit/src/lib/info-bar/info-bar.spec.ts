@@ -1,17 +1,17 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { KitInfoBar } from './info-bar';
+import { LenziInfoBar } from './info-bar';
 
 @Component({
-  imports: [KitInfoBar],
-  template: `<kit-info-bar icon="visibility" tone="tertiary" actionLabel="Exit" (action)="exits = exits + 1">Viewing as <strong>lenzi</strong></kit-info-bar>`,
+  imports: [LenziInfoBar],
+  template: `<lenzi-info-bar icon="visibility" tone="tertiary" actionLabel="Exit" (action)="exits = exits + 1">Viewing as <strong>lenzi</strong></lenzi-info-bar>`,
 })
 class Host {
   exits = 0;
 }
 
-describe('KitInfoBar', () => {
+describe('LenziInfoBar', () => {
   it('says its sentence with its icon, as a status, and its action says when it is tapped', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
@@ -25,7 +25,7 @@ describe('KitInfoBar', () => {
   });
 
   it('a link out opens elsewhere; no label, no action', () => {
-    const fixture = TestBed.createComponent(KitInfoBar);
+    const fixture = TestBed.createComponent(LenziInfoBar);
     fixture.componentRef.setInput('actionLabel', 'Download');
     fixture.componentRef.setInput('actionHref', 'https://example.org/download');
     fixture.detectChanges();

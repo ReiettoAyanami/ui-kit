@@ -1,5 +1,5 @@
 // The kit's global variables: tokens.json is the source, tokens.css is generated from it.
-// `npm run tokens` regenerates the CSS; the catalog's dev server (tools/kit-server.mjs) uses the
+// `npm run tokens` regenerates the CSS; the catalog's dev server (tools/lenzi-server.mjs) uses the
 // same functions to save what the Variables page changed. A plain Node module, no dependencies.
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -57,7 +57,7 @@ export function tokensByName(document) {
 
 /**
  * The document with the new values, or the list of what is wrong (nothing is changed then).
- * `values`: { "--kit-glass": "60%", ... }; names it does not know are refused.
+ * `values`: { "--lenzi-glass": "60%", ... }; names it does not know are refused.
  */
 export function applyValues(document, values) {
   const known = tokensByName(document);

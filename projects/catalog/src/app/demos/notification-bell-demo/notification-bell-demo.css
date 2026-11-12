@@ -5,8 +5,8 @@
 
 /* A top bar like the shell's: floating, rounded, glass. */
 .bar {
-  border-radius: var(--kit-bar-radius);
-  backdrop-filter: var(--kit-glass-filter);
+  border-radius: var(--lenzi-bar-radius);
+  backdrop-filter: var(--lenzi-glass-filter);
 }
 
 .title {

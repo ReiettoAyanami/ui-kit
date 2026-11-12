@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
-import { KitFigure, KitFigureGrid } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
 
 import { Markdown } from '../../shared/markdown/markdown';
 import { CATEGORIES, DOCS } from '../../registry';
@@ -11,7 +11,7 @@ import { CATEGORIES, DOCS } from '../../registry';
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [KitFigure, KitFigureGrid, Markdown, MatButtonModule, MatIconModule, RouterLink],
+  imports: [LenziFigure, LenziFigureGrid, Markdown, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })
@@ -35,13 +35,13 @@ npm install @lenzi/ui-kit
 "node_modules/@lenzi/ui-kit/styles/fonts.css",
 
 // 3. app.config.ts
-providers: [provideKit({ appId: 'my-app' }), provideHttpClient(withInterceptors([kitErrorInterceptor]))]
+providers: [provideLenziKit({ appId: 'my-app' }), provideHttpClient(withInterceptors([lenziErrorInterceptor]))]
 
 // 4. app.html
-<kit-app-shell>
-  <kit-nav-list kitShellNav appName="My app" [pages]="pages" />
+<lenzi-app-shell>
+  <lenzi-nav-list lenziShellNav appName="My app" [pages]="pages" />
   <router-outlet />
-</kit-app-shell>`;
+</lenzi-app-shell>`;
 
   protected readonly startMarkdown = '```typescript\n' + this.start + '\n```';
 }

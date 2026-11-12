@@ -73,8 +73,8 @@
   margin: 0 0 16px;
   padding: 14px 16px;
   overflow-x: auto;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--kit-panel-radius);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
   background: var(--mat-sys-surface-container-lowest);
   font: var(--mat-sys-body-medium);
   line-height: 1.55;
@@ -85,8 +85,8 @@
   margin: 0 0 16px;
   border-collapse: separate;
   border-spacing: 0;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--kit-panel-radius);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
   overflow: hidden;
   font: var(--mat-sys-body-medium);
 }

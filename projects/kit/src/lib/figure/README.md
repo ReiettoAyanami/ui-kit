@@ -1,7 +1,7 @@
 # Figure
 
-`<kit-figure>`: one figure, what it is on top, bold, and its value under it (lenzi, 2026-10-02: "Voglio cos'è
-sopra e il valore sotto"). `<kit-figure-grid>`: several, one per line on a phone, two columns from 600 px.
+`<lenzi-figure>`: one figure, what it is on top, bold, and its value under it (lenzi, 2026-10-02: "Voglio cos'è
+sopra e il valore sotto"). `<lenzi-figure-grid>`: several, one per line on a phone, two columns from 600 px.
 
 ## Rules
 
@@ -10,7 +10,7 @@ sopra e il valore sotto"). `<kit-figure-grid>`: several, one per line on a phone
 - **The value comes formatted**: the server computes, the page formats (currency, unit, decimals).
 - **"—" when there is no value** (a price with nothing bought).
 - A sentence that explains it goes under it (`description`), smaller.
-- Something richer than text (a `KitDelta`) goes inside it.
+- Something richer than text (a `LenziDelta`) goes inside it.
 
 ## API
 
@@ -23,10 +23,10 @@ sopra e il valore sotto"). `<kit-figure-grid>`: several, one per line on a phone
 ## Example
 
 ```html
-<kit-figure-grid>
-  <kit-figure label="Stock" [value]="stock()" />
-  <kit-figure label="Last price"><kit-delta [ratio]="delta()" /></kit-figure>
-</kit-figure-grid>
+<lenzi-figure-grid>
+  <lenzi-figure label="Stock" [value]="stock()" />
+  <lenzi-figure label="Last price"><lenzi-delta [ratio]="delta()" /></lenzi-figure>
+</lenzi-figure-grid>
 ```
 
 ## Origin

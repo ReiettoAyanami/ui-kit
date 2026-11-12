@@ -43,7 +43,7 @@ test('every README has rules, every AI note says what to do', async () => {
     const readme = readFileSync(join(kit, doc.readme), 'utf8');
     const ai = readFileSync(join(kit, doc.ai), 'utf8');
     assert.match(readme, /^# /, `${doc.readme}: a title`);
-    assert.match(readme, /## (Rules|What it does|Uses|provideKit|describeError)/, `${doc.readme}: its rules`);
+    assert.match(readme, /## (Rules|What it does|Uses|provideLenziKit|describeError)/, `${doc.readme}: its rules`);
     assert.match(ai, /^# AI notes: /, `${doc.ai}: a title`);
     assert.ok(ai.split('\n').filter((line) => line.startsWith('- ')).length >= 3, `${doc.ai}: at least three notes`);
   }

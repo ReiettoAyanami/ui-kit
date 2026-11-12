@@ -1,12 +1,12 @@
 import { Component, input } from '@angular/core';
 
-import { KitDelta, KitFigure, KitFigureGrid } from '@lenzi/ui-kit';
+import { LenziDelta, LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-figure-demo',
-  imports: [KitDelta, KitFigure, KitFigureGrid],
+  imports: [LenziDelta, LenziFigure, LenziFigureGrid],
   templateUrl: './figure-demo.html',
   styleUrl: './figure-demo.css',
 })

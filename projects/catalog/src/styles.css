@@ -2,20 +2,20 @@
    The look is the kit's (styles/kit.scss, listed before this file in angular.json). */
 
 /* A demo's frame: the page alone, nothing around it. */
-body.kit-frame kit-version-label {
+body.catalog-frame lenzi-version-label {
   display: none;
 }
 
-body.kit-frame {
+body.catalog-frame {
   background: var(--mat-sys-surface);
 }
 
 /* "Pattern": a busy background behind a demo, to see what the glass does. */
-body.kit-frame.kit-pattern {
+body.catalog-frame.catalog-pattern {
   background:
     radial-gradient(circle at 15% 20%, color-mix(in srgb, var(--mat-sys-primary) 70%, transparent) 0 70px, transparent 71px),
     radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--mat-sys-tertiary) 70%, transparent) 0 90px, transparent 91px),
-    radial-gradient(circle at 60% 15%, color-mix(in srgb, var(--kit-status-bad) 60%, transparent) 0 40px, transparent 41px),
+    radial-gradient(circle at 60% 15%, color-mix(in srgb, var(--lenzi-status-bad) 60%, transparent) 0 40px, transparent 41px),
     repeating-linear-gradient(45deg, var(--mat-sys-surface-container-high) 0 12px, var(--mat-sys-surface) 12px 24px);
   background-attachment: fixed;
 }

@@ -4,14 +4,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
 /** One action of a card's menu. */
-export interface KitMenuAction {
+export interface LenziMenuAction {
   /** Which action it is: what `action` says. */
   id: string;
   /** Whole words: "Edit", "Delete", "Details". */
   label: string;
   /** A Material icon before the label. */
   icon?: string;
-  /** It destroys something: in the error colour (and it asks first: KitConfirmDialog). */
+  /** It destroys something: in the error colour (and it asks first: LenziConfirmDialog). */
   destructive?: boolean;
   disabled?: boolean;
 }
@@ -23,13 +23,13 @@ export interface KitMenuAction {
  * Delete always asks first, and is in the error colour.
  */
 @Component({
-  selector: 'kit-card-menu',
+  selector: 'lenzi-card-menu',
   imports: [MatButtonModule, MatIconModule, MatMenuModule],
   templateUrl: './card-menu.html',
   styleUrl: './card-menu.css',
 })
-export class KitCardMenu {
-  readonly actions = input.required<readonly KitMenuAction[]>();
+export class LenziCardMenu {
+  readonly actions = input.required<readonly LenziMenuAction[]>();
   /** The button's accessible name: what the card is ("Actions for Birra"). */
   readonly label = input('More actions');
   /** The action chosen: its id. */

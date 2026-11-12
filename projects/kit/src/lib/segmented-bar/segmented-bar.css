@@ -5,7 +5,7 @@
 /* The whole track is the maximum; the part not covered by segments is what is gone. */
 .track {
   display: flex;
-  height: var(--kit-segment-height);
+  height: var(--lenzi-segment-height);
   border-radius: 4px;
   overflow: hidden;
   background-color: var(--mat-sys-surface-container-highest);
@@ -18,17 +18,17 @@
 .segment {
   flex-grow: 0;
   flex-shrink: 1;
-  min-width: var(--kit-segment-min);
+  min-width: var(--lenzi-segment-min);
   touch-action: pan-y !important;
   transition:
-    flex-basis var(--kit-standard-duration) var(--kit-standard-easing),
-    min-width var(--kit-standard-duration) var(--kit-standard-easing),
-    margin-left var(--kit-standard-duration) var(--kit-standard-easing);
+    flex-basis var(--lenzi-standard-duration) var(--lenzi-standard-easing),
+    min-width var(--lenzi-standard-duration) var(--lenzi-standard-easing),
+    margin-left var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
 /* The separator: a margin, not the track's gap, so that it closes with a segment that shrinks away. */
 .segment + .segment {
-  margin-left: var(--kit-segment-gap);
+  margin-left: var(--lenzi-segment-gap);
 }
 
 /* One segment alone: no separator, the others down to nothing. */

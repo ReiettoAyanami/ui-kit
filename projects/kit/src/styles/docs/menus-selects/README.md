@@ -5,12 +5,12 @@ from their field, the chosen option a pill inside them.
 
 ## Rules
 
-- **Rounded on every side, 12 px** (`--kit-panel-radius`), 4 px away from their field (lenzi, 2026-10-02:
+- **Rounded on every side, 12 px** (`--lenzi-panel-radius`), 4 px away from their field (lenzi, 2026-10-02:
   "la scelta nelle metrics non ha border radius").
-- **The chosen, hovered or focused option is a pill** 6 px in from the panel's sides (`--kit-option-radius`).
+- **The chosen, hovered or focused option is a pill** 6 px in from the panel's sides (`--lenzi-option-radius`).
 - **Glass** like every panel over the page; they **rise 8 px** when they open.
-- **Options that need explaining** have their description under their name: `panelClass="kit-described-options"`,
-  each option a `.kit-option-label` and a `.kit-option-description`.
+- **Options that need explaining** have their description under their name: `panelClass="lenzi-described-options"`,
+  each option a `.lenzi-option-label` and a `.lenzi-option-description`.
 - **Same names** are listed one by one, keyed by id: two entries with the same name stay two entries.
 
 ## Example

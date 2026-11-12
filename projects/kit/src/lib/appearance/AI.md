@@ -1,5 +1,5 @@
 # AI notes: Setup and appearance
 
-- `provideKit({ appId })` in every app's `app.config.ts`, with the app's own id.
-- An app's settings page offers "Reduce transparency" with `KitAppearance`; nothing else stores it.
-- Never set `MAT_DIALOG_DEFAULT_OPTIONS` in an app: `provideKit` does.
+- `provideLenziKit({ appId })` in every app's `app.config.ts`, with the app's own id.
+- An app's settings page offers "Reduce transparency" with `LenziAppearance`; nothing else stores it.
+- Never set `MAT_DIALOG_DEFAULT_OPTIONS` in an app: `provideLenziKit` does.

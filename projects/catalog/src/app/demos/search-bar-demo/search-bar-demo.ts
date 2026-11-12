@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 
-import { KitSearchBar, KitStatusMessage } from '@lenzi/ui-kit';
+import { LenziSearchBar, LenziStatusMessage } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -10,7 +10,7 @@ const NAMES = ['Birra', 'Caffè', 'Whisky', 'Sigarette', 'Tè verde', 'Acqua fri
 /** The search bar over a list: it searches once the typing pauses, the ✕ brings everything back. */
 @Component({
   selector: 'app-search-bar-demo',
-  imports: [KitSearchBar, KitStatusMessage],
+  imports: [LenziSearchBar, LenziStatusMessage],
   templateUrl: './search-bar-demo.html',
   styleUrl: './search-bar-demo.css',
 })

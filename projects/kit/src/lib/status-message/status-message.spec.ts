@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 
 import { couldNotLoad } from '../util/describe-error';
-import { KitStatusMessage } from './status-message';
+import { LenziStatusMessage } from './status-message';
 
-describe('KitStatusMessage', () => {
+describe('LenziStatusMessage', () => {
   function message(inputs: Record<string, unknown>) {
-    const fixture = TestBed.createComponent(KitStatusMessage);
+    const fixture = TestBed.createComponent(LenziStatusMessage);
     for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;

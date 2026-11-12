@@ -1,6 +1,6 @@
 # three.js canvas
 
-`<kit-three-canvas>` (`@lenzi/ui-kit/three`): a 3D view. three.js is in the kit for later (lenzi, 2026-11-12:
+`<lenzi-three-canvas>` (`@lenzi/ui-kit/three`): a 3D view. three.js is in the kit for later (lenzi, 2026-11-12:
 "we don't use it now, but we might"): the canvas owns what every 3D view needs and gets wrong; the scene is
 the page's.
 
@@ -24,18 +24,18 @@ the page's.
 
 | | Name | Type | Default |
 | --- | --- | --- | --- |
-| input | `setup` | `KitThreeSetup` | required |
+| input | `setup` | `LenziThreeSetup` | required |
 | input | `label` | `string` | required |
 | input | `animate` | `boolean` | `true` |
 | input | `fov` / `distance` | `number` | `50` / `5` |
 | input | `height` | `string` | `'320px'` |
 
-`KitThreeSetup = ({ scene, camera, renderer, color, size }) => ({ frame?(delta, elapsed), dispose?() }) | void`.
+`LenziThreeSetup = ({ scene, camera, renderer, color, size }) => ({ frame?(delta, elapsed), dispose?() }) | void`.
 
 ## Example
 
 ```ts
-scene: KitThreeSetup = ({ scene, color }) => {
+scene: LenziThreeSetup = ({ scene, color }) => {
   const shape = new Mesh(new IcosahedronGeometry(1.4, 1), new MeshStandardMaterial({ color: color('--mat-sys-primary') }));
   scene.add(shape, new AmbientLight(0xffffff, 0.6), new DirectionalLight(0xffffff, 2.4));
   return { frame: (delta) => (shape.rotation.y += delta * 0.6) };

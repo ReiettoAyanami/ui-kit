@@ -1,8 +1,8 @@
-<kit-search-bar [placeholder]="'' + values()['placeholder']" [debounce]="+values()['debounce']" (search)="search($event)" />
+<lenzi-search-bar [placeholder]="'' + values()['placeholder']" [debounce]="+values()['debounce']" (search)="search($event)" />
 <ul class="list">
   @for (name of found(); track name) {
     <li class="item">{{ name }}</li>
   } @empty {
-    <kit-status-message [text]="'No substance or batch with “' + query() + '” in its name'" compact />
+    <lenzi-status-message [text]="'No substance or batch with “' + query() + '” in its name'" compact />
   }
 </ul>

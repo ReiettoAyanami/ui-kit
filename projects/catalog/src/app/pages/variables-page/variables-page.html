@@ -30,7 +30,7 @@
   </div>
 
   @if (failure(); as failure) {
-    <kit-status-message kind="error" [text]="failure" />
+    <lenzi-status-message kind="error" [text]="failure" />
   } @else if (tokens.hasValue()) {
     <div class="layout">
       <div class="groups">
@@ -96,14 +96,14 @@
           <mat-button-toggle value="average">average</mat-button-toggle>
         </mat-button-toggle-group>
         <span class="row">
-          <kit-pill-toggle [options]="measures" [(value)]="measure" />
+          <lenzi-pill-toggle [options]="measures" [(value)]="measure" />
           <span class="figure">{{ measure() === 'price' ? '€8.93/g' : '6/10 g' }}</span>
         </span>
-        <kit-search-bar placeholder="Search substances" />
-        <kit-segmented-bar label="Stock: 75 of 100" [segments]="segments" max="100" [colorOffset]="0.5" />
+        <lenzi-search-bar placeholder="Search substances" />
+        <lenzi-segmented-bar label="Stock: 75 of 100" [segments]="segments" max="100" [colorOffset]="0.5" />
         <span class="row">
-          <kit-delta ratio="-0.2" />
-          <kit-delta ratio="0.15" />
+          <lenzi-delta ratio="-0.2" />
+          <lenzi-delta ratio="0.15" />
         </span>
         <div class="buttons">
           <button mat-stroked-button type="button" (click)="openDialog()">Open a dialog</button>
@@ -117,6 +117,6 @@
       </aside>
     </div>
   } @else {
-    <kit-status-message kind="loading" />
+    <lenzi-status-message kind="loading" />
   }
 </main>

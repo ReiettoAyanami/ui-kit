@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 
 import { identityColor } from '@lenzi/ui-kit';
 
-import { KitChart, kitLineColor } from './chart';
+import { LenziChart, lenziLineColor } from './chart';
 
-describe('KitChart', () => {
+describe('LenziChart', () => {
   // jsdom has no ResizeObserver; ngx-echarts watches the chart's size with one.
   beforeAll(() => {
     globalThis.ResizeObserver ??= class {
@@ -15,14 +15,14 @@ describe('KitChart', () => {
   });
 
   it('says so when there is nothing to draw', () => {
-    const fixture = TestBed.createComponent(KitChart);
+    const fixture = TestBed.createComponent(LenziChart);
     fixture.componentRef.setInput('data', { periods: [], lines: [] });
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('.empty')?.textContent?.trim()).toBe('Nothing in the period');
   });
 
   it('shows a chip per line to hide it by hand, with its colour', () => {
-    const fixture = TestBed.createComponent(KitChart);
+    const fixture = TestBed.createComponent(LenziChart);
     fixture.componentRef.setInput('data', {
       periods: ['W39', 'W40'],
       lines: [
@@ -37,6 +37,6 @@ describe('KitChart', () => {
   });
 
   it("a line without a colour takes the identity colour of its position", () => {
-    expect(kitLineColor({ key: 'a', name: 'a', values: [] }, 0)).toBe(identityColor(1));
+    expect(lenziLineColor({ key: 'a', name: 'a', values: [] }, 0)).toBe(identityColor(1));
   });
 });

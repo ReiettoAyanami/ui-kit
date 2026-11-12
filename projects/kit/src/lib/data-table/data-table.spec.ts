@@ -1,20 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitCellFormat, KitDataTable, KitTableColumn, KitTableRow } from './data-table';
+import { LenziCellFormat, LenziDataTable, LenziTableColumn, LenziTableRow } from './data-table';
 
-describe('KitDataTable', () => {
-  const columns: KitTableColumn[] = [
+describe('LenziDataTable', () => {
+  const columns: LenziTableColumn[] = [
     { key: 'stock', label: 'Stock', description: 'What is left' },
     { key: 'unit', label: 'Unit', text: true },
   ];
-  const rows: KitTableRow[] = [
+  const rows: LenziTableRow[] = [
     { id: 1, name: 'Birra', details: ['6 batches'], color: 'red', values: { stock: '12.500', unit: 'bottiglia' } },
     { id: 2, name: 'Caffè', values: { stock: '3', unit: 'capsula' } },
     { id: 3, name: 'acqua', values: { stock: null, unit: 'l' } },
   ];
 
   function table(inputs: Record<string, unknown> = {}) {
-    const fixture = TestBed.createComponent(KitDataTable);
+    const fixture = TestBed.createComponent(LenziDataTable);
     fixture.componentRef.setInput('nameHeader', 'Substance');
     fixture.componentRef.setInput('label', 'Substances');
     fixture.componentRef.setInput('columns', columns);
@@ -46,10 +46,10 @@ describe('KitDataTable', () => {
   });
 
   it('formats the cells the way the page says, and says which row was tapped', () => {
-    const format: KitCellFormat = (value, column) => (column.key === 'stock' && value != null ? `${Number(value)} u` : String(value ?? '—'));
+    const format: LenziCellFormat = (value, column) => (column.key === 'stock' && value != null ? `${Number(value)} u` : String(value ?? '—'));
     const { element, fixture } = table({ format });
     expect(element.querySelector('tr.row td.number')?.textContent?.trim()).toBe('12.5 u');
-    const opened: KitTableRow[] = [];
+    const opened: LenziTableRow[] = [];
     fixture.componentInstance.opened.subscribe((row) => opened.push(row));
     element.querySelectorAll<HTMLElement>('tr.row')[1]!.click();
     expect(opened.map((row) => row.id)).toEqual([2]);

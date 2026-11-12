@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { delay, of, throwError, timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { KitConfirmData, KitConfirmDialog, KitDialogs } from '@lenzi/ui-kit';
+import { LenziConfirmData, LenziConfirmDialog, LenziDialogs } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -17,14 +17,14 @@ import { Values } from '../../registry';
 })
 export class ConfirmDialogDemo {
   readonly values = input<Values>({});
-  private readonly dialogs = inject(KitDialogs);
+  private readonly dialogs = inject(LenziDialogs);
   private readonly events = inject(DemoEvents);
 
   protected async ask(): Promise<void> {
     const values = this.values();
     const outcome = values['outcome'];
-    const done = await this.dialogs.open<KitConfirmDialog, KitConfirmData, true>(
-      KitConfirmDialog,
+    const done = await this.dialogs.open<LenziConfirmDialog, LenziConfirmData, true>(
+      LenziConfirmDialog,
       {
         title: String(values['title']),
         message: String(values['message']),

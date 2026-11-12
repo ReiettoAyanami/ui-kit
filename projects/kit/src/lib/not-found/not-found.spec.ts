@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { KitNotFound } from './not-found';
+import { LenziNotFound } from './not-found';
 
-describe('KitNotFound', () => {
+describe('LenziNotFound', () => {
   it('says the page is not found and gives one way out', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
-    const fixture = TestBed.createComponent(KitNotFound);
+    const fixture = TestBed.createComponent(LenziNotFound);
     fixture.componentRef.setInput('linkLabel', 'Go to the tickets');
     fixture.componentRef.setInput('link', '/');
     fixture.detectChanges();
@@ -21,7 +21,7 @@ describe('KitNotFound', () => {
 
   it('keeps its words when a route binds them to undefined', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
-    const fixture = TestBed.createComponent(KitNotFound);
+    const fixture = TestBed.createComponent(LenziNotFound);
     fixture.componentRef.setInput('linkLabel', 'Go home');
     fixture.componentRef.setInput('link', '/');
     fixture.componentRef.setInput('title', undefined);

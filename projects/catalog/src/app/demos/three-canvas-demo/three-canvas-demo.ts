@@ -1,14 +1,14 @@
 import { Component, computed, input } from '@angular/core';
 import { AmbientLight, DirectionalLight, IcosahedronGeometry, Mesh, MeshStandardMaterial } from 'three';
 
-import { KitThreeCanvas, KitThreeSetup } from '@lenzi/ui-kit/three';
+import { LenziThreeCanvas, LenziThreeSetup } from '@lenzi/ui-kit/three';
 
 import { Values } from '../../registry';
 
 /** An icosahedron in a theme colour, turning: the scene is the page's, the canvas owns the rest. */
 @Component({
   selector: 'app-three-canvas-demo',
-  imports: [KitThreeCanvas],
+  imports: [LenziThreeCanvas],
   templateUrl: './three-canvas-demo.html',
   styleUrl: './three-canvas-demo.css',
 })
@@ -19,7 +19,7 @@ export class ThreeCanvasDemo {
   protected readonly speed = computed(() => Number(this.values()['speed'] ?? 0.6));
 
   /** A new setup when the shape changes (detail, colour, wireframe); the speed is read at every frame. */
-  protected readonly setup = computed<KitThreeSetup>(() => {
+  protected readonly setup = computed<LenziThreeSetup>(() => {
     const detail = Number(this.values()['detail'] ?? 1);
     const wireframe = this.values()['wireframe'] === true;
     const colour = String(this.values()['color'] ?? '--mat-sys-primary');

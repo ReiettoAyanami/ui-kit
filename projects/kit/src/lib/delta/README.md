@@ -1,6 +1,6 @@
 # Delta
 
-`<kit-delta>`: a change from the one before, as text: "delta: -33.3%", the word dim, the change in the colour
+`<lenzi-delta>`: a change from the one before, as text: "delta: -33.3%", the word dim, the change in the colour
 of where it went, after Material's triangle (lenzi, 2026-10-09: "the delta could be green if it's negative and
 red if it's positive"; "an arrow up if it's positive and a triangle down if negative").
 
@@ -9,7 +9,7 @@ red if it's positive"; "an arrow up if it's positive and a triangle down if nega
 - **The ratio is the API's** ("-0.3333" is -33.3%): the page never computes a change.
 - **Which way is good is the page's to say** (`good`): spending, a fall (the default); savings, a rise;
   neither: no colours.
-- **Green and red are the status colours** (`--kit-status-good`, `--kit-status-bad`), the only colours with a
+- **Green and red are the status colours** (`--lenzi-status-good`, `--lenzi-status-bad`), the only colours with a
   meaning.
 - **No change ("0%") and no change to show ("—")** are neither colour nor direction; "—" says why in its
   tooltip.
@@ -31,7 +31,7 @@ red if it's positive"; "an arrow up if it's positive and a triangle down if nega
 
 ```html
 @if (consumption.deltaQuantity !== undefined) {
-  <kit-delta [ratio]="consumption.deltaQuantity" />
+  <lenzi-delta [ratio]="consumption.deltaQuantity" />
 }
 ```
 

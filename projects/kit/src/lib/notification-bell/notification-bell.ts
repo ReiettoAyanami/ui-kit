@@ -7,7 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 
 /** One thing that arrived. */
-export interface KitNotification {
+export interface LenziNotification {
   id: string | number;
   /** What it is: a ticket's title. Up to two lines. */
   title: string;
@@ -24,31 +24,31 @@ export interface KitNotification {
  * arrived since the user last looked, a menu of it when opened, a tap opens one. What it lists is
  * kept as it was when it opened, so it does not change under the finger while the page marks it
  * seen. The page loads, marks seen (`opened`) and hides the bell when notifications are off.
- * Put it in the shell's top bar (`kitShellActions`).
+ * Put it in the shell's top bar (`lenziShellActions`).
  */
 @Component({
-  selector: 'kit-notification-bell',
+  selector: 'lenzi-notification-bell',
   imports: [MatBadgeModule, MatButtonModule, MatIconModule, MatMenuModule, NgTemplateOutlet, RouterLink],
   templateUrl: './notification-bell.html',
   styleUrl: './notification-bell.css',
 })
-export class KitNotificationBell {
+export class LenziNotificationBell {
   /** What arrived since the user last looked, newest first. */
-  readonly items = input.required<readonly KitNotification[]>();
+  readonly items = input.required<readonly LenziNotification[]>();
   /** What the things are called, for the accessible name: "3 new tickets", "No new tickets". */
   readonly noun = input('notifications');
   /** What the open menu says when nothing arrived. */
   readonly emptyText = input('Nothing new.');
   /** The menu was opened: the page marks what it showed as seen. */
-  readonly opened = output<readonly KitNotification[]>();
+  readonly opened = output<readonly LenziNotification[]>();
   /** An item without a link was tapped. */
-  readonly selected = output<KitNotification>();
+  readonly selected = output<LenziNotification>();
 
   protected readonly count = computed(() => this.items().length);
   protected readonly ariaLabel = computed(() => (this.count() ? `${this.count()} new ${this.noun()}` : `No new ${this.noun()}`));
 
   /** What the open menu shows: the items as they were when it opened. */
-  protected readonly shown = signal<readonly KitNotification[]>([]);
+  protected readonly shown = signal<readonly LenziNotification[]>([]);
 
   protected open(): void {
     const items = this.items();

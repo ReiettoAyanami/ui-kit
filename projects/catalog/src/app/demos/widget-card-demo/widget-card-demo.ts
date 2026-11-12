@@ -1,13 +1,13 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 
-import { KitFigure, KitFigureGrid, KitSegmentedBar, KitWidgetCard } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid, LenziSegmentedBar, LenziWidgetCard } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-widget-card-demo',
-  imports: [KitFigure, KitFigureGrid, KitSegmentedBar, KitWidgetCard],
+  imports: [LenziFigure, LenziFigureGrid, LenziSegmentedBar, LenziWidgetCard],
   templateUrl: './widget-card-demo.html',
   styleUrl: './widget-card-demo.css',
 })

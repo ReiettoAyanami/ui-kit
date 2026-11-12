@@ -1,6 +1,6 @@
 # Identity colours
 
-`identityColor(id, offset)`, the pipe `kitIdentityColor` and `<kit-identity-dot>`: a colour computed from an
+`identityColor(id, offset)`, the pipe `lenziIdentityColor` and `<lenzi-identity-dot>`: a colour computed from an
 entity's id, so the same thing is the same colour everywhere: its dot next to its name, its segment in a bar,
 its line in a chart.
 
@@ -19,13 +19,13 @@ its line in a chart.
 ## API
 
 - `identityColor(id: number, offset = 0): string` — an `oklch()` string.
-- `{{ id | kitIdentityColor }}`, `{{ id | kitIdentityColor: 0.5 }}`.
-- `<kit-identity-dot [id]="id" [offset]="0.5" />`, or `[color]` for something without an id ("One-time":
+- `{{ id | lenziIdentityColor }}`, `{{ id | lenziIdentityColor: 0.5 }}`.
+- `<lenzi-identity-dot [id]="id" [offset]="0.5" />`, or `[color]` for something without an id ("One-time":
   `var(--mat-sys-outline)`).
 
 ## Variables
 
-`--kit-dot-size`.
+`--lenzi-dot-size`.
 
 ## Origin
 

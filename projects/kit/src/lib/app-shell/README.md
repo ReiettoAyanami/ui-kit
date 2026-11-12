@@ -1,6 +1,6 @@
 # App shell
 
-`<kit-app-shell>`: the frame of every app. A top bar that floats away from the screen's edges and sticks
+`<lenzi-app-shell>`: the frame of every app. A top bar that floats away from the screen's edges and sticks
 while the page scrolls under its glass, with the menu button and the current route's title; a navigation
 drawer that opens from it on every screen; and the page.
 
@@ -24,10 +24,10 @@ drawer that opens from it on every screen; and the page.
 
 | Attribute | Where | For |
 | --- | --- | --- |
-| `kitShellNav` | the drawer | a `KitNavList` |
-| `kitShellActions` | the end of the top bar | a `KitNotificationBell`, an icon button |
-| `kitShellBanner` | a bar above the top bar, sticky | "Viewing as" (`KitInfoBar`, tone tertiary) |
-| `kitShellBelow` | under the top bar | "Offline", "A new version" (`KitInfoBar`), `KitPullToRefresh` |
+| `lenziShellNav` | the drawer | a `LenziNavList` |
+| `lenziShellActions` | the end of the top bar | a `LenziNotificationBell`, an icon button |
+| `lenziShellBanner` | a bar above the top bar, sticky | "Viewing as" (`LenziInfoBar`, tone tertiary) |
+| `lenziShellBelow` | under the top bar | "Offline", "A new version" (`LenziInfoBar`), `LenziPullToRefresh` |
 | (none) | the page | `<router-outlet />` |
 
 ## API
@@ -37,22 +37,22 @@ drawer that opens from it on every screen; and the page.
 | input | `title` | `string \| null` | `null` | null: the deepest route's title |
 | input | `bare` | `boolean \| 'route'` | `'route'` | the page alone: `'route'` follows route data `bare: true`; `true` / `false` always / never |
 | input | `menuLabel` | `string` | `'Menu'` | the menu button's accessible name |
-| method | `openNav(click?)` / `closeNav()` | | | `KitNavList` closes it after a link |
+| method | `openNav(click?)` / `closeNav()` | | | `LenziNavList` closes it after a link |
 
 ## Example
 
 ```html
-<kit-app-shell>
-  <kit-nav-list kitShellNav appName="Substance tracker" [subtitle]="user()?.username" [pages]="pages" [bottom]="bottom" />
-  <kit-notification-bell kitShellActions noun="tickets" [items]="news()" />
+<lenzi-app-shell>
+  <lenzi-nav-list lenziShellNav appName="Substance tracker" [subtitle]="user()?.username" [pages]="pages" [bottom]="bottom" />
+  <lenzi-notification-bell lenziShellActions noun="tickets" [items]="news()" />
   <router-outlet />
-</kit-app-shell>
-<kit-version-label [version]="version()" />
+</lenzi-app-shell>
+<lenzi-version-label [version]="version()" />
 ```
 
 ## Variables
 
-`--kit-float-gap`, `--kit-bar-radius`, `--kit-drawer-width`, `--kit-glass-bar`, `--kit-glass-filter`.
+`--lenzi-float-gap`, `--lenzi-bar-radius`, `--lenzi-drawer-width`, `--lenzi-glass-bar`, `--lenzi-glass-filter`.
 
 ## Origin
 

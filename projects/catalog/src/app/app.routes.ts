@@ -1,6 +1,6 @@
 import { ActivatedRouteSnapshot, Routes, UrlSegment } from '@angular/router';
 
-import { KitNotFound } from '@lenzi/ui-kit';
+import { LenziNotFound } from '@lenzi/ui-kit';
 
 import { docById } from './registry';
 
@@ -33,5 +33,5 @@ export const routes: Routes = [
   { path: 'libraries', title: 'Libraries', loadComponent: () => import('./pages/libraries-page/libraries-page').then((m) => m.LibrariesPage) },
   // A demo alone, for the frame of its component page: the page without the shell around it.
   { matcher: frameMatcher, data: { bare: true }, loadComponent: () => import('./pages/frame-page/frame-page').then((m) => m.FramePage) },
-  { path: '**', title: 'Not found', component: KitNotFound, data: { linkLabel: 'Go to the overview', link: '/' } },
+  { path: '**', title: 'Not found', component: LenziNotFound, data: { linkLabel: 'Go to the overview', link: '/' } },
 ];

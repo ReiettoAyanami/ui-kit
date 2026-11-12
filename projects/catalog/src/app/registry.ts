@@ -118,8 +118,8 @@ export const DOCS: readonly KitDoc[] = [
       { key: 'glass', label: 'Window opacity (%)', type: 'number', default: 56, min: 0, max: 100, step: 1 },
       { key: 'blur', label: 'Glass blur (px)', type: 'number', default: 24, min: 0, max: 64, step: 1 },
     ],
-    usage: () => `// A window: open it with KitDialogs (its own history entry); the glass and the rise are global.
-const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'kit-dialog-raised' });`,
+    usage: () => `// A window: open it with LenziDialogs (its own history entry); the glass and the rise are global.
+const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'lenzi-dialog-raised' });`,
     usageLanguage: 'typescript',
     height: 480,
   },
@@ -128,7 +128,7 @@ const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'kit-
     name: 'Borders and shape',
     category: 'Foundations',
     summary: 'Every rounded border is 2 px, so corners are as thick as sides; surfaces above the page have one.',
-    api: 'var(--kit-border)',
+    api: 'var(--lenzi-border)',
     entry: 'styles',
     origin: 'substance-tracker styles.css ("borders", 2026-10-02)',
     files: ['src/styles/global.css', 'src/styles/tokens.json'],
@@ -136,8 +136,8 @@ const saved = await this.dialogs.open(MyForm, { substance }, { panelClass: 'kit-
     demo: () => import('./demos/borders-shape-demo/borders-shape-demo').then((m) => m.BordersShapeDemo),
     controls: [{ key: 'border', label: 'Border width (px)', type: 'number', default: 2, min: 1, max: 4, step: 1 }],
     usage: () => `.my-sub-card {
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--kit-panel-radius);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
 }`,
     usageLanguage: 'scss',
     height: 460,
@@ -181,11 +181,11 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     controls: [{ key: 'described', label: 'Options with a description', type: 'boolean', default: false }],
     usage: (v) =>
       v['described']
-        ? `<mat-select panelClass="kit-described-options" [(value)]="metric">
+        ? `<mat-select panelClass="lenzi-described-options" [(value)]="metric">
   @for (option of metrics; track option.key) {
     <mat-option [value]="option.key">
-      <span class="kit-option-label">{{ option.label }}</span>
-      <span class="kit-option-description">{{ option.description }}</span>
+      <span class="lenzi-option-label">{{ option.label }}</span>
+      <span class="lenzi-option-description">{{ option.description }}</span>
     </mat-option>
   }
 </mat-select>`
@@ -215,7 +215,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     ],
     usage: (v) =>
       v['second']
-        ? `<span [matTooltip]="'${v['text']}\\n${v['second']}'" matTooltipClass="kit-tooltip-lines">…</span>`
+        ? `<span [matTooltip]="'${v['text']}\\n${v['second']}'" matTooltipClass="lenzi-tooltip-lines">…</span>`
         : `<button mat-icon-button matTooltip="${v['text']}" aria-label="${v['text']}">…</button>`,
     usageLanguage: 'html',
     height: 300,
@@ -225,7 +225,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     name: 'Expansion panels',
     category: "Material, the kit's way",
     summary: 'Panels with a border; flat inside a window; on a phone the header keeps only its title.',
-    api: '<mat-expansion-panel>, .kit-flat',
+    api: '<mat-expansion-panel>, .lenzi-flat',
     entry: 'styles',
     origin: 'substance-tracker styles.css (2026-10-01, 10-03)',
     files: ['src/styles/global.css'],
@@ -235,7 +235,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
       { key: 'flat', label: 'Flat', type: 'boolean', default: false },
       { key: 'description', label: 'Header description', type: 'text', default: 'Last 30 days' },
     ],
-    usage: (v) => `<mat-expansion-panel${v['flat'] ? ' class="kit-flat"' : ''}>
+    usage: (v) => `<mat-expansion-panel${v['flat'] ? ' class="lenzi-flat"' : ''}>
   <mat-expansion-panel-header>
     <mat-panel-title>Metrics</mat-panel-title>
     <mat-panel-description>${v['description']}</mat-panel-description>
@@ -251,7 +251,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     name: 'App shell',
     category: 'Layout',
     summary: 'The floating glass top bar, the navigation drawer on every screen, and the page.',
-    api: '<kit-app-shell>',
+    api: '<lenzi-app-shell>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader app.html / app.css',
     files: component('app-shell'),
@@ -264,15 +264,15 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
       { key: 'below', label: 'A bar under it (Offline)', type: 'boolean', default: false },
       { key: 'bare', label: 'Bare (the page alone)', type: 'boolean', default: false },
     ],
-    usage: (v) => `<kit-app-shell${attr('title', v['title'])}${v['bare'] ? ' [bare]="true"' : ''}>
-  <kit-nav-list kitShellNav appName="Substance tracker" [pages]="pages" [bottom]="bottom" />${
-    v['actions'] ? '\n  <kit-notification-bell kitShellActions noun="tickets" [items]="news()" />' : ''
-  }${v['banner'] ? '\n  <kit-info-bar kitShellBanner icon="visibility" tone="tertiary" actionLabel="Exit" (action)="exit()">Viewing as lenzi</kit-info-bar>' : ''}${
-    v['below'] ? '\n  <kit-info-bar kitShellBelow icon="cloud_off">Offline · data from 14:32</kit-info-bar>' : ''
+    usage: (v) => `<lenzi-app-shell${attr('title', v['title'])}${v['bare'] ? ' [bare]="true"' : ''}>
+  <lenzi-nav-list lenziShellNav appName="Substance tracker" [pages]="pages" [bottom]="bottom" />${
+    v['actions'] ? '\n  <lenzi-notification-bell lenziShellActions noun="tickets" [items]="news()" />' : ''
+  }${v['banner'] ? '\n  <lenzi-info-bar lenziShellBanner icon="visibility" tone="tertiary" actionLabel="Exit" (action)="exit()">Viewing as lenzi</lenzi-info-bar>' : ''}${
+    v['below'] ? '\n  <lenzi-info-bar lenziShellBelow icon="cloud_off">Offline · data from 14:32</lenzi-info-bar>' : ''
   }
   <router-outlet />
-</kit-app-shell>
-<kit-version-label [version]="version()" />`,
+</lenzi-app-shell>
+<lenzi-version-label [version]="version()" />`,
     usageLanguage: 'html',
     height: 560,
   },
@@ -281,7 +281,7 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
     name: 'Navigation list',
     category: 'Layout',
     summary: "The drawer's content: the app's name, one link per page, the rest at the bottom.",
-    api: '<kit-nav-list>',
+    api: '<lenzi-nav-list>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader sidebar',
     files: component('nav-list'),
@@ -292,15 +292,15 @@ ${options.map((o) => `  <mat-button-toggle value="${o}">${o}</mat-button-toggle>
       { key: 'subtitle', label: 'Signed in as', type: 'text', default: 'lenzi' },
       { key: 'bottom', label: 'Entries at the bottom', type: 'boolean', default: true },
     ],
-    usage: (v) => `<kit-nav-list kitShellNav${attr('appName', v['appName'])}${attr('subtitle', v['subtitle'])} [pages]="pages"${
+    usage: (v) => `<lenzi-nav-list lenziShellNav${attr('appName', v['appName'])}${attr('subtitle', v['subtitle'])} [pages]="pages"${
       v['bottom'] ? ' [bottom]="bottom" (pressed)="action($event)"' : ''
     } />
 
-pages: KitNavEntry[] = [
+pages: LenziNavEntry[] = [
   { label: 'Consumptions', icon: 'history', link: '/' },
   { label: 'Substances', icon: 'inventory_2', link: '/substances' },
 ];
-bottom: KitNavEntry[] = [
+bottom: LenziNavEntry[] = [
   { label: 'Sign out', icon: 'logout', id: 'sign-out' },
   { label: 'Settings', icon: 'settings', link: '/settings' },
 ];`,
@@ -312,7 +312,7 @@ bottom: KitNavEntry[] = [
     name: 'Not found',
     category: 'Layout',
     summary: 'An address that does not exist: a card in the middle with one way out.',
-    api: '<kit-not-found>',
+    api: '<lenzi-not-found>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader not-found-page',
     files: component('not-found'),
@@ -327,7 +327,7 @@ bottom: KitNavEntry[] = [
 { path: '**', title: 'Not found', component: NotFoundPage }
 
 // not-found-page.html
-<kit-not-found${attr('title', v['title'] === 'Page not found' ? '' : v['title'])}${attr('linkLabel', v['linkLabel'])} link="/" />`,
+<lenzi-not-found${attr('title', v['title'] === 'Page not found' ? '' : v['title'])}${attr('linkLabel', v['linkLabel'])} link="/" />`,
     usageLanguage: 'typescript',
     height: 420,
   },
@@ -336,7 +336,7 @@ bottom: KitNavEntry[] = [
     name: 'Version label',
     category: 'Layout',
     summary: "The app's version, small and faint in the bottom right corner of every page.",
-    api: '<kit-version-label>',
+    api: '<lenzi-version-label>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader ui/version-label',
     files: component('version-label'),
@@ -344,7 +344,7 @@ bottom: KitNavEntry[] = [
     demo: () => import('./demos/version-label-demo/version-label-demo').then((m) => m.VersionLabelDemo),
     controls: [{ key: 'version', label: 'Version', type: 'text', default: 'dev26.0.0.0002' }],
     usage: () => `<!-- app.html, after the shell -->
-<kit-version-label [version]="version.value() ?? null" />
+<lenzi-version-label [version]="version.value() ?? null" />
 
 // app.ts: the API says which version runs
 protected readonly version = rxResource({ stream: () => this.versionApi.getVersion() });`,
@@ -357,14 +357,14 @@ protected readonly version = rxResource({ stream: () => this.versionApi.getVersi
     name: 'Add button',
     category: 'Actions and inputs',
     summary: 'The floating "+" at the bottom right; the page decides what it opens.',
-    api: '<kit-add-button>',
+    api: '<lenzi-add-button>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader ui/add-button',
     files: component('add-button'),
     ...docs('src/lib/add-button'),
     demo: () => import('./demos/add-button-demo/add-button-demo').then((m) => m.AddButtonDemo),
     controls: [{ key: 'label', label: 'What it does (screen readers)', type: 'text', default: 'Add substance' }],
-    usage: (v) => `<kit-add-button${attr('label', v['label'])} (pressed)="add()" />`,
+    usage: (v) => `<lenzi-add-button${attr('label', v['label'])} (pressed)="add()" />`,
     usageLanguage: 'html',
     height: 300,
   },
@@ -373,7 +373,7 @@ protected readonly version = rxResource({ stream: () => this.versionApi.getVersi
     name: 'Pill toggle',
     category: 'Actions and inputs',
     summary: 'One pill that reads what the figure beside it shows, and switches it at a tap.',
-    api: '<kit-pill-toggle>',
+    api: '<lenzi-pill-toggle>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/measure-toggle',
     files: component('pill-toggle'),
@@ -383,10 +383,10 @@ protected readonly version = rxResource({ stream: () => this.versionApi.getVersi
       { key: 'first', label: 'First state', type: 'text', default: 'price' },
       { key: 'second', label: 'Second state', type: 'text', default: 'qty' },
     ],
-    usage: (v) => `<kit-pill-toggle [options]="measures" [(value)]="measure" />
+    usage: (v) => `<lenzi-pill-toggle [options]="measures" [(value)]="measure" />
 <span class="figure">{{ measure() === '${v['first']}' ? price : quantity }}</span>
 
-measures: KitPillOption<string>[] = [
+measures: LenziPillOption<string>[] = [
   { value: '${v['first']}', label: '${v['first']}' },
   { value: '${v['second']}', label: '${v['second']}' },
 ];
@@ -399,7 +399,7 @@ measure = signal('${v['first']}');`,
     name: 'Search bar',
     category: 'Actions and inputs',
     summary: 'An elongated circle like a browser’s bar: it searches as you type, a ✕ clears it.',
-    api: '<kit-search-bar>',
+    api: '<lenzi-search-bar>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker substances search (styles.css .search-bar)',
     files: component('search-bar'),
@@ -409,7 +409,7 @@ measure = signal('${v['first']}');`,
       { key: 'placeholder', label: 'What it looks for', type: 'text', default: 'Search substances and batches' },
       { key: 'debounce', label: 'Pause before searching (ms)', type: 'number', default: 300, min: 0, max: 1000, step: 50 },
     ],
-    usage: (v) => `<kit-search-bar${attr('placeholder', v['placeholder'])}${v['debounce'] === 300 ? '' : ` [debounce]="${v['debounce']}"`} [value]="query()" (search)="search($event)" />`,
+    usage: (v) => `<lenzi-search-bar${attr('placeholder', v['placeholder'])}${v['debounce'] === 300 ? '' : ` [debounce]="${v['debounce']}"`} [value]="query()" (search)="search($event)" />`,
     usageLanguage: 'html',
     height: 380,
   },
@@ -418,7 +418,7 @@ measure = signal('${v['first']}');`,
     name: 'Period picker',
     category: 'Actions and inputs',
     summary: 'The period and the scale every figure over time is read in.',
-    api: '<kit-period-picker>',
+    api: '<lenzi-period-picker>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/period-scale',
     files: component('period-picker'),
@@ -429,7 +429,7 @@ measure = signal('${v['first']}');`,
       { key: 'scale', label: 'Choose the scale', type: 'boolean', default: true },
     ],
     usage: (v) => `<div class="choices">
-  <kit-period-picker${v['period'] ? ' [period]="days()" (periodChange)="days.set($event)"' : ''}${v['scale'] ? ' [scale]="per()" (scaleChange)="per.set($event)"' : ''} />
+  <lenzi-period-picker${v['period'] ? ' [period]="days()" (periodChange)="days.set($event)"' : ''}${v['scale'] ? ' [scale]="per()" (scaleChange)="per.set($event)"' : ''} />
 </div>`,
     usageLanguage: 'html',
     height: 360,
@@ -439,7 +439,7 @@ measure = signal('${v['first']}');`,
     name: 'Card menu',
     category: 'Actions and inputs',
     summary: 'The ⋮ at a card’s top right: Edit, Delete; its taps never open the card.',
-    api: '<kit-card-menu>',
+    api: '<lenzi-card-menu>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker substance, consumption and user cards',
     files: component('card-menu'),
@@ -450,11 +450,11 @@ measure = signal('${v['first']}');`,
       { key: 'label', label: 'Accessible name', type: 'text', default: 'Actions for Birra' },
     ],
     usage: (v) => `<mat-card appearance="outlined" class="card" (click)="open()">
-  <kit-card-menu class="menu"${attr('label', v['label'])} [actions]="actions" (action)="act($event)" />
+  <lenzi-card-menu class="menu"${attr('label', v['label'])} [actions]="actions" (action)="act($event)" />
   …
 </mat-card>
 
-actions: KitMenuAction[] = [
+actions: LenziMenuAction[] = [
   { id: 'edit', label: 'Edit', icon: 'edit' },${v['delete'] ? "\n  { id: 'delete', label: 'Delete', icon: 'delete', destructive: true }," : ''}
 ];`,
     usageLanguage: 'html',
@@ -466,7 +466,7 @@ actions: KitMenuAction[] = [
     name: 'Figure',
     category: 'Data',
     summary: 'What it is on top, bold; its value under it. Never two figures on one line.',
-    api: '<kit-figure>, <kit-figure-grid>',
+    api: '<lenzi-figure>, <lenzi-figure-grid>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker metrics panel',
     files: [...component('figure'), ...lib('figure', 'figure-grid.ts', 'figure-grid.css')],
@@ -477,10 +477,10 @@ actions: KitMenuAction[] = [
       { key: 'value', label: 'Value', type: 'text', default: '264 / 391 capsula' },
       { key: 'explain', label: 'Description under it', type: 'boolean', default: false },
     ],
-    usage: (v) => `<kit-figure-grid>
-  <kit-figure${attr('label', v['label'])}${attr('value', v['value'])}${v['explain'] ? ' description="What is left of the active batches."' : ''} />
-  <kit-figure label="Spent" [value]="spent()" />
-</kit-figure-grid>`,
+    usage: (v) => `<lenzi-figure-grid>
+  <lenzi-figure${attr('label', v['label'])}${attr('value', v['value'])}${v['explain'] ? ' description="What is left of the active batches."' : ''} />
+  <lenzi-figure label="Spent" [value]="spent()" />
+</lenzi-figure-grid>`,
     usageLanguage: 'html',
     height: 300,
   },
@@ -489,7 +489,7 @@ actions: KitMenuAction[] = [
     name: 'Delta',
     category: 'Data',
     summary: 'A change from the one before: green or red by which way is good, with a triangle.',
-    api: '<kit-delta>',
+    api: '<lenzi-delta>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/consumption-figures ("delta:", 2026-10-09)',
     files: component('delta'),
@@ -511,7 +511,7 @@ actions: KitMenuAction[] = [
       },
       { key: 'label', label: 'Word', type: 'text', default: 'delta:' },
     ],
-    usage: (v) => `<kit-delta [ratio]="${v['none'] ? 'null' : `'${v['ratio']}'`}"${v['good'] === 'down' ? '' : ` good="${v['good']}"`}${v['label'] === 'delta:' ? '' : attr('label', v['label'])} />`,
+    usage: (v) => `<lenzi-delta [ratio]="${v['none'] ? 'null' : `'${v['ratio']}'`}"${v['good'] === 'down' ? '' : ` good="${v['good']}"`}${v['label'] === 'delta:' ? '' : attr('label', v['label'])} />`,
     usageLanguage: 'html',
     height: 220,
   },
@@ -520,7 +520,7 @@ actions: KitMenuAction[] = [
     name: 'Identity colours',
     category: 'Data',
     summary: 'A colour computed from an id, so the same thing is the same colour everywhere.',
-    api: 'identityColor(), | kitIdentityColor, <kit-identity-dot>',
+    api: 'identityColor(), | lenziIdentityColor, <lenzi-identity-dot>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/identity-color-pipe (frozen, all violet since 2026-10-02)',
     files: lib('identity-dot', 'identity-color.ts', 'identity-color-pipe.ts', 'identity-dot.ts', 'identity-dot.css', 'identity-color-pipe.spec.ts'),
@@ -539,8 +539,8 @@ actions: KitMenuAction[] = [
         ],
       },
     ],
-    usage: (v) => `<kit-identity-dot [id]="substance.id"${v['offset'] === '0' ? '' : ` [offset]="${v['offset']}"`} /> {{ substance.name }}
-<span [style.background-color]="batch.id | kitIdentityColor${v['offset'] === '0' ? '' : `: ${v['offset']}`}"></span>`,
+    usage: (v) => `<lenzi-identity-dot [id]="substance.id"${v['offset'] === '0' ? '' : ` [offset]="${v['offset']}"`} /> {{ substance.name }}
+<span [style.background-color]="batch.id | lenziIdentityColor${v['offset'] === '0' ? '' : `: ${v['offset']}`}"></span>`,
     usageLanguage: 'html',
     height: 380,
   },
@@ -549,7 +549,7 @@ actions: KitMenuAction[] = [
     name: 'Segmented bar',
     category: 'Data',
     summary: 'A bar split in segments, each as wide as its share, with a tooltip that follows the mouse.',
-    api: '<kit-segmented-bar>',
+    api: '<lenzi-segmented-bar>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/stock-bar and ui/batch-bar',
     files: component('segmented-bar'),
@@ -561,7 +561,7 @@ actions: KitMenuAction[] = [
       { key: 'selectable', label: 'Selectable', type: 'boolean', default: true },
       { key: 'only', label: 'Only the first, alone', type: 'boolean', default: false },
     ],
-    usage: (v) => `<kit-segmented-bar label="Stock: 272 capsula" [segments]="segments" [max]="stockBarMax"${v['only'] ? ' [only]="selected()"' : ''}${
+    usage: (v) => `<lenzi-segmented-bar label="Stock: 272 capsula" [segments]="segments" [max]="stockBarMax"${v['only'] ? ' [only]="selected()"' : ''}${
       v['selectable'] ? ' selectable (segmentSelect)="select($event)"' : ''
     } [colorOffset]="0.5" />`,
     usageLanguage: 'html',
@@ -572,7 +572,7 @@ actions: KitMenuAction[] = [
     name: 'Data table',
     category: 'Data',
     summary: 'Rows of figures, the names fixed at the left, ordered by any column; it scrolls in its box.',
-    api: '<kit-data-table>',
+    api: '<lenzi-data-table>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/metrics-table',
     files: component('data-table'),
@@ -582,7 +582,7 @@ actions: KitMenuAction[] = [
       { key: 'rows', label: 'Rows', type: 'number', default: 5, min: 0, max: 12, step: 1 },
       { key: 'details', label: 'Details under the names', type: 'boolean', default: true },
     ],
-    usage: () => `<kit-data-table
+    usage: () => `<lenzi-data-table
   nameHeader="Substance"
   label="Substances"
   [columns]="columns"
@@ -601,7 +601,7 @@ actions: KitMenuAction[] = [
     name: 'Widget card',
     category: 'Data',
     summary: 'The card of a chart: almost black, very round, an icon in a well, its own interval toggle.',
-    api: '<kit-widget-card>',
+    api: '<lenzi-widget-card>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/widget (the reference photo, 2026-10-02)',
     files: component('widget-card'),
@@ -613,11 +613,11 @@ actions: KitMenuAction[] = [
       { key: 'subtitle', label: 'Subtitle', type: 'text', default: '' },
       { key: 'scales', label: 'Interval toggle', type: 'boolean', default: true },
     ],
-    usage: (v) => `<kit-widget-card${attr('title', v['title'])}${attr('icon', v['icon'])}${attr('subtitle', v['subtitle'])}${
+    usage: (v) => `<lenzi-widget-card${attr('title', v['title'])}${attr('icon', v['icon'])}${attr('subtitle', v['subtitle'])}${
       v['scales'] ? ' [scales]="[\'day\', \'week\', \'month\']" [scale]="scale()" (scaleChange)="choose($event)"' : ''
     }>
-  <kit-chart [data]="series()" type="stacked-bar" [format]="money" />
-</kit-widget-card>`,
+  <lenzi-chart [data]="series()" type="stacked-bar" [format]="money" />
+</lenzi-widget-card>`,
     usageLanguage: 'html',
     height: 480,
   },
@@ -626,7 +626,7 @@ actions: KitMenuAction[] = [
     name: 'Chart',
     category: 'Data',
     summary: 'Bars, lines, donut, treemap and radar with ECharts, in the theme’s colours.',
-    api: '<kit-chart>',
+    api: '<lenzi-chart>',
     entry: '@lenzi/ui-kit/charts',
     origin: 'substance-tracker ui/chart and chart-options.ts',
     files: ['charts/src/chart/chart.ts', 'charts/src/chart/chart-options.ts', 'charts/src/chart/chart.html', 'charts/src/chart/chart.css', 'charts/src/chart/chart-options.spec.ts'],
@@ -645,11 +645,11 @@ actions: KitMenuAction[] = [
       { key: 'current', label: 'Last period in progress', type: 'boolean', default: true },
       { key: 'filters', label: 'Chips to hide lines', type: 'boolean', default: true },
     ],
-    usage: (v) => `import { KitChart, KitChartData } from '@lenzi/ui-kit/charts';
+    usage: (v) => `import { LenziChart, LenziChartData } from '@lenzi/ui-kit/charts';
 
-<kit-chart [data]="data()" type="${v['type']}" [format]="money"${v['filters'] ? '' : ' [filters]="false"'} />
+<lenzi-chart [data]="data()" type="${v['type']}" [format]="money"${v['filters'] ? '' : ' [filters]="false"'} />
 
-data: KitChartData = {
+data: LenziChartData = {
   periods: ['W38', 'W39', 'W40'],${v['current'] ? '\n  current: 2, // the period still in progress' : ''}
   lines: [{ key: 'birra', name: 'Birra', color: identityColor(1), values: ['2.000', '3.500', '1.000'] }],
 };`,
@@ -662,7 +662,7 @@ data: KitChartData = {
     name: 'Status message',
     category: 'Feedback',
     summary: 'What a list says instead of its content: "…", "No substances", or why it failed.',
-    api: '<kit-status-message>',
+    api: '<lenzi-status-message>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker pages and widgets ("Could not load …")',
     files: [...component('status-message'), 'src/lib/util/describe-error.ts'],
@@ -685,8 +685,8 @@ data: KitChartData = {
     ],
     usage: (v) =>
       v['kind'] === 'error'
-        ? `<kit-status-message kind="error" [text]="couldNotLoad('the substances', list.error())"${v['compact'] ? ' compact' : ''} />`
-        : `<kit-status-message kind="${v['kind']}"${attr('text', v['text'])}${v['compact'] ? ' compact' : ''} />`,
+        ? `<lenzi-status-message kind="error" [text]="couldNotLoad('the substances', list.error())"${v['compact'] ? ' compact' : ''} />`
+        : `<lenzi-status-message kind="${v['kind']}"${attr('text', v['text'])}${v['compact'] ? ' compact' : ''} />`,
     usageLanguage: 'html',
     height: 240,
   },
@@ -695,7 +695,7 @@ data: KitChartData = {
     name: 'Info bar',
     category: 'Feedback',
     summary: 'A bar that stands out from every page: offline, an update, acting as someone else.',
-    api: '<kit-info-bar>',
+    api: '<lenzi-info-bar>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker offline bar, viewing-as bar, update bar',
     files: component('info-bar'),
@@ -713,9 +713,9 @@ data: KitChartData = {
       { key: 'text', label: 'Text', type: 'text', default: 'Viewing as lenzi' },
       { key: 'action', label: 'Action', type: 'text', default: 'Exit' },
     ],
-    usage: (v) => `<kit-info-bar${attr('icon', v['icon'])}${v['tone'] === 'neutral' ? '' : attr('tone', v['tone'])}${attr('actionLabel', v['action'])}${
+    usage: (v) => `<lenzi-info-bar${attr('icon', v['icon'])}${v['tone'] === 'neutral' ? '' : attr('tone', v['tone'])}${attr('actionLabel', v['action'])}${
       v['action'] ? ' (action)="exit()"' : ''
-    }>${v['text']}</kit-info-bar>`,
+    }>${v['text']}</lenzi-info-bar>`,
     usageLanguage: 'html',
     height: 220,
   },
@@ -724,7 +724,7 @@ data: KitChartData = {
     name: 'Blocking screen',
     category: 'Feedback',
     summary: 'A screen over everything that cannot be closed, for what truly blocks the app.',
-    api: '<kit-blocking-screen>',
+    api: '<lenzi-blocking-screen>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/update-notice ("Update required")',
     files: component('blocking-screen'),
@@ -747,11 +747,11 @@ data: KitChartData = {
       },
     ],
     usage: (v) => `@if (standing() === 'app-older') {
-  <kit-blocking-screen${attr('icon', v['icon'])}${attr('title', v['title'])}${attr('actionLabel', v['action'])} [actionHref]="download()"${
+  <lenzi-blocking-screen${attr('icon', v['icon'])}${attr('title', v['title'])}${attr('actionLabel', v['action'])} [actionHref]="download()"${
     v['kind'] === 'flat' ? '' : ' actionKind="stroked"'
   }>
     ${v['text']}
-  </kit-blocking-screen>
+  </lenzi-blocking-screen>
 }`,
     usageLanguage: 'html',
     height: 480,
@@ -761,20 +761,20 @@ data: KitChartData = {
     name: 'Pull to refresh',
     category: 'Feedback',
     summary: 'A pull from the top of a page asks for its data again: the gesture only, no button.',
-    api: '<kit-pull-to-refresh>',
+    api: '<lenzi-pull-to-refresh>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/pull-to-refresh (Android app, 2.11)',
     files: component('pull-to-refresh'),
     ...docs('src/lib/pull-to-refresh'),
     demo: () => import('./demos/pull-to-refresh-demo/pull-to-refresh-demo').then((m) => m.PullToRefreshDemo),
     controls: [{ key: 'duration', label: 'Refresh takes (ms)', type: 'number', default: 1200, min: 0, max: 5000, step: 100 }],
-    usage: () => `<kit-app-shell>
+    usage: () => `<lenzi-app-shell>
   …
   @if (inApp) {
-    <kit-pull-to-refresh kitShellBelow [refresh]="refresh" />
+    <lenzi-pull-to-refresh lenziShellBelow [refresh]="refresh" />
   }
   <router-outlet />
-</kit-app-shell>
+</lenzi-app-shell>
 
 refresh = () => this.pageRefresh.pull();`,
     usageLanguage: 'html',
@@ -785,7 +785,7 @@ refresh = () => this.pageRefresh.pull();`,
     name: 'Notification bell',
     category: 'Feedback',
     summary: 'A count of what arrived in the top bar; opened, the list, a tap opens one.',
-    api: '<kit-notification-bell>',
+    api: '<lenzi-notification-bell>',
     entry: '@lenzi/ui-kit',
     origin: 'vtiger-reader ui/bell',
     files: component('notification-bell'),
@@ -795,7 +795,7 @@ refresh = () => this.pageRefresh.pull();`,
       { key: 'count', label: 'Arrived', type: 'number', default: 3, min: 0, max: 8, step: 1 },
       { key: 'noun', label: 'They are called', type: 'text', default: 'tickets' },
     ],
-    usage: (v) => `<kit-notification-bell kitShellActions${attr('noun', v['noun'])} [items]="news()" (opened)="markSeen($event)" />`,
+    usage: (v) => `<lenzi-notification-bell lenziShellActions${attr('noun', v['noun'])} [items]="news()" (opened)="markSeen($event)" />`,
     usageLanguage: 'html',
     height: 420,
   },
@@ -805,7 +805,7 @@ refresh = () => this.pageRefresh.pull();`,
     name: 'Confirm dialog',
     category: 'Dialogs',
     summary: 'Asks before an action and runs it: closes on success, says why on a failure.',
-    api: 'KitDialogs.open(KitConfirmDialog, …)',
+    api: 'LenziDialogs.open(LenziConfirmDialog, …)',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader confirm-dialog, substance-tracker history-dialogs',
     files: [...component('confirm-dialog'), 'src/lib/dialogs/dialogs.ts', 'src/lib/dialogs/dialogs.spec.ts'],
@@ -828,7 +828,7 @@ refresh = () => this.pageRefresh.pull();`,
         ],
       },
     ],
-    usage: (v) => `const deleted = await this.dialogs.open<KitConfirmDialog, KitConfirmData, true>(KitConfirmDialog, {
+    usage: (v) => `const deleted = await this.dialogs.open<LenziConfirmDialog, LenziConfirmData, true>(LenziConfirmDialog, {
   title: '${v['title']}',
   message: '${v['message']}',
   confirm: '${v['confirm']}',${v['destructive'] ? '' : '\n  destructive: false,'}
@@ -842,8 +842,8 @@ refresh = () => this.pageRefresh.pull();`,
     id: 'appearance',
     name: 'Setup and appearance',
     category: 'Services',
-    summary: 'provideKit() once per app; Reduce transparency, remembered by the browser.',
-    api: 'provideKit(), KitAppearance',
+    summary: 'provideLenziKit() once per app; Reduce transparency, remembered by the browser.',
+    api: 'provideLenziKit(), LenziAppearance',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker ui/appearance.ts, app.config.ts',
     files: ['src/lib/provide-kit.ts', 'src/lib/appearance/appearance.ts', 'src/lib/appearance/appearance.spec.ts'],
@@ -855,8 +855,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch(), withInterceptors([kitErrorInterceptor])),
-    provideKit({ appId: 'substance-tracker' }),
+    provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
+    provideLenziKit({ appId: 'substance-tracker' }),
   ],
 };`,
     usageLanguage: 'typescript',
@@ -867,7 +867,7 @@ export const appConfig: ApplicationConfig = {
     name: 'API errors',
     category: 'Services',
     summary: 'Every failed request becomes one ApiError: status, code, title, detail, field errors.',
-    api: 'kitErrorInterceptor, ApiError',
+    api: 'lenziErrorInterceptor, ApiError',
     entry: '@lenzi/ui-kit/http',
     origin: 'substance-tracker data/api-error.ts and error-interceptor.ts',
     files: ['http/src/api-error.ts', 'http/src/error-interceptor.ts', 'http/src/error-interceptor.spec.ts'],
@@ -887,11 +887,11 @@ export const appConfig: ApplicationConfig = {
         ],
       },
     ],
-    usage: () => `import { ApiError, kitErrorInterceptor, provideKitHttp } from '@lenzi/ui-kit/http';
+    usage: () => `import { ApiError, lenziErrorInterceptor, provideLenziHttp } from '@lenzi/ui-kit/http';
 
 providers: [
-  provideHttpClient(withFetch(), withInterceptors([kitErrorInterceptor])),
-  provideKitHttp({ problemTypePrefix: 'urn:substance-tracker:problem:' }),
+  provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
+  provideLenziHttp({ problemTypePrefix: 'urn:substance-tracker:problem:' }),
 ]`,
     usageLanguage: 'typescript',
     height: 420,
@@ -926,7 +926,7 @@ readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? 
     name: 'three.js canvas',
     category: '3D',
     summary: 'A 3D view in the theme’s colours that pauses out of view and frees its GPU memory.',
-    api: '<kit-three-canvas>',
+    api: '<lenzi-three-canvas>',
     entry: '@lenzi/ui-kit/three',
     origin: 'new (lenzi, 2026-11-12: "we don\'t use it now, but we might")',
     files: ['three/src/three-canvas/three-canvas.ts', 'three/src/three-canvas/three-canvas.html', 'three/src/three-canvas/three-canvas.css', 'three/src/three-canvas/three-canvas.spec.ts'],
@@ -942,15 +942,15 @@ readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? 
         label: 'Colour',
         type: 'select',
         default: '--mat-sys-primary',
-        options: ['--mat-sys-primary', '--mat-sys-tertiary', '--mat-sys-secondary', '--kit-status-good'].map((value) => ({ value, label: value })),
+        options: ['--mat-sys-primary', '--mat-sys-tertiary', '--mat-sys-secondary', '--lenzi-status-good'].map((value) => ({ value, label: value })),
       },
     ],
-    usage: (v) => `import { KitThreeCanvas, KitThreeSetup } from '@lenzi/ui-kit/three';
+    usage: (v) => `import { LenziThreeCanvas, LenziThreeSetup } from '@lenzi/ui-kit/three';
 import { IcosahedronGeometry, Mesh, MeshStandardMaterial, DirectionalLight, AmbientLight } from 'three';
 
-<kit-three-canvas [setup]="scene" label="A violet icosahedron, turning"${v['animate'] ? '' : ' [animate]="false"'} />
+<lenzi-three-canvas [setup]="scene" label="A violet icosahedron, turning"${v['animate'] ? '' : ' [animate]="false"'} />
 
-scene: KitThreeSetup = ({ scene, color }) => {
+scene: LenziThreeSetup = ({ scene, color }) => {
   const shape = new Mesh(new IcosahedronGeometry(1.4, ${v['detail']}), new MeshStandardMaterial({ color: color('${v['color']}')${v['wireframe'] ? ', wireframe: true' : ''} }));
   scene.add(shape, new AmbientLight(0xffffff, 0.6), new DirectionalLight(0xffffff, 2.4));
   return { frame: (delta) => (shape.rotation.y += delta * ${v['speed']}) };

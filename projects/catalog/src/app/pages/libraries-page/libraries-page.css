@@ -42,8 +42,8 @@
   gap: 8px;
   min-width: 0;
   padding: 16px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--kit-panel-radius);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
   background: var(--mat-sys-surface-container-low);
 }
 

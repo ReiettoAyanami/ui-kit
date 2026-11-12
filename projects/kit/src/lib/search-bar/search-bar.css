@@ -2,7 +2,7 @@
   display: block;
 }
 
-/* As wide as its host; the shape comes from the global .kit-search-bar class (global.css). */
+/* As wide as its host; the shape comes from the global .lenzi-search-bar class (global.css). */
 .field {
   width: 100%;
 }

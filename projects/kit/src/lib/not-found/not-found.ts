@@ -8,17 +8,17 @@ import { RouterLink } from '@angular/router';
  * one way out. Route it as the app's `**`. A second action, if the app needs one, goes inside it.
  */
 @Component({
-  selector: 'kit-not-found',
+  selector: 'lenzi-not-found',
   imports: [MatButtonModule, RouterLink],
   templateUrl: './not-found.html',
   styleUrl: './not-found.css',
 })
-export class KitNotFound {
+export class LenziNotFound {
   /** The way out, in whole words: "Go to the tickets", "Sign in". */
   readonly linkLabel = input.required<string>();
   /** Where it goes: a router link. */
   readonly link = input.required<string | readonly unknown[]>();
-  // As a route's component (`{ path: '**', component: KitNotFound }`), the router binds every input it
+  // As a route's component (`{ path: '**', component: LenziNotFound }`), the router binds every input it
   // has no data for to undefined: the defaults hold then too.
   readonly code = input('404', { transform: (value: string | undefined) => value ?? '404' });
   readonly title = input('Page not found', { transform: (value: string | undefined) => value ?? 'Page not found' });

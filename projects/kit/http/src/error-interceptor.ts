@@ -2,16 +2,16 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { TimeoutError, catchError, throwError, timeout } from 'rxjs';
 
-import { ApiError, KIT_HTTP_OPTIONS } from './api-error';
+import { ApiError, LENZI_HTTP_OPTIONS } from './api-error';
 
 /**
  * Turns every failed response into an ApiError, and a request with no answer in time into one with
  * no status, like a network failure (RULES.md, "Data"; substance-tracker `data/error-interceptor.ts`).
- * No retries, no messages shown: the page decides what to say (describeError, KitStatusMessage, a
- * form's field errors). `provideHttpClient(withInterceptors([kitErrorInterceptor]))`.
+ * No retries, no messages shown: the page decides what to say (describeError, LenziStatusMessage, a
+ * form's field errors). `provideHttpClient(withInterceptors([lenziErrorInterceptor]))`.
  */
-export const kitErrorInterceptor: HttpInterceptorFn = (req, next) => {
-  const options = inject(KIT_HTTP_OPTIONS);
+export const lenziErrorInterceptor: HttpInterceptorFn = (req, next) => {
+  const options = inject(LENZI_HTTP_OPTIONS);
   return next(req).pipe(
     // `each`: the first event (the request sent) comes at once; the answer must follow within the time.
     timeout({ each: options.timeoutMs }),

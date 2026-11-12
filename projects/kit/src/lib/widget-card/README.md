@@ -1,6 +1,6 @@
 # Widget card
 
-`<kit-widget-card>`: the card of a chart (substance-tracker's widget, from lenzi's reference photo,
+`<lenzi-widget-card>`: the card of a chart (substance-tracker's widget, from lenzi's reference photo,
 2026-10-02): almost black on the anthracite page, very round corners, an icon in a round well at its head and
 a large title; when its chart can be read in several intervals, a toggle of them above it.
 
@@ -28,7 +28,7 @@ a large title; when its chart can be read in several intervals, a toggle of them
 
 ## Variables
 
-`--kit-widget-radius`.
+`--lenzi-widget-radius`.
 
 ## Origin
 

@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 
-import { KitSegment, KitSegmentedBar } from '@lenzi/ui-kit';
+import { LenziSegment, LenziSegmentedBar } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -8,7 +8,7 @@ import { Values } from '../../registry';
 /** Batches of a stock: each as wide as what is left of it; a tiny one stays visible. */
 @Component({
   selector: 'app-segmented-bar-demo',
-  imports: [KitSegmentedBar],
+  imports: [LenziSegmentedBar],
   templateUrl: './segmented-bar-demo.html',
   styleUrl: './segmented-bar-demo.css',
 })
@@ -16,7 +16,7 @@ export class SegmentedBarDemo {
   readonly values = input<Values>({});
   private readonly events = inject(DemoEvents);
 
-  protected readonly segments = computed<KitSegment[]>(() => {
+  protected readonly segments = computed<LenziSegment[]>(() => {
     const count = Number(this.values()['count'] ?? 4);
     const used = Number(this.values()['used'] ?? 30) / 100;
     return Array.from({ length: count }, (_, i) => ({

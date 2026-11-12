@@ -5,7 +5,7 @@ import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { identityColor } from '../identity-dot/identity-color';
 
 /** One segment of the bar. */
-export interface KitSegment {
+export interface LenziSegment {
   id: number | string;
   /** How much of the whole it is: a number, or the API's decimal string ("264.000"). */
   value: number | string;
@@ -18,7 +18,7 @@ export interface KitSegment {
 }
 
 /** One segment drawn alone, out of a whole of its own (what is left of what was bought of it). */
-export interface KitOnlySegment {
+export interface LenziOnlySegment {
   id: number | string;
   value: number | string;
   max: number | string;
@@ -37,20 +37,20 @@ const LONG_PRESS_MS = 500;
  * above or below it) says which. It computes nothing: the numbers are the API's.
  */
 @Component({
-  selector: 'kit-segmented-bar',
+  selector: 'lenzi-segmented-bar',
   imports: [MatTooltipModule],
   templateUrl: './segmented-bar.html',
   styleUrl: './segmented-bar.css',
   host: { '[class.selectable]': 'selectable()', '(click)': 'tapped($event)' },
 })
-export class KitSegmentedBar {
-  readonly segments = input.required<readonly KitSegment[]>();
+export class LenziSegmentedBar {
+  readonly segments = input.required<readonly LenziSegment[]>();
   /** The whole track: what the segments are a share of. */
   readonly max = input.required<number | string>();
   /** What the bar says to a screen reader: "Stock: 272 capsula". */
   readonly label = input('');
   /** Only this segment, out of its own whole; null: every segment, out of the maximum. */
-  readonly only = input<KitOnlySegment | null>(null);
+  readonly only = input<LenziOnlySegment | null>(null);
   /** Its segments can be tapped: a tap says which (`segmentSelect`) and goes no further. */
   readonly selectable = input(false, { transform: booleanAttribute });
   /** Where the segments' identity colours start in the band (0.5: a second kind of entity, as batches). */

@@ -1,4 +1,4 @@
-<kit-widget-card
+<lenzi-widget-card
   [title]="'' + values()['title']"
   [icon]="'' + values()['icon']"
   [subtitle]="values()['subtitle'] ? '' + values()['subtitle'] : null"
@@ -6,9 +6,9 @@
   [scale]="scale()"
   (scaleChange)="choose($event)"
 >
-  <kit-figure-grid>
-    <kit-figure label="This {{ scale() }}" value="€42.80" />
-    <kit-figure label="The one before" value="€51.10" />
-  </kit-figure-grid>
-  <kit-segmented-bar class="bar" label="Spent by substance" [segments]="segments" max="100" />
-</kit-widget-card>
+  <lenzi-figure-grid>
+    <lenzi-figure label="This {{ scale() }}" value="€42.80" />
+    <lenzi-figure label="The one before" value="€51.10" />
+  </lenzi-figure-grid>
+  <lenzi-segmented-bar class="bar" label="Spent by substance" [segments]="segments" max="100" />
+</lenzi-widget-card>

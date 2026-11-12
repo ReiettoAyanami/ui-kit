@@ -1,6 +1,6 @@
 # Segmented bar
 
-`<kit-segmented-bar>`: a bar split in segments, the whole track the maximum, each segment as wide as its
+`<lenzi-segmented-bar>`: a bar split in segments, the whole track the maximum, each segment as wide as its
 value, in its identity colour (substance-tracker's stock bar: one segment per batch).
 
 ## Rules
@@ -21,10 +21,10 @@ value, in its identity colour (substance-tracker's stock bar: one segment per ba
 
 | | Name | Type | Default |
 | --- | --- | --- | --- |
-| input | `segments` | `KitSegment[]` (`{ id, value, color?, label?, detail? }`) | required |
+| input | `segments` | `LenziSegment[]` (`{ id, value, color?, label?, detail? }`) | required |
 | input | `max` | `number \| string` | required |
 | input | `label` | `string` | `''` (what a screen reader hears) |
-| input | `only` | `KitOnlySegment \| null` (`{ id, value, max }`) | `null` |
+| input | `only` | `LenziOnlySegment \| null` (`{ id, value, max }`) | `null` |
 | input | `selectable` | `boolean` | `false` |
 | input | `colorOffset` | `number` | `0` |
 | input | `unnamed` | `string` | `'Unnamed'` |
@@ -32,7 +32,7 @@ value, in its identity colour (substance-tracker's stock bar: one segment per ba
 
 ## Variables
 
-`--kit-segment-height`, `--kit-segment-min`, `--kit-segment-gap`, `--kit-standard-duration`, `--kit-standard-easing`.
+`--lenzi-segment-height`, `--lenzi-segment-min`, `--lenzi-segment-gap`, `--lenzi-standard-duration`, `--lenzi-standard-easing`.
 
 ## Origin
 

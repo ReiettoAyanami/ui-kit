@@ -1,6 +1,6 @@
 # Period picker
 
-`<kit-period-picker>`: the two choices of whoever shows figures over time: the period (the last 7, 30, 90,
+`<lenzi-period-picker>`: the two choices of whoever shows figures over time: the period (the last 7, 30, 90,
 365 days, or all time) and the scale every rate and duration is read in (per day, week, month, year). Both
 are always the user's to choose (lenzi).
 
@@ -19,18 +19,18 @@ are always the user's to choose (lenzi).
 | --- | --- | --- | --- |
 | input | `period` | `number \| null` | `null` (days, 0 = all time) |
 | input | `scale` | `string \| null` | `null` |
-| input | `periods` | `KitPeriod[]` | `KIT_PERIODS` |
-| input | `scales` | `string[]` | `KIT_SCALES` (day, week, month, year) |
+| input | `periods` | `LenziPeriod[]` | `LENZI_PERIODS` |
+| input | `scales` | `string[]` | `LENZI_SCALES` (day, week, month, year) |
 | input | `periodLabel` / `scaleLabel` | `string` | `'Period'` / `'Per'` |
 | output | `periodChange` / `scaleChange` | `number` / `string` | |
 
-`kitPeriodLabel(days)`: "Last 30 days", "All time".
+`lenziPeriodLabel(days)`: "Last 30 days", "All time".
 
 ## Example
 
 ```html
 <div class="choices">
-  <kit-period-picker [period]="days()" [scale]="per()" (periodChange)="days.set($event)" (scaleChange)="per.set($event)" />
+  <lenzi-period-picker [period]="days()" [scale]="per()" (periodChange)="days.set($event)" (scaleChange)="per.set($event)" />
 </div>
 ```
 

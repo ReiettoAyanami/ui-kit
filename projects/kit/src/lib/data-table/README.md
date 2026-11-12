@@ -1,6 +1,6 @@
 # Data table
 
-`<kit-data-table>`: rows of figures, one per entity, its name fixed at the left with its identity dot, one
+`<lenzi-data-table>`: rows of figures, one per entity, its name fixed at the left with its identity dot, one
 column per figure. The header and the names stay in place while it scrolls sideways inside its own box, never
 the page.
 
@@ -23,13 +23,13 @@ the page.
 | --- | --- | --- | --- |
 | input | `nameHeader` | `string` | required |
 | input | `label` | `string` | required (for a screen reader) |
-| input | `columns` | `KitTableColumn[]` (`{ key, label, description?, text? }`) | required |
-| input | `rows` | `KitTableRow[]` (`{ id, name, details?, color?, sortKey?, values, label? }`) | required |
+| input | `columns` | `LenziTableColumn[]` (`{ key, label, description?, text? }`) | required |
+| input | `rows` | `LenziTableRow[]` (`{ id, name, details?, color?, sortKey?, values, label? }`) | required |
 | input | `sort` / `direction` | `string` / `'asc' \| 'desc' \| ''` | `''` |
-| input | `format` | `KitCellFormat` | the value as it is, "—" for none |
+| input | `format` | `LenziCellFormat` | the value as it is, "—" for none |
 | input | `locale` | `string` | `'en-GB'` |
 | output | `sortChange` | `Sort` | |
-| output | `opened` | `KitTableRow` | |
+| output | `opened` | `LenziTableRow` | |
 
 ## Origin
 

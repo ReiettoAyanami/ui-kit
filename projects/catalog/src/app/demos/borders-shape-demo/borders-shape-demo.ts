@@ -20,7 +20,7 @@ export class BordersShapeDemo {
 
   constructor() {
     const root = inject(DOCUMENT).documentElement;
-    effect(() => root.style.setProperty('--kit-border', `${this.values()['border'] ?? 2}px`));
-    inject(DestroyRef).onDestroy(() => root.style.removeProperty('--kit-border'));
+    effect(() => root.style.setProperty('--lenzi-border', `${this.values()['border'] ?? 2}px`));
+    inject(DestroyRef).onDestroy(() => root.style.removeProperty('--lenzi-border'));
   }
 }

@@ -12,12 +12,12 @@ import { MatInputModule } from '@angular/material/input';
  * have this shape. Keeping the text in the page's URL (`?q=`, replacing the entry) is the page's job.
  */
 @Component({
-  selector: 'kit-search-bar',
+  selector: 'lenzi-search-bar',
   imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule],
   templateUrl: './search-bar.html',
   styleUrl: './search-bar.css',
 })
-export class KitSearchBar {
+export class LenziSearchBar {
   /** What it looks for, written inside it: "Search substances and batches". */
   readonly placeholder = input.required<string>();
   /** The text in the bar; it changes at every key. */

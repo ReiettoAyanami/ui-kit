@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 
 import { identityColor } from './identity-color';
-import { KitIdentityDot } from './identity-dot';
+import { LenziIdentityDot } from './identity-dot';
 
-describe('KitIdentityDot', () => {
+describe('LenziIdentityDot', () => {
   function dot(inputs: Record<string, unknown>): HTMLElement {
-    const fixture = TestBed.createComponent(KitIdentityDot);
+    const fixture = TestBed.createComponent(LenziIdentityDot);
     for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;

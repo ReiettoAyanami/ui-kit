@@ -1,6 +1,6 @@
 # Pull to refresh
 
-`<kit-pull-to-refresh>`: with the page at its top, a finger pulling down brings a disc down from under the top
+`<lenzi-pull-to-refresh>`: with the page at its top, a finger pulling down brings a disc down from under the top
 bar, its arrow turning with the pull; let go beyond the threshold, the arrow spins while the page asks for its
 data again, then the disc goes back up. Only the gesture, no button.
 
@@ -23,11 +23,11 @@ data again, then the disc goes back up. Only the gesture, no button.
 ## Example
 
 ```html
-<kit-app-shell>
+<lenzi-app-shell>
   …
-  @if (inApp) { <kit-pull-to-refresh kitShellBelow [refresh]="refresh" /> }
+  @if (inApp) { <lenzi-pull-to-refresh lenziShellBelow [refresh]="refresh" /> }
   <router-outlet />
-</kit-app-shell>
+</lenzi-app-shell>
 ```
 
 ## Origin

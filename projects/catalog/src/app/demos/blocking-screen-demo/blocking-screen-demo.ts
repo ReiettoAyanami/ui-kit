@@ -1,13 +1,13 @@
 import { Component, computed, inject, input } from '@angular/core';
 
-import { KitBlockingScreen } from '@lenzi/ui-kit';
+import { LenziBlockingScreen } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-blocking-screen-demo',
-  imports: [KitBlockingScreen],
+  imports: [LenziBlockingScreen],
   templateUrl: './blocking-screen-demo.html',
   styleUrl: './blocking-screen-demo.css',
 })

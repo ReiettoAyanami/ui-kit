@@ -1,6 +1,6 @@
 # API errors
 
-`@lenzi/ui-kit/http`: every failed request becomes one `ApiError` (`kitErrorInterceptor`), so pages and forms
+`@lenzi/ui-kit/http`: every failed request becomes one `ApiError` (`lenziErrorInterceptor`), so pages and forms
 read failures the same way.
 
 ## Rules
@@ -16,8 +16,8 @@ read failures the same way.
 
 ## API
 
-- `kitErrorInterceptor`: `provideHttpClient(withFetch(), withInterceptors([kitErrorInterceptor]))`.
-- `provideKitHttp({ problemTypePrefix?, timeoutMs? })`.
+- `lenziErrorInterceptor`: `provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor]))`.
+- `provideLenziHttp({ problemTypePrefix?, timeoutMs? })`.
 - `ApiError`, `FieldError`, `isApiError(error)`, `isUnreachable(error)`.
 
 ## Origin

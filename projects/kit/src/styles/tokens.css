@@ -2,52 +2,52 @@
    catalog, never this file: it is written again from them. */
 :root {
   /* Glass */
-  --kit-glass: 56%;
-  --kit-glass-bar: 66%;
-  --kit-glass-blur: 24px;
-  --kit-glass-saturate: 160%;
-  --kit-scrim-blur: 6px;
-  --kit-scrim-opacity: 32%;
+  --lenzi-glass: 56%;
+  --lenzi-glass-bar: 66%;
+  --lenzi-glass-blur: 24px;
+  --lenzi-glass-saturate: 160%;
+  --lenzi-scrim-blur: 6px;
+  --lenzi-scrim-opacity: 32%;
 
   /* Borders */
-  --kit-border: 2px;
-  --kit-border-focus: 3px;
+  --lenzi-border: 2px;
+  --lenzi-border-focus: 3px;
 
   /* Shape */
-  --kit-float-gap: 8px;
-  --kit-bar-radius: 16px;
-  --kit-panel-radius: 12px;
-  --kit-option-radius: 8px;
-  --kit-card-radius: 28px;
-  --kit-widget-radius: 24px;
+  --lenzi-float-gap: 8px;
+  --lenzi-bar-radius: 16px;
+  --lenzi-panel-radius: 12px;
+  --lenzi-option-radius: 8px;
+  --lenzi-card-radius: 28px;
+  --lenzi-widget-radius: 24px;
 
   /* Motion */
-  --kit-window-rise: 24px;
-  --kit-panel-rise: 8px;
-  --kit-rise-duration: 300ms;
-  --kit-rise-easing: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --kit-window-exit: 150ms;
-  --kit-scrim-duration: 400ms;
-  --kit-standard-duration: 300ms;
-  --kit-standard-easing: cubic-bezier(0.2, 0, 0, 1);
+  --lenzi-window-rise: 24px;
+  --lenzi-panel-rise: 8px;
+  --lenzi-rise-duration: 300ms;
+  --lenzi-rise-easing: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --lenzi-window-exit: 150ms;
+  --lenzi-scrim-duration: 400ms;
+  --lenzi-standard-duration: 300ms;
+  --lenzi-standard-easing: cubic-bezier(0.2, 0, 0, 1);
 
   /* Sizes */
-  --kit-toggle-height: 32px;
-  --kit-toggle-padding: 14px;
-  --kit-pill-padding: 10px;
-  --kit-search-height: 48px;
-  --kit-fab-size: 64px;
-  --kit-fab-icon: 28px;
-  --kit-drawer-width: 240px;
-  --kit-nav-gap: 6px;
-  --kit-segment-height: 12px;
-  --kit-segment-min: 6px;
-  --kit-segment-gap: 2px;
-  --kit-dot-size: 10px;
+  --lenzi-toggle-height: 32px;
+  --lenzi-toggle-padding: 14px;
+  --lenzi-pill-padding: 10px;
+  --lenzi-search-height: 48px;
+  --lenzi-fab-size: 64px;
+  --lenzi-fab-icon: 28px;
+  --lenzi-drawer-width: 240px;
+  --lenzi-nav-gap: 6px;
+  --lenzi-segment-height: 12px;
+  --lenzi-segment-min: 6px;
+  --lenzi-segment-gap: 2px;
+  --lenzi-dot-size: 10px;
 
   /* Status colours */
-  --kit-status-good: #6ed889;
-  --kit-status-bad: #ff8a80;
+  --lenzi-status-good: #6ed889;
+  --lenzi-status-bad: #ff8a80;
 
   /* Surfaces */
   --mat-sys-background: #1f1f22;

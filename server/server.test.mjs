@@ -29,7 +29,7 @@ test('gives the variables, and says whether it can save them', async () => {
 test('saving is off unless the development server turns it on', async () => {
   const { tokensJson, tokensCss } = await scratch();
   const app = await buildServer({ tokensJson, tokensCss });
-  const answer = await app.inject({ method: 'PUT', url: '/api/tokens', payload: { values: { '--kit-glass': '60%' } } });
+  const answer = await app.inject({ method: 'PUT', url: '/api/tokens', payload: { values: { '--lenzi-glass': '60%' } } });
   assert.equal(answer.statusCode, 403);
   assert.equal(answer.headers['content-type'], 'application/problem+json; charset=utf-8');
   assert.equal(answer.json().title, 'Saving is off');
@@ -38,23 +38,23 @@ test('saving is off unless the development server turns it on', async () => {
 test('the development server saves the values into the JSON and the CSS', async () => {
   const { tokensJson, tokensCss } = await scratch();
   const app = await buildServer({ tokensJson, tokensCss, allowSave: true });
-  const answer = await app.inject({ method: 'PUT', url: '/api/tokens', payload: { values: { '--kit-glass': '60%', '--kit-border': '3px' } } });
+  const answer = await app.inject({ method: 'PUT', url: '/api/tokens', payload: { values: { '--lenzi-glass': '60%', '--lenzi-border': '3px' } } });
   assert.equal(answer.statusCode, 200);
   const saved = JSON.parse(await readFile(tokensJson, 'utf8'));
-  const glass = saved.groups.flatMap((g) => g.tokens).find((t) => t.name === '--kit-glass');
+  const glass = saved.groups.flatMap((g) => g.tokens).find((t) => t.name === '--lenzi-glass');
   assert.equal(glass.value, '60%');
   const css = await readFile(tokensCss, 'utf8');
-  assert.match(css, /--kit-glass: 60%;/);
-  assert.match(css, /--kit-border: 3px;/);
+  assert.match(css, /--lenzi-glass: 60%;/);
+  assert.match(css, /--lenzi-border: 3px;/);
 });
 
 test('a wrong value is refused with what is wrong, and nothing is written', async () => {
   const { tokensJson, tokensCss } = await scratch();
   const before = await readFile(tokensJson, 'utf8');
   const app = await buildServer({ tokensJson, tokensCss, allowSave: true });
-  const answer = await app.inject({ method: 'PUT', url: '/api/tokens', payload: { values: { '--kit-glass': '60%', '--kit-border': '2px; }' } } });
+  const answer = await app.inject({ method: 'PUT', url: '/api/tokens', payload: { values: { '--lenzi-glass': '60%', '--lenzi-border': '2px; }' } } });
   assert.equal(answer.statusCode, 400);
-  assert.deepEqual(answer.json().errors, [{ field: '--kit-border', message: 'not a length value' }]);
+  assert.deepEqual(answer.json().errors, [{ field: '--lenzi-border', message: 'not a length value' }]);
   assert.equal(await readFile(tokensJson, 'utf8'), before);
 });
 

@@ -6,10 +6,10 @@
     </p>
   }
   @if (failure(); as failure) {
-    <kit-status-message kind="error" [text]="failure" />
+    <lenzi-status-message kind="error" [text]="failure" />
   } @else if (document.hasValue()) {
     <app-markdown [source]="document.value()" />
   } @else {
-    <kit-status-message kind="loading" />
+    <lenzi-status-message kind="loading" />
   }
 </main>

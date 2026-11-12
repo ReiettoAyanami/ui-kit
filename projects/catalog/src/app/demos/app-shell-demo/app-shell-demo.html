@@ -1,13 +1,13 @@
-<kit-app-shell [title]="title()" [bare]="!!values()['bare']">
-  <kit-nav-list kitShellNav appName="Substance tracker" subtitle="lenzi" [pages]="pages" [bottom]="bottom" (pressed)="log('pressed ' + $event)" (navigated)="log('went to ' + $event.label)" />
+<lenzi-app-shell [title]="title()" [bare]="!!values()['bare']">
+  <lenzi-nav-list lenziShellNav appName="Substance tracker" subtitle="lenzi" [pages]="pages" [bottom]="bottom" (pressed)="log('pressed ' + $event)" (navigated)="log('went to ' + $event.label)" />
   @if (values()['actions']) {
-    <kit-notification-bell kitShellActions noun="tickets" [items]="news" (opened)="log('bell opened')" />
+    <lenzi-notification-bell lenziShellActions noun="tickets" [items]="news" (opened)="log('bell opened')" />
   }
   @if (values()['banner']) {
-    <kit-info-bar kitShellBanner icon="visibility" tone="tertiary" actionLabel="Exit" (action)="log('exit')">Viewing as <strong>lenzi</strong></kit-info-bar>
+    <lenzi-info-bar lenziShellBanner icon="visibility" tone="tertiary" actionLabel="Exit" (action)="log('exit')">Viewing as <strong>lenzi</strong></lenzi-info-bar>
   }
   @if (values()['below']) {
-    <kit-info-bar kitShellBelow icon="cloud_off">Offline · data from 14:32</kit-info-bar>
+    <lenzi-info-bar lenziShellBelow icon="cloud_off">Offline · data from 14:32</lenzi-info-bar>
   }
   <main class="page">
     @for (row of rows; track row) {
@@ -17,4 +17,4 @@
       </div>
     }
   </main>
-</kit-app-shell>
+</lenzi-app-shell>

@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitFigure } from './figure';
+import { LenziFigure } from './figure';
 
-describe('KitFigure', () => {
+describe('LenziFigure', () => {
   function figure(inputs: Record<string, unknown>) {
-    const fixture = TestBed.createComponent(KitFigure);
+    const fixture = TestBed.createComponent(LenziFigure);
     for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;

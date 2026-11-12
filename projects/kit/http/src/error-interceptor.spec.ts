@@ -3,16 +3,16 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 
-import { ApiError, isApiError, isUnreachable, provideKitHttp } from './api-error';
-import { kitErrorInterceptor } from './error-interceptor';
+import { ApiError, isApiError, isUnreachable, provideLenziHttp } from './api-error';
+import { lenziErrorInterceptor } from './error-interceptor';
 
-describe('kitErrorInterceptor', () => {
+describe('lenziErrorInterceptor', () => {
   function setup(prefix: string | null = null) {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([kitErrorInterceptor])),
+        provideHttpClient(withInterceptors([lenziErrorInterceptor])),
         provideHttpClientTesting(),
-        provideKitHttp({ problemTypePrefix: prefix, timeoutMs: 50 }),
+        provideLenziHttp({ problemTypePrefix: prefix, timeoutMs: 50 }),
       ],
     });
     return { http: TestBed.inject(HttpClient), backend: TestBed.inject(HttpTestingController) };

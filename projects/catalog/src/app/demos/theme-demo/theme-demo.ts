@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 
-import { KitFigure } from '@lenzi/ui-kit';
+import { LenziFigure } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
@@ -31,7 +31,7 @@ const TYPE = ['display-small', 'headline-medium', 'headline-small', 'title-large
 /** The theme's colour roles, each with its value as the page has it now, and the type scale. */
 @Component({
   selector: 'app-theme-demo',
-  imports: [KitFigure],
+  imports: [LenziFigure],
   templateUrl: './theme-demo.html',
   styleUrl: './theme-demo.css',
 })
@@ -40,7 +40,7 @@ export class ThemeDemo {
   protected readonly show = computed(() => String(this.values()['show'] ?? 'colours'));
 
   protected readonly roles = ROLES.map((role) => ({ role, variable: `--mat-sys-${role}` }));
-  protected readonly statuses = ['--kit-status-good', '--kit-status-bad'];
+  protected readonly statuses = ['--lenzi-status-good', '--lenzi-status-bad'];
   protected readonly type = TYPE;
 
   protected valueOf(variable: string): string {

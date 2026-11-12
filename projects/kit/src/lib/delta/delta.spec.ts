@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitDelta } from './delta';
+import { LenziDelta } from './delta';
 
-describe('KitDelta', () => {
+describe('LenziDelta', () => {
   function delta(inputs: Record<string, unknown>) {
-    const fixture = TestBed.createComponent(KitDelta);
+    const fixture = TestBed.createComponent(LenziDelta);
     for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;

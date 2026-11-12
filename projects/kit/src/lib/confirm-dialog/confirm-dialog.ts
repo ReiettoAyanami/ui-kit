@@ -6,7 +6,7 @@ import { Observable, from, isObservable } from 'rxjs';
 import { describeError } from '../util/describe-error';
 
 /** What the confirmation asks and does. */
-export interface KitConfirmData {
+export interface LenziConfirmData {
   /** A question: "Delete this consumption?", "Sign out?". */
   title: string;
   /** What confirming costs, in a sentence or two: "Its consumptions are deleted too." */
@@ -25,17 +25,17 @@ export interface KitConfirmData {
  * Asks before an action and runs it (RULES.md, "Dialogs"; substance-tracker: Delete, Sign out).
  * Closes with `true` once the action succeeded, with nothing on Cancel; on an error it stays open
  * and says why (the API's detail and status). The confirm button is disabled while the action runs:
- * no double submit. Open it with KitDialogs, so the back button closes it.
+ * no double submit. Open it with LenziDialogs, so the back button closes it.
  */
 @Component({
-  selector: 'kit-confirm-dialog',
+  selector: 'lenzi-confirm-dialog',
   imports: [MatButtonModule, MatDialogModule],
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.css',
 })
-export class KitConfirmDialog {
-  protected readonly data = inject<KitConfirmData>(MAT_DIALOG_DATA);
-  private readonly dialog = inject<MatDialogRef<KitConfirmDialog, true>>(MatDialogRef);
+export class LenziConfirmDialog {
+  protected readonly data = inject<LenziConfirmData>(MAT_DIALOG_DATA);
+  private readonly dialog = inject<MatDialogRef<LenziConfirmDialog, true>>(MatDialogRef);
 
   /** The action is running: the button is disabled (no double submit). */
   protected readonly running = signal(false);

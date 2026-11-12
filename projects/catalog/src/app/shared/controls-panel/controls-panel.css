@@ -9,8 +9,8 @@
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--kit-panel-radius);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
   background: var(--mat-sys-surface-container-low);
 }
 
@@ -59,7 +59,7 @@
   box-sizing: border-box;
   width: 84px;
   padding: 6px 8px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 8px;
   background: transparent;
   color: var(--mat-sys-on-surface);
@@ -88,7 +88,7 @@
   width: 44px;
   height: 32px;
   padding: 0;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 8px;
   background: transparent;
 }

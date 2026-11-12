@@ -2,14 +2,14 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 
-import { KitCardMenu, KitMenuAction } from './card-menu';
+import { LenziCardMenu, LenziMenuAction } from './card-menu';
 
 @Component({
-  imports: [KitCardMenu],
-  template: `<div class="card" (click)="opened = opened + 1"><kit-card-menu label="Actions for Birra" [actions]="actions" (action)="chosen.push($event)" /></div>`,
+  imports: [LenziCardMenu],
+  template: `<div class="card" (click)="opened = opened + 1"><lenzi-card-menu label="Actions for Birra" [actions]="actions" (action)="chosen.push($event)" /></div>`,
 })
 class Host {
-  readonly actions: KitMenuAction[] = [
+  readonly actions: LenziMenuAction[] = [
     { id: 'edit', label: 'Edit', icon: 'edit' },
     { id: 'delete', label: 'Delete', icon: 'delete', destructive: true },
   ];
@@ -17,7 +17,7 @@ class Host {
   chosen: string[] = [];
 }
 
-describe('KitCardMenu', () => {
+describe('LenziCardMenu', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [{ provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } }] }));
   afterEach(() => document.querySelectorAll('.cdk-overlay-container').forEach((overlay) => overlay.remove()));
 

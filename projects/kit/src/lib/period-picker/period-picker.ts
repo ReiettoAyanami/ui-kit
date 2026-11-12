@@ -3,13 +3,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 
 /** A period offered: the last N days, or all time (0). */
-export interface KitPeriod {
+export interface LenziPeriod {
   days: number;
   label: string;
 }
 
 /** The periods substance-tracker offers: the last 7, 30, 90, 365 days, or all time. */
-export const KIT_PERIODS: readonly KitPeriod[] = [
+export const LENZI_PERIODS: readonly LenziPeriod[] = [
   { days: 7, label: 'Last 7 days' },
   { days: 30, label: 'Last 30 days' },
   { days: 90, label: 'Last 90 days' },
@@ -18,10 +18,10 @@ export const KIT_PERIODS: readonly KitPeriod[] = [
 ];
 
 /** The scales substance-tracker offers: what rates and durations are read in. */
-export const KIT_SCALES: readonly string[] = ['day', 'week', 'month', 'year'];
+export const LENZI_SCALES: readonly string[] = ['day', 'week', 'month', 'year'];
 
 /** "Last 30 days", "All time"; "Last 14 days" for a period not in the list. */
-export function kitPeriodLabel(days: number, periods: readonly KitPeriod[] = KIT_PERIODS): string {
+export function lenziPeriodLabel(days: number, periods: readonly LenziPeriod[] = LENZI_PERIODS): string {
   return periods.find((p) => p.days === days)?.label ?? `Last ${days} days`;
 }
 
@@ -33,18 +33,18 @@ export function kitPeriodLabel(days: number, periods: readonly KitPeriod[] = KIT
  * wrap with the host's other choices.
  */
 @Component({
-  selector: 'kit-period-picker',
+  selector: 'lenzi-period-picker',
   imports: [MatFormFieldModule, MatSelectModule],
   templateUrl: './period-picker.html',
   styleUrl: './period-picker.css',
 })
-export class KitPeriodPicker {
+export class LenziPeriodPicker {
   /** The period, in days (0 = all time); null: no period to choose. */
   readonly period = input<number | null>(null);
   /** The scale; null: no scale to choose. */
   readonly scale = input<string | null>(null);
-  readonly periods = input<readonly KitPeriod[]>(KIT_PERIODS);
-  readonly scales = input<readonly string[]>(KIT_SCALES);
+  readonly periods = input<readonly LenziPeriod[]>(LENZI_PERIODS);
+  readonly scales = input<readonly string[]>(LENZI_SCALES);
   readonly periodLabel = input('Period');
   readonly scaleLabel = input('Per');
   readonly periodChange = output<number>();

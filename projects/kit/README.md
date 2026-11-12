@@ -13,15 +13,15 @@ lenzi's Angular component kit: Angular Material 3, heavily modified (dark violet
 
 ```ts
 // app.config.ts
-providers: [provideKit({ appId: 'my-app' }), provideHttpClient(withFetch(), withInterceptors([kitErrorInterceptor]))]
+providers: [provideLenziKit({ appId: 'my-app' }), provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor]))]
 ```
 
 | Entry point | What |
 | --- | --- |
 | `@lenzi/ui-kit` | the shell, navigation, buttons, toggles, search bar, figures, bars, tables, dialogs, messages, services, utilities |
-| `@lenzi/ui-kit/charts` | `KitChart` (peer dependencies: `echarts`, `ngx-echarts`) |
-| `@lenzi/ui-kit/three` | `KitThreeCanvas` (peer dependency: `three`) |
-| `@lenzi/ui-kit/http` | `ApiError`, `kitErrorInterceptor` |
+| `@lenzi/ui-kit/charts` | `LenziChart` (peer dependencies: `echarts`, `ngx-echarts`) |
+| `@lenzi/ui-kit/three` | `LenziThreeCanvas` (peer dependency: `three`) |
+| `@lenzi/ui-kit/http` | `ApiError`, `lenziErrorInterceptor` |
 
 ## Read first
 

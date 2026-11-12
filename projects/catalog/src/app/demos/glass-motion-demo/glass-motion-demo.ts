@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { of } from 'rxjs';
 
-import { KitConfirmData, KitConfirmDialog, KitDialogs } from '@lenzi/ui-kit';
+import { LenziConfirmData, LenziConfirmDialog, LenziDialogs } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -21,7 +21,7 @@ import { Values } from '../../registry';
 export class GlassMotionDemo {
   readonly values = input<Values>({});
 
-  private readonly dialogs = inject(KitDialogs);
+  private readonly dialogs = inject(LenziDialogs);
   private readonly snackBar = inject(MatSnackBar);
   private readonly events = inject(DemoEvents);
 
@@ -30,18 +30,18 @@ export class GlassMotionDemo {
     effect(() => {
       const values = this.values();
       root.classList.toggle('reduce-transparency', values['reduce'] === true);
-      root.style.setProperty('--kit-glass', `${values['glass'] ?? 56}%`);
-      root.style.setProperty('--kit-glass-blur', `${values['blur'] ?? 24}px`);
+      root.style.setProperty('--lenzi-glass', `${values['glass'] ?? 56}%`);
+      root.style.setProperty('--lenzi-glass-blur', `${values['blur'] ?? 24}px`);
     });
     inject(DestroyRef).onDestroy(() => {
       root.classList.remove('reduce-transparency');
-      root.style.removeProperty('--kit-glass');
-      root.style.removeProperty('--kit-glass-blur');
+      root.style.removeProperty('--lenzi-glass');
+      root.style.removeProperty('--lenzi-glass-blur');
     });
   }
 
   protected async openWindow(): Promise<void> {
-    const closed = await this.dialogs.open<KitConfirmDialog, KitConfirmData, true>(KitConfirmDialog, {
+    const closed = await this.dialogs.open<LenziConfirmDialog, LenziConfirmData, true>(LenziConfirmDialog, {
       title: 'A window in glass',
       message: 'Full size from the first frame: it rises into place, its content fades in. Close it with the back button too.',
       confirm: 'Close',

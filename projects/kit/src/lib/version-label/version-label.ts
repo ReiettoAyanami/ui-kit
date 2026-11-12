@@ -8,13 +8,13 @@ import { Component, input } from '@angular/core';
  * makes it.
  */
 @Component({
-  selector: 'kit-version-label',
+  selector: 'lenzi-version-label',
   imports: [],
   templateUrl: './version-label.html',
   styleUrl: './version-label.css',
   host: { '[class.inline]': "placement() === 'inline'" },
 })
-export class KitVersionLabel {
+export class LenziVersionLabel {
   /** The version running: "dev26.0.0.0002"; null or empty while it is not known. */
   readonly version = input<string | null>(null);
   /** fixed: the screen's corner (the only place in an app); inline: where its host puts it. */

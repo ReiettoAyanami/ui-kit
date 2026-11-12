@@ -118,7 +118,7 @@
           "url": "https://echarts.apache.org",
           "role": "The charts: bars, lines, donut, treemap, radar, drawn in SVG.",
           "rules": [
-            "Only through KitChart (@lenzi/ui-kit/charts): the one component that knows the chart library.",
+            "Only through LenziChart (@lenzi/ui-kit/charts): the one component that knows the chart library.",
             "The modular import only (echarts/core plus the pieces used): never the whole of ECharts.",
             "The SVG renderer; the theme's colours read from its variables."
           ],
@@ -133,7 +133,7 @@
           "url": "https://github.com/xieziyu/ngx-echarts",
           "role": "The Angular directive around ECharts (resizing, updates).",
           "rules": [
-            "Only inside KitChart."
+            "Only inside LenziChart."
           ],
           "versions": {
             "kit": "21.0.0",
@@ -146,7 +146,7 @@
           "url": "https://threejs.org",
           "role": "3D, for later (lenzi, 2026-11-12: \"we don't use it now, but we might\").",
           "rules": [
-            "Only through KitThreeCanvas (@lenzi/ui-kit/three): it owns the renderer, the size, the frame loop and freeing the GPU memory.",
+            "Only through LenziThreeCanvas (@lenzi/ui-kit/three): it owns the renderer, the size, the frame loop and freeing the GPU memory.",
             "A page with 3D is a lazy route: three.js is heavy.",
             "Colours from the theme (context.color('--mat-sys-primary')), never hard-coded."
           ],
@@ -294,7 +294,7 @@
           "url": "https://fastify.dev",
           "role": "The kit's server (saving the variables, serving the catalog in Docker); the API of both apps.",
           "rules": [
-            "Errors as Problem Details (RFC 9457), the shape kitErrorInterceptor reads."
+            "Errors as Problem Details (RFC 9457), the shape lenziErrorInterceptor reads."
           ],
           "versions": {
             "kit": "5.12.8",

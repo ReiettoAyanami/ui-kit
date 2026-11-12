@@ -7,7 +7,7 @@ const SLOP_PX = 10;
 /** The disc follows the finger at half its speed, as if pulled against a spring. */
 const RESISTANCE = 0.5;
 /** Released beyond this, the pull refreshes the page; before it, it is let go. */
-export const KIT_PULL_THRESHOLD_PX = 72;
+export const LENZI_PULL_THRESHOLD_PX = 72;
 /** The disc goes no further down than this. */
 const MAX_PULL_PX = 112;
 
@@ -24,16 +24,16 @@ function pullDisabled(route: ActivatedRouteSnapshot | null): boolean {
  * no button. With the page at its top, a finger pulling down brings a disc down from under the top
  * bar, its arrow turning with the pull; let go beyond the threshold, the arrow spins while `refresh`
  * runs, then the disc goes back up. It watches the touches of the element it sits in (put it in the
- * shell's content, `kitShellBelow`), so the drawer, the dialogs and the overlays never start one;
+ * shell's content, `lenziShellBelow`), so the drawer, the dialogs and the overlays never start one;
  * routes with `data: { pullToRefresh: false }` neither. Touch only: a mouse never pulls.
  */
 @Component({
-  selector: 'kit-pull-to-refresh',
+  selector: 'lenzi-pull-to-refresh',
   imports: [MatIconModule],
   templateUrl: './pull-to-refresh.html',
   styleUrl: './pull-to-refresh.css',
 })
-export class KitPullToRefresh {
+export class LenziPullToRefresh {
   /** What a pull does: ask the server and the page's data again. The disc spins until it settles. */
   readonly refresh = input.required<() => Promise<unknown>>();
   /** What the spinning disc says to a screen reader. */
@@ -48,7 +48,7 @@ export class KitPullToRefresh {
   /** Released beyond the threshold: the refresh is running. */
   protected readonly refreshing = signal(false);
   /** How much of the threshold the pull has covered, 0 to 1: the arrow turns and appears with it. */
-  protected readonly progress = computed(() => Math.min(1, this.distance() / KIT_PULL_THRESHOLD_PX));
+  protected readonly progress = computed(() => Math.min(1, this.distance() / LENZI_PULL_THRESHOLD_PX));
 
   private start: { x: number; y: number } | null = null;
 
@@ -102,13 +102,13 @@ export class KitPullToRefresh {
       this.start = null;
       return;
     }
-    if (this.distance() < KIT_PULL_THRESHOLD_PX) {
+    if (this.distance() < LENZI_PULL_THRESHOLD_PX) {
       this.letGo();
       return;
     }
     this.start = null;
     this.dragging.set(false);
-    this.distance.set(KIT_PULL_THRESHOLD_PX);
+    this.distance.set(LENZI_PULL_THRESHOLD_PX);
     this.refreshing.set(true);
     try {
       await this.refresh()();

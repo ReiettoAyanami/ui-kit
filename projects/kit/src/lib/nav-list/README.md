@@ -1,6 +1,6 @@
 # Navigation list
 
-`<kit-nav-list>`: the drawer's content. The app's name at the top (and under it who is signed in), one link
+`<lenzi-nav-list>`: the drawer's content. The app's name at the top (and under it who is signed in), one link
 per page with its icon, the current one highlighted; at the bottom, apart from the pages, the rest
 (settings, sign out).
 
@@ -12,9 +12,9 @@ per page with its icon, the current one highlighted; at the bottom, apart from t
 - **Entries 6 px apart** (lenzi, 2026-10-03: "distanzia leggermente di più i bottoni nel menu laterale in
   altezza"); their names bold.
 - **The app's name a little bigger** than the entries (title-large).
-- **A tap on a link closes the drawer** (inside `KitAppShell`, by itself).
+- **A tap on a link closes the drawer** (inside `LenziAppShell`, by itself).
 - **Sign out asks first** (lenzi, 2026-10-03: "sign out ha bisogno di una richiesta di conferma"): a button
-  entry, `(pressed)` opens a `KitConfirmDialog`.
+  entry, `(pressed)` opens a `LenziConfirmDialog`.
 
 ## API
 
@@ -22,22 +22,22 @@ per page with its icon, the current one highlighted; at the bottom, apart from t
 | --- | --- | --- | --- | --- |
 | input | `appName` | `string` | required | |
 | input | `subtitle` | `string \| null` | `null` | who is signed in |
-| input | `pages` | `KitNavEntry[]` | required | |
-| input | `bottom` | `KitNavEntry[]` | `[]` | settings, sign out |
+| input | `pages` | `LenziNavEntry[]` | required | |
+| input | `bottom` | `LenziNavEntry[]` | `[]` | settings, sign out |
 | input | `label` | `string` | `'Pages'` | the navigation's accessible name |
-| output | `navigated` | `KitNavEntry` | | a link was tapped |
+| output | `navigated` | `LenziNavEntry` | | a link was tapped |
 | output | `pressed` | `string` | | a button entry's id |
 
-`KitNavEntry`: `{ label, icon, link?, exact?, id? }`. With a `link` it is a link; without, a button.
+`LenziNavEntry`: `{ label, icon, link?, exact?, id? }`. With a `link` it is a link; without, a button.
 
 ## Example
 
 ```ts
-pages: KitNavEntry[] = [
+pages: LenziNavEntry[] = [
   { label: 'Consumptions', icon: 'history', link: '/' },
   { label: 'Substances', icon: 'inventory_2', link: '/substances' },
 ];
-bottom: KitNavEntry[] = [
+bottom: LenziNavEntry[] = [
   { label: 'Sign out', icon: 'logout', id: 'sign-out' },
   { label: 'Settings', icon: 'settings', link: '/settings' },
 ];

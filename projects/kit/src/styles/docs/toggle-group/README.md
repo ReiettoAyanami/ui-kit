@@ -10,13 +10,13 @@ little more room at each side of a label.
 
 ## When not to use
 
-- One pill that switches what a figure beside it shows: `KitPillToggle`.
+- One pill that switches what a figure beside it shows: `LenziPillToggle`.
 - Many choices, or long ones: a select.
 
 ## Rules
 
-- **32 px high** (`--kit-toggle-height`; lenzi, 2026-09-30: 48 was "ciccio in altezza", then 36, then 32).
-- **14 px at each side of a label** (`--kit-toggle-padding`): lower, not narrower.
+- **32 px high** (`--lenzi-toggle-height`; lenzi, 2026-09-30: 48 was "ciccio in altezza", then 36, then 32).
+- **14 px at each side of a label** (`--lenzi-toggle-padding`): lower, not narrower.
 - **Less tall never means less round** (lenzi: "il raggio di bordo era godevole").
 - **Whole words**: "average", never "avg" (lenzi, 2026-09-30).
 - No check mark on the chosen one: `hideSingleSelectionIndicator`.

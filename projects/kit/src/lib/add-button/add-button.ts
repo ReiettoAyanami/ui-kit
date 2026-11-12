@@ -8,13 +8,13 @@ import { MatIconModule } from '@angular/material/icon';
  * From substance-tracker and vtiger-reader `ui/add-button` (the same in both).
  */
 @Component({
-  selector: 'kit-add-button',
+  selector: 'lenzi-add-button',
   imports: [MatButtonModule, MatIconModule],
   templateUrl: './add-button.html',
   styleUrl: './add-button.css',
   host: { '[class.inline]': "placement() === 'inline'" },
 })
-export class KitAddButton {
+export class LenziAddButton {
   /** What the button does, for screen readers, in whole words: "Add substance". */
   readonly label = input.required<string>();
   /**

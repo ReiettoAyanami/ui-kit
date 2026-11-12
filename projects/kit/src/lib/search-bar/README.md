@@ -1,20 +1,20 @@
 # Search bar
 
-`<kit-search-bar>`: an elongated circle like a browser's bar (lenzi, 2026-09-30: "come la barra di Chrome …
+`<lenzi-search-bar>`: an elongated circle like a browser's bar (lenzi, 2026-09-30: "come la barra di Chrome …
 non quadrato con i bordi smussati"): a magnifier at the left, what it looks for written inside it, a ✕ that
 clears it.
 
 ## Rules
 
 - **Only search bars** have this shape; every other text field keeps Material's corners.
-- **48 px high**, its ends half circles (`--kit-search-height`).
+- **48 px high**, its ends half circles (`--lenzi-search-height`).
 - **It searches as it is typed**, once the typing pauses (300 ms), with no button (lenzi, 2026-09-30).
 - **The ✕ brings the whole list back at once.**
 - **The text lives in the page's URL** (`?q=`), replacing the entry, so back does not walk through the
   letters and a link, a refresh and back keep the search. That is the page's job: it gives `value` and
   hears `search`.
 - **Nothing found** says so with what was searched: "No substance or batch with “…” in its name"
-  (`KitStatusMessage`).
+  (`LenziStatusMessage`).
 
 ## API
 
@@ -28,7 +28,7 @@ clears it.
 ## Example
 
 ```html
-<kit-search-bar placeholder="Search substances and batches" [value]="q() ?? ''" (search)="search($event)" />
+<lenzi-search-bar placeholder="Search substances and batches" [value]="q() ?? ''" (search)="search($event)" />
 ```
 
 ```ts
@@ -39,7 +39,7 @@ search(text: string) {
 
 ## Variables
 
-`--kit-search-height`.
+`--lenzi-search-height`.
 
 ## Origin
 

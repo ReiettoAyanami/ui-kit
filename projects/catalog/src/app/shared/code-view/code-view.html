@@ -11,9 +11,9 @@
 </div>
 <p class="path">projects/kit/{{ chosen() }}</p>
 @if (failure(); as failure) {
-  <kit-status-message kind="error" [text]="failure" compact />
+  <lenzi-status-message kind="error" [text]="failure" compact />
 } @else if (file.isLoading() && !file.hasValue()) {
-  <kit-status-message kind="loading" compact />
+  <lenzi-status-message kind="loading" compact />
 } @else {
   <pre class="code"><code class="hljs" [innerHTML]="coloured()"></code></pre>
 }

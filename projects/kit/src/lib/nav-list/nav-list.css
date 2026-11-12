@@ -21,7 +21,7 @@ nav {
 /* A little air between the entries (lenzi, 2026-10-03: "distanzia leggermente di più i bottoni nel
    menu laterale in altezza"). */
 [mat-list-item] + [mat-list-item] {
-  margin-top: var(--kit-nav-gap);
+  margin-top: var(--lenzi-nav-gap);
 }
 
 /* A little bigger than the entries (lenzi, 2026-10-01). */

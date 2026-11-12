@@ -2,11 +2,11 @@
   @if (described()) {
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Add a metric</mat-label>
-      <mat-select panelClass="kit-described-options" [value]="metric()" (selectionChange)="metric.set($event.value); log('metric ' + $event.value)">
+      <mat-select panelClass="lenzi-described-options" [value]="metric()" (selectionChange)="metric.set($event.value); log('metric ' + $event.value)">
         @for (option of metrics; track option.key) {
           <mat-option [value]="option.key">
-            <span class="kit-option-label">{{ option.label }}</span>
-            <span class="kit-option-description">{{ option.description }}</span>
+            <span class="lenzi-option-label">{{ option.label }}</span>
+            <span class="lenzi-option-description">{{ option.description }}</span>
           </mat-option>
         }
       </mat-select>

@@ -1,26 +1,26 @@
 <!-- The page never moves: hiding the app around it (bare) must not create the page again. -->
-<mat-sidenav-container class="kit-shell" [class.kit-shell-bare]="isBare()">
+<mat-sidenav-container class="lenzi-shell" [class.lenzi-shell-bare]="isBare()">
   <!-- Opened, the focus goes to the current page's entry, not to the first one: a focused entry is
        drawn highlighted, and the first page looked selected on every page (lenzi, 2026-10-03). -->
   <mat-sidenav
-    class="kit-shell-drawer"
+    class="lenzi-shell-drawer"
     fixedInViewport
     [fixedTopGap]="8"
     [fixedBottomGap]="8"
     mode="over"
     autoFocus='[aria-current="page"]'
-  ><ng-content select="[kitShellNav]" /></mat-sidenav>
+  ><ng-content select="[lenziShellNav]" /></mat-sidenav>
 
-  <mat-sidenav-content class="kit-shell-content">
-    <div class="kit-shell-banner"><ng-content select="[kitShellBanner]" /></div>
-    <mat-toolbar class="kit-shell-bar">
-      <button mat-icon-button type="button" class="kit-shell-menu" [attr.aria-label]="menuLabel()" (click)="openNav($event)">
+  <mat-sidenav-content class="lenzi-shell-content">
+    <div class="lenzi-shell-banner"><ng-content select="[lenziShellBanner]" /></div>
+    <mat-toolbar class="lenzi-shell-bar">
+      <button mat-icon-button type="button" class="lenzi-shell-menu" [attr.aria-label]="menuLabel()" (click)="openNav($event)">
         <mat-icon>menu</mat-icon>
       </button>
-      <span class="kit-shell-title">{{ shownTitle() }}</span>
-      <ng-content select="[kitShellActions]" />
+      <span class="lenzi-shell-title">{{ shownTitle() }}</span>
+      <ng-content select="[lenziShellActions]" />
     </mat-toolbar>
-    <div class="kit-shell-below"><ng-content select="[kitShellBelow]" /></div>
+    <div class="lenzi-shell-below"><ng-content select="[lenziShellBelow]" /></div>
     <ng-content />
   </mat-sidenav-content>
 </mat-sidenav-container>

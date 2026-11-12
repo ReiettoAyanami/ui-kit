@@ -9,7 +9,7 @@ app takes: `styles/kit.scss` (the theme, the global variables, the global rules)
 - **Dark only** (lenzi, 2026-10-02): `color-scheme: dark`; the system's light setting is not followed.
 - **Violet accents** (Material's violet palette), **cyan tertiary**; **neutral grey surfaces**, not the
   palette's violet-tinted ones: the page `#1f1f22`, the chart cards `#121214`, windows and menus lighter.
-- **Status colours** (`--kit-status-good`, `--kit-status-bad`) are the only colours with a meaning.
+- **Status colours** (`--lenzi-status-good`, `--lenzi-status-bad`) are the only colours with a meaning.
 - **One font: Roboto Mono** (lenzi, 2026-10-02: "Usa roboto mono per tutto"). **Bold (700)** for display,
   headline, title and label styles; values regular. Material's sizes.
 - **Colours and type always through variables**: `var(--mat-sys-primary)`, `font: var(--mat-sys-title-medium)`.

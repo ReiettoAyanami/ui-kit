@@ -1,6 +1,6 @@
 # Version label
 
-`<kit-version-label>`: the app's version in the bottom right corner of every page, small and faint, under the
+`<lenzi-version-label>`: the app's version in the bottom right corner of every page, small and faint, under the
 "+" and the windows, never in the way of a tap (lenzi, 2026-10-03: "metti in basso la sottoversione in basso a
 destra").
 
@@ -21,7 +21,7 @@ destra").
 ## Example
 
 ```html
-<kit-version-label [version]="version.value() ?? null" />
+<lenzi-version-label [version]="version.value() ?? null" />
 ```
 
 ## Origin

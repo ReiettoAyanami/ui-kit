@@ -3,7 +3,7 @@
 import { InjectionToken, Provider } from '@angular/core';
 
 /**
- * A failed API call, as kitErrorInterceptor hands it to the caller. Built from the Problem Details
+ * A failed API call, as lenziErrorInterceptor hands it to the caller. Built from the Problem Details
  * body (RFC 9457) when there is one; a network failure, or no answer in time, has no status.
  */
 export interface ApiError {
@@ -21,20 +21,20 @@ export interface FieldError {
   message: string;
 }
 
-export interface KitHttpOptions {
+export interface LenziHttpOptions {
   /** How long a request waits for an answer before it counts as unanswered, in ms. */
   timeoutMs: number;
   /** The start of the API's problem types (`urn:substance-tracker:problem:`): what is after it is the code. Null: the part after the last ":" or "/". */
   problemTypePrefix: string | null;
 }
 
-export const KIT_HTTP_OPTIONS = new InjectionToken<KitHttpOptions>('KIT_HTTP_OPTIONS', {
+export const LENZI_HTTP_OPTIONS = new InjectionToken<LenziHttpOptions>('LENZI_HTTP_OPTIONS', {
   factory: () => ({ timeoutMs: 15_000, problemTypePrefix: null }),
 });
 
-/** The app's own options for kitErrorInterceptor: `providers: [provideKitHttp({ problemTypePrefix: 'urn:my-app:problem:' })]`. */
-export function provideKitHttp(options: Partial<KitHttpOptions>): Provider {
-  return { provide: KIT_HTTP_OPTIONS, useValue: { timeoutMs: 15_000, problemTypePrefix: null, ...options } };
+/** The app's own options for lenziErrorInterceptor: `providers: [provideLenziHttp({ problemTypePrefix: 'urn:my-app:problem:' })]`. */
+export function provideLenziHttp(options: Partial<LenziHttpOptions>): Provider {
+  return { provide: LENZI_HTTP_OPTIONS, useValue: { timeoutMs: 15_000, problemTypePrefix: null, ...options } };
 }
 
 /**
@@ -45,7 +45,7 @@ export function isUnreachable(error: ApiError): boolean {
   return error.status === null || error.status === 502 || error.status === 503 || error.status === 504;
 }
 
-/** Whether something is an ApiError (a failure from kitErrorInterceptor). */
+/** Whether something is an ApiError (a failure from lenziErrorInterceptor). */
 export function isApiError(error: unknown): error is ApiError {
   return typeof error === 'object' && error !== null && 'fieldErrors' in error && 'title' in error && 'status' in error;
 }

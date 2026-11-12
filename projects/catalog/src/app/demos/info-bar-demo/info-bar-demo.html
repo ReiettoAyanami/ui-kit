@@ -1,9 +1,9 @@
-<kit-info-bar
+<lenzi-info-bar
   class="bar"
   [icon]="'' + values()['icon']"
   [tone]="tone()"
   [actionLabel]="values()['action'] ? '' + values()['action'] : null"
   (action)="events.log('action: ' + values()['action'])"
-  >{{ values()['text'] }}</kit-info-bar
+  >{{ values()['text'] }}</lenzi-info-bar
 >
 <p class="hint">Neutral: a state of the app. Secondary: news. Tertiary: something unusual not to forget.</p>

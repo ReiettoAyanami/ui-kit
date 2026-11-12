@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
-import { KitAppearance } from '@lenzi/ui-kit';
+import { LenziAppearance } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 
@@ -13,7 +13,7 @@ import { DemoEvents } from '../../shared/demo-events';
   styleUrl: './appearance-demo.css',
 })
 export class AppearanceDemo {
-  protected readonly appearance = inject(KitAppearance);
+  protected readonly appearance = inject(LenziAppearance);
   private readonly events = inject(DemoEvents);
 
   protected set(reduce: boolean): void {

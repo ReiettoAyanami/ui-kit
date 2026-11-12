@@ -4,11 +4,11 @@
       <p class="category">{{ doc.category }}</p>
       <h1 class="title">{{ doc.name }}</h1>
       <p class="summary">{{ doc.summary }}</p>
-      <kit-figure-grid class="facts">
-        <kit-figure label="Use" [value]="doc.api" />
-        <kit-figure label="Import from" [value]="doc.entry === 'styles' ? 'the styles (kit.scss)' : doc.entry" />
-        <kit-figure label="Comes from" [value]="doc.origin" />
-      </kit-figure-grid>
+      <lenzi-figure-grid class="facts">
+        <lenzi-figure label="Use" [value]="doc.api" />
+        <lenzi-figure label="Import from" [value]="doc.entry === 'styles' ? 'the styles (kit.scss)' : doc.entry" />
+        <lenzi-figure label="Comes from" [value]="doc.origin" />
+      </lenzi-figure-grid>
     </header>
 
     <mat-tab-group class="tabs" mat-stretch-tabs="false" animationDuration="0ms" [selectedIndex]="tabIndex()" (selectedIndexChange)="chooseTab($event)">
@@ -35,11 +35,11 @@
         <ng-template matTabContent>
           <div class="doc">
             @if (readme.error()) {
-              <kit-status-message kind="error" [text]="failure('the rules', readme.error())" />
+              <lenzi-status-message kind="error" [text]="failure('the rules', readme.error())" />
             } @else if (readme.hasValue()) {
               <app-markdown [source]="readme.value()" />
             } @else {
-              <kit-status-message kind="loading" />
+              <lenzi-status-message kind="loading" />
             }
           </div>
         </ng-template>
@@ -56,11 +56,11 @@
               </span>
             </p>
             @if (ai.error()) {
-              <kit-status-message kind="error" [text]="failure('the AI notes', ai.error())" />
+              <lenzi-status-message kind="error" [text]="failure('the AI notes', ai.error())" />
             } @else if (ai.hasValue()) {
               <app-markdown [source]="ai.value()" />
             } @else {
-              <kit-status-message kind="loading" />
+              <lenzi-status-message kind="loading" />
             }
           </div>
         </ng-template>
@@ -78,23 +78,23 @@
         <ng-template matTabContent>
           <div class="doc">
             @if (variables.error()) {
-              <kit-status-message kind="error" [text]="failure('the variables', variables.error())" />
+              <lenzi-status-message kind="error" [text]="failure('the variables', variables.error())" />
             } @else if (variables.hasValue()) {
               @if (variables.value().length) {
                 <p class="intro">
                   The global variables its styles read. Change them on the <a routerLink="/variables">Variables</a> page: every
                   piece that uses them changes with it.
                 </p>
-                <kit-figure-grid>
+                <lenzi-figure-grid>
                   @for (token of variables.value(); track token.name) {
-                    <kit-figure [label]="token.label" [value]="token.value + ' (' + token.name + ')'" [description]="token.description" />
+                    <lenzi-figure [label]="token.label" [value]="token.value + ' (' + token.name + ')'" [description]="token.description" />
                   }
-                </kit-figure-grid>
+                </lenzi-figure-grid>
               } @else {
-                <kit-status-message text="Its styles use no global variable of the kit: only Material's own." />
+                <lenzi-status-message text="Its styles use no global variable of the kit: only Material's own." />
               }
             } @else {
-              <kit-status-message kind="loading" />
+              <lenzi-status-message kind="loading" />
             }
           </div>
         </ng-template>
@@ -117,5 +117,5 @@
     </nav>
   </main>
 } @else {
-  <kit-not-found title="No such page" text="The kit has no page with this name." linkLabel="Go to the components" link="/components" />
+  <lenzi-not-found title="No such page" text="The kit has no page with this name." linkLabel="Go to the components" link="/components" />
 }

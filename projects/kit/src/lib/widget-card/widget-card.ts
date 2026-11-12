@@ -7,16 +7,16 @@ import { MatIconModule } from '@angular/material/icon';
  * The card of a chart (substance-tracker `ui/widget`, from lenzi's reference photo, 2026-10-02):
  * almost black on the anthracite page, very round corners, an icon in a round well at its head and a
  * large title; when the chart can be read in several intervals, a toggle of them above it, each card
- * its own (lenzi, 2026-10-01: "ogni card suo toggle"). What it shows goes inside it (a KitChart, a
+ * its own (lenzi, 2026-10-01: "ogni card suo toggle"). What it shows goes inside it (a LenziChart, a
  * figure, a message). It loads nothing itself: the page asks and saves.
  */
 @Component({
-  selector: 'kit-widget-card',
+  selector: 'lenzi-widget-card',
   imports: [MatButtonToggleModule, MatCardModule, MatIconModule],
   templateUrl: './widget-card.html',
   styleUrl: './widget-card.css',
 })
-export class KitWidgetCard {
+export class LenziWidgetCard {
   readonly title = input.required<string>();
   /** The icon of what it measures: quantities "inventory_2", counts "numbers", money "payments", prices "sell", hours "schedule". */
   readonly icon = input<string | null>(null);

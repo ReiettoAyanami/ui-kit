@@ -1,8 +1,8 @@
 <button mat-flat-button type="button" (click)="send()">Send the request</button>
 @if (error(); as error) {
-  <kit-figure-grid class="facts">
-    <kit-figure label="What the page says" [value]="line()" />
-    <kit-figure label="The server answered" [value]="unreachable() ? 'no: unreachable' : 'yes'" />
-  </kit-figure-grid>
+  <lenzi-figure-grid class="facts">
+    <lenzi-figure label="What the page says" [value]="line()" />
+    <lenzi-figure label="The server answered" [value]="unreachable() ? 'no: unreachable' : 'yes'" />
+  </lenzi-figure-grid>
   <app-markdown [source]="json()" />
 }

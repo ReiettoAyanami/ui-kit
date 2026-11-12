@@ -1,13 +1,13 @@
 import { Component, computed, inject, input } from '@angular/core';
 
-import { KitInfoBar } from '@lenzi/ui-kit';
+import { LenziInfoBar } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-info-bar-demo',
-  imports: [KitInfoBar],
+  imports: [LenziInfoBar],
   templateUrl: './info-bar-demo.html',
   styleUrl: './info-bar-demo.css',
 })

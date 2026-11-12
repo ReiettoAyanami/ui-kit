@@ -9,13 +9,13 @@ import { MatIconModule } from '@angular/material/icon';
  * be reached. Only for what truly blocks: anything else is an info bar.
  */
 @Component({
-  selector: 'kit-blocking-screen',
+  selector: 'lenzi-blocking-screen',
   imports: [MatButtonModule, MatIconModule],
   templateUrl: './blocking-screen.html',
   styleUrl: './blocking-screen.css',
   host: { '[class.inline]': "placement() === 'inline'" },
 })
-export class KitBlockingScreen {
+export class LenziBlockingScreen {
   /** A Material icon: "system_update", "dns". */
   readonly icon = input<string | null>(null);
   /** What happened, in a few words: "Update required". */

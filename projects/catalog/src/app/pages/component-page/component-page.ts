@@ -6,7 +6,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { Router, RouterLink } from '@angular/router';
 import { combineLatest, map, of } from 'rxjs';
 
-import { KitFigure, KitFigureGrid, KitNotFound, KitStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid, LenziNotFound, LenziStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
 
 import { CodeView } from '../../shared/code-view/code-view';
 import { ControlsPanel } from '../../shared/controls-panel/controls-panel';
@@ -30,10 +30,10 @@ type Tab = (typeof TABS)[number];
     CodeView,
     ControlsPanel,
     DemoStage,
-    KitFigure,
-    KitFigureGrid,
-    KitNotFound,
-    KitStatusMessage,
+    LenziFigure,
+    LenziFigureGrid,
+    LenziNotFound,
+    LenziStatusMessage,
     Markdown,
     MatButtonModule,
     MatIconModule,
@@ -80,7 +80,7 @@ export class ComponentPage {
     stream: ({ params }) =>
       combineLatest([params.length ? combineLatest(params.map((file) => this.files.text(file))) : of([] as string[]), this.tokensApi.load()]).pipe(
         map(([styles, document]) => {
-          const used = new Set(styles.join('\n').match(/--kit-[a-z0-9-]+/g) ?? []);
+          const used = new Set(styles.join('\n').match(/--lenzi-[a-z0-9-]+/g) ?? []);
           return document.groups.flatMap((group) => group.tokens.filter((token) => used.has(token.name)).map((token) => ({ ...token, group: group.id })));
         }),
       ),

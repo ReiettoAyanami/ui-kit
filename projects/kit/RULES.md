@@ -24,10 +24,10 @@ the rule says what, the variable says how much.
 - **Accents from Material's violet palette** (primary), cyan for the tertiary.
 - **Surfaces are neutral greys**, not the palette's violet-tinted ones: the page anthracite (`#1f1f22`),
   the chart cards almost black (`surface-container-lowest`), windows and menus lighter.
-- **Colours come from the theme's variables** (`--mat-sys-*`, `--kit-*`), never written by hand in a
+- **Colours come from the theme's variables** (`--mat-sys-*`, `--lenzi-*`), never written by hand in a
   component.
-- **Status colours are the only colours with a meaning**: `--kit-status-good` (green) and
-  `--kit-status-bad` (red), a pair for the dark theme (lenzi, 2026-10-09). Nothing else is green or red
+- **Status colours are the only colours with a meaning**: `--lenzi-status-good` (green) and
+  `--lenzi-status-bad` (red), a pair for the dark theme (lenzi, 2026-10-09). Nothing else is green or red
   because of what it says.
 
 ## Typography
@@ -41,7 +41,7 @@ the rule says what, the variable says how much.
 ## Figures
 
 - **A figure is its name on top, bold, and its value under it** (lenzi, 2026-10-02: "Voglio cos'è sopra
-  e il valore sotto"). `KitFigure`.
+  e il valore sotto"). `LenziFigure`.
 - **Never two pieces of data on one line joined by "·"** in a card, a list or a tree: one line, one
   fact.
 - **The server computes, the page shows.** A number that means something comes from the API, already
@@ -52,13 +52,13 @@ the rule says what, the variable says how much.
 ## Glass
 
 - **Windows, menus and bars are see-through** (lenzi, 2026-10-01: "un po' di trasparenza nelle
-  finestre", like Android 17's app menu and notification shade): they keep `--kit-glass` (56%) of their
-  colour, the top bar `--kit-glass-bar` (66%), and blur what is under them (24 px, saturation 160%).
+  finestre", like Android 17's app menu and notification shade): they keep `--lenzi-glass` (56%) of their
+  colour, the top bar `--lenzi-glass-bar` (66%), and blur what is under them (24 px, saturation 160%).
 - **Glass**: dialogs, page windows, the drawer, menus, selects, autocomplete, date and time pickers,
   snackbars, tooltips, the top bar. **Solid**: cards, tables and panels of a page (nothing is under
   them), and the info bars (they must stand out).
 - **The scrims blur the page** behind a dialog, a page window or the drawer (6 px).
-- **Reduce transparency** (`KitAppearance`, and the system's own `prefers-reduced-transparency`) makes
+- **Reduce transparency** (`LenziAppearance`, and the system's own `prefers-reduced-transparency`) makes
   every surface solid again.
 
 ## Motion
@@ -71,12 +71,12 @@ the rule says what, the variable says how much.
 - **The blur is whole from the first frame** (lenzi, 2026-10-02: "metti il blur all'apertura di ogni
   pagina che sotto mostra il resto"): the glass never fades in, what it holds does.
 - **A window waits for its content** (hidden, at most 400 ms) so it appears at its size: mark what it
-  waits for with `kit-not-ready`.
+  waits for with `lenzi-not-ready`.
 - **None of it with reduced motion.**
 
 ## Borders and shape
 
-- **Every rounded border is 2 px** (`--kit-border`), Material's and ours (lenzi, 2026-10-02: "i bordi
+- **Every rounded border is 2 px** (`--lenzi-border`), Material's and ours (lenzi, 2026-10-02: "i bordi
   agli angoli non hanno lo stesso spessore dei lati DA NESSUNA PARTE"): at 100% scale a 1 px border is
   smeared at half strength along a corner. A focused field 3 px. **Straight dividers stay 1 px.**
 - **Every surface that rises above the page has a border** in `outline-variant`: cards, panels,
@@ -90,12 +90,12 @@ the rule says what, the variable says how much.
 
 - **A drawer on every screen**, opened from the menu button in the top bar, closed after a tap on a
   link (lenzi, 2026-10-02: "la barra di fianco si apra con un tasto come la versione android"). 240 px
-  wide. `KitAppShell` + `KitNavList`.
+  wide. `LenziAppShell` + `LenziNavList`.
 - **The drawer holds links only, no data**: the app's name at the top, one link per page with its icon,
   the current one highlighted (also on its child routes), the rest at the bottom (settings, sign out).
 - **The top bar shows the current route's title** and sticks while the page scrolls under its glass.
 - **The document scrolls, not the shell.**
-- **Unknown addresses** get the not-found page (`KitNotFound`) with one way out.
+- **Unknown addresses** get the not-found page (`LenziNotFound`) with one way out.
 - **The version** sits in the bottom right corner of every page, small and faint (lenzi, 2026-10-03).
 
 ## Actions and words
@@ -105,22 +105,22 @@ the rule says what, the variable says how much.
   write it in its own design.
 - **The language of the interface is the app's** (substance-tracker and vtiger-reader: English); code,
   names, comments always English.
-- **The floating "+"** (`KitAddButton`) is the page's one way of adding: bottom right, 64 px (a little
+- **The floating "+"** (`LenziAddButton`) is the page's one way of adding: bottom right, 64 px (a little
   larger than Material's 56, lenzi 2026-09-29). It says it was pressed; the page decides what opens.
 - **Toggles are pills, 32 px high** (lenzi, 2026-09-30: 48 px was "ciccio in altezza"), each label with
   14 px at its sides. **Less tall never means less round.** Two or more choices side by side: a toggle
-  group; one pill that switches what a figure shows: `KitPillToggle`.
+  group; one pill that switches what a figure shows: `LenziPillToggle`.
 - **Search bars are elongated circles** like a browser's (lenzi, 2026-09-30: "come la barra di Chrome …
   non quadrato con i bordi smussati"), 48 px high, a magnifier and what they look for inside them; they
   search as you type (300 ms pause), a ✕ clears them, the text lives in the page's URL. **Only search
-  bars** have this shape. `KitSearchBar`.
+  bars** have this shape. `LenziSearchBar`.
 - **No tap highlight** (lenzi, 2026-10-10): Material's own state layers are the feedback.
 
 ## Cards
 
 - **A card opens its page or its details on a tap.** It is not a button or a link when it holds
   something interactive (a toggle, a menu): their taps never reach the card.
-- **Its actions are in a ⋮ menu at its top right** (`KitCardMenu`): Edit, Delete, Details.
+- **Its actions are in a ⋮ menu at its top right** (`LenziCardMenu`): Edit, Delete, Details.
 - **The same thing is the same colour everywhere**: its identity colour (below), shown as a dot next to
   its name.
 
@@ -128,16 +128,16 @@ the rule says what, the variable says how much.
 
 - **One form component per entity**, used everywhere that entity is created or edited; it decides its
   mode (new or edit) from its input.
-- **The back button closes a dialog** (it has its own history entry): open dialogs with `KitDialogs`.
+- **The back button closes a dialog** (it has its own history entry): open dialogs with `LenziDialogs`.
 - **Every save button is disabled on tap** (no double submit); the dialog closes on the server's
   success; on a 400 it stays open with each error under its field, in the API's words; errors of no
   field above the buttons.
-- **Destructive actions ask first** (`KitConfirmDialog`), and their button is in the error colour.
-- **A lighter window** (details): `panelClass: 'kit-dialog-raised'`.
+- **Destructive actions ask first** (`LenziConfirmDialog`), and their button is in the error colour.
+- **A lighter window** (details): `panelClass: 'lenzi-dialog-raised'`.
 
 ## Lists and empty states
 
-- **What a list says instead of its content** (`KitStatusMessage`): "…" while it loads, a short
+- **What a list says instead of its content** (`LenziStatusMessage`): "…" while it loads, a short
   sentence when there is nothing, and why it failed ("Could not load the substances: Not found (404)").
   A failure is never a blank page.
 - **A list keeps what it shows while the next page loads** (`keptValue`): nothing shrinks or blinks.
@@ -146,7 +146,7 @@ the rule says what, the variable says how much.
 ## Tables
 
 - **Names fixed at the left, bold, with their identity dot; numbers at the right in columns.**
-- **A table scrolls sideways inside its own box**, never the page (`KitDataTable`).
+- **A table scrolls sideways inside its own box**, never the page (`LenziDataTable`).
 - A tap on a header orders by it; a tap on a row opens it.
 
 ## Identity colours
@@ -158,13 +158,13 @@ the rule says what, the variable says how much.
 
 ## Charts
 
-- **Only through `KitChart`** (Apache ECharts, the modular import, SVG).
+- **Only through `LenziChart`** (Apache ECharts, the modular import, SVG).
 - **Bars with rounded ends**; in a stack only the outer pieces are rounded. **Soft lines** (2.5 px) that
   never dip under zero. **No axis lines or ticks**, a faint horizontal grid.
 - **The period in progress** is striped, its label in the theme's violet, a line's last stretch dashed
   (lenzi, 2026-10-02: "Si tratteggio").
 - **Each line in its identity colour**; chips above the chart hide lines by hand.
-- **The chart's card** (`KitWidgetCard`): almost black, 24 px corners, an icon in a round well, a large
+- **The chart's card** (`LenziWidgetCard`): almost black, 24 px corners, an icon in a round well, a large
   title, its own interval toggle (lenzi, 2026-10-01: "ogni card suo toggle").
 - **Tooltips in dark glass**, like every tooltip.
 
@@ -178,7 +178,7 @@ the rule says what, the variable says how much.
 
 ## 3D
 
-- **Only through `KitThreeCanvas`**, in the theme's colours, on a lazy route.
+- **Only through `LenziThreeCanvas`**, in the theme's colours, on a lazy route.
 
 ## Code
 
@@ -188,6 +188,6 @@ the rule says what, the variable says how much.
 - **Standalone components, signals** (`input()`, `output()`, `model()`, `computed()`), the new control
   flow.
 - **Gateways are the only code that calls `HttpClient`**; failures arrive as `ApiError`
-  (`kitErrorInterceptor`).
+  (`lenziErrorInterceptor`).
 - **Every page is a lazy route.**
 - **Code in English**: names, comments, messages.

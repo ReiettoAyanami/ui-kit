@@ -3,7 +3,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 
 /** One column of figures. */
-export interface KitTableColumn {
+export interface LenziTableColumn {
   key: string;
   /** Its header: "Stock", "Spent". */
   label: string;
@@ -14,7 +14,7 @@ export interface KitTableColumn {
 }
 
 /** One row: an entity, its name fixed at the left. */
-export interface KitTableRow {
+export interface LenziTableRow {
   id: string | number;
   /** Its name, bold; cut when long (the whole name is on its page). */
   name: string;
@@ -31,9 +31,9 @@ export interface KitTableRow {
 }
 
 /** How a cell reads: the page formats (a currency, a unit); by default the value as it is, "—" for none. */
-export type KitCellFormat = (value: string | number | null | undefined, column: KitTableColumn, row: KitTableRow) => string;
+export type LenziCellFormat = (value: string | number | null | undefined, column: LenziTableColumn, row: LenziTableRow) => string;
 
-const defaultFormat: KitCellFormat = (value) => (value === null || value === undefined || value === '' ? '—' : String(value));
+const defaultFormat: LenziCellFormat = (value) => (value === null || value === undefined || value === '' ? '—' : String(value));
 
 /**
  * A table of figures (RULES.md, "Tables"; substance-tracker `ui/metrics-table`): one row per
@@ -44,40 +44,40 @@ const defaultFormat: KitCellFormat = (value) => (value === null || value === und
  * with no value goes last in either direction.
  */
 @Component({
-  selector: 'kit-data-table',
+  selector: 'lenzi-data-table',
   imports: [MatSortModule, MatTableModule],
   templateUrl: './data-table.html',
   styleUrl: './data-table.css',
 })
-export class KitDataTable {
+export class LenziDataTable {
   /** The header of the names' column: "Substance". */
   readonly nameHeader = input.required<string>();
   /** What the table is, for a screen reader. */
   readonly label = input.required<string>();
-  readonly columns = input.required<readonly KitTableColumn[]>();
-  readonly rows = input.required<readonly KitTableRow[]>();
+  readonly columns = input.required<readonly LenziTableColumn[]>();
+  readonly rows = input.required<readonly LenziTableRow[]>();
   /** The column the rows are ordered by ('name' or a column's key); '' = the order given. */
   readonly sort = input('');
   readonly direction = input<'asc' | 'desc' | ''>('');
-  readonly format = input<KitCellFormat>(defaultFormat);
+  readonly format = input<LenziCellFormat>(defaultFormat);
   /** The locale names are compared in. */
   readonly locale = input('en-GB');
   readonly sortChange = output<Sort>();
-  readonly opened = output<KitTableRow>();
+  readonly opened = output<LenziTableRow>();
 
   protected readonly columnIds = computed(() => ['name', ...this.columns().map((c) => c.key)]);
 
   private readonly collator = computed(() => new Intl.Collator(this.locale()));
 
   /** The rows, in the order of the column chosen. */
-  protected readonly sorted = computed<KitTableRow[]>(() => {
+  protected readonly sorted = computed<LenziTableRow[]>(() => {
     const rows = [...this.rows()];
     const sort = this.sort();
     const direction = this.direction();
     if (!sort || !direction) return rows;
     const column = this.columns().find((c) => c.key === sort);
     const text = sort === 'name' || column?.text === true;
-    const cell = (row: KitTableRow): string | number | null => {
+    const cell = (row: LenziTableRow): string | number | null => {
       if (sort === 'name') return row.sortKey ?? row.name;
       const value = row.values[sort];
       if (value === null || value === undefined || value === '') return null;
@@ -95,7 +95,7 @@ export class KitDataTable {
     });
   });
 
-  protected cell(row: KitTableRow, column: KitTableColumn): string {
+  protected cell(row: LenziTableRow, column: LenziTableColumn): string {
     return this.format()(row.values[column.key], column, row);
   }
 }

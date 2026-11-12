@@ -2,7 +2,7 @@ import { Component, DestroyRef, ElementRef, afterNextRender, booleanAttribute, e
 import { Color, Material, Mesh, PerspectiveCamera, SRGBColorSpace, Scene, Texture, WebGLRenderer } from 'three';
 
 /** What a scene's setup gets: the scene to fill, the camera and renderer, and the theme's colours. */
-export interface KitThreeContext {
+export interface LenziThreeContext {
   scene: Scene;
   camera: PerspectiveCamera;
   renderer: WebGLRenderer;
@@ -13,7 +13,7 @@ export interface KitThreeContext {
 }
 
 /** What a setup can give back. */
-export interface KitThreeScene {
+export interface LenziThreeScene {
   /** Called at every frame while the canvas is in view and moving: move things. `delta` and `elapsed` in seconds. */
   frame?: (delta: number, elapsed: number) => void;
   /** Called when the scene goes: free what the setup made outside the scene (the canvas frees the scene's geometries, materials and textures). */
@@ -21,7 +21,7 @@ export interface KitThreeScene {
 }
 
 /** Fills the scene: adds meshes and lights, places the camera. Runs again when it changes. */
-export type KitThreeSetup = (context: KitThreeContext) => KitThreeScene | void;
+export type LenziThreeSetup = (context: LenziThreeContext) => LenziThreeScene | void;
 
 /**
  * A three.js canvas (RULES.md, "3D"; three.js is in the kit for later: no app uses it yet). It owns
@@ -33,15 +33,15 @@ export type KitThreeSetup = (context: KitThreeContext) => KitThreeScene | void;
  * three.js is heavy: put the page that uses it behind a lazy route.
  */
 @Component({
-  selector: 'kit-three-canvas',
+  selector: 'lenzi-three-canvas',
   imports: [],
   templateUrl: './three-canvas.html',
   styleUrl: './three-canvas.css',
   host: { '[style.height]': 'height()' },
 })
-export class KitThreeCanvas {
+export class LenziThreeCanvas {
   /** Fills the scene. */
-  readonly setup = input.required<KitThreeSetup>();
+  readonly setup = input.required<LenziThreeSetup>();
   /** What the picture shows, for a screen reader: the canvas is an image. */
   readonly label = input.required<string>();
   /** The frame loop runs (still false: one frame, drawn again when the size changes). */
@@ -62,7 +62,7 @@ export class KitThreeCanvas {
   private renderer: WebGLRenderer | null = null;
   private readonly camera = new PerspectiveCamera(50, 1, 0.1, 100);
   private scene = new Scene();
-  private current: KitThreeScene = {};
+  private current: LenziThreeScene = {};
   private frameId: number | null = null;
   private visible = true;
   private reducedMotion = false;

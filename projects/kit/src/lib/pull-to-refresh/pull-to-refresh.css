@@ -1,9 +1,9 @@
-/* The disc waits tucked under the top bar (64 px high, floating under the status bar: KitAppShell)
+/* The disc waits tucked under the top bar (64 px high, floating under the status bar: LenziAppShell)
    and comes down from under it with the pull: under the bar (z-index 5), above the page, under the
    "+" (10) and the windows (20). Material 3's pull-to-refresh: a 40 px disc, a circle of its surface. */
 .disc {
   position: fixed;
-  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px) + 64px - 40px);
+  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px) + 64px - 40px);
   left: calc(50% - 20px);
   z-index: 4;
   display: flex;
@@ -35,10 +35,10 @@
 
 /* Released: the arrow spins until the page has its data, or the server did not answer. */
 .disc.spinning mat-icon {
-  animation: kit-pull-spin 900ms linear infinite;
+  animation: lenzi-pull-spin 900ms linear infinite;
 }
 
-@keyframes kit-pull-spin {
+@keyframes lenzi-pull-spin {
   to {
     transform: rotate(360deg);
   }

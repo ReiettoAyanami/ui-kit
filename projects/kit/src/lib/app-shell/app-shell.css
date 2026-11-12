@@ -1,19 +1,19 @@
-/* KitAppShell's styles are global (encapsulation none): the projected bars are styled by their
-   slot. Every selector starts with a kit-shell class. From substance-tracker's app.css. */
+/* LenziAppShell's styles are global (encapsulation none): the projected bars are styled by their
+   slot. Every selector starts with a lenzi-shell class. From substance-tracker's app.css. */
 
 /* The document scrolls: the container grows with its page (no inner scrolling), so a page window
    can still stop the document scrolling underneath it. */
-.kit-shell {
+.lenzi-shell {
   min-height: 100dvh;
   overflow: visible;
 }
 
 /* The drawer floats inside the safe area, away from the edges (global.css rounds it and gives it
    its border); its gaps from the template come as inline styles, hence !important. */
-.kit-shell-drawer {
-  width: var(--kit-drawer-width);
-  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px)) !important;
-  bottom: calc(var(--kit-float-gap) + env(safe-area-inset-bottom, 0px)) !important;
+.lenzi-shell-drawer {
+  width: var(--lenzi-drawer-width);
+  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px)) !important;
+  bottom: calc(var(--lenzi-float-gap) + env(safe-area-inset-bottom, 0px)) !important;
   margin-left: env(safe-area-inset-left, 0px);
 }
 
@@ -22,7 +22,7 @@
    insets. 0 on a website. Material's overflow: auto would make the content scroll by itself; here
    the document scrolls, and flow-root keeps the bar's margin inside the content (when it collapsed
    out, the drawer's scrim left an unblurred strip at the top: lenzi, 2026-10-03). */
-.kit-shell-content {
+.lenzi-shell-content {
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
   overflow: visible;
@@ -31,7 +31,7 @@
 
 /* Behind the status bar, the page's own colour: the page scrolls under it, not under the clock.
    Under the scrims and the page windows (z-index 20 and up). */
-.kit-shell-content::before {
+.lenzi-shell-content::before {
   content: '';
   position: fixed;
   top: 0;
@@ -46,24 +46,24 @@
    (z-index 20) and the "+" (10). It floats away from the edges with rounded corners on every
    screen (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le
    versioni"). */
-.kit-shell-bar {
+.lenzi-shell-bar {
   position: sticky;
-  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px));
+  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px));
   z-index: 5;
   box-sizing: border-box;
   width: auto;
-  margin: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px)) var(--kit-float-gap) var(--kit-float-gap);
-  border-radius: var(--kit-bar-radius);
-  backdrop-filter: var(--kit-glass-filter);
+  margin: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px)) var(--lenzi-float-gap) var(--lenzi-float-gap);
+  border-radius: var(--lenzi-bar-radius);
+  backdrop-filter: var(--lenzi-glass-filter);
 }
 
 /* The menu button at the bar's edge, the title after it, taking the room up to the actions. */
-.kit-shell-menu {
+.lenzi-shell-menu {
   margin-left: -8px;
   margin-right: 8px;
 }
 
-.kit-shell-title {
+.lenzi-shell-title {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -72,29 +72,29 @@
 
 /* A bar above the top bar that cannot be closed ("Viewing as"): it sticks, and the top bar sticks
    just under it, so both stay in sight however far the page scrolls. */
-.kit-shell-banner {
+.lenzi-shell-banner {
   position: sticky;
-  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px));
+  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px));
   z-index: 6;
   height: 44px;
-  margin: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px)) var(--kit-float-gap) 0;
+  margin: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px)) var(--lenzi-float-gap) 0;
 }
 
-.kit-shell-banner:not(:empty) + .kit-shell-bar {
-  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px) + 44px + var(--kit-float-gap));
-  margin-top: var(--kit-float-gap);
+.lenzi-shell-banner:not(:empty) + .lenzi-shell-bar {
+  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px) + 44px + var(--lenzi-float-gap));
+  margin-top: var(--lenzi-float-gap);
 }
 
 /* Bars under the top bar (offline, an update): above the page, apart from each other. */
-.kit-shell-below > * {
+.lenzi-shell-below > * {
   display: block;
-  margin: var(--kit-float-gap);
+  margin: var(--lenzi-float-gap);
 }
 
 /* Bare: this shell's own bars only (a shell inside a bare one, like a demo, keeps its own). */
-.kit-shell-banner:empty,
-.kit-shell-below:empty,
-.kit-shell-bare > .kit-shell-content > .kit-shell-banner,
-.kit-shell-bare > .kit-shell-content > .kit-shell-bar {
+.lenzi-shell-banner:empty,
+.lenzi-shell-below:empty,
+.lenzi-shell-bare > .lenzi-shell-content > .lenzi-shell-banner,
+.lenzi-shell-bare > .lenzi-shell-content > .lenzi-shell-bar {
   display: none;
 }

@@ -1,6 +1,6 @@
 # Chart
 
-`<kit-chart>` (`@lenzi/ui-kit/charts`): the only component that knows the chart library (Apache ECharts).
+`<lenzi-chart>` (`@lenzi/ui-kit/charts`): the only component that knows the chart library (Apache ECharts).
 Lines in, a chart out: bars, stacked bars, lines, a donut or a treemap of the totals, a radar; drawn in SVG,
 in the theme's colours, each line in its identity colour.
 
@@ -24,14 +24,14 @@ in the theme's colours, each line in its identity colour.
 
 | | Name | Type | Default |
 | --- | --- | --- | --- |
-| input | `data` | `KitChartData` (`{ periods, current?, lines }`) | required |
+| input | `data` | `LenziChartData` (`{ periods, current?, lines }`) | required |
 | input | `type` | `'bar' \| 'stacked-bar' \| 'line' \| 'donut' \| 'treemap' \| 'radar'` | `'bar'` |
 | input | `format` | `(value: number) => string` | a number, up to 3 decimals |
 | input | `filters` | `boolean` | `true` |
 | input | `height` | `string` | `'260px'` |
 | input | `emptyText` | `string` | `'Nothing in the period'` |
 
-`KitChartLine`: `{ key, name, color?, values, total? }`. `kitPeriodAxisLabel('2026-09-29')` → "29 Sept".
+`LenziChartLine`: `{ key, name, color?, values, total? }`. `lenziPeriodAxisLabel('2026-09-29')` → "29 Sept".
 
 ## Origin
 

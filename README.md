@@ -60,8 +60,8 @@ npm install ../ui-kit/dist/lenzi-ui-kit-0.1.0.tgz     # after `npm run pack`; la
 // app.config.ts
 providers: [
   provideRouter(routes, withComponentInputBinding()),
-  provideHttpClient(withFetch(), withInterceptors([kitErrorInterceptor])),
-  provideKit({ appId: 'my-app' }),
+  provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
+  provideLenziKit({ appId: 'my-app' }),
 ]
 ```
 

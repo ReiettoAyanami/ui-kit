@@ -1,6 +1,6 @@
 # Blocking screen
 
-`<kit-blocking-screen>`: a screen over everything that cannot be closed, when the app cannot go on until the
+`<lenzi-blocking-screen>`: a screen over everything that cannot be closed, when the app cannot go on until the
 user does something outside it ("Update required": the app is older than its server).
 
 ## Rules

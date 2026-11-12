@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 
-import { KitFigure, KitFigureGrid, KitStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid, LenziStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
 
 import { KitFiles } from '../../shared/kit-files';
 
@@ -27,7 +27,7 @@ interface Libraries {
  */
 @Component({
   selector: 'app-libraries-page',
-  imports: [KitFigure, KitFigureGrid, KitStatusMessage, MatIconModule],
+  imports: [LenziFigure, LenziFigureGrid, LenziStatusMessage, MatIconModule],
   templateUrl: './libraries-page.html',
   styleUrl: './libraries-page.css',
 })

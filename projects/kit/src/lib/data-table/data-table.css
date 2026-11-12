@@ -4,8 +4,8 @@
 .table-scroll {
   isolation: isolate;
   overflow-x: auto;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--kit-panel-radius);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
 }
 
 table {
@@ -60,8 +60,8 @@ td {
 
 .dot {
   flex: none;
-  width: var(--kit-dot-size);
-  height: var(--kit-dot-size);
+  width: var(--lenzi-dot-size);
+  height: var(--lenzi-dot-size);
   border-radius: 50%;
 }
 

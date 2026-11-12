@@ -8,7 +8,7 @@
 .widget {
   height: 100%;
   --mat-card-outlined-container-color: var(--mat-sys-surface-container-lowest);
-  --mat-card-outlined-container-shape: var(--kit-widget-radius);
+  --mat-card-outlined-container-shape: var(--lenzi-widget-radius);
   --mat-card-title-text-font: var(--mat-sys-title-large-font);
   --mat-card-title-text-size: 22px;
   --mat-card-title-text-weight: 500;

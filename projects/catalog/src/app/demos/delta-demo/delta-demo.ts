@@ -1,12 +1,12 @@
 import { Component, computed, input } from '@angular/core';
 
-import { KitDelta } from '@lenzi/ui-kit';
+import { LenziDelta } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
 @Component({
   selector: 'app-delta-demo',
-  imports: [KitDelta],
+  imports: [LenziDelta],
   templateUrl: './delta-demo.html',
   styleUrl: './delta-demo.css',
 })

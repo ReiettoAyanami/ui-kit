@@ -7,7 +7,7 @@ import { Component, booleanAttribute, computed, input } from '@angular/core';
  * blank page. Shown only once the answer is known: an empty list is not "empty" while it loads.
  */
 @Component({
-  selector: 'kit-status-message',
+  selector: 'lenzi-status-message',
   imports: [],
   templateUrl: './status-message.html',
   styleUrl: './status-message.css',
@@ -17,7 +17,7 @@ import { Component, booleanAttribute, computed, input } from '@angular/core';
     '[class.compact]': 'compact()',
   },
 })
-export class KitStatusMessage {
+export class LenziStatusMessage {
   readonly kind = input<'loading' | 'empty' | 'error'>('empty');
   /** What it says; while loading, "…" when not given. */
   readonly text = input<string>('');

@@ -8,8 +8,8 @@
    48 dp to tap. A little less room at the sides of the word than a toggle group's: with the figure
    beside it, it fits on a 412 px phone. */
 .pill {
-  --mat-button-outlined-container-height: var(--kit-toggle-height);
-  --mat-button-outlined-horizontal-padding: var(--kit-pill-padding);
+  --mat-button-outlined-container-height: var(--lenzi-toggle-height);
+  --mat-button-outlined-horizontal-padding: var(--lenzi-pill-padding);
   --mat-button-outlined-label-text-color: var(--mat-sys-on-secondary-container);
   --mat-button-outlined-state-layer-color: var(--mat-sys-on-secondary-container);
   --mat-button-outlined-ripple-color: color-mix(in srgb, var(--mat-sys-on-secondary-container) 12%, transparent);

@@ -1,9 +1,9 @@
-<kit-figure-grid>
-  <kit-figure [label]="'' + values()['label']" [value]="'' + values()['value']" [description]="values()['explain'] ? 'What is left of the active batches.' : null" />
-  <kit-figure label="Spent" value="€20.00" [description]="values()['explain'] ? 'What the consumptions of the period cost.' : null" />
-  <kit-figure label="Per day" value="1.4 capsula / day" />
-  <kit-figure label="Last price">
-    <kit-delta ratio="-0.0625" />
-  </kit-figure>
-  <kit-figure label="Last purchase" [value]="null" />
-</kit-figure-grid>
+<lenzi-figure-grid>
+  <lenzi-figure [label]="'' + values()['label']" [value]="'' + values()['value']" [description]="values()['explain'] ? 'What is left of the active batches.' : null" />
+  <lenzi-figure label="Spent" value="€20.00" [description]="values()['explain'] ? 'What the consumptions of the period cost.' : null" />
+  <lenzi-figure label="Per day" value="1.4 capsula / day" />
+  <lenzi-figure label="Last price">
+    <lenzi-delta ratio="-0.0625" />
+  </lenzi-figure>
+  <lenzi-figure label="Last purchase" [value]="null" />
+</lenzi-figure-grid>

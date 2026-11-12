@@ -1,6 +1,6 @@
 # Notification bell
 
-`<kit-notification-bell>`: a bell in the top bar with the count of what arrived since the user last looked;
+`<lenzi-notification-bell>`: a bell in the top bar with the count of what arrived since the user last looked;
 opened, the list of it; a tap opens one.
 
 ## Rules
@@ -16,11 +16,11 @@ opened, the list of it; a tap opens one.
 
 | | Name | Type | Default |
 | --- | --- | --- | --- |
-| input | `items` | `KitNotification[]` (`{ id, title, meta?, when?, link? }`) | required |
+| input | `items` | `LenziNotification[]` (`{ id, title, meta?, when?, link? }`) | required |
 | input | `noun` | `string` | `'notifications'` ("3 new tickets") |
 | input | `emptyText` | `string` | `'Nothing new.'` |
-| output | `opened` | `KitNotification[]` | what it showed |
-| output | `selected` | `KitNotification` | an item without a link |
+| output | `opened` | `LenziNotification[]` | what it showed |
+| output | `selected` | `LenziNotification` | an item without a link |
 
 ## Origin
 

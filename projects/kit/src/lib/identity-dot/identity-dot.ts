@@ -8,7 +8,7 @@ import { IdentityOffset, identityColor } from './identity-color';
  * chart's chip, a segment of a bar). Decoration: screen readers skip it, the name says what it is.
  */
 @Component({
-  selector: 'kit-identity-dot',
+  selector: 'lenzi-identity-dot',
   imports: [],
   templateUrl: './identity-dot.html',
   styleUrl: './identity-dot.css',
@@ -17,7 +17,7 @@ import { IdentityOffset, identityColor } from './identity-color';
     '[style.background-color]': 'shownColor()',
   },
 })
-export class KitIdentityDot {
+export class LenziIdentityDot {
   /** The entity's id: its colour comes from it. */
   readonly id = input<number | null>(null);
   /** Where this kind of entity starts in the band (0, or 0.5 for a second kind with its own ids). */

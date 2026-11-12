@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
-import { KitVersionLabel } from './version-label';
+import { LenziVersionLabel } from './version-label';
 
-describe('KitVersionLabel', () => {
+describe('LenziVersionLabel', () => {
   it('shows nothing until it has a version, then the version', () => {
-    const fixture = TestBed.createComponent(KitVersionLabel);
+    const fixture = TestBed.createComponent(LenziVersionLabel);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     expect(element.textContent?.trim()).toBe('');

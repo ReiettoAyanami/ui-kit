@@ -21,7 +21,7 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
 }
 
 .type {

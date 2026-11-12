@@ -3,14 +3,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { KitIdentityColorPipe } from '@lenzi/ui-kit';
+import { LenziIdentityColorPipe } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
 /** A tooltip on one line and one on two, in the kit's dark glass. */
 @Component({
   selector: 'app-tooltips-demo',
-  imports: [KitIdentityColorPipe, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [LenziIdentityColorPipe, MatButtonModule, MatIconModule, MatTooltipModule],
   templateUrl: './tooltips-demo.html',
   styleUrl: './tooltips-demo.css',
 })

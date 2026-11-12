@@ -30,19 +30,19 @@ function routeIsBare(route: ActivatedRouteSnapshot): boolean {
  * closed after a tap on a link; and the page. The document scrolls, not the shell, so a page window
  * can stop it scrolling under itself.
  *
- * What it holds comes in by attribute: `kitShellNav` (the drawer's content, a KitNavList),
- * `kitShellActions` (the end of the top bar: a bell), `kitShellBanner` (a bar above the top bar that
- * cannot be closed: "Viewing as"), `kitShellBelow` (bars under it: offline, update), and the page
- * (a router outlet). Global styles (encapsulation none): every class starts with `kit-shell`.
+ * What it holds comes in by attribute: `lenziShellNav` (the drawer's content, a LenziNavList),
+ * `lenziShellActions` (the end of the top bar: a bell), `lenziShellBanner` (a bar above the top bar that
+ * cannot be closed: "Viewing as"), `lenziShellBelow` (bars under it: offline, update), and the page
+ * (a router outlet). Global styles (encapsulation none): every class starts with `lenzi-shell`.
  */
 @Component({
-  selector: 'kit-app-shell',
+  selector: 'lenzi-app-shell',
   imports: [MatButtonModule, MatIconModule, MatSidenavModule, MatToolbarModule],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
   encapsulation: ViewEncapsulation.None,
 })
-export class KitAppShell {
+export class LenziAppShell {
   /** The top bar's title; null: the title of the deepest active route (`title` in the routes). */
   readonly title = input<string | null>(null);
   /**
@@ -82,7 +82,7 @@ export class KitAppShell {
     void this.drawer().open(click && click.detail === 0 ? 'keyboard' : 'mouse');
   }
 
-  /** Closes the drawer: KitNavList does it after a tap on a link. */
+  /** Closes the drawer: LenziNavList does it after a tap on a link. */
   closeNav(): void {
     void this.drawer().close();
   }

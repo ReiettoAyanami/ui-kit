@@ -2,8 +2,8 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
-import { provideKit } from '@lenzi/ui-kit';
-import { kitErrorInterceptor } from '@lenzi/ui-kit/http';
+import { provideLenziKit } from '@lenzi/ui-kit';
+import { lenziErrorInterceptor } from '@lenzi/ui-kit/http';
 
 import { routes } from './app.routes';
 
@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     // Route parameters and data arrive as component inputs (a component page's `id`).
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })),
-    provideHttpClient(withFetch(), withInterceptors([kitErrorInterceptor])),
-    provideKit({ appId: 'kit-catalog' }),
+    provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
+    provideLenziKit({ appId: 'kit-catalog' }),
   ],
 };

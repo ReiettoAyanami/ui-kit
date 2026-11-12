@@ -1,6 +1,6 @@
 # Card menu
 
-`<kit-card-menu>`: the ⋮ of a card, at its top right, opening a Material menu of the card's actions (Details,
+`<lenzi-card-menu>`: the ⋮ of a card, at its top right, opening a Material menu of the card's actions (Details,
 Edit, Delete). Its taps never reach the card, which opens its page or its details on a tap.
 
 ## Rules
@@ -8,7 +8,7 @@ Edit, Delete). Its taps never reach the card, which opens its page or its detail
 - **Three vertical dots at the card's top right** (lenzi, 2026-09-30: "in alto a destra come card
   substances").
 - **Its taps never open the card.**
-- **Delete asks first** (`KitConfirmDialog`) and is in the error colour (`destructive: true`).
+- **Delete asks first** (`LenziConfirmDialog`) and is in the error colour (`destructive: true`).
 - Actions in whole words, each with its icon; Delete last.
 - A card the user cannot act on (the signed-in admin's own card) has no menu.
 
@@ -16,7 +16,7 @@ Edit, Delete). Its taps never reach the card, which opens its page or its detail
 
 | | Name | Type | Default |
 | --- | --- | --- | --- |
-| input | `actions` | `KitMenuAction[]` (`{ id, label, icon?, destructive?, disabled? }`) | required |
+| input | `actions` | `LenziMenuAction[]` (`{ id, label, icon?, destructive?, disabled? }`) | required |
 | input | `label` | `string` | `'More actions'` (say which card: "Actions for Birra") |
 | output | `action` | `string` | the id chosen |
 
@@ -24,7 +24,7 @@ Edit, Delete). Its taps never reach the card, which opens its page or its detail
 
 ```html
 <mat-card appearance="outlined" class="card" (click)="open()">
-  <kit-card-menu class="menu" [label]="'Actions for ' + substance.name" [actions]="actions" (action)="act($event)" />
+  <lenzi-card-menu class="menu" [label]="'Actions for ' + substance.name" [actions]="actions" (action)="act($event)" />
   …
 </mat-card>
 ```

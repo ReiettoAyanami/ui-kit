@@ -1,7 +1,7 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
-import { KitFigure, KitFigureGrid, couldNotLoad, describeError, readPreference, writePreference } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid, couldNotLoad, describeError, readPreference, writePreference } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
@@ -10,7 +10,7 @@ const KEY = 'kit-catalog.demo-per';
 /** describeError and couldNotLoad on the error of the parameters; a choice this browser remembers. */
 @Component({
   selector: 'app-utilities-demo',
-  imports: [KitFigure, KitFigureGrid, MatButtonToggleModule],
+  imports: [LenziFigure, LenziFigureGrid, MatButtonToggleModule],
   templateUrl: './utilities-demo.html',
   styleUrl: './utilities-demo.css',
 })

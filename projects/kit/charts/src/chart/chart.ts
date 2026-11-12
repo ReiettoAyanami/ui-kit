@@ -6,9 +6,9 @@ import * as echarts from 'echarts/core';
 import { SVGRenderer } from 'echarts/renderers';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 
-import { KitAppearance, identityColor } from '@lenzi/ui-kit';
+import { LenziAppearance, identityColor } from '@lenzi/ui-kit';
 
-import { KitChartColors, KitChartData, KitChartLine, KitChartType, kitChartOptions } from './chart-options';
+import { LenziChartColors, LenziChartData, LenziChartLine, LenziChartType, lenziChartOptions } from './chart-options';
 
 // Only the pieces the charts use (the modular import): five kinds of chart, their grid, the radar's
 // circle and the tooltip, and the SVG renderer. The whole of ECharts is never bundled.
@@ -17,7 +17,7 @@ echarts.use([BarChart, LineChart, PieChart, TreemapChart, RadarChart, GridCompon
 const defaultFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 3 });
 
 /** A line's colour as CSS: its own, or the identity colour of its position. */
-export function kitLineColor(line: KitChartLine, index: number): string {
+export function lenziLineColor(line: LenziChartLine, index: number): string {
   return line.color ?? identityColor(index + 1);
 }
 
@@ -27,18 +27,18 @@ export function kitLineColor(line: KitChartLine, index: number): string {
  * lines, a radar, or a donut or a treemap of the totals, drawn in SVG with the Material 3 colours of
  * the theme (read from its variables) and each line in its colour. Material filter chips above it
  * hide lines by hand, when `filters` is on and there is more than one. It computes nothing: every
- * number is the page's (the API's). Put it in a KitWidgetCard.
+ * number is the page's (the API's). Put it in a LenziWidgetCard.
  */
 @Component({
-  selector: 'kit-chart',
+  selector: 'lenzi-chart',
   imports: [MatChipsModule, NgxEchartsDirective],
   providers: [provideEchartsCore({ echarts })],
   templateUrl: './chart.html',
   styleUrl: './chart.css',
 })
-export class KitChart {
-  readonly data = input.required<KitChartData>();
-  readonly type = input<KitChartType>('bar');
+export class LenziChart {
+  readonly data = input.required<LenziChartData>();
+  readonly type = input<LenziChartType>('bar');
   /** How a value reads in a tooltip and on the axis (a currency, a unit). Default: a number, up to 3 decimals. */
   readonly format = input<(value: number) => string>((value) => defaultFormat.format(value));
   /** The chips that hide lines by hand. */
@@ -49,14 +49,14 @@ export class KitChart {
   readonly emptyText = input('Nothing in the period');
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly appearance = inject(KitAppearance);
+  private readonly appearance = inject(LenziAppearance);
 
   /** The lines hidden by hand: they stay hidden while the chart is shown. */
   protected readonly hidden = signal<ReadonlySet<string>>(new Set());
-  protected readonly color = kitLineColor;
+  protected readonly color = lenziLineColor;
 
   /** The theme's colours and the lines', resolved to what ECharts can draw. */
-  private readonly colors = computed<KitChartColors>(() => {
+  private readonly colors = computed<LenziChartColors>(() => {
     // read again when Reduce transparency changes: the tooltip's glass follows it
     this.appearance.reduceTransparency();
     const lines = this.data().lines;
@@ -69,15 +69,15 @@ export class KitChart {
       outlineVariant: resolve('var(--mat-sys-outline-variant)'),
       surface: resolve('var(--mat-sys-surface-container-high)'),
       card: resolve('var(--mat-sys-surface-container-lowest)'),
-      glass: resolve('color-mix(in srgb, var(--mat-sys-surface-container-high) var(--kit-glass), transparent)'),
-      glassFilter: style.getPropertyValue('--kit-glass-filter').trim() || 'none',
+      glass: resolve('color-mix(in srgb, var(--mat-sys-surface-container-high) var(--lenzi-glass), transparent)'),
+      glassFilter: style.getPropertyValue('--lenzi-glass-filter').trim() || 'none',
       font: style.getPropertyValue('--mat-sys-body-medium-font').trim() || 'monospace',
-      lines: Object.fromEntries(lines.map((line, index) => [line.key, resolve(kitLineColor(line, index))])),
+      lines: Object.fromEntries(lines.map((line, index) => [line.key, resolve(lenziLineColor(line, index))])),
     }));
   });
 
   protected readonly options = computed(() =>
-    kitChartOptions({ data: this.data(), type: this.type(), format: this.format(), hidden: this.hidden(), colors: this.colors() }),
+    lenziChartOptions({ data: this.data(), type: this.type(), format: this.format(), hidden: this.hidden(), colors: this.colors() }),
   );
 
   /** The chips chosen are the lines shown. */

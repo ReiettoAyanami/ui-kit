@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { KIT_PULL_THRESHOLD_PX, KitPullToRefresh } from './pull-to-refresh';
+import { LENZI_PULL_THRESHOLD_PX, LenziPullToRefresh } from './pull-to-refresh';
 
 @Component({
-  imports: [KitPullToRefresh],
-  template: `<div class="area"><kit-pull-to-refresh [refresh]="refresh" /><p>page</p></div>`,
+  imports: [LenziPullToRefresh],
+  template: `<div class="area"><lenzi-pull-to-refresh [refresh]="refresh" /><p>page</p></div>`,
 })
 class Host {
   pulls = 0;
@@ -22,7 +22,7 @@ function touch(target: Element, type: string, y: number, x = 100): void {
   target.dispatchEvent(event);
 }
 
-describe('KitPullToRefresh', () => {
+describe('LenziPullToRefresh', () => {
   async function page() {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
@@ -35,7 +35,7 @@ describe('KitPullToRefresh', () => {
 
   it('a pull past the threshold refreshes, the disc spins until it is done, then goes back up', async () => {
     const { fixture, area, disc } = await page();
-    const pullTo = 10 + (KIT_PULL_THRESHOLD_PX + 10) * 2;
+    const pullTo = 10 + (LENZI_PULL_THRESHOLD_PX + 10) * 2;
     touch(area, 'touchstart', 0);
     touch(area, 'touchmove', 20);
     touch(area, 'touchmove', pullTo);

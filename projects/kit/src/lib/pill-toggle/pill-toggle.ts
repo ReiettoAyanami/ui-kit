@@ -2,7 +2,7 @@ import { Component, computed, input, model } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 /** One state of a pill toggle. */
-export interface KitPillOption<T> {
+export interface LenziPillOption<T> {
   value: T;
   /** The word the pill reads in this state: "price", "qty". */
   label: string;
@@ -20,14 +20,14 @@ export interface KitPillOption<T> {
  * For two or more choices side by side, use a toggle group (mat-button-toggle-group) instead.
  */
 @Component({
-  selector: 'kit-pill-toggle',
+  selector: 'lenzi-pill-toggle',
   imports: [MatButtonModule],
   templateUrl: './pill-toggle.html',
   styleUrl: './pill-toggle.css',
 })
-export class KitPillToggle<T = string> {
+export class LenziPillToggle<T = string> {
   /** The states, in the order a tap walks them (two, usually). */
-  readonly options = input.required<readonly KitPillOption<T>[]>();
+  readonly options = input.required<readonly LenziPillOption<T>[]>();
   /** The state shown; a tap moves it to the next one. */
   readonly value = model.required<T>();
 

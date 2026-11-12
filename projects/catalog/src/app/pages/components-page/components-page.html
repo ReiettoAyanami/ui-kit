@@ -1,5 +1,5 @@
 <main class="page">
-  <kit-search-bar class="search" placeholder="Search the components" [value]="q() ?? ''" (search)="search($event)" />
+  <lenzi-search-bar class="search" placeholder="Search the components" [value]="q() ?? ''" (search)="search($event)" />
 
   @for (group of groups(); track group.category) {
     <section class="group">
@@ -15,6 +15,6 @@
       </div>
     </section>
   } @empty {
-    <kit-status-message [text]="'Nothing with “' + q() + '” in the kit'" />
+    <lenzi-status-message [text]="'Nothing with “' + q() + '” in the kit'" />
   }
 </main>

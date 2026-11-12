@@ -17,10 +17,10 @@
   gap: 4px;
   max-width: 420px;
   padding: 16px 20px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 28px;
-  background: color-mix(in srgb, var(--mat-sys-surface) var(--kit-glass), transparent);
-  backdrop-filter: var(--kit-glass-filter);
+  background: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-glass), transparent);
+  backdrop-filter: var(--lenzi-glass-filter);
 }
 
 .glass-title {

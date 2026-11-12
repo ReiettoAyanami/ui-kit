@@ -3,22 +3,22 @@ import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { provideRouter } from '@angular/router';
 
-import { KitNotification, KitNotificationBell } from './notification-bell';
+import { LenziNotification, LenziNotificationBell } from './notification-bell';
 
 @Component({
-  imports: [KitNotificationBell],
-  template: `<kit-notification-bell noun="tickets" [items]="items" (opened)="seen.push($event)" (selected)="tapped.push($event.id)" />`,
+  imports: [LenziNotificationBell],
+  template: `<lenzi-notification-bell noun="tickets" [items]="items" (opened)="seen.push($event)" (selected)="tapped.push($event.id)" />`,
 })
 class Host {
-  items: KitNotification[] = [
+  items: LenziNotification[] = [
     { id: 7, title: 'Printer offline again', meta: 'TT-0007', when: '2 min ago', link: '/tickets/7' },
     { id: 8, title: 'New mailbox', meta: 'TT-0008' },
   ];
-  seen: (readonly KitNotification[])[] = [];
+  seen: (readonly LenziNotification[])[] = [];
   tapped: (string | number)[] = [];
 }
 
-describe('KitNotificationBell', () => {
+describe('LenziNotificationBell', () => {
   beforeEach(() =>
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } }] }),
   );
@@ -34,7 +34,7 @@ describe('KitNotificationBell', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(fixture.componentInstance.seen.length).toBe(1);
-    const rows = Array.from(document.querySelectorAll<HTMLElement>('.kit-bell-menu .item'));
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.lenzi-bell-menu .item'));
     expect(rows.map((row) => row.querySelector('.title')?.textContent?.trim())).toEqual(['Printer offline again', 'New mailbox']);
     expect(rows[0]!.getAttribute('href')).toBe('/tickets/7');
     rows[1]!.click();
@@ -50,6 +50,6 @@ describe('KitNotificationBell', () => {
     bell.click();
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(document.querySelector('.kit-bell-menu .empty')?.textContent?.trim()).toBe('Nothing new.');
+    expect(document.querySelector('.lenzi-bell-menu .empty')?.textContent?.trim()).toBe('Nothing new.');
   });
 });

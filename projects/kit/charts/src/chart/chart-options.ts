@@ -1,12 +1,12 @@
-// The ECharts options of a KitChart, from its data and the theme's colours. A plain module (no
+// The ECharts options of a LenziChart, from its data and the theme's colours. A plain module (no
 // schematic makes one): pure functions, tested on their own. From substance-tracker
 // `ui/chart/chart-options.ts`, with the API's series replaced by plain lines.
 
 /** How a chart draws its lines. */
-export type KitChartType = 'bar' | 'stacked-bar' | 'line' | 'donut' | 'treemap' | 'radar';
+export type LenziChartType = 'bar' | 'stacked-bar' | 'line' | 'donut' | 'treemap' | 'radar';
 
 /** One line of a chart: a substance, a person, a category. */
-export interface KitChartLine {
+export interface LenziChartLine {
   /** Unique within the chart. */
   key: string;
   /** Its name: the chip, the tooltip, the slice. */
@@ -20,16 +20,16 @@ export interface KitChartLine {
 }
 
 /** What a chart draws. */
-export interface KitChartData {
+export interface LenziChartData {
   /** The periods, as the axis shows them: "29 Sept", "W40", "Sept 2026", "20:00". */
   periods: readonly string[];
   /** The period still in progress (not complete yet): its index, the last one usually. Null: none (the hours of the day). */
   current?: number | null;
-  lines: readonly KitChartLine[];
+  lines: readonly LenziChartLine[];
 }
 
 /** The colours a chart takes from the Material 3 theme, resolved (ECharts needs real colours). */
-export interface KitChartColors {
+export interface LenziChartColors {
   /** The theme's violet: the label of the period in progress. */
   primary: string;
   onSurface: string;
@@ -48,18 +48,18 @@ export interface KitChartColors {
   lines: Record<string, string>;
 }
 
-export interface KitChartInput {
-  data: KitChartData;
-  type: KitChartType;
+export interface LenziChartInput {
+  data: LenziChartData;
+  type: LenziChartType;
   /** How a value reads in a tooltip and on the axis. */
   format: (value: number) => string;
   /** The lines hidden by hand (their keys). */
   hidden: ReadonlySet<string>;
-  colors: KitChartColors;
+  colors: LenziChartColors;
 }
 
 /** "2026-09-29" → "29 Sept", "2026-W40" → "W40", "2026-09" → "Sept 2026", "20" → "20:00": an API's period keys as an axis shows them. */
-export function kitPeriodAxisLabel(period: string, locale = 'en-GB'): string {
+export function lenziPeriodAxisLabel(period: string, locale = 'en-GB'): string {
   if (/^\d{2}$/.test(period)) return `${period}:00`;
   if (/^\d{4}-W\d{2}$/.test(period)) return period.slice(5);
   if (/^\d{4}-\d{2}-\d{2}$/.test(period)) {
@@ -75,7 +75,7 @@ export function kitPeriodAxisLabel(period: string, locale = 'en-GB'): string {
 const drawn = (value: number | string | null | undefined): number | null => (value === null || value === undefined ? null : Number(value));
 
 /** A line's total: given, or the sum of its values. */
-export function lineTotal(line: KitChartLine): number | null {
+export function lineTotal(line: LenziChartLine): number | null {
   if (line.total !== undefined) return drawn(line.total);
   const values = line.values.map(drawn).filter((v): v is number => v !== null);
   return values.length ? values.reduce((sum, v) => sum + v, 0) : null;
@@ -109,7 +109,7 @@ interface TooltipEntry {
  * period in progress striped with its label in the theme's violet; soft lines whose last stretch,
  * into the period in progress, is dashed.
  */
-export function kitChartOptions({ data, type, format, hidden, colors }: KitChartInput): Record<string, unknown> {
+export function lenziChartOptions({ data, type, format, hidden, colors }: LenziChartInput): Record<string, unknown> {
   const lines = data.lines.filter((line) => !hidden.has(line.key));
   const valueFormatter = (value: number | null | undefined) => (value === null || value === undefined ? '—' : format(value));
   const tooltip = {
@@ -315,7 +315,7 @@ function axisTooltip(entries: TooltipEntry[], format: (value: number | null | un
  * The corners of a stacked bar's piece: the top piece of a period rounds its top, the bottom piece
  * its bottom (a piece alone, both); the pieces between stay square. Only the pieces drawn count.
  */
-function stackRadius(lines: readonly KitChartLine[], index: number, period: number): number[] {
+function stackRadius(lines: readonly LenziChartLine[], index: number, period: number): number[] {
   const drawnHere = lines.map((line, i) => (Number(line.values[period] ?? 0) > 0 ? i : -1)).filter((i) => i >= 0);
   const top = index === drawnHere[drawnHere.length - 1] ? RADIUS : 0;
   const bottom = index === drawnHere[0] ? RADIUS : 0;

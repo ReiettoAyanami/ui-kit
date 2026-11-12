@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 
-import { KitStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
+import { LenziStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
 
 import { highlight, languageOf } from '../highlight';
 import { KitFiles } from '../kit-files';
@@ -15,7 +15,7 @@ import { KitFiles } from '../kit-files';
  */
 @Component({
   selector: 'app-code-view',
-  imports: [KitStatusMessage, MatButtonModule, MatButtonToggleModule, MatIconModule],
+  imports: [LenziStatusMessage, MatButtonModule, MatButtonToggleModule, MatIconModule],
   templateUrl: './code-view.html',
   styleUrl: './code-view.css',
 })

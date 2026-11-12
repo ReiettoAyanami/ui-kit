@@ -9,7 +9,7 @@
   display: grid;
   place-items: center;
   height: 200px;
-  border-radius: var(--kit-panel-radius);
+  border-radius: var(--lenzi-panel-radius);
   background:
     radial-gradient(circle at 25% 40%, var(--mat-sys-primary) 0 16%, transparent 17%),
     radial-gradient(circle at 70% 60%, var(--mat-sys-tertiary) 0 14%, transparent 15%),
@@ -22,10 +22,10 @@
   gap: 4px;
   width: min(80%, 380px);
   padding: 14px 16px;
-  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 28px;
-  background: color-mix(in srgb, var(--mat-sys-surface) var(--kit-glass), transparent);
-  backdrop-filter: var(--kit-glass-filter);
+  background: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-glass), transparent);
+  backdrop-filter: var(--lenzi-glass-filter);
 }
 
 .title {

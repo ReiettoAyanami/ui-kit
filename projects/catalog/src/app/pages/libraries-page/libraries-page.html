@@ -1,7 +1,7 @@
 <main class="page">
   <h1 class="title">Libraries</h1>
   @if (failure(); as failure) {
-    <kit-status-message kind="error" [text]="failure" />
+    <lenzi-status-message kind="error" [text]="failure" />
   } @else if (libraries.hasValue()) {
     @let data = libraries.value();
     <p class="lead" [innerHTML]="inline(data.about)"></p>
@@ -18,11 +18,11 @@
                 </span>
               </header>
               <p class="role" [innerHTML]="inline(library.role)"></p>
-              <kit-figure-grid class="versions">
+              <lenzi-figure-grid class="versions">
                 @for (project of data.projects; track project) {
-                  <kit-figure [label]="project" [value]="library.versions[project] ?? 'not used'" />
+                  <lenzi-figure [label]="project" [value]="library.versions[project] ?? 'not used'" />
                 }
-              </kit-figure-grid>
+              </lenzi-figure-grid>
               <ul class="rules">
                 @for (rule of library.rules; track $index) {
                   <li [innerHTML]="inline(rule)"></li>
@@ -34,6 +34,6 @@
       </section>
     }
   } @else {
-    <kit-status-message kind="loading" />
+    <lenzi-status-message kind="loading" />
   }
 </main>

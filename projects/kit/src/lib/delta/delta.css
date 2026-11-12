@@ -19,11 +19,11 @@
 }
 
 .change.good {
-  color: var(--kit-status-good);
+  color: var(--lenzi-status-good);
 }
 
 .change.bad {
-  color: var(--kit-status-bad);
+  color: var(--lenzi-status-bad);
 }
 
 /* Material's triangle is 10 px wide in the middle of its 24 px box: the box's empty sides are

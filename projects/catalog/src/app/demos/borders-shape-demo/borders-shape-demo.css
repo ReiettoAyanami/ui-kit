@@ -57,5 +57,5 @@
 }
 
 .box.kit {
-  border: var(--kit-border) solid var(--mat-sys-outline);
+  border: var(--lenzi-border) solid var(--mat-sys-outline);
 }

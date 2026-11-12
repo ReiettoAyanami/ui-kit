@@ -1,9 +1,9 @@
-<div class="screen" role="alertdialog" aria-labelledby="kit-blocking-title" aria-modal="true">
+<div class="screen" role="alertdialog" aria-labelledby="lenzi-blocking-title" aria-modal="true">
   <div class="card">
     @if (icon(); as icon) {
       <mat-icon class="big" aria-hidden="true">{{ icon }}</mat-icon>
     }
-    <h1 class="title" id="kit-blocking-title">{{ title() }}</h1>
+    <h1 class="title" id="lenzi-blocking-title">{{ title() }}</h1>
     <div class="text"><ng-content /></div>
     @if (actionLabel(); as label) {
       @if (actionHref(); as href) {
