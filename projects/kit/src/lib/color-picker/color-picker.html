@@ -1,0 +1,108 @@
+<button
+  #swatch
+  #origin="cdkOverlayOrigin"
+  cdkOverlayOrigin
+  type="button"
+  class="swatch"
+  aria-haspopup="dialog"
+  [style.width.px]="size()"
+  [style.height.px]="size()"
+  [style.background-color]="value()"
+  [disabled]="disabled()"
+  [attr.aria-label]="label() + ': ' + hex()"
+  [attr.aria-expanded]="open()"
+  (click)="toggle($event)"
+></button>
+
+<ng-template
+  cdkConnectedOverlay
+  cdkConnectedOverlayPush
+  [cdkConnectedOverlayOrigin]="origin"
+  [cdkConnectedOverlayOpen]="open() && !disabled()"
+  [cdkConnectedOverlayPositions]="positions"
+  [cdkConnectedOverlayViewportMargin]="8"
+  (overlayOutsideClick)="close()"
+  (detach)="close()"
+>
+  <div #panel class="panel" role="dialog" cdkTrapFocus [attr.aria-label]="label()">
+    <div
+      #area
+      class="area"
+      role="slider"
+      tabindex="0"
+      aria-label="Saturation and brightness"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="percent(hsv().s)"
+      [attr.aria-valuetext]="'Saturation ' + percent(hsv().s) + '%, brightness ' + percent(hsv().v) + '%'"
+      [style.--lenzi-hue]="hsv().h"
+      (pointerdown)="press('area', $event)"
+      (pointermove)="drag('area', $event)"
+      (pointerup)="release()"
+      (pointercancel)="release()"
+      (keydown)="keyArea($event)"
+    >
+      <span class="thumb" [style.left.%]="hsv().s * 100" [style.top.%]="(1 - hsv().v) * 100" [style.background-color]="hex()"></span>
+    </div>
+
+    <div
+      class="hue"
+      role="slider"
+      tabindex="0"
+      aria-label="Hue"
+      aria-valuemin="0"
+      aria-valuemax="360"
+      [attr.aria-valuenow]="degrees(hsv().h)"
+      [attr.aria-valuetext]="degrees(hsv().h) + '°'"
+      (pointerdown)="press('hue', $event)"
+      (pointermove)="drag('hue', $event)"
+      (pointerup)="release()"
+      (pointercancel)="release()"
+      (keydown)="keyHue($event)"
+    >
+      <span class="thumb" [style.left.%]="hsv().h / 3.6" [style.background-color]="'hsl(' + hsv().h + ' 100% 50%)'"></span>
+    </div>
+
+    <div class="row">
+      <mat-form-field class="hex" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Hex</mat-label>
+        <input
+          matInput
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          maxlength="7"
+          [value]="text()"
+          (input)="typed($any($event.target).value)"
+          (blur)="settle($any($event.target))"
+          (keydown.enter)="settle($any($event.target))"
+        />
+        @if (wrong()) {
+          <mat-hint>Six digits, like #d5baff</mat-hint>
+        }
+      </mat-form-field>
+      @if (canSample) {
+        <button mat-icon-button type="button" matTooltip="Pick a colour from the screen" aria-label="Pick a colour from the screen" (click)="sample()">
+          <mat-icon>colorize</mat-icon>
+        </button>
+      }
+    </div>
+
+    @if (offered().length) {
+      <div class="choices" role="group" aria-label="Colours offered">
+        @for (choice of offered(); track $index) {
+          <button
+            type="button"
+            class="choice"
+            [class.chosen]="choice.hex === hex()"
+            [style.background-color]="choice.value"
+            [matTooltip]="choice.label"
+            [attr.aria-label]="choice.label"
+            [attr.aria-pressed]="choice.hex === hex()"
+            (click)="choose(choice.hex)"
+          ></button>
+        }
+      </div>
+    }
+  </div>
+</ng-template>

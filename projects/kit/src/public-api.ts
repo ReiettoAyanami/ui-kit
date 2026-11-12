@@ -20,6 +20,8 @@ export * from './lib/add-button/add-button';
 export * from './lib/pill-toggle/pill-toggle';
 export * from './lib/search-bar/search-bar';
 export * from './lib/period-picker/period-picker';
+export * from './lib/color-picker/color';
+export * from './lib/color-picker/color-picker';
 export * from './lib/card-menu/card-menu';
 
 // Showing data

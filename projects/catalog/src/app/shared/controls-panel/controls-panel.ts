@@ -7,16 +7,17 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 
+import { LenziColorPicker } from '@lenzi/ui-kit';
+
 import { Control, Values } from '../../registry';
-import { ColorSwatch } from '../color-swatch/color-swatch';
 
 /**
  * The GUI of a demo: one field per parameter (text, a slider, a switch, the choices as pills or a
- * select, a colour). Every change goes to the demo at once; Reset brings the defaults back.
+ * select, a colour picker). Every change goes to the demo at once; Reset brings the defaults back.
  */
 @Component({
   selector: 'app-controls-panel',
-  imports: [ColorSwatch, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, MatSliderModule],
+  imports: [LenziColorPicker, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, MatSliderModule],
   templateUrl: './controls-panel.html',
   styleUrl: './controls-panel.css',
 })

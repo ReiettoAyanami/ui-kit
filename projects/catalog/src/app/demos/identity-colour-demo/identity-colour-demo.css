@@ -3,12 +3,6 @@
   padding: 16px;
 }
 
-.hint {
-  margin: 0 0 12px;
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-on-surface-variant);
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -22,10 +16,14 @@
   min-width: 0;
 }
 
+.big {
+  width: 28px;
+  height: 28px;
+}
+
 .lines {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   min-width: 0;
 }
 
@@ -38,14 +36,4 @@
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
   overflow-wrap: anywhere;
-}
-
-/* A text link, not a button's look: small, the accent colour. */
-.back {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: var(--mat-sys-label-small);
-  color: var(--mat-sys-primary);
-  cursor: pointer;
 }

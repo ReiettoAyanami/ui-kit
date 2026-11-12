@@ -1,9 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 
-import { LenziFigure } from '@lenzi/ui-kit';
+import { LenziColorPicker, LenziFigure } from '@lenzi/ui-kit';
 
-import { ColorSwatch } from '../../shared/color-swatch/color-swatch';
 import { DemoEvents } from '../../shared/demo-events';
 import { LiveTokens } from '../../shared/live-tokens';
 import { TokensApi } from '../../shared/tokens-api';
@@ -34,13 +33,13 @@ const ROLES = [
 const TYPE = ['display-small', 'headline-medium', 'headline-small', 'title-large', 'title-medium', 'body-large', 'body-medium', 'body-small', 'label-large', 'label-medium'];
 
 /**
- * The theme's colour roles and the type scale. A click on a colour opens a colour selector: the
- * colour changes at once, everywhere (it is a global variable), and is saved from the Variables tab
- * or page.
+ * The theme's colour roles and the type scale. Every colour is its picker (LenziColorPicker): a click
+ * opens the selector and the colour changes at once, everywhere (it is a global variable); it is
+ * saved from the Variables tab or page.
  */
 @Component({
   selector: 'app-theme-demo',
-  imports: [ColorSwatch, LenziFigure],
+  imports: [LenziColorPicker, LenziFigure],
   templateUrl: './theme-demo.html',
   styleUrl: './theme-demo.css',
 })
@@ -63,10 +62,15 @@ export class ThemeDemo {
     return Object.fromEntries(this.roles.map((role) => [role.variable, style.getPropertyValue(role.variable).trim()]));
   });
 
-  protected pick(variable: string, name: string, hex: string): void {
+  /** While the selector moves: the variable follows; back on its saved value, it is no change any more. */
+  protected apply(variable: string, hex: string): void {
     const saved = this.saved.hasValue() ? this.saved.value().groups.flatMap((group) => group.tokens).find((token) => token.name === variable)?.value : undefined;
     if (saved !== undefined && saved.toLowerCase() === hex.toLowerCase()) this.live.reset(variable);
     else this.live.set(variable, hex);
+  }
+
+  /** The selector closed with another colour. */
+  protected picked(name: string, hex: string): void {
     this.events.log(`${name}: ${hex}, applied everywhere (save it from the Variables tab)`);
   }
 }

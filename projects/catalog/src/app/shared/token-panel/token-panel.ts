@@ -8,9 +8,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 
-import { describeError, readPreference, writePreference } from '@lenzi/ui-kit';
+import { LenziColorPicker, describeError, readPreference, writePreference } from '@lenzi/ui-kit';
 
-import { ColorSwatch } from '../color-swatch/color-swatch';
 import { KitServer } from '../kit-server';
 import { LiveTokens } from '../live-tokens';
 import { tokensToCss } from '../token-css';
@@ -36,7 +35,7 @@ function split(value: string): { number: number; unit: string } {
 
 /**
  * Global variables, each with its own control (lenzi, 2026-11-12: "ogni variabile ha il suo toggle
- * giusto"): a slider with its unit, a colour, a curve; what it is for and why it has its value. A
+ * giusto"): a slider with its unit, a colour picker, a curve; what it is for and why it has its value. A
  * toggle at the top turns them into CSS text to edit (`Controls | Text`). Every change applies at once,
  * here and in every demo; "Save to the kit" writes tokens.json and tokens.css (development server),
  * "Discard" goes back. The Variables page shows all of them, a piece's Variables tab the ones its
@@ -44,7 +43,7 @@ function split(value: string): { number: number; unit: string } {
  */
 @Component({
   selector: 'app-token-panel',
-  imports: [ColorSwatch, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, TokenEditor],
+  imports: [LenziColorPicker, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, TokenEditor],
   templateUrl: './token-panel.html',
   styleUrl: './token-panel.css',
 })

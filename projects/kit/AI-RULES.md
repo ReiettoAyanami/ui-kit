@@ -47,6 +47,8 @@ styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the ap
 - **Dark only.** Do not add a light theme or follow the system's.
 - **One "+" per page** (`LenziAddButton`), bottom right, for its one way of adding.
 - **Toggles: 32 px pills**; search bars: elongated circles (`LenziSearchBar`), and only search bars.
+- **A colour the user may change is its own picker** (`LenziColorPicker`): the swatch opens the selector;
+  never `<input type="color">`, never a button beside the colour. Save on `(picked)`.
 - **Dialogs open with `LenziDialogs`** (the back button closes them); destructive actions with
   `LenziConfirmDialog`; save buttons disabled on tap.
 - **Empty, loading, failed**: `LenziStatusMessage`, with `couldNotLoad()` for failures.
@@ -75,6 +77,12 @@ styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the ap
 - **A component's API** (an input, an output, a selector) is a contract for every app: change it with
   care, update its README, AI notes, demo and usage, and tell lenzi which apps must follow.
 - **A new library**: not without lenzi's yes; then it goes in `libraries.json` with its role and rules.
+- **lenzi changes the kit from the catalog too** (2026-11-12: code and configuration "must be put into a
+  code-like textarea where the user can edit, and they will take effect"). With `npm start`: the **Code**
+  tab saves a piece's files, **Rules** and **AI notes** save its `README.md` and `AI.md` (the Rules and AI
+  rules pages save these two documents), **Variables** saves the tokens, the Libraries page saves
+  `libraries.json`. So a file may have changed since you last read it: read it again before editing, and
+  never write over what he wrote.
 - After a change: `npm test`, `npm run build`, then look at the catalog.
 
 ## Where things are

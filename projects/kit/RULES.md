@@ -21,7 +21,8 @@ the rule says what, the variable says how much.
 
 - **Dark only**, violet on neutral greys, "like Obsidian" (lenzi, 2026-10-02: "Come in foto, quindi
   viola/g scuro come obsidian"). `color-scheme: dark`: the system's light setting is not followed.
-- **Accents from Material's violet palette** (primary), cyan for the tertiary.
+- **Accents from Material's violet palette** (primary), cyan for the tertiary. The accent roles are
+  global variables too (2026-11-12, "Accents"), with the palette's own values.
 - **Surfaces are neutral greys**, not the palette's violet-tinted ones: the page anthracite (`#1f1f22`),
   the chart cards almost black (`surface-container-lowest`), windows and menus lighter.
 - **Colours come from the theme's variables** (`--mat-sys-*`, `--lenzi-*`), never written by hand in a
@@ -114,6 +115,10 @@ the rule says what, the variable says how much.
   non quadrato con i bordi smussati"), 48 px high, a magnifier and what they look for inside them; they
   search as you type (300 ms pause), a ✕ clears them, the text lives in the page's URL. **Only search
   bars** have this shape. `LenziSearchBar`.
+- **A colour is changed from the colour itself** (lenzi, 2026-11-12: "se mostri un colore o che, fammi
+  cliccare sul colore e mostrare un selector di colore"): wherever a colour the user may change is shown,
+  it is a round swatch that opens the colour selector at a click, a glass panel like a menu's (the shade,
+  the hue, the hex, the colours the app offers). `LenziColorPicker`; never the browser's own colour input.
 - **No tap highlight** (lenzi, 2026-10-10): Material's own state layers are the feedback.
 
 ## Cards

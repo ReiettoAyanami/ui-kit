@@ -59,7 +59,7 @@
         @case ('color') {
           <span class="label">{{ control.label }}</span>
           <div class="color">
-            <app-color-swatch [color]="'' + value" [label]="control.label" (picked)="set(control.key, $event)" />
+            <lenzi-color-picker [value]="'' + value" [label]="control.label" (valueChange)="set(control.key, $event)" />
             <span class="color-value">{{ value }}</span>
           </div>
         }

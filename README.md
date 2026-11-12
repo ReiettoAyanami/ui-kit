@@ -17,8 +17,20 @@ npm start          # http://localhost:4300 (and the kit's server on 127.0.0.1:43
 ```
 
 The catalog has a page per piece: a live demo with its parameters (phone or desktop width), its rules,
-its AI notes, its real code and the global variables it uses. The **Variables** page changes the global
-variables live and saves them into `projects/kit/src/styles/tokens.json` and `tokens.css`.
+its AI notes, its real code and the global variables it uses. **Everything shown as code or configuration
+can be changed there, and takes effect:**
+
+- **Playground**: the parameters, or the usage code itself (editing it moves the parameters and the demo).
+- **Rules** and **AI notes**: `Read | Edit`; saved into the piece's `README.md` and `AI.md`. The Rules and
+  AI rules pages do the same for `RULES.md` and `AI-RULES.md`.
+- **Code**: the piece's real files, saved into the kit; the catalog rebuilds with them.
+- **Variables** (a piece's tab, and the page with all of them): one control per variable, or all of them
+  as CSS text (`Controls | Text`); a change applies at once everywhere, and is saved into
+  `projects/kit/src/styles/tokens.json` and `tokens.css`. A colour is changed from the colour itself: a
+  click opens the colour selector (`LenziColorPicker`).
+- **Libraries**: `libraries.json`.
+
+Saving needs the development server (`npm start`); elsewhere the changes stay in the browser.
 
 ## Docker
 
@@ -28,7 +40,7 @@ docker compose -f compose.dev.yaml up         # development in a container, the 
 ```
 
 The image (`Dockerfile`) builds the library and the catalog, then serves the catalog with the kit's
-server (Fastify) on port 8080; there the variables are read only. The CI (`.github/workflows/ci.yml`)
+server (Fastify) on port 8080; there nothing is saved (the editors work, in the browser only). The CI (`.github/workflows/ci.yml`)
 runs the tests and the builds, then builds the image, starts it and asks it for pages, at every push:
 the catalog is always deployable.
 
@@ -36,7 +48,7 @@ the catalog is always deployable.
 
 | Script | What it does |
 | --- | --- |
-| `npm start` | the catalog in development, with the server that saves the variables |
+| `npm start` | the catalog in development, with the server that saves the variables and the kit's files |
 | `npm test` | the library's tests, the catalog's, the server's, and that every page has its files |
 | `npm run build` | the package (`dist/kit`) and the catalog (`dist/catalog`) |
 | `npm run pack` | the package as a tarball (`dist/lenzi-ui-kit-<version>.tgz`), for `ng add` |
@@ -87,7 +99,7 @@ projects/kit/              the package @lenzi/ui-kit
   src/styles/              kit.scss, _theme.scss, global.css, tokens.json → tokens.css, fonts.css, docs/
   charts/ three/ http/     the secondary entry points
 projects/catalog/          the catalog app (demos, pages, registry)
-server/                    the kit's server: saves the variables (development), serves the catalog (Docker)
+server/                    the kit's server: saves the variables and the kit's files (development), serves the catalog (Docker)
 tools/                     the dev launcher, the libraries' versions, the documents' test
 ```
 

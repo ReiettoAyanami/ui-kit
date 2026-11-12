@@ -1,0 +1,14 @@
+<div class="coloured" [style.border-color]="colour()">
+  <span class="mark" [style.background-color]="colour()"></span>
+  <span class="lines">
+    <span class="name">What it colours</span>
+    <span class="value">follows the selector at once</span>
+  </span>
+</div>
+<div class="entry">
+  <lenzi-color-picker [label]="label()" [(value)]="colour" [size]="size()" [choices]="choices()" [disabled]="disabled()" (picked)="picked($event)" />
+  <span class="lines">
+    <span class="name">Morning shift</span>
+    <span class="value">{{ colour() }}</span>
+  </span>
+</div>

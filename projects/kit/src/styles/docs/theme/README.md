@@ -23,8 +23,11 @@ app takes: `styles/kit.scss` (the theme, the global variables, the global rules)
 "src/styles.css"
 ```
 
-The neutral surfaces and the status colours are global variables (catalog, Variables page). The accent
-palette is in `styles/_theme.scss` (`mat.$violet-palette`): changing it is a change of the kit.
+The colours are global variables (catalog, Variables page): the neutral surfaces, the status colours and,
+since 2026-11-12, the accent roles ("Accents": primary, secondary, tertiary, error, with their containers
+and "on" colours), written with the values the palette gives the dark theme. In the catalog every colour
+shown is its own picker: a click opens the colour selector. The palette itself is in `styles/_theme.scss`
+(`mat.$violet-palette`): the roles that are not variables still come from it.
 
 ## Roles in use
 

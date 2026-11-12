@@ -3,7 +3,13 @@
   <div class="swatches">
     @for (role of roles; track role.variable) {
       <div class="swatch">
-        <app-color-swatch [color]="role.variable" [label]="role.name" [size]="36" (picked)="pick(role.variable, role.name, $event)" />
+        <lenzi-color-picker
+          [value]="colours()[role.variable]"
+          [label]="role.name"
+          [size]="36"
+          (valueChange)="apply(role.variable, $event)"
+          (picked)="picked(role.name, $event)"
+        />
         <lenzi-figure [label]="role.name" [value]="colours()[role.variable]" />
       </div>
     }
