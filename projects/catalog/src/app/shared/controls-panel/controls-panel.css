@@ -84,15 +84,6 @@
   gap: 10px;
 }
 
-.color input {
-  width: 44px;
-  height: 32px;
-  padding: 0;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: 8px;
-  background: transparent;
-}
-
 .color-value {
   font: var(--mat-sys-body-medium);
   font-variant-numeric: tabular-nums;

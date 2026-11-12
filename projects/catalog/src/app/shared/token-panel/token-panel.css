@@ -122,15 +122,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.color input {
-  width: 44px;
-  height: 32px;
-  padding: 0;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: 8px;
-  background: transparent;
-}
-
 .easing {
   width: 100%;
   max-width: 320px;

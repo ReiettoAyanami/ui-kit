@@ -49,6 +49,22 @@
   --lenzi-status-good: #6ed889;
   --lenzi-status-bad: #ff8a80;
 
+  /* Accents */
+  --mat-sys-primary: #d5baff;
+  --mat-sys-on-primary: #42008a;
+  --mat-sys-primary-container: #5f00c0;
+  --mat-sys-on-primary-container: #ecdcff;
+  --mat-sys-secondary: #cec2db;
+  --mat-sys-on-secondary: #352d40;
+  --mat-sys-secondary-container: #4b4357;
+  --mat-sys-on-secondary-container: #eadef7;
+  --mat-sys-tertiary: #00dddd;
+  --mat-sys-on-tertiary: #003737;
+  --mat-sys-tertiary-container: #004f4f;
+  --mat-sys-on-tertiary-container: #00fbfb;
+  --mat-sys-error: #ffb4ab;
+  --mat-sys-on-error: #690005;
+
   /* Surfaces */
   --mat-sys-background: #1f1f22;
   --mat-sys-surface: #1f1f22;

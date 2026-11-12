@@ -59,7 +59,7 @@
         @case ('color') {
           <span class="label">{{ control.label }}</span>
           <div class="color">
-            <input type="color" [value]="value" [attr.aria-label]="control.label" (input)="set(control.key, $any($event.target).value)" />
+            <app-color-swatch [color]="'' + value" [label]="control.label" (picked)="set(control.key, $event)" />
             <span class="color-value">{{ value }}</span>
           </div>
         }

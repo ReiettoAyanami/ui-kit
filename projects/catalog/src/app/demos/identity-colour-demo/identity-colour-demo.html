@@ -1,10 +1,14 @@
+<p class="hint">Click a dot to try a colour of your own (its <code>[color]</code>): the computed ones are frozen.</p>
 <div class="grid">
   @for (entry of ids(); track entry.id) {
     <div class="entry">
-      <lenzi-identity-dot class="big" [id]="entry.id" [offset]="offset()" />
+      <app-color-swatch [color]="entry.chosen ?? entry.computed" [label]="'id ' + entry.id" [size]="28" (picked)="pick(entry.id, $event)" />
       <span class="lines">
         <span class="name">id {{ entry.id }}</span>
-        <span class="value">{{ entry.color }}</span>
+        <span class="value">{{ entry.chosen ?? entry.computed }}</span>
+        @if (entry.chosen) {
+          <button type="button" class="back" (click)="forget(entry.id)">Back to its own</button>
+        }
       </span>
     </div>
   }

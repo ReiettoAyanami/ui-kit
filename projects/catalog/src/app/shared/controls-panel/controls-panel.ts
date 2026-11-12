@@ -8,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 
 import { Control, Values } from '../../registry';
+import { ColorSwatch } from '../color-swatch/color-swatch';
 
 /**
  * The GUI of a demo: one field per parameter (text, a slider, a switch, the choices as pills or a
@@ -15,7 +16,7 @@ import { Control, Values } from '../../registry';
  */
 @Component({
   selector: 'app-controls-panel',
-  imports: [MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, MatSliderModule],
+  imports: [ColorSwatch, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, MatSliderModule],
   templateUrl: './controls-panel.html',
   styleUrl: './controls-panel.css',
 })

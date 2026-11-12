@@ -1,7 +1,8 @@
 // The kit's Material 3 theme (RULES.md, "Theme"): dark only, Material's violet palette for the
-// accents and cyan for the tertiary, one font (Roboto Mono) with bold labels and titles. The neutral
-// surfaces are NOT here: they are global variables (tokens.css, "Surfaces"), so the catalog's
-// Variables page can change them. Use it through kit.scss, which also sets the page's colours.
+// accents and cyan for the tertiary, one font (Roboto Mono) with bold labels and titles. The colours
+// people pick are global variables too (tokens.css: "Accents" with the palette's own values, and the
+// neutral "Surfaces"), so the catalog's Variables page changes them; this palette is where the other
+// roles come from. Use it through kit.scss, which also sets the page's colours.
 @use 'sass:list';
 @use '@angular/material' as mat;
 

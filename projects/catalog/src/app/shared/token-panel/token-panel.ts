@@ -10,6 +10,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { describeError, readPreference, writePreference } from '@lenzi/ui-kit';
 
+import { ColorSwatch } from '../color-swatch/color-swatch';
 import { KitServer } from '../kit-server';
 import { LiveTokens } from '../live-tokens';
 import { tokensToCss } from '../token-css';
@@ -43,7 +44,7 @@ function split(value: string): { number: number; unit: string } {
  */
 @Component({
   selector: 'app-token-panel',
-  imports: [MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, TokenEditor],
+  imports: [ColorSwatch, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, TokenEditor],
   templateUrl: './token-panel.html',
   styleUrl: './token-panel.css',
 })

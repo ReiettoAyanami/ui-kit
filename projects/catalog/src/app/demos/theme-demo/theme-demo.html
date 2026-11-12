@@ -1,15 +1,10 @@
 @if (show() === 'colours') {
+  <p class="hint">Click a colour to change it: it applies everywhere at once. Save it from the Variables tab.</p>
   <div class="swatches">
-    @for (role of roles; track role.role) {
+    @for (role of roles; track role.variable) {
       <div class="swatch">
-        <span class="chip" [style.background]="'var(' + role.variable + ')'"></span>
-        <lenzi-figure [label]="role.role" [value]="valueOf(role.variable)" />
-      </div>
-    }
-    @for (status of statuses; track status) {
-      <div class="swatch">
-        <span class="chip" [style.background]="'var(' + status + ')'"></span>
-        <lenzi-figure [label]="status.replace('--lenzi-', '')" [value]="valueOf(status)" />
+        <app-color-swatch [color]="role.variable" [label]="role.name" [size]="36" (picked)="pick(role.variable, role.name, $event)" />
+        <lenzi-figure [label]="role.name" [value]="colours()[role.variable]" />
       </div>
     }
   </div>

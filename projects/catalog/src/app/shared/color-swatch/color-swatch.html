@@ -1,0 +1,7 @@
+@if (editable()) {
+  <label class="swatch editable" [style.background]="background()" [style.width.px]="size()" [style.height.px]="size()" [attr.title]="'Change ' + label() + ': ' + hex()">
+    <input type="color" [value]="hex()" [attr.aria-label]="'Change ' + label()" (input)="picked.emit($any($event.target).value)" />
+  </label>
+} @else {
+  <span class="swatch" [style.background]="background()" [style.width.px]="size()" [style.height.px]="size()" [attr.title]="label() + ': ' + hex()"></span>
+}
