@@ -1,0 +1,8 @@
+<kit-blocking-screen
+  [icon]="'' + values()['icon']"
+  [title]="'' + values()['title']"
+  [actionLabel]="values()['action'] ? '' + values()['action'] : null"
+  [actionKind]="kind()"
+  (action)="events.log('way out: ' + values()['action'])"
+  >{{ values()['text'] }}</kit-blocking-screen
+>

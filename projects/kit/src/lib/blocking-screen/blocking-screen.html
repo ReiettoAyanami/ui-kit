@@ -1,0 +1,24 @@
+<div class="screen" role="alertdialog" aria-labelledby="kit-blocking-title" aria-modal="true">
+  <div class="card">
+    @if (icon(); as icon) {
+      <mat-icon class="big" aria-hidden="true">{{ icon }}</mat-icon>
+    }
+    <h1 class="title" id="kit-blocking-title">{{ title() }}</h1>
+    <div class="text"><ng-content /></div>
+    @if (actionLabel(); as label) {
+      @if (actionHref(); as href) {
+        @if (actionKind() === 'flat') {
+          <a mat-flat-button class="get" [href]="href" target="_blank" rel="noopener">{{ label }}</a>
+        } @else {
+          <a mat-stroked-button class="get" [href]="href" target="_blank" rel="noopener">{{ label }}</a>
+        }
+      } @else {
+        @if (actionKind() === 'flat') {
+          <button mat-flat-button type="button" class="get" (click)="action.emit()">{{ label }}</button>
+        } @else {
+          <button mat-stroked-button type="button" class="get" (click)="action.emit()">{{ label }}</button>
+        }
+      }
+    }
+  </div>
+</div>

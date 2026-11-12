@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+mat-form-field {
+  width: 240px;
+  max-width: 100%;
+}

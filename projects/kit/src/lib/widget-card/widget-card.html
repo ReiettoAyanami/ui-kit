@@ -1,0 +1,27 @@
+<mat-card appearance="outlined" class="widget">
+  <mat-card-header>
+    @if (icon(); as icon) {
+      <mat-icon mat-card-avatar class="icon" aria-hidden="true">{{ icon }}</mat-icon>
+    }
+    <mat-card-title>{{ title() }}</mat-card-title>
+    @if (subtitle(); as subtitle) {
+      <mat-card-subtitle>{{ subtitle }}</mat-card-subtitle>
+    }
+  </mat-card-header>
+  <mat-card-content>
+    @if (scales().length > 1) {
+      <mat-button-toggle-group
+        class="scales"
+        hideSingleSelectionIndicator
+        [attr.aria-label]="'Interval of ' + title()"
+        [value]="scale()"
+        (change)="scaleChange.emit($event.value)"
+      >
+        @for (option of scales(); track option) {
+          <mat-button-toggle [value]="option">{{ option }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+    }
+    <ng-content />
+  </mat-card-content>
+</mat-card>

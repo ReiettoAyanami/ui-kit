@@ -1,0 +1,21 @@
+<div class="lines">
+  <p class="line">The windows of the kit</p>
+  <p class="line">Open each one over the pattern background.</p>
+</div>
+<div class="glass">
+  <span class="glass-title">A glass surface</span>
+  <span class="glass-text">Its colour at the window opacity, what is under it blurred.</span>
+</div>
+<div class="buttons">
+  <button mat-flat-button type="button" (click)="openWindow()">Open a window</button>
+  <button mat-stroked-button type="button" [matMenuTriggerFor]="menu">Open a menu</button>
+  <button mat-stroked-button type="button" (click)="snack()">Show a snackbar</button>
+  <button mat-icon-button type="button" matTooltip="A tooltip in dark glass" aria-label="A tooltip in dark glass">
+    <mat-icon>info</mat-icon>
+  </button>
+</div>
+<mat-menu #menu="matMenu">
+  <button mat-menu-item type="button"><mat-icon>edit</mat-icon>Edit</button>
+  <button mat-menu-item type="button"><mat-icon>content_copy</mat-icon>Duplicate</button>
+  <button mat-menu-item type="button"><mat-icon>delete</mat-icon>Delete</button>
+</mat-menu>

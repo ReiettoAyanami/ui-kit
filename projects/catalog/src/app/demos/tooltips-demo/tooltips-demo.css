@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+.hint {
+  margin: 0 0 24px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.bar {
+  display: block;
+  width: 180px;
+  height: 12px;
+  border-radius: 4px;
+}

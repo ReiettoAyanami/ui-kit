@@ -1,0 +1,16 @@
+@if (filters() && data().lines.length > 1) {
+  <!-- Every line starts shown; a tap on its chip hides it, another shows it again. -->
+  <mat-chip-listbox class="filters" [multiple]="true" aria-label="Lines shown" (change)="choose($event)">
+    @for (line of data().lines; track line.key; let index = $index) {
+      <mat-chip-option [value]="line.key" [selected]="!hidden().has(line.key)">
+        <span class="dot" [style.background-color]="color(line, index)"></span>
+        {{ line.name }}
+      </mat-chip-option>
+    }
+  </mat-chip-listbox>
+}
+@if (data().lines.length === 0) {
+  <p class="empty">{{ emptyText() }}</p>
+} @else {
+  <div echarts class="chart" [style.height]="height()" [options]="options()" [autoResize]="true" [initOpts]="{ renderer: 'svg' }"></div>
+}

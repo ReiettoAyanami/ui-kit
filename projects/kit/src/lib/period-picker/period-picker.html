@@ -1,0 +1,20 @@
+@if (period() !== null) {
+  <mat-form-field class="period" appearance="outline" subscriptSizing="dynamic">
+    <mat-label>{{ periodLabel() }}</mat-label>
+    <mat-select [value]="period()" (selectionChange)="periodChange.emit($event.value)">
+      @for (option of periods(); track option.days) {
+        <mat-option [value]="option.days">{{ option.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+}
+@if (scale() !== null) {
+  <mat-form-field class="scale" appearance="outline" subscriptSizing="dynamic">
+    <mat-label>{{ scaleLabel() }}</mat-label>
+    <mat-select [value]="scale()" (selectionChange)="scaleChange.emit($event.value)">
+      @for (option of scales(); track option) {
+        <mat-option [value]="option">{{ option }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+}

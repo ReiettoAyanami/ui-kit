@@ -1,0 +1,14 @@
+{
+  "name": "ui-kit-server",
+  "private": true,
+  "type": "module",
+  "description": "The kit's server: the catalog's Variables page saves through it in development; in Docker it serves the built catalog.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test 'server/*.test.mjs'"
+  },
+  "dependencies": {
+    "@fastify/static": "10.1.10",
+    "fastify": "5.12.8"
+  }
+}

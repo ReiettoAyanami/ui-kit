@@ -1,0 +1,105 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+/* A panel of the page: solid, with the border of every surface (RULES.md, "Borders"). */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--kit-panel-radius);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+}
+
+.title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.control mat-form-field {
+  width: 100%;
+}
+
+/* What a field is, on top and bold, like every label of the kit. */
+.label {
+  font: var(--mat-sys-body-medium);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.number mat-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.number-field {
+  box-sizing: border-box;
+  width: 84px;
+  padding: 6px 8px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.number-field:focus {
+  outline: none;
+  border-color: var(--mat-sys-primary);
+}
+
+.choices {
+  align-self: flex-start;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.color {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color input {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  background: transparent;
+}
+
+.color-value {
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

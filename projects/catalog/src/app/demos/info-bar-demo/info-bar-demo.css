@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.bar {
+  height: 44px;
+}
+
+.hint {
+  margin: 16px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,18 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+/* The figure on the left, the change on the right; the change under it where they do not fit. */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  max-width: 420px;
+}
+
+.figure {
+  font: var(--mat-sys-body-large);
+}

@@ -1,0 +1,4 @@
+<div class="choices">
+  <kit-period-picker [period]="values()['period'] ? days() : null" [scale]="values()['scale'] ? per() : null" (periodChange)="period($event)" (scaleChange)="scale($event)" />
+</div>
+<p class="shown">{{ label(days()) }}, per {{ per() }}</p>

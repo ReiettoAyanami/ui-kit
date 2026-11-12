@@ -1,0 +1,70 @@
+/* Generated from tokens.json by tools/tokens.mjs. Edit tokens.json, or the Variables page of the
+   catalog, never this file: it is written again from them. */
+:root {
+  /* Glass */
+  --kit-glass: 56%;
+  --kit-glass-bar: 66%;
+  --kit-glass-blur: 24px;
+  --kit-glass-saturate: 160%;
+  --kit-scrim-blur: 6px;
+  --kit-scrim-opacity: 32%;
+
+  /* Borders */
+  --kit-border: 2px;
+  --kit-border-focus: 3px;
+
+  /* Shape */
+  --kit-float-gap: 8px;
+  --kit-bar-radius: 16px;
+  --kit-panel-radius: 12px;
+  --kit-option-radius: 8px;
+  --kit-card-radius: 28px;
+  --kit-widget-radius: 24px;
+
+  /* Motion */
+  --kit-window-rise: 24px;
+  --kit-panel-rise: 8px;
+  --kit-rise-duration: 300ms;
+  --kit-rise-easing: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --kit-window-exit: 150ms;
+  --kit-scrim-duration: 400ms;
+  --kit-standard-duration: 300ms;
+  --kit-standard-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Sizes */
+  --kit-toggle-height: 32px;
+  --kit-toggle-padding: 14px;
+  --kit-pill-padding: 10px;
+  --kit-search-height: 48px;
+  --kit-fab-size: 64px;
+  --kit-fab-icon: 28px;
+  --kit-drawer-width: 240px;
+  --kit-nav-gap: 6px;
+  --kit-segment-height: 12px;
+  --kit-segment-min: 6px;
+  --kit-segment-gap: 2px;
+  --kit-dot-size: 10px;
+
+  /* Status colours */
+  --kit-status-good: #6ed889;
+  --kit-status-bad: #ff8a80;
+
+  /* Surfaces */
+  --mat-sys-background: #1f1f22;
+  --mat-sys-surface: #1f1f22;
+  --mat-sys-surface-dim: #18181b;
+  --mat-sys-surface-bright: #3a3a3f;
+  --mat-sys-surface-container-lowest: #121214;
+  --mat-sys-surface-container-low: #18181b;
+  --mat-sys-surface-container: #232327;
+  --mat-sys-surface-container-high: #2b2b30;
+  --mat-sys-surface-container-highest: #34343a;
+  --mat-sys-surface-variant: #34343a;
+  --mat-sys-on-background: #e6e6ea;
+  --mat-sys-on-surface: #e6e6ea;
+  --mat-sys-on-surface-variant: #b9b9c1;
+  --mat-sys-outline: #8b8b95;
+  --mat-sys-outline-variant: #3d3d44;
+  --mat-sys-inverse-surface: #e6e6ea;
+  --mat-sys-inverse-on-surface: #232327;
+}

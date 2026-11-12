@@ -1,0 +1,10 @@
+<div class="drawer">
+  <kit-nav-list
+    [appName]="'' + values()['appName']"
+    [subtitle]="values()['subtitle'] ? '' + values()['subtitle'] : null"
+    [pages]="pages"
+    [bottom]="bottom()"
+    (navigated)="log('went to ' + $event.label)"
+    (pressed)="log('pressed ' + $event)"
+  />
+</div>

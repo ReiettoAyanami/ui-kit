@@ -1,0 +1,9 @@
+:host {
+  display: block;
+  max-width: 560px;
+  padding: 16px;
+}
+
+.bar {
+  margin-top: 12px;
+}

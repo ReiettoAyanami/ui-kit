@@ -1,0 +1,9 @@
+<kit-figure-grid>
+  <kit-figure [label]="'' + values()['label']" [value]="'' + values()['value']" [description]="values()['explain'] ? 'What is left of the active batches.' : null" />
+  <kit-figure label="Spent" value="€20.00" [description]="values()['explain'] ? 'What the consumptions of the period cost.' : null" />
+  <kit-figure label="Per day" value="1.4 capsula / day" />
+  <kit-figure label="Last price">
+    <kit-delta ratio="-0.0625" />
+  </kit-figure>
+  <kit-figure label="Last purchase" [value]="null" />
+</kit-figure-grid>

@@ -1,0 +1,25 @@
+@if (show() === 'colours') {
+  <div class="swatches">
+    @for (role of roles; track role.role) {
+      <div class="swatch">
+        <span class="chip" [style.background]="'var(' + role.variable + ')'"></span>
+        <kit-figure [label]="role.role" [value]="valueOf(role.variable)" />
+      </div>
+    }
+    @for (status of statuses; track status) {
+      <div class="swatch">
+        <span class="chip" [style.background]="'var(' + status + ')'"></span>
+        <kit-figure [label]="status.replace('--kit-', '')" [value]="valueOf(status)" />
+      </div>
+    }
+  </div>
+} @else {
+  <div class="type">
+    @for (style of type; track style) {
+      <div class="sample">
+        <span class="sample-name">{{ style }}</span>
+        <span class="sample-text" [style.font]="'var(--mat-sys-' + style + ')'">Consumptions 264 g €8.93</span>
+      </div>
+    }
+  </div>
+}

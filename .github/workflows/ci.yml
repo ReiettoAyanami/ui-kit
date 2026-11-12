@@ -1,0 +1,42 @@
+# Every push and pull request: the tests, the builds, and the Docker image, started and asked for a
+# page: the catalog must always be deployable with Docker (lenzi, 2026-11-12).
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    name: Tests and builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Tests (library, catalog, server, documents)
+        run: npm test
+      - name: Builds (the package, the catalog)
+        run: npm run build
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t ui-kit-catalog .
+      - name: Start it and ask for pages
+        run: |
+          docker run -d --name catalog -p 8080:8080 ui-kit-catalog
+          for attempt in $(seq 1 30); do curl -fs http://localhost:8080/api/health && break; sleep 1; done
+          curl -fs http://localhost:8080/ | grep -q '<app-root>'
+          curl -fs http://localhost:8080/components/add-button | grep -q '<app-root>'
+          curl -fs http://localhost:8080/kit-src/AI-RULES.md | grep -q '# AI rules'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'content-type: application/json' -d '{"values":{}}' http://localhost:8080/api/tokens)" = 403
+          docker rm -f catalog

@@ -1,0 +1,31 @@
+<main class="page">
+  <header class="hero">
+    <h1 class="title">ui-kit</h1>
+    <p class="lead">
+      lenzi's components, in one place: Angular Material 3, heavily modified. Dark violet on neutral greys, glass, 2 px
+      borders, Roboto Mono. Imported from substance-tracker and vtiger-reader, so every new app starts from the same pieces
+      and the same rules.
+    </p>
+    <kit-figure-grid class="numbers">
+      <kit-figure label="Pages of components" [value]="components" />
+      <kit-figure label="Categories" [value]="categories" />
+    </kit-figure-grid>
+  </header>
+
+  <nav class="sections" aria-label="Sections">
+    @for (section of sections; track section.link) {
+      <a class="section" [routerLink]="section.link">
+        <mat-icon class="icon" aria-hidden="true">{{ section.icon }}</mat-icon>
+        <span class="section-text">
+          <span class="section-title">{{ section.title }}</span>
+          <span class="section-summary">{{ section.text }}</span>
+        </span>
+      </a>
+    }
+  </nav>
+
+  <section class="start">
+    <h2 class="heading">How an app takes the kit</h2>
+    <app-markdown [source]="startMarkdown" />
+  </section>
+</main>

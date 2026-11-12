@@ -1,0 +1,10 @@
+<kit-figure-grid>
+  <kit-figure label="describeError(error)" [value]="described()" />
+  <kit-figure label="couldNotLoad('the substances', error)" [value]="loadFailed()" />
+</kit-figure-grid>
+<p class="label">A choice this browser remembers (reload the frame: it stays)</p>
+<mat-button-toggle-group hideSingleSelectionIndicator aria-label="Per" [value]="per()" (change)="choose($event.value)">
+  <mat-button-toggle value="day">day</mat-button-toggle>
+  <mat-button-toggle value="week">week</mat-button-toggle>
+  <mat-button-toggle value="month">month</mat-button-toggle>
+</mat-button-toggle-group>

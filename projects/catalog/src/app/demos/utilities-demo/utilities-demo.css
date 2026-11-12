@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.label {
+  margin: 24px 0 8px;
+  font: var(--mat-sys-body-medium);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface-variant);
+}

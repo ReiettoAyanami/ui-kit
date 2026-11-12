@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.content {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+}
+
+/* A window drawn the way the kit draws dialogs. */
+.window {
+  max-width: 480px;
+  padding: 20px 24px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: 28px;
+  background: var(--mat-sys-surface-container-high);
+}
+
+.window-title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+.window-text {
+  margin: 4px 0 8px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

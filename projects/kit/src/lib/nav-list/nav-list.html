@@ -1,0 +1,44 @@
+<nav [attr.aria-label]="label()">
+  <p class="app-name">{{ appName() }}</p>
+  @if (subtitle(); as subtitle) {
+    <p class="subtitle">{{ subtitle }}</p>
+  }
+
+  <mat-nav-list>
+    @for (entry of pages(); track key(entry)) {
+      <ng-container *ngTemplateOutlet="item; context: { $implicit: entry }" />
+    }
+  </mat-nav-list>
+
+  @if (bottom().length) {
+    <!-- At the bottom, apart from the pages. -->
+    <mat-nav-list class="bottom">
+      @for (entry of bottom(); track key(entry)) {
+        <ng-container *ngTemplateOutlet="item; context: { $implicit: entry }" />
+      }
+    </mat-nav-list>
+  }
+</nav>
+
+<ng-template #item let-entry>
+  @if (entry.link !== undefined) {
+    <!-- activated: Material's indicator of the current page (and aria-current="page"). -->
+    <a
+      mat-list-item
+      [routerLink]="entry.link"
+      routerLinkActive
+      [routerLinkActiveOptions]="match(entry)"
+      #active="routerLinkActive"
+      [activated]="active.isActive"
+      (click)="follow(entry)"
+    >
+      <mat-icon matListItemIcon>{{ entry.icon }}</mat-icon>
+      <span matListItemTitle>{{ entry.label }}</span>
+    </a>
+  } @else {
+    <button mat-list-item type="button" (click)="press(entry)">
+      <mat-icon matListItemIcon>{{ entry.icon }}</mat-icon>
+      <span matListItemTitle>{{ entry.label }}</span>
+    </button>
+  }
+</ng-template>

@@ -1,0 +1,17 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-body-large);
+  font-weight: 700;
+}

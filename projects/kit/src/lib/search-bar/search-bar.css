@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+
+/* As wide as its host; the shape comes from the global .kit-search-bar class (global.css). */
+.field {
+  width: 100%;
+}
+
+/* The magnifier a little in from the round end, like a browser's bar. */
+mat-icon[matPrefix] {
+  margin: 0 4px 0 12px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* The browser's own clear button of type="search": the ✕ is ours. */
+input::-webkit-search-cancel-button {
+  appearance: none;
+}

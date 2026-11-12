@@ -1,0 +1,22 @@
+// The whole look of the kit, in one file. An app lists it in angular.json, "styles", before its own:
+//   "node_modules/@lenzi/ui-kit/styles/kit.scss"
+// (and "node_modules/@lenzi/ui-kit/styles/fonts.css" for the bundled fonts and icons).
+// The order matters: the variables (tokens.css) before the rules that read them (global.css).
+@use 'theme';
+@use 'tokens';
+@use 'global';
+
+html {
+  height: 100%;
+  @include theme.theme();
+}
+
+body {
+  // Dark only (lenzi, 2026-10-02): the system's light setting is not followed.
+  color-scheme: dark;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}

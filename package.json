@@ -1,0 +1,50 @@
+{
+  "name": "ui-kit",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "node tools/dev.mjs",
+    "build": "ng build kit && ng build catalog",
+    "test": "ng test kit --watch=false && ng test catalog --watch=false && node --test 'server/*.test.mjs' 'tools/*.test.mjs'",
+    "tokens": "node server/tokens.mjs",
+    "libraries": "node tools/libraries.mjs",
+    "serve:prod": "PUBLIC_DIR=dist/catalog/browser PORT=8080 node server/server.mjs",
+    "pack": "ng build kit && cd dist/kit && npm pack --pack-destination ../"
+  },
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "dependencies": {
+    "@angular/cdk": "^21.2.14",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/material": "^21.2.14",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@fontsource/roboto-mono": "^5.3.0",
+    "echarts": "^6.1.0",
+    "highlight.js": "^11.12.0",
+    "marked": "^18.2.0",
+    "material-icons": "^1.13.14",
+    "ngx-echarts": "^21.0.0",
+    "rxjs": "~7.8.0",
+    "three": "^0.187.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.29",
+    "@angular/cli": "^21.2.29",
+    "@angular/compiler-cli": "^21.2.0",
+    "@fastify/static": "10.1.10",
+    "@types/three": "^0.187.0",
+    "fastify": "5.12.8",
+    "jsdom": "^28.0.0",
+    "ng-packagr": "^21.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  },
+  "description": "lenzi's Angular component kit (@lenzi/ui-kit) and its catalog.",
+  "license": "Unlicense"
+}

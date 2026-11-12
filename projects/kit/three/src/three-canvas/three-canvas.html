@@ -1,0 +1,5 @@
+<div #box class="box" role="img" [attr.aria-label]="label()">
+  @if (unavailable()) {
+    <p class="unavailable">{{ unavailableText() }}</p>
+  }
+</div>

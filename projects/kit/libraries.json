@@ -1,0 +1,308 @@
+{
+  "about": "Every library the frontends use, what it is for and its rules. The versions come from each project's package.json (`npm run libraries` reads them again): the kit, substance-tracker and vtiger-reader. A new library goes here first, with its reason, before an app installs it.",
+  "projects": [
+    "kit",
+    "substance-tracker",
+    "vtiger-reader"
+  ],
+  "groups": [
+    {
+      "id": "framework",
+      "label": "Framework",
+      "libraries": [
+        {
+          "name": "Angular",
+          "package": "@angular/core",
+          "url": "https://angular.dev",
+          "role": "The frontend framework of every app: standalone components, signals, the router, forms, HttpClient. Client-side only.",
+          "rules": [
+            "Standalone components, signal inputs and outputs (input(), output(), model()), the new control flow (@if, @for, @switch).",
+            "Every component, service, pipe, guard, directive and interceptor is made with `ng generate`, never by hand (lenzi, 2026-09-29).",
+            "No SSR: a client-side single-page app.",
+            "Every page is a lazy route (loadComponent): the first bundle stays small.",
+            "Route parameters and data arrive as inputs (withComponentInputBinding)."
+          ],
+          "versions": {
+            "kit": "21.2.26",
+            "substance-tracker": "^21.2.0",
+            "vtiger-reader": "21.2.26"
+          }
+        },
+        {
+          "name": "Angular CDK",
+          "package": "@angular/cdk",
+          "url": "https://material.angular.dev/cdk",
+          "role": "Overlays, portals, focus trapping, layout: what Material is built on.",
+          "rules": [
+            "Use it for behaviour Material does not have (a page window's focus trap), never to draw a component of its own look."
+          ],
+          "versions": {
+            "kit": "21.2.14",
+            "substance-tracker": "^21.2.14",
+            "vtiger-reader": "21.2.14"
+          }
+        },
+        {
+          "name": "RxJS",
+          "package": "rxjs",
+          "url": "https://rxjs.dev",
+          "role": "HttpClient's streams, router events, timeouts.",
+          "rules": [
+            "State lives in signals; RxJS stays at the edges (HTTP, events). Load data with rxResource, keep it on screen with keptValue."
+          ],
+          "versions": {
+            "kit": "7.8.2",
+            "substance-tracker": "~7.8.0",
+            "vtiger-reader": "7.8.2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "look",
+      "label": "Look",
+      "libraries": [
+        {
+          "name": "Angular Material",
+          "package": "@angular/material",
+          "url": "https://material.angular.dev",
+          "role": "The only UI component library: Material 3, heavily modified by the kit (dark violet, glass, 2 px borders, Roboto Mono, 32 px pills).",
+          "rules": [
+            "No other UI or CSS framework (no Tailwind, no Bootstrap, no PrimeNG): Material and the kit.",
+            "The kit's styles modify Material once, globally (styles/global.css): an app never restyles a Material component locally.",
+            "Custom CSS only for layout and for what Material does not have (a segmented bar, identity colours)."
+          ],
+          "versions": {
+            "kit": "21.2.14",
+            "substance-tracker": "^21.2.14",
+            "vtiger-reader": "21.2.14"
+          }
+        },
+        {
+          "name": "Roboto Mono (Fontsource)",
+          "package": "@fontsource/roboto-mono",
+          "url": "https://fontsource.org/fonts/roboto-mono",
+          "role": "The one font of every app, bundled with it (works offline, under a strict CSP).",
+          "rules": [
+            "One font for everything (lenzi, 2026-10-02: \"Usa roboto mono per tutto\"); weights 400, 500, 700 and italic; through styles/fonts.css."
+          ],
+          "versions": {
+            "kit": "5.3.0",
+            "substance-tracker": "5.3.0",
+            "vtiger-reader": "5.3.0"
+          }
+        },
+        {
+          "name": "Material Icons",
+          "package": "material-icons",
+          "url": "https://fonts.google.com/icons",
+          "role": "The icons, filled, bundled with the app.",
+          "rules": [
+            "Filled icons only, through <mat-icon>; an icon that carries meaning has a text or an aria-label next to it."
+          ],
+          "versions": {
+            "kit": "1.13.14",
+            "substance-tracker": "1.13.14",
+            "vtiger-reader": "1.13.14"
+          }
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "label": "Charts and 3D",
+      "libraries": [
+        {
+          "name": "Apache ECharts",
+          "package": "echarts",
+          "url": "https://echarts.apache.org",
+          "role": "The charts: bars, lines, donut, treemap, radar, drawn in SVG.",
+          "rules": [
+            "Only through KitChart (@lenzi/ui-kit/charts): the one component that knows the chart library.",
+            "The modular import only (echarts/core plus the pieces used): never the whole of ECharts.",
+            "The SVG renderer; the theme's colours read from its variables."
+          ],
+          "versions": {
+            "kit": "6.1.0",
+            "substance-tracker": "^6.1.0"
+          }
+        },
+        {
+          "name": "ngx-echarts",
+          "package": "ngx-echarts",
+          "url": "https://github.com/xieziyu/ngx-echarts",
+          "role": "The Angular directive around ECharts (resizing, updates).",
+          "rules": [
+            "Only inside KitChart."
+          ],
+          "versions": {
+            "kit": "21.0.0",
+            "substance-tracker": "^21.0.0"
+          }
+        },
+        {
+          "name": "three.js",
+          "package": "three",
+          "url": "https://threejs.org",
+          "role": "3D, for later (lenzi, 2026-11-12: \"we don't use it now, but we might\").",
+          "rules": [
+            "Only through KitThreeCanvas (@lenzi/ui-kit/three): it owns the renderer, the size, the frame loop and freeing the GPU memory.",
+            "A page with 3D is a lazy route: three.js is heavy.",
+            "Colours from the theme (context.color('--mat-sys-primary')), never hard-coded."
+          ],
+          "versions": {
+            "kit": "0.187.0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "platforms",
+      "label": "Platforms",
+      "libraries": [
+        {
+          "name": "Capacitor",
+          "package": "@capacitor/core",
+          "url": "https://capacitorjs.com",
+          "role": "substance-tracker's Android app: the website packed as an APK.",
+          "rules": [
+            "The web stays the source: the app is the same pages, edge to edge, with the safe-area insets the kit already respects."
+          ],
+          "versions": {
+            "substance-tracker": "8.5.2"
+          }
+        },
+        {
+          "name": "Electron",
+          "package": "electron",
+          "url": "https://www.electronjs.org",
+          "role": "vtiger-reader's desktop app for Windows: the Angular pages and a Fastify API inside one window.",
+          "rules": [
+            "The pages are the same as on the web: the kit's look, the kit's components."
+          ],
+          "versions": {
+            "vtiger-reader": "45.2.3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tooling",
+      "label": "Build and tests",
+      "libraries": [
+        {
+          "name": "Angular CLI and build",
+          "package": "@angular/build",
+          "url": "https://angular.dev/tools/cli",
+          "role": "Builds (esbuild), the dev server, the unit-test runner.",
+          "rules": [
+            "`ng generate` for every Angular artifact; `ng build` must pass with no error before anything is handed over."
+          ],
+          "versions": {
+            "kit": "21.2.29",
+            "substance-tracker": "^21.2.24",
+            "vtiger-reader": "21.2.29"
+          }
+        },
+        {
+          "name": "ng-packagr",
+          "package": "ng-packagr",
+          "url": "https://github.com/ng-packagr/ng-packagr",
+          "role": "Packs the kit as an Angular library, with its entry points (charts, three, http).",
+          "rules": [
+            "The kit only."
+          ],
+          "versions": {
+            "kit": "21.2.7"
+          }
+        },
+        {
+          "name": "TypeScript",
+          "package": "typescript",
+          "url": "https://www.typescriptlang.org",
+          "role": "The language of every frontend, strict.",
+          "rules": [
+            "strict, strictTemplates; code, names and comments in English."
+          ],
+          "versions": {
+            "kit": "5.9.3",
+            "substance-tracker": "~5.9.2",
+            "vtiger-reader": "5.9.3"
+          }
+        },
+        {
+          "name": "Vitest",
+          "package": "vitest",
+          "url": "https://vitest.dev",
+          "role": "Unit tests, through Angular's unit-test builder, in jsdom.",
+          "rules": [
+            "Every component of the kit has tests of what it does from outside: its inputs, its outputs, what it shows."
+          ],
+          "versions": {
+            "kit": "4.1.12",
+            "substance-tracker": "^4.0.8",
+            "vtiger-reader": "4.1.12"
+          }
+        },
+        {
+          "name": "Prettier",
+          "package": "prettier",
+          "url": "https://prettier.io",
+          "role": "Formatting.",
+          "rules": [
+            "The workspace's .prettierrc: 140 columns, single quotes."
+          ],
+          "versions": {
+            "kit": "3.10.1",
+            "substance-tracker": "^3.8.1",
+            "vtiger-reader": "3.9.10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "catalog",
+      "label": "Only in the catalog",
+      "libraries": [
+        {
+          "name": "marked",
+          "package": "marked",
+          "url": "https://marked.js.org",
+          "role": "Shows the kit's Markdown (rules, AI notes) as pages.",
+          "rules": [
+            "Catalog only: the apps do not render Markdown."
+          ],
+          "versions": {
+            "kit": "18.2.0"
+          }
+        },
+        {
+          "name": "highlight.js",
+          "package": "highlight.js",
+          "url": "https://highlightjs.org",
+          "role": "Colours the code shown in the catalog, in the theme's colours.",
+          "rules": [
+            "Catalog only; the languages the kit is written in, nothing else."
+          ],
+          "versions": {
+            "kit": "11.12.0"
+          }
+        },
+        {
+          "name": "Fastify",
+          "package": "fastify",
+          "url": "https://fastify.dev",
+          "role": "The kit's server (saving the variables, serving the catalog in Docker); the API of both apps.",
+          "rules": [
+            "Errors as Problem Details (RFC 9457), the shape kitErrorInterceptor reads."
+          ],
+          "versions": {
+            "kit": "5.12.8",
+            "substance-tracker": "5.12.5",
+            "vtiger-reader": "5.12.8"
+          }
+        }
+      ]
+    }
+  ]
+}

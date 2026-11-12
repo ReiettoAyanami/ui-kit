@@ -1,0 +1,100 @@
+/* KitAppShell's styles are global (encapsulation none): the projected bars are styled by their
+   slot. Every selector starts with a kit-shell class. From substance-tracker's app.css. */
+
+/* The document scrolls: the container grows with its page (no inner scrolling), so a page window
+   can still stop the document scrolling underneath it. */
+.kit-shell {
+  min-height: 100dvh;
+  overflow: visible;
+}
+
+/* The drawer floats inside the safe area, away from the edges (global.css rounds it and gives it
+   its border); its gaps from the template come as inline styles, hence !important. */
+.kit-shell-drawer {
+  width: var(--kit-drawer-width);
+  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px)) !important;
+  bottom: calc(var(--kit-float-gap) + env(safe-area-inset-bottom, 0px)) !important;
+  margin-left: env(safe-area-inset-left, 0px);
+}
+
+/* An app that runs edge to edge (Android): the page reaches under the status and gesture bars, so
+   the scrims cover them too, and what must stay readable keeps away from them by the safe-area
+   insets. 0 on a website. Material's overflow: auto would make the content scroll by itself; here
+   the document scrolls, and flow-root keeps the bar's margin inside the content (when it collapsed
+   out, the drawer's scrim left an unblurred strip at the top: lenzi, 2026-10-03). */
+.kit-shell-content {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  overflow: visible;
+  display: flow-root;
+}
+
+/* Behind the status bar, the page's own colour: the page scrolls under it, not under the clock.
+   Under the scrims and the page windows (z-index 20 and up). */
+.kit-shell-content::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 7;
+  height: env(safe-area-inset-top, 0px);
+  background-color: var(--mat-sys-surface);
+}
+
+/* The top bar stays at the top while the page scrolls under its glass. Under the page windows
+   (z-index 20) and the "+" (10). It floats away from the edges with rounded corners on every
+   screen (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le
+   versioni"). */
+.kit-shell-bar {
+  position: sticky;
+  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px));
+  z-index: 5;
+  box-sizing: border-box;
+  width: auto;
+  margin: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px)) var(--kit-float-gap) var(--kit-float-gap);
+  border-radius: var(--kit-bar-radius);
+  backdrop-filter: var(--kit-glass-filter);
+}
+
+/* The menu button at the bar's edge, the title after it, taking the room up to the actions. */
+.kit-shell-menu {
+  margin-left: -8px;
+  margin-right: 8px;
+}
+
+.kit-shell-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A bar above the top bar that cannot be closed ("Viewing as"): it sticks, and the top bar sticks
+   just under it, so both stay in sight however far the page scrolls. */
+.kit-shell-banner {
+  position: sticky;
+  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px));
+  z-index: 6;
+  height: 44px;
+  margin: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px)) var(--kit-float-gap) 0;
+}
+
+.kit-shell-banner:not(:empty) + .kit-shell-bar {
+  top: calc(var(--kit-float-gap) + env(safe-area-inset-top, 0px) + 44px + var(--kit-float-gap));
+  margin-top: var(--kit-float-gap);
+}
+
+/* Bars under the top bar (offline, an update): above the page, apart from each other. */
+.kit-shell-below > * {
+  display: block;
+  margin: var(--kit-float-gap);
+}
+
+/* Bare: this shell's own bars only (a shell inside a bare one, like a demo, keeps its own). */
+.kit-shell-banner:empty,
+.kit-shell-below:empty,
+.kit-shell-bare > .kit-shell-content > .kit-shell-banner,
+.kit-shell-bare > .kit-shell-content > .kit-shell-bar {
+  display: none;
+}

@@ -1,0 +1,11 @@
+<div class="grid">
+  @for (entry of ids(); track entry.id) {
+    <div class="entry">
+      <kit-identity-dot class="big" [id]="entry.id" [offset]="offset()" />
+      <span class="lines">
+        <span class="name">id {{ entry.id }}</span>
+        <span class="value">{{ entry.color }}</span>
+      </span>
+    </div>
+  }
+</div>

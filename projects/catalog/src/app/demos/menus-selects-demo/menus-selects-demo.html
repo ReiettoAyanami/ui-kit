@@ -1,0 +1,33 @@
+<div class="row">
+  @if (described()) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Add a metric</mat-label>
+      <mat-select panelClass="kit-described-options" [value]="metric()" (selectionChange)="metric.set($event.value); log('metric ' + $event.value)">
+        @for (option of metrics; track option.key) {
+          <mat-option [value]="option.key">
+            <span class="kit-option-label">{{ option.label }}</span>
+            <span class="kit-option-description">{{ option.description }}</span>
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  } @else {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Period</mat-label>
+      <mat-select [value]="days()" (selectionChange)="days.set($event.value); log('period ' + $event.value)">
+        @for (option of periods; track option.days) {
+          <mat-option [value]="option.days">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+  <button mat-stroked-button type="button" [matMenuTriggerFor]="menu">
+    <mat-icon>more_vert</mat-icon>
+    Actions
+  </button>
+</div>
+<mat-menu #menu="matMenu">
+  <button mat-menu-item type="button" (click)="log('Edit')"><mat-icon>edit</mat-icon>Edit</button>
+  <button mat-menu-item type="button" (click)="log('Details')"><mat-icon>info</mat-icon>Details</button>
+  <button mat-menu-item type="button" (click)="log('Delete')"><mat-icon>delete</mat-icon>Delete</button>
+</mat-menu>

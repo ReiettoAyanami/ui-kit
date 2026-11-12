@@ -1,0 +1,85 @@
+/* The catalog's own global styles: what the kit does not have because only the catalog needs it.
+   The look is the kit's (styles/kit.scss, listed before this file in angular.json). */
+
+/* A demo's frame: the page alone, nothing around it. */
+body.kit-frame kit-version-label {
+  display: none;
+}
+
+body.kit-frame {
+  background: var(--mat-sys-surface);
+}
+
+/* "Pattern": a busy background behind a demo, to see what the glass does. */
+body.kit-frame.kit-pattern {
+  background:
+    radial-gradient(circle at 15% 20%, color-mix(in srgb, var(--mat-sys-primary) 70%, transparent) 0 70px, transparent 71px),
+    radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--mat-sys-tertiary) 70%, transparent) 0 90px, transparent 91px),
+    radial-gradient(circle at 60% 15%, color-mix(in srgb, var(--kit-status-bad) 60%, transparent) 0 40px, transparent 41px),
+    repeating-linear-gradient(45deg, var(--mat-sys-surface-container-high) 0 12px, var(--mat-sys-surface) 12px 24px);
+  background-attachment: fixed;
+}
+
+/* Code colours (highlight.js) in the theme's: keywords violet, strings cyan, the rest quieter. */
+.hljs {
+  color: var(--mat-sys-on-surface);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-meta .hljs-keyword {
+  color: var(--mat-sys-primary);
+}
+
+.hljs-string,
+.hljs-attr .hljs-string,
+.hljs-template-variable,
+.hljs-selector-attr {
+  color: var(--mat-sys-tertiary);
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-property,
+.hljs-variable {
+  color: var(--mat-sys-on-primary-container);
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-name,
+.hljs-tag {
+  color: var(--mat-sys-secondary);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-symbol {
+  color: var(--mat-sys-primary-fixed-dim);
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--mat-sys-outline);
+  font-style: italic;
+}
+
+.hljs-section {
+  color: var(--mat-sys-primary);
+  font-weight: 700;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* The catalog's tabs: the labels bold like every label of the kit. */
+.mat-mdc-tab .mdc-tab__text-label {
+  font-weight: 700;
+}

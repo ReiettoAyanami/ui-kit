@@ -1,0 +1,24 @@
+/* Bottom right, above the content (under the windows), clear of the phone's gesture bar. */
+:host {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 10;
+}
+
+:host(.inline) {
+  position: static;
+  display: inline-block;
+}
+
+/* A little larger than the standard 56 dp FAB (lenzi, 2026-09-29); Material has no token for its size. */
+button {
+  width: var(--kit-fab-size);
+  height: var(--kit-fab-size);
+}
+
+mat-icon {
+  width: var(--kit-fab-icon);
+  height: var(--kit-fab-icon);
+  font-size: var(--kit-fab-icon);
+}

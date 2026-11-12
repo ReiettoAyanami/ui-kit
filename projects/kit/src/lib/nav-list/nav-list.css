@@ -1,0 +1,49 @@
+/* The whole height of the drawer: the bottom entries sit at its bottom. */
+:host {
+  display: block;
+  height: 100%;
+}
+
+nav {
+  /* the pages' names are interface: bold, like every label (RULES.md, "Typography") */
+  --mat-list-list-item-label-text-weight: 700;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 12px;
+}
+
+.bottom {
+  margin-top: auto;
+}
+
+/* A little air between the entries (lenzi, 2026-10-03: "distanzia leggermente di più i bottoni nel
+   menu laterale in altezza"). */
+[mat-list-item] + [mat-list-item] {
+  margin-top: var(--kit-nav-gap);
+}
+
+/* A little bigger than the entries (lenzi, 2026-10-01). */
+.app-name {
+  margin: 12px 16px 16px;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.app-name:has(+ .subtitle) {
+  margin-bottom: 0;
+}
+
+.subtitle {
+  margin: 2px 16px 16px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+
+/* An action among links: without the browser's button look (a border, the text in the middle). */
+button[mat-list-item] {
+  border: 0;
+  text-align: start;
+}

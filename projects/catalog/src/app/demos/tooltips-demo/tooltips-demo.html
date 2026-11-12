@@ -1,0 +1,7 @@
+<p class="hint">Hover them (a long press on a phone).</p>
+<div class="row">
+  <button mat-icon-button type="button" [matTooltip]="text()" [attr.aria-label]="text()">
+    <mat-icon>info</mat-icon>
+  </button>
+  <span class="bar" [style.background-color]="1 | kitIdentityColor: 0.5" [matTooltip]="lines()" matTooltipClass="kit-tooltip-lines" matTooltipPosition="above" tabindex="0" [attr.aria-label]="lines()"></span>
+</div>

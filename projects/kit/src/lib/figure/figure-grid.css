@@ -1,0 +1,11 @@
+:host {
+  display: grid;
+  gap: 4px 24px;
+}
+
+/* On a wide screen the figures stand in two columns. */
+@media (min-width: 600px) {
+  :host {
+    grid-template-columns: 1fr 1fr;
+  }
+}

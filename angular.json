@@ -1,0 +1,138 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "kit": {
+      "projectType": "library",
+      "root": "projects/kit",
+      "sourceRoot": "projects/kit/src",
+      "prefix": "kit",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/kit/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/kit/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/kit/tsconfig.spec.json",
+            "include": [
+              "**/*.spec.ts",
+              "../charts/**/*.spec.ts",
+              "../three/**/*.spec.ts",
+              "../http/**/*.spec.ts"
+            ]
+          }
+        }
+      }
+    },
+    "catalog": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "projects/catalog",
+      "sourceRoot": "projects/catalog/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/catalog/src/main.ts",
+            "tsConfig": "projects/catalog/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/catalog/public"
+              },
+              {
+                "glob": "**/*.{ts,html,css,scss,md,json}",
+                "input": "projects/kit",
+                "output": "kit-src",
+                "ignore": [
+                  "**/node_modules/**"
+                ]
+              }
+            ],
+            "styles": [
+              "projects/kit/src/styles/kit.scss",
+              "projects/kit/src/styles/fonts.css",
+              "projects/catalog/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1000kB",
+                  "maximumError": "1.5MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kB",
+                  "maximumError": "10kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "projects/catalog/public"
+                },
+                {
+                  "glob": "**/*.{ts,html,css,scss,md,json}",
+                  "input": "projects/kit",
+                  "output": "kit-src",
+                  "ignore": [
+                    "**/node_modules/**"
+                  ]
+                },
+                {
+                  "glob": "probe.html",
+                  "input": "projects/catalog/dev",
+                  "output": "."
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "catalog:build:production"
+            },
+            "development": {
+              "buildTarget": "catalog:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "port": 4300,
+            "proxyConfig": "projects/catalog/proxy.conf.json"
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
+  }
+}

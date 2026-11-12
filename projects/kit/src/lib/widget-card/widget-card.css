@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+/* The card of the reference photo: almost black on the anthracite page, very round corners, an icon
+   in a round well at its head, a large title; the outline of every card (RULES.md, "Borders"). */
+.widget {
+  height: 100%;
+  --mat-card-outlined-container-color: var(--mat-sys-surface-container-lowest);
+  --mat-card-outlined-container-shape: var(--kit-widget-radius);
+  --mat-card-title-text-font: var(--mat-sys-title-large-font);
+  --mat-card-title-text-size: 22px;
+  --mat-card-title-text-weight: 500;
+  --mat-card-title-text-line-height: 40px;
+}
+
+mat-card-header {
+  align-items: center;
+  padding-top: 20px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+  border-radius: 50%;
+  color: var(--mat-sys-primary);
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+mat-card-content {
+  padding-top: 8px;
+}
+
+/* The interval toggle above what it shows: the kit's pills, 32 px like every toggle. */
+.scales {
+  margin-bottom: 8px;
+}

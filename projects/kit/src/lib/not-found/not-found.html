@@ -1,0 +1,11 @@
+<main class="page">
+  <section class="card">
+    <p class="code">{{ code() }}</p>
+    <h1 class="title">{{ title() }}</h1>
+    <p class="text">{{ text() }}</p>
+    <div class="actions">
+      <a mat-flat-button [routerLink]="link()">{{ linkLabel() }}</a>
+      <ng-content />
+    </div>
+  </section>
+</main>

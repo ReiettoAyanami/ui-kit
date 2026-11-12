@@ -1,0 +1,39 @@
+<main class="page">
+  <h1 class="title">Libraries</h1>
+  @if (failure(); as failure) {
+    <kit-status-message kind="error" [text]="failure" />
+  } @else if (libraries.hasValue()) {
+    @let data = libraries.value();
+    <p class="lead" [innerHTML]="inline(data.about)"></p>
+    @for (group of data.groups; track group.id) {
+      <section class="group">
+        <h2 class="group-title">{{ group.label }}</h2>
+        <div class="cards">
+          @for (library of group.libraries; track library.package) {
+            <article class="card">
+              <header class="card-head">
+                <span class="names">
+                  <a class="name" [href]="library.url" target="_blank" rel="noopener">{{ library.name }}</a>
+                  <code class="package">{{ library.package }}</code>
+                </span>
+              </header>
+              <p class="role" [innerHTML]="inline(library.role)"></p>
+              <kit-figure-grid class="versions">
+                @for (project of data.projects; track project) {
+                  <kit-figure [label]="project" [value]="library.versions[project] ?? 'not used'" />
+                }
+              </kit-figure-grid>
+              <ul class="rules">
+                @for (rule of library.rules; track $index) {
+                  <li [innerHTML]="inline(rule)"></li>
+                }
+              </ul>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  } @else {
+    <kit-status-message kind="loading" />
+  }
+</main>

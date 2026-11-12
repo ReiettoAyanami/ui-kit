@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+  Development only (angular.json: the "development" configuration's assets): measures a page of the
+  catalog the way the kit's rules ask, for a headless browser that cannot run scripts of its own.
+  /probe.html?url=/components&w=390&h=844&wait=3000 loads the page in a same-origin frame of that size
+  and writes what it measured in #out: the page's width against the frame's (a horizontal scroll is a
+  fault), and what sticks out.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Probe</title>
+  </head>
+  <body style="margin: 0">
+    <pre id="out">waiting</pre>
+    <iframe id="frame" title="Page" style="border: 0; display: block"></iframe>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const url = params.get('url') || '/';
+      const width = Number(params.get('w') || 1280);
+      const height = Number(params.get('h') || 900);
+      const wait = Number(params.get('wait') || 3000);
+      const frame = document.getElementById('frame');
+      frame.style.width = `${width}px`;
+      frame.style.height = `${height}px`;
+      // shot=1: only the page, at its size, for a screenshot (a headless window has a least width).
+      if (params.get('shot') === '1') document.getElementById('out').style.display = 'none';
+      frame.src = url;
+      frame.onload = () =>
+        setTimeout(() => {
+          const page = frame.contentDocument;
+          const root = page.documentElement;
+          const clipped = (element) => {
+            for (let parent = element.parentElement; parent && parent !== page.body; parent = parent.parentElement) {
+              const overflow = getComputedStyle(parent).overflowX;
+              if (overflow !== 'visible') return true;
+            }
+            return false;
+          };
+          const outside = [...page.querySelectorAll('body *')]
+            .filter((element) => {
+              const box = element.getBoundingClientRect();
+              return box.width > 0 && box.right > width + 0.5 && getComputedStyle(element).position !== 'fixed' && !clipped(element);
+            })
+            .slice(0, 12)
+            .map((element) => `${element.tagName.toLowerCase()}${element.className && typeof element.className === 'string' ? '.' + element.className.trim().split(/\s+/).join('.') : ''} right=${Math.round(element.getBoundingClientRect().right)}`);
+          const result = {
+            url,
+            width,
+            title: page.title,
+            scrollWidth: root.scrollWidth,
+            clientWidth: root.clientWidth,
+            horizontalScroll: root.scrollWidth > root.clientWidth,
+            outside,
+            headings: [...page.querySelectorAll('h1, h2')].slice(0, 8).map((h) => h.textContent.trim()),
+            alerts: [...page.querySelectorAll('[role="alert"]')].map((a) => a.textContent.trim()),
+            // q=.a,.b: where each of these is (the first match), in px of the frame.
+            boxes: Object.fromEntries(
+              (params.get('q') || '')
+                .split(',')
+                .filter(Boolean)
+                .map((selector) => {
+                  const element = page.querySelector(selector);
+                  const box = element?.getBoundingClientRect();
+                  return [selector, box ? { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width), h: Math.round(box.height) } : null];
+                }),
+            ),
+          };
+          document.getElementById('out').textContent = JSON.stringify(result, null, 1);
+        }, wait);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+@if (flat()) {
+  <div class="window">
+    <h2 class="window-title">Consumption</h2>
+    <p class="window-text">Caffè</p>
+    <p class="window-text">28 Sept 2026, 08:45</p>
+    <mat-expansion-panel class="kit-flat" expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Metrics</mat-panel-title>
+        <mat-panel-description>{{ description() }}</mat-panel-description>
+      </mat-expansion-panel-header>
+      <p class="content">In line with the text above it: no card of its own.</p>
+    </mat-expansion-panel>
+  </div>
+} @else {
+  <mat-accordion multi>
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Metrics</mat-panel-title>
+        <mat-panel-description>{{ description() }}</mat-panel-description>
+      </mat-expansion-panel-header>
+      <p class="content">A panel of a page: its border, rounded. On a phone the description goes.</p>
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Charts</mat-panel-title>
+        <mat-panel-description>3 charts</mat-panel-description>
+      </mat-expansion-panel-header>
+      <p class="content">Closed by default.</p>
+    </mat-expansion-panel>
+  </mat-accordion>
+}

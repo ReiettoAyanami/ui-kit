@@ -1,0 +1,18 @@
+<mat-form-field class="kit-search-bar field" appearance="outline" subscriptSizing="dynamic">
+  <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+  <input
+    #field
+    matInput
+    type="search"
+    enterkeyhint="search"
+    [placeholder]="placeholder()"
+    [attr.aria-label]="placeholder()"
+    [value]="value()"
+    (input)="typed(field.value)"
+  />
+  @if (value()) {
+    <button mat-icon-button matSuffix type="button" aria-label="Clear the search" (click)="clear(field)">
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+</mat-form-field>

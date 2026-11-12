@@ -1,0 +1,8 @@
+<div #area class="area">
+  <kit-pull-to-refresh [refresh]="refresh" />
+  <div class="top">
+    <p class="hint">On a phone, pull this page down from its top. With a mouse:</p>
+    <button mat-flat-button type="button" (click)="pull()">Pull</button>
+  </div>
+  <p class="count">Refreshed {{ refreshed() }} {{ refreshed() === 1 ? 'time' : 'times' }}</p>
+</div>

@@ -1,0 +1,106 @@
+.page {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+.title {
+  margin: 16px 0 8px;
+  font: var(--mat-sys-headline-medium);
+}
+
+.lead {
+  max-width: 72ch;
+  margin: 0 0 8px;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.group-title {
+  margin: 28px 0 12px;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+}
+
+.cards {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 840px) {
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* A library: its name bold (a link to its site), its package under it, then what it is for, the
+   version in each project (name on top, value under), and its rules. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--kit-panel-radius);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+}
+
+.name:hover,
+.name:focus-visible {
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+}
+
+.package {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-tertiary);
+}
+
+.role {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+}
+
+.versions {
+  gap: 0 12px;
+}
+
+@media (min-width: 600px) {
+  .versions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.rules {
+  margin: 0;
+  padding-left: 20px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.rules li + li {
+  margin-top: 4px;
+}
+
+/* A command or a name in a text: the code's colour, as in the documents. */
+.lead ::ng-deep code,
+.role ::ng-deep code,
+.rules ::ng-deep code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-tertiary);
+}

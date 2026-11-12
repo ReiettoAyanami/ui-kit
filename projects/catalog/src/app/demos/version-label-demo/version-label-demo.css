@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

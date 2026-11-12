@@ -1,0 +1,10 @@
+:host {
+  display: inline-flex;
+  flex: none;
+}
+
+/* The menu lives in the overlay: its items are styled from here through Material's tokens. */
+:host ::ng-deep .destructive {
+  --mat-menu-item-label-text-color: var(--mat-sys-error);
+  --mat-menu-item-icon-color: var(--mat-sys-error);
+}

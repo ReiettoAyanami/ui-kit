@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+
+.message {
+  margin: 48px 0;
+  text-align: center;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+:host(.compact) .message {
+  margin: 16px 0 0;
+  text-align: start;
+}
+
+:host(.error) .message {
+  color: var(--mat-sys-error);
+}

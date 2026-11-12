@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+/* The host's row of choices: the picker's fields are its items and wrap with it. */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.shown {
+  margin: 16px 0 0;
+  font: var(--mat-sys-body-large);
+}

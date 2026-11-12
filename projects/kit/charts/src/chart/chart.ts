@@ -1,0 +1,122 @@
+import { Component, ElementRef, booleanAttribute, computed, inject, input, signal } from '@angular/core';
+import { MatChipListboxChange, MatChipsModule } from '@angular/material/chips';
+import { BarChart, LineChart, PieChart, RadarChart, TreemapChart } from 'echarts/charts';
+import { GridComponent, RadarComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { SVGRenderer } from 'echarts/renderers';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
+
+import { KitAppearance, identityColor } from '@lenzi/ui-kit';
+
+import { KitChartColors, KitChartData, KitChartLine, KitChartType, kitChartOptions } from './chart-options';
+
+// Only the pieces the charts use (the modular import): five kinds of chart, their grid, the radar's
+// circle and the tooltip, and the SVG renderer. The whole of ECharts is never bundled.
+echarts.use([BarChart, LineChart, PieChart, TreemapChart, RadarChart, GridComponent, RadarComponent, TooltipComponent, SVGRenderer]);
+
+const defaultFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 3 });
+
+/** A line's colour as CSS: its own, or the identity colour of its position. */
+export function kitLineColor(line: KitChartLine, index: number): string {
+  return line.color ?? identityColor(index + 1);
+}
+
+/**
+ * A chart (RULES.md, "Charts"; substance-tracker `ui/chart`): the only component that knows the
+ * chart library (Apache ECharts, through ngx-echarts). Lines in, a chart out: bars, stacked bars,
+ * lines, a radar, or a donut or a treemap of the totals, drawn in SVG with the Material 3 colours of
+ * the theme (read from its variables) and each line in its colour. Material filter chips above it
+ * hide lines by hand, when `filters` is on and there is more than one. It computes nothing: every
+ * number is the page's (the API's). Put it in a KitWidgetCard.
+ */
+@Component({
+  selector: 'kit-chart',
+  imports: [MatChipsModule, NgxEchartsDirective],
+  providers: [provideEchartsCore({ echarts })],
+  templateUrl: './chart.html',
+  styleUrl: './chart.css',
+})
+export class KitChart {
+  readonly data = input.required<KitChartData>();
+  readonly type = input<KitChartType>('bar');
+  /** How a value reads in a tooltip and on the axis (a currency, a unit). Default: a number, up to 3 decimals. */
+  readonly format = input<(value: number) => string>((value) => defaultFormat.format(value));
+  /** The chips that hide lines by hand. */
+  readonly filters = input(true, { transform: booleanAttribute });
+  /** The chart's height (CSS). */
+  readonly height = input('260px');
+  /** What it says when there is no line. */
+  readonly emptyText = input('Nothing in the period');
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly appearance = inject(KitAppearance);
+
+  /** The lines hidden by hand: they stay hidden while the chart is shown. */
+  protected readonly hidden = signal<ReadonlySet<string>>(new Set());
+  protected readonly color = kitLineColor;
+
+  /** The theme's colours and the lines', resolved to what ECharts can draw. */
+  private readonly colors = computed<KitChartColors>(() => {
+    // read again when Reduce transparency changes: the tooltip's glass follows it
+    this.appearance.reduceTransparency();
+    const lines = this.data().lines;
+    const style = getComputedStyle(this.host.nativeElement);
+    return resolveColors(this.host.nativeElement, (resolve) => ({
+      primary: resolve('var(--mat-sys-primary)'),
+      onSurface: resolve('var(--mat-sys-on-surface)'),
+      onSurfaceVariant: resolve('var(--mat-sys-on-surface-variant)'),
+      outline: resolve('var(--mat-sys-outline)'),
+      outlineVariant: resolve('var(--mat-sys-outline-variant)'),
+      surface: resolve('var(--mat-sys-surface-container-high)'),
+      card: resolve('var(--mat-sys-surface-container-lowest)'),
+      glass: resolve('color-mix(in srgb, var(--mat-sys-surface-container-high) var(--kit-glass), transparent)'),
+      glassFilter: style.getPropertyValue('--kit-glass-filter').trim() || 'none',
+      font: style.getPropertyValue('--mat-sys-body-medium-font').trim() || 'monospace',
+      lines: Object.fromEntries(lines.map((line, index) => [line.key, resolve(kitLineColor(line, index))])),
+    }));
+  });
+
+  protected readonly options = computed(() =>
+    kitChartOptions({ data: this.data(), type: this.type(), format: this.format(), hidden: this.hidden(), colors: this.colors() }),
+  );
+
+  /** The chips chosen are the lines shown. */
+  protected choose(change: MatChipListboxChange): void {
+    const shown = new Set<string>(change.value as string[]);
+    this.hidden.set(new Set(this.data().lines.map((line) => line.key).filter((key) => !shown.has(key))));
+  }
+}
+
+/**
+ * Resolves CSS colours (variables, identity colours in oklch()) into rgba() ECharts can use: the
+ * browser computes each on a hidden element, then a 1×1 canvas turns it into sRGB. Without a canvas
+ * (tests), the computed colour as it is. The element is removed once `read` is done.
+ */
+function resolveColors<T>(host: HTMLElement, read: (resolve: (css: string) => string) => T): T {
+  const probe = document.createElement('span');
+  probe.style.display = 'none';
+  host.appendChild(probe);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  let context: CanvasRenderingContext2D | null = null;
+  try {
+    context = canvas.getContext('2d', { willReadFrequently: true });
+  } catch {
+    context = null;
+  }
+  const resolve = (css: string): string => {
+    probe.style.color = css;
+    const computed = getComputedStyle(probe).color || css;
+    if (!context) return computed;
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = computed;
+    context.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+    return `rgba(${r}, ${g}, ${b}, ${((a ?? 255) / 255).toFixed(3)})`;
+  };
+  try {
+    return read(resolve);
+  } finally {
+    probe.remove();
+  }
+}

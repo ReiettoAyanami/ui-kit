@@ -1,0 +1,22 @@
+.area {
+  min-height: 400px;
+  padding: 88px 16px 16px;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.count {
+  margin: 24px 0 0;
+  font: var(--mat-sys-title-medium);
+}

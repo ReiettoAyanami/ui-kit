@@ -1,0 +1,38 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 8px 0;
+}
+
+/* What it is on top, bold like a label, in the quieter text colour. */
+.label {
+  font: var(--mat-sys-body-medium);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* The value under it, a little heavier than text, its digits in columns. */
+.value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font: var(--mat-sys-body-large);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin: 4px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,54 @@
+/* A bar that stands out from every page: a solid container colour, never the glass of the top bar. */
+:host {
+  display: block;
+  height: 100%;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--kit-bar-radius);
+  font: var(--mat-sys-body-medium);
+}
+
+.bar:has(.action) {
+  padding-right: 8px;
+}
+
+.neutral {
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface);
+}
+
+.neutral .icon {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.secondary {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.tertiary {
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The action in the bar's own text colour, bold like a label. */
+.action {
+  --mat-button-text-label-text-color: currentColor;
+  font-weight: 700;
+}

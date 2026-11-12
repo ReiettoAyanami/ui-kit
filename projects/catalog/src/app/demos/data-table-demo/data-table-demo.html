@@ -1,0 +1,11 @@
+<kit-data-table
+  nameHeader="Substance"
+  label="Substances"
+  [columns]="columns"
+  [rows]="rows()"
+  [sort]="sort()"
+  [direction]="direction()"
+  [format]="format"
+  (sortChange)="order($event)"
+  (opened)="open($event)"
+/>

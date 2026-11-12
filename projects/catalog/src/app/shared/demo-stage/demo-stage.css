@@ -1,0 +1,63 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The demo's frame: the page's colour around it, the border of every surface. As a phone it is
+   390 px wide (the kit's phone), never wider than the column. */
+.viewport {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.frame {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--kit-panel-radius);
+  background: var(--mat-sys-surface);
+}
+
+.viewport.phone .frame {
+  width: 390px;
+  max-width: 100%;
+  border-radius: 28px;
+}
+
+.events {
+  padding: 12px 16px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--kit-panel-radius);
+  background: var(--mat-sys-surface-container-lowest);
+}
+
+.events-title {
+  margin: 0 0 6px;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.event {
+  margin: 2px 0;
+  font: var(--mat-sys-body-medium);
+  overflow-wrap: anywhere;
+}
+
+.at {
+  color: var(--mat-sys-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.quiet {
+  color: var(--mat-sys-on-surface-variant);
+}

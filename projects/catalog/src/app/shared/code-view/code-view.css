@@ -1,0 +1,38 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Many files: the pills wrap instead of pushing the page sideways. */
+.files {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.path {
+  margin: 12px 0 8px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+
+.code {
+  margin: 0;
+  padding: 14px 16px;
+  max-height: 70dvh;
+  overflow: auto;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--kit-panel-radius);
+  background: var(--mat-sys-surface-container-lowest);
+  font: var(--mat-sys-body-medium);
+  line-height: 1.55;
+  tab-size: 2;
+}

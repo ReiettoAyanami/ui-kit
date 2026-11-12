@@ -1,0 +1,60 @@
+:host {
+  display: block;
+}
+
+/* The whole track is the maximum; the part not covered by segments is what is gone. */
+.track {
+  display: flex;
+  height: var(--kit-segment-height);
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--mat-sys-surface-container-highest);
+}
+
+/* Going from every segment to one (`only`) and back, the segments grow and shrink in place:
+   Material 3's standard easing, none with reduced motion. A tiny segment stays visible, also under
+   the rounded corner. The tooltip sets touch-action: none for its long press; a swipe starting on
+   the bar must still scroll the page. */
+.segment {
+  flex-grow: 0;
+  flex-shrink: 1;
+  min-width: var(--kit-segment-min);
+  touch-action: pan-y !important;
+  transition:
+    flex-basis var(--kit-standard-duration) var(--kit-standard-easing),
+    min-width var(--kit-standard-duration) var(--kit-standard-easing),
+    margin-left var(--kit-standard-duration) var(--kit-standard-easing);
+}
+
+/* The separator: a margin, not the track's gap, so that it closes with a segment that shrinks away. */
+.segment + .segment {
+  margin-left: var(--kit-segment-gap);
+}
+
+/* One segment alone: no separator, the others down to nothing. */
+.track.only .segment {
+  margin-left: 0;
+}
+
+.segment.away {
+  min-width: 0;
+}
+
+/* Selectable: 10 px above and below the track take the tap too, without moving anything; a segment
+   focused from the keyboard has its ring inside it (the track clips it). */
+:host(.selectable) {
+  padding: 10px 0;
+  margin: -10px 0;
+  cursor: pointer;
+}
+
+:host(.selectable) .segment:focus-visible {
+  outline: 2px solid var(--mat-sys-on-surface);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment {
+    transition: none;
+  }
+}

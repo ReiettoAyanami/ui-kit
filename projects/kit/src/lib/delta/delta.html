@@ -1,0 +1,8 @@
+@let delta = shown();
+<span class="label">{{ label() }}</span>
+<span class="change" [class.good]="delta.tone === 'good'" [class.bad]="delta.tone === 'bad'" [attr.title]="delta.direction === null && ratio() === null ? noneReason() : null">
+  @if (delta.direction) {
+    <mat-icon class="arrow" aria-hidden="true">{{ delta.direction === 'up' ? 'arrow_drop_up' : 'arrow_drop_down' }}</mat-icon>
+  }
+  <span class="number">{{ delta.change }}</span>
+</span>

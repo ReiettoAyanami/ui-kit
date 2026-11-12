@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  padding: 8px;
+}
+
+/* A top bar like the shell's: floating, rounded, glass. */
+.bar {
+  border-radius: var(--kit-bar-radius);
+  backdrop-filter: var(--kit-glass-filter);
+}
+
+.title {
+  flex: 1;
+}

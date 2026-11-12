@@ -1,0 +1,10 @@
+<dl class="figure">
+  <dt class="label">{{ label() }}</dt>
+  <dd class="value">
+    {{ value() ?? '—' }}
+    <ng-content />
+  </dd>
+  @if (description(); as description) {
+    <dd class="description">{{ description }}</dd>
+  }
+</dl>

@@ -1,0 +1,8 @@
+# The catalog as it is deployed: `docker compose up -d --build`, then http://localhost:8080.
+services:
+  catalog:
+    build: .
+    image: ui-kit-catalog
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

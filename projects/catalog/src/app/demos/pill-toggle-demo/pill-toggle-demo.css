@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.figure {
+  font: var(--mat-sys-body-large);
+  font-variant-numeric: tabular-nums;
+}

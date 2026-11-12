@@ -1,0 +1,17 @@
+# Development inside a container, with the repo mounted: `docker compose -f compose.dev.yaml up`,
+# then http://localhost:4300. The Variables page saves into the mounted repo (tokens.json and
+# tokens.css), and the catalog reloads with them. Commands run inside it:
+#   docker compose -f compose.dev.yaml exec catalog npx ng generate component lib/<name> --project kit
+services:
+  catalog:
+    image: node:24-bookworm-slim
+    working_dir: /workspace
+    command: sh -c "npm ci --no-audit --no-fund && npm start -- --host 0.0.0.0 --poll 1000"
+    ports:
+      - "4300:4300"
+    volumes:
+      - .:/workspace
+      # the container's own packages, not the host's
+      - node_modules:/workspace/node_modules
+volumes:
+  node_modules:

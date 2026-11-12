@@ -1,0 +1,430 @@
+/* The kit's global look: what Angular Material draws, modified (RULES.md). Every value comes from
+   the global variables (tokens.css); this file only says where they go. Ported from
+   substance-tracker's styles.css (2026-09-29 → 2026-10-10), where each rule was asked for by lenzi:
+   the quotes below are the reasons, keep them with the rules. */
+
+/* No tap highlight (lenzi, 2026-10-10): on a touch screen Chromium paints a blue box over the
+   outermost element with a pointer cursor around the touch, so a tap on a toggle lit up the whole
+   card. Material's own state layers are the feedback. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Glass (lenzi, 2026-10-01: "un po' di trasparenza nelle finestre", like Android 17's app menu and
+   notification shade). Not a Material 3 rule for apps: the kit's own style, on Material's own
+   colours, so it follows the theme. Cards, tables and panels of a page stay solid: nothing is
+   under them. Reduce transparency (KitAppearance) or the system's own wish make everything solid.
+   --------------------------------------------------------------------------------------------- */
+:root {
+  --kit-glass-filter: blur(var(--kit-glass-blur)) saturate(var(--kit-glass-saturate));
+  --kit-scrim-filter: blur(var(--kit-scrim-blur));
+  --kit-scrim-color: rgb(0 0 0 / var(--kit-scrim-opacity));
+}
+
+:root.reduce-transparency {
+  --kit-glass: 100%;
+  --kit-glass-bar: 100%;
+  --kit-glass-filter: none;
+  --kit-scrim-filter: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --kit-glass: 100%;
+    --kit-glass-bar: 100%;
+    --kit-glass-filter: none;
+    --kit-scrim-filter: none;
+  }
+}
+
+/* Material's own colour of each surface (its default, read from @angular/material 21), made
+   see-through. */
+:root {
+  --mat-dialog-container-color: color-mix(in srgb, var(--mat-sys-surface) var(--kit-glass), transparent);
+  --mat-menu-container-color: color-mix(in srgb, var(--mat-sys-surface-container) var(--kit-glass), transparent);
+  --mat-select-panel-background-color: color-mix(in srgb, var(--mat-sys-surface-container) var(--kit-glass), transparent);
+  --mat-autocomplete-background-color: color-mix(in srgb, var(--mat-sys-surface-container) var(--kit-glass), transparent);
+  --mat-timepicker-container-background-color: color-mix(in srgb, var(--mat-sys-surface-container) var(--kit-glass), transparent);
+  --mat-datepicker-calendar-container-background-color: color-mix(
+    in srgb,
+    var(--mat-sys-surface-container-high) var(--kit-glass),
+    transparent
+  );
+  --mat-snack-bar-container-color: color-mix(in srgb, var(--mat-sys-inverse-surface) var(--kit-glass-bar), transparent);
+  --mat-toolbar-container-background-color: color-mix(in srgb, var(--mat-sys-surface) var(--kit-glass-bar), transparent);
+}
+
+.mat-mdc-dialog-surface,
+.mat-mdc-menu-panel,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.mat-timepicker-panel,
+.mat-datepicker-content,
+.mat-mdc-snack-bar-container {
+  backdrop-filter: var(--kit-glass-filter);
+}
+
+/* The drawer is a window over the page. */
+.mat-drawer.mat-drawer-over {
+  background-color: color-mix(in srgb, var(--mat-sys-surface) var(--kit-glass), transparent);
+  backdrop-filter: var(--kit-glass-filter);
+}
+
+/* A lighter window (a details dialog, lenzi 2026-10-01: "leggermente più chiara"): give the dialog
+   `panelClass: 'kit-dialog-raised'`. surface-container-high instead of surface, and 12 px more over
+   its title. */
+.kit-dialog-raised {
+  --mat-dialog-container-color: color-mix(in srgb, var(--mat-sys-surface-container-high) var(--kit-glass), transparent);
+  --mat-dialog-headline-padding: 18px 24px 13px;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   The blur from the first frame of an opening (lenzi, 2026-10-02: "metti il blur all'apertura di
+   ogni pagina che sotto mostra il resto"). Whatever fades (an element around the glass, or the
+   glass itself) shows the page sharp under it until the fade ends. So the glass is whole from the
+   first frame and what it holds fades in; the scrims keep full opacity and grow their tint and
+   their blur instead. Measured with Playwright, animations slowed 20 times.
+   --------------------------------------------------------------------------------------------- */
+
+/* Dialog: Material fades the box around the surface and grows the surface from 80%. Here the box
+   stays opaque and the surface is whole and full size from the first frame: no growth (lenzi,
+   2026-10-02: the windows "all'inizio sono piccole e poi grandi [...] effetto molla [...] sembra
+   che lagga"; a blurred surface changing size is blurred again at every frame, and stutters).
+   Only its content fades in, with Material's timing (250 ms, provideKit). Closing, the whole
+   surface fades. */
+.cdk-overlay-pane .mat-mdc-dialog-container .mat-mdc-dialog-inner-container {
+  opacity: 1;
+  transition: none;
+}
+
+.cdk-overlay-pane .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  transform: none;
+  transition: none;
+}
+
+/* The first frame of a window can come before its content: an empty glass bar 44 px high, the
+   next frame the whole window. Until its content is there, the window is not shown at all, so it
+   appears whole. An empty content still holds Angular's comment anchors, which :empty ignores. */
+.mat-mdc-dialog-surface:has(> * > .mat-mdc-dialog-content:empty),
+.mat-mdc-dialog-surface:has(> .mat-mdc-dialog-content:empty) {
+  visibility: hidden;
+  animation: none;
+}
+
+/* The opening (lenzi, 2026-10-02: "aggiungi animazione apertura"): every window rises into place,
+   slowing down, while its content fades in. It moves, it never changes size. None with reduced
+   motion. Page windows (not dialogs) take the same variable. */
+:root {
+  --kit-window-in: kit-window-in var(--kit-rise-duration) var(--kit-rise-easing) both;
+  --kit-panel-in: kit-panel-in var(--kit-rise-duration) var(--kit-rise-easing) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --kit-window-in: none;
+    --kit-panel-in: none;
+  }
+}
+
+@keyframes kit-window-in {
+  from {
+    transform: translateY(var(--kit-window-rise));
+  }
+}
+
+.mat-mdc-dialog-surface {
+  animation: var(--kit-window-in);
+}
+
+/* Every other panel that appears over the page rises the same way (lenzi, 2026-10-02: "La voglio
+   su ogni pannello che appare in quel modo"): menus, selects, autocomplete, date and time pickers,
+   snackbars; less far for what opens from a field or a button, the snackbar from the bottom edge as
+   far as a window. Material grows and fades these from 80% and waits for its own animation by name,
+   so its animation stays, cut to 1 ms: the glass is whole at once. The rise goes on the overlay
+   pane, with `translate`, which does not touch the transform the CDK may position the pane with. */
+@keyframes kit-panel-in {
+  from {
+    translate: 0 var(--kit-rise, var(--kit-panel-rise));
+  }
+}
+
+.cdk-overlay-pane:has(
+    > .mat-mdc-menu-panel,
+    > .mat-mdc-select-panel,
+    > .mat-mdc-autocomplete-panel,
+    > .mat-timepicker-panel,
+    > .mat-datepicker-content,
+    > .mat-mdc-snack-bar-container
+  ) {
+  animation: var(--kit-panel-in);
+}
+
+.cdk-overlay-pane:has(> .mat-mdc-snack-bar-container) {
+  --kit-rise: var(--kit-window-rise);
+}
+
+/* Each class twice: above Material's own rule, wherever the CDK puts the panel (some go in the
+   browser's top layer, outside .cdk-overlay-container). */
+.mat-mdc-menu-panel.mat-mdc-menu-panel:not(.mat-menu-panel-exit-animation),
+.mat-select-panel-animations-enabled.mat-select-panel-animations-enabled:not(.mat-select-panel-exit),
+.mat-autocomplete-panel-animations-enabled.mat-autocomplete-panel-animations-enabled,
+.mat-timepicker-panel-animations-enabled.mat-timepicker-panel-animations-enabled:not(.mat-timepicker-panel-exit),
+.mat-datepicker-content.mat-datepicker-content-animations-enabled.mat-datepicker-content-animations-enabled:not(.mat-datepicker-content-exit),
+.mat-snack-bar-container-animations-enabled.mat-snack-bar-container-enter.mat-snack-bar-container-enter {
+  animation-duration: 1ms;
+}
+
+/* A window whose content is not ready yet (its first numbers are not on screen) waits for it
+   hidden, so it appears at its size: put the class `kit-not-ready` on what it waits for, and
+   remove it once ready. At most 400 ms, then it shows anyway (a slow API) and grows when the content
+   comes. Hidden by opacity, not visibility: Material's open expansion panels set `visibility:
+   visible` on their content, which beats a hidden parent (lenzi, 2026-10-02: the window "si apre da
+   piccola e diventa più grande dopo"). */
+.mat-mdc-dialog-surface:has(.kit-not-ready) {
+  opacity: 0;
+  pointer-events: none;
+  animation: kit-show-anyway 0s linear 400ms forwards;
+}
+
+@keyframes kit-show-anyway {
+  to {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.cdk-overlay-pane .mat-mdc-dialog-container .mat-mdc-dialog-surface > * {
+  opacity: 0;
+  transition: opacity linear var(--mat-dialog-transition-duration, 0ms);
+}
+
+.cdk-overlay-pane .mat-mdc-dialog-container.mdc-dialog--open .mat-mdc-dialog-surface > *,
+.cdk-overlay-pane .mat-mdc-dialog-container.mdc-dialog--closing .mat-mdc-dialog-surface > *,
+.cdk-overlay-pane .mat-mdc-dialog-container._mat-animation-noopable .mat-mdc-dialog-surface > * {
+  opacity: 1;
+}
+
+.cdk-overlay-pane .mat-mdc-dialog-container.mdc-dialog--closing .mat-mdc-dialog-surface {
+  opacity: 0;
+  transition: opacity var(--kit-window-exit) linear;
+}
+
+/* The dialog's scrim: the CDK fades it (opacity, 400 ms). Here it is always opaque and its tint and
+   its blur grow from nothing in the same time; the CDK removes it when that transition ends. */
+.cdk-overlay-container .cdk-overlay-dark-backdrop {
+  opacity: 1;
+  background: transparent;
+  backdrop-filter: blur(0);
+  transition:
+    background-color var(--kit-scrim-duration) cubic-bezier(0.25, 0.8, 0.25, 1),
+    backdrop-filter var(--kit-scrim-duration) cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.cdk-overlay-container .cdk-overlay-dark-backdrop.cdk-overlay-backdrop-showing {
+  background-color: var(--kit-scrim-color);
+  backdrop-filter: var(--kit-scrim-filter);
+}
+
+.cdk-overlay-container .cdk-overlay-dark-backdrop.cdk-overlay-backdrop-noop-animation {
+  transition: none;
+}
+
+/* The drawer's scrim: Material grows its tint; its blur grows with it. */
+.mat-drawer-container .mat-drawer-backdrop {
+  backdrop-filter: blur(0);
+  transition-property: background-color, visibility, backdrop-filter;
+}
+
+.mat-drawer-container .mat-drawer-backdrop.mat-drawer-shown {
+  backdrop-filter: var(--kit-scrim-filter);
+}
+
+/* Snackbar: Material fades its container and ends the snackbar by that animation's name, so the blur
+   goes on the container itself (above), with the surface's corners. Above the gesture bar of an
+   app that runs edge to edge. */
+.mat-mdc-snack-bar-container {
+  border-radius: var(--mat-snack-bar-container-shape, var(--mat-sys-corner-extra-small));
+}
+
+.cdk-overlay-pane .mat-mdc-snack-bar-container {
+  margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Menus, selects, autocomplete: rounded on every side (lenzi, 2026-10-02: "la scelta nelle metrics
+   non ha border radius"). Material joins a select's panel to its field, square where they meet, and
+   rounds menus by 4 px; here each is a rounded window of its own, a few px away from its field.
+   --------------------------------------------------------------------------------------------- */
+.mat-mdc-select-panel.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel.mat-mdc-autocomplete-panel,
+.mat-mdc-menu-panel.mat-mdc-menu-panel {
+  border-radius: var(--kit-panel-radius);
+}
+
+.cdk-overlay-pane:has(
+    > .mat-mdc-select-panel:not(.mat-mdc-select-panel-above),
+    > .mat-mdc-autocomplete-panel:not(.mat-mdc-autocomplete-panel-above)
+  ) {
+  margin-top: 4px;
+}
+
+.cdk-overlay-pane:has(> .mat-mdc-select-panel-above, > .mat-mdc-autocomplete-panel-above) {
+  margin-top: -4px;
+}
+
+/* The choices inside them: the chosen, hovered or focused one is a rounded pill a few px in from the
+   panel's sides, not a band from edge to edge. */
+.mat-mdc-select-panel .mat-mdc-option,
+.mat-mdc-autocomplete-panel .mat-mdc-option,
+.mat-mdc-menu-panel .mat-mdc-menu-item {
+  width: auto;
+  margin: 0 6px;
+  border-radius: var(--kit-option-radius);
+}
+
+/* Options with a description under their name (a select of things that need explaining): give the
+   select `panelClass="kit-described-options"`, and each option a `.kit-option-label` and a
+   `.kit-option-description`. The options live in the overlay, outside any component's styles. */
+.kit-described-options .mat-mdc-option {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.kit-described-options .kit-option-label {
+  display: block;
+}
+
+.kit-described-options .kit-option-description {
+  display: block;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: normal;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Tooltips (lenzi, 2026-10-02: "trasparenza blurrata anche su questo"; "mettile scure se il tema è
+   scuro"): dark glass like a window, not Material's light inverse surface; a thin outline so the
+   edge reads over a dark page. Material fades the tooltip's box and ends it by the animation's
+   name, so the blur goes on that box. The charts' tooltips take the same glass (KitChart).
+   --------------------------------------------------------------------------------------------- */
+:root {
+  --mat-tooltip-container-color: color-mix(in srgb, var(--mat-sys-surface-container-high) var(--kit-glass), transparent);
+  --mat-tooltip-supporting-text-color: var(--mat-sys-on-surface);
+}
+
+.mat-mdc-tooltip {
+  border-radius: var(--mat-tooltip-container-shape, var(--mat-sys-corner-extra-small));
+  backdrop-filter: var(--kit-glass-filter);
+}
+
+.mat-mdc-tooltip .mat-mdc-tooltip-surface {
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+}
+
+/* A tooltip on two or more lines (a name, then a figure): `matTooltipClass="kit-tooltip-lines"` and
+   "\n" between the lines. The tooltip lives in the overlay, outside the component's styles. */
+.kit-tooltip-lines .mat-mdc-tooltip-surface {
+  white-space: pre-line;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Borders (lenzi, 2026-10-02: "i bordi agli angoli non hanno lo stesso spessore dei lati DA NESSUNA
+   PARTE"). On a screen at 100% a 1 px border is one device pixel: whole on the straight sides,
+   smeared over two pixels at half strength along a rounded corner, so every corner looked thinner
+   and fainter than its sides. At 2 px the curve keeps a whole pixel all along it: every rounded
+   border is --kit-border, Material's (cards, outlined buttons, chips, text fields, toggles) and
+   the kit's (tables, sub-cards, tooltips). Straight dividers stay 1 px. A focused field one more.
+   --------------------------------------------------------------------------------------------- */
+:root {
+  --mat-card-outlined-outline-width: var(--kit-border);
+  --mat-button-outlined-outline-width: var(--kit-border);
+  --mat-chip-outline-width: var(--kit-border);
+  --mat-form-field-outlined-outline-width: var(--kit-border);
+  --mat-form-field-outlined-focus-outline-width: var(--kit-border-focus);
+}
+
+/* The toggles' border and dividers are not tokens: each class twice, above Material's own rule. */
+.mat-button-toggle-group-appearance-standard.mat-button-toggle-group-appearance-standard {
+  border-width: var(--kit-border);
+}
+
+.mat-button-toggle-appearance-standard.mat-button-toggle-appearance-standard + .mat-button-toggle-appearance-standard {
+  border-left-width: var(--kit-border);
+}
+
+/* Every surface that rises above the page has a border (lenzi, 2026-10-02, in place of the
+   Windows 10 reveal light tried the same evening: "rimuovere l'effetto sui bordi. ma aggiungi un
+   bordo leggermente più spesso"): panels, dialogs, the drawer; cards through their outline (above).
+   A flat panel has none. */
+.mat-expansion-panel:not(.kit-flat),
+.mat-mdc-dialog-surface,
+.mat-drawer.mat-drawer-over {
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+}
+
+/* The drawer floats like the top bar (KitAppShell): away from the screen's edges, rounded on every
+   corner, so its border goes all around it. A border on its free side alone would thin out to
+   nothing along the rounded corners, the very fault fixed above. */
+.mat-drawer.mat-drawer-over {
+  left: var(--kit-float-gap);
+  box-sizing: border-box;
+  border-radius: var(--kit-bar-radius);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Toggles and search bars
+   --------------------------------------------------------------------------------------------- */
+
+/* Every toggle group is a row of pills, as Material draws them, only lower (lenzi, 2026-09-30: less
+   tall, not less round, and no narrower than they were). */
+:root {
+  --mat-button-toggle-height: var(--kit-toggle-height);
+}
+
+.mat-button-toggle-group .mat-button-toggle-appearance-standard .mat-button-toggle-label-content {
+  padding: 0 var(--kit-toggle-padding);
+}
+
+/* A search bar is an elongated circle, like a browser's (lenzi, 2026-09-30: "come la barra di
+   Chrome … non quadrato con i bordi smussati"): a little lower than a text field, its ends half
+   circles. Only search bars: every other text field keeps Material's corners. KitSearchBar has it;
+   a hand-made search field takes the class `kit-search-bar` on its mat-form-field. */
+.kit-search-bar {
+  --mat-form-field-container-height: var(--kit-search-height);
+  --mat-form-field-container-vertical-padding: calc((var(--kit-search-height) - 24px) / 2);
+  --mat-form-field-outlined-container-shape: calc(var(--kit-search-height) / 2);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Expansion panels
+   --------------------------------------------------------------------------------------------- */
+
+/* An expansion panel inside a surface of its own (a dialog), class `kit-flat`: no card of its own,
+   its title and its content in line with the text around it (lenzi, 2026-10-01: "Metrics" aligned
+   with what is above it). The header and body paddings are Material's plain CSS, hence the
+   selectors; the rest are its tokens. */
+.mat-expansion-panel.kit-flat {
+  --mat-expansion-container-background-color: transparent;
+  --mat-expansion-container-elevation-shadow: none;
+  --mat-expansion-header-hover-state-layer-color: transparent;
+  --mat-expansion-header-focus-state-layer-color: transparent;
+}
+
+.mat-expansion-panel.kit-flat .mat-expansion-panel-header {
+  padding: 0;
+}
+
+.mat-expansion-panel.kit-flat .mat-expansion-panel-body {
+  padding: 0 0 8px;
+}
+
+/* On a phone the header of every panel keeps only its title: what it holds (a period, totals,
+   active filters) is inside once opened (lenzi, 2026-10-03: "su mobile non mostrino le
+   informazioni dei toggle, ... mostrarle solo web"). 600 px is where pages turn into windows. Two
+   classes: Material's own rule (display: flex) comes after this file, and would win over one. */
+@media (max-width: 599.98px) {
+  .mat-expansion-panel-header .mat-expansion-panel-header-description {
+    display: none;
+  }
+}

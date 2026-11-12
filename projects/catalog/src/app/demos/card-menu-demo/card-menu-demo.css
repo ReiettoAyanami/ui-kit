@@ -1,0 +1,36 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+.card {
+  position: relative;
+  max-width: 420px;
+  cursor: pointer;
+}
+
+/* The ⋮ at the card's top right (RULES.md, "Cards"). */
+.menu {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 48px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--mat-sys-title-medium);
+}
+
+.detail {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

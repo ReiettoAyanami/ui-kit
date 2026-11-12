@@ -1,0 +1,19 @@
+<div class="head">
+  <mat-button-toggle-group class="files" hideSingleSelectionIndicator aria-label="File" [value]="chosen()" (change)="chosen.set($event.value)">
+    @for (path of files(); track path) {
+      <mat-button-toggle [value]="path">{{ name(path) }}</mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+  <button mat-button type="button" class="copy" (click)="copy()" [disabled]="!file.hasValue()">
+    <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+    {{ copied() ? 'Copied' : 'Copy' }}
+  </button>
+</div>
+<p class="path">projects/kit/{{ chosen() }}</p>
+@if (failure(); as failure) {
+  <kit-status-message kind="error" [text]="failure" compact />
+} @else if (file.isLoading() && !file.hasValue()) {
+  <kit-status-message kind="loading" compact />
+} @else {
+  <pre class="code"><code class="hljs" [innerHTML]="coloured()"></code></pre>
+}

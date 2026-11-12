@@ -1,0 +1,61 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.card {
+  max-width: 360px;
+}
+
+.card mat-card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font: var(--mat-sys-title-medium);
+}
+
+.detail {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.compare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  width: 150px;
+  height: 64px;
+  border-radius: 16px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.box.one {
+  border: 1px solid var(--mat-sys-outline);
+}
+
+.box.kit {
+  border: var(--kit-border) solid var(--mat-sys-outline);
+}

@@ -1,0 +1,9 @@
+/* A filled circle, as wide as the identity dot variable, never squeezed by a flex row. */
+:host {
+  display: inline-block;
+  flex: none;
+  width: var(--kit-dot-size);
+  height: var(--kit-dot-size);
+  border-radius: 50%;
+  vertical-align: middle;
+}

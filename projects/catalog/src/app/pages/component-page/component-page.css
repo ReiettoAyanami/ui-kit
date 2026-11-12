@@ -1,0 +1,113 @@
+.page {
+  box-sizing: border-box;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+.head {
+  padding: 16px 0 8px;
+}
+
+.category {
+  margin: 0;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-primary);
+}
+
+.title {
+  margin: 4px 0 8px;
+  font: var(--mat-sys-headline-medium);
+}
+
+.summary {
+  max-width: 72ch;
+  margin: 0 0 8px;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 900px) {
+  .facts {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tabs {
+  margin-top: 8px;
+}
+
+/* The demo with its parameters beside it on a wide screen, under it on a phone. */
+.playground {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+@media (min-width: 1100px) {
+  .playground {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .usage {
+    grid-column: 1 / -1;
+  }
+}
+
+.usage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.doc {
+  max-width: 860px;
+  padding-top: 20px;
+}
+
+.doc.wide {
+  max-width: none;
+}
+
+.for-claude {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border-radius: var(--kit-bar-radius);
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  font: var(--mat-sys-body-medium);
+  overflow-wrap: anywhere;
+}
+
+.intro {
+  margin: 0 0 8px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.intro a {
+  color: var(--mat-sys-primary);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.next {
+  margin-left: auto;
+}

@@ -1,0 +1,23 @@
+<div class="bar">
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Width" [value]="width()" (change)="width.set($event.value)">
+    <mat-button-toggle value="phone">Phone</mat-button-toggle>
+    <mat-button-toggle value="desktop">Desktop</mat-button-toggle>
+  </mat-button-toggle-group>
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Background" [value]="pattern()" (change)="pattern.set($event.value)">
+    <mat-button-toggle [value]="false">Plain</mat-button-toggle>
+    <mat-button-toggle [value]="true">Pattern</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+
+<div class="viewport" [class.phone]="width() === 'phone'">
+  <iframe #frame class="frame" [src]="source()" [style.height.px]="doc().height" [title]="'Demo of ' + doc().name"></iframe>
+</div>
+
+<section class="events" aria-label="What the demo did" aria-live="polite">
+  <h3 class="events-title">Events</h3>
+  @for (event of events.events(); track $index) {
+    <p class="event"><span class="at">{{ event.at }}</span> {{ event.text }}</p>
+  } @empty {
+    <p class="event quiet">Nothing yet: use the demo.</p>
+  }
+</section>

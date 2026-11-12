@@ -1,0 +1,12 @@
+<p class="label">Stock</p>
+<kit-segmented-bar
+  label="Stock: what is left of the active batches"
+  [segments]="segments()"
+  max="100"
+  [only]="only()"
+  [selectable]="!!values()['selectable']"
+  [colorOffset]="0.5"
+  unnamed="Unnamed batch"
+  (segmentSelect)="select($event)"
+/>
+<p class="hint">Hover a segment (a long press on a phone) for its name and price.</p>

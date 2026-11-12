@@ -1,0 +1,54 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "paths": {
+      "@lenzi/ui-kit": [
+        "./projects/kit/src/public-api.ts"
+      ],
+      "@lenzi/ui-kit/charts": [
+        "./projects/kit/charts/src/public-api.ts"
+      ],
+      "@lenzi/ui-kit/three": [
+        "./projects/kit/three/src/public-api.ts"
+      ],
+      "@lenzi/ui-kit/http": [
+        "./projects/kit/http/src/public-api.ts"
+      ]
+    },
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "resolveJsonModule": true
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/kit/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/kit/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/catalog/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/catalog/tsconfig.spec.json"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<mat-toolbar class="bar">
+  <span class="title">Tickets</span>
+  <kit-notification-bell
+    [items]="items()"
+    [noun]="'' + values()['noun']"
+    (opened)="events.log('opened: ' + $event.length + ' shown, the page marks them seen')"
+    (selected)="events.log('opened ' + $event.meta)"
+  />
+</mat-toolbar>

@@ -1,0 +1,40 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.line {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+/* A surface drawn the way the kit draws its windows. */
+.glass {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 420px;
+  padding: 16px 20px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--mat-sys-surface) var(--kit-glass), transparent);
+  backdrop-filter: var(--kit-glass-filter);
+}
+
+.glass-title {
+  font: var(--mat-sys-title-medium);
+}
+
+.glass-text {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

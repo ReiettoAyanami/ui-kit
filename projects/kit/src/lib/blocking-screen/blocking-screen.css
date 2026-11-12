@@ -1,0 +1,59 @@
+/* Over everything, nothing behind it can be reached; inside the safe area of an edge-to-edge app. */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px))
+    calc(16px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+  background: var(--mat-sys-surface);
+}
+
+:host(.inline) .screen {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  min-height: 420px;
+  border-radius: var(--kit-card-radius);
+}
+
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 24px;
+  border-radius: var(--kit-card-radius);
+  text-align: center;
+  background: var(--mat-sys-surface-container-low);
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+}
+
+.big {
+  width: 48px;
+  height: 48px;
+  font-size: 48px;
+  color: var(--mat-sys-primary);
+}
+
+.title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+  color: var(--mat-sys-on-surface);
+}
+
+.text {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.get {
+  margin-top: 8px;
+  height: 48px;
+}

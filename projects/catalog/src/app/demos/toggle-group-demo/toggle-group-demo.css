@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+}
+
+mat-button-toggle-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.shown {
+  margin: 16px 0 0;
+  font: var(--mat-sys-body-large);
+}

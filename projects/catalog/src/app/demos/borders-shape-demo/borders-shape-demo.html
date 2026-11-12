@@ -1,0 +1,25 @@
+<div class="grid">
+  <mat-card appearance="outlined" class="card">
+    <mat-card-content>
+      <span class="name">An outlined card</span>
+      <span class="detail">Its outline is the border variable.</span>
+    </mat-card-content>
+  </mat-card>
+  <div class="row">
+    <button mat-stroked-button type="button">Outlined button</button>
+    <mat-chip-set><mat-chip>A chip</mat-chip></mat-chip-set>
+  </div>
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Example" value="week">
+    <mat-button-toggle value="day">day</mat-button-toggle>
+    <mat-button-toggle value="week">week</mat-button-toggle>
+    <mat-button-toggle value="month">month</mat-button-toggle>
+  </mat-button-toggle-group>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>A text field</mat-label>
+    <input matInput value="Focus it: one more px" />
+  </mat-form-field>
+  <div class="compare">
+    <div class="box one"><span>1 px: thinner corners</span></div>
+    <div class="box kit"><span>the kit's width</span></div>
+  </div>
+</div>

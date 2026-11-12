@@ -1,0 +1,20 @@
+<kit-app-shell [title]="title()" [bare]="!!values()['bare']">
+  <kit-nav-list kitShellNav appName="Substance tracker" subtitle="lenzi" [pages]="pages" [bottom]="bottom" (pressed)="log('pressed ' + $event)" (navigated)="log('went to ' + $event.label)" />
+  @if (values()['actions']) {
+    <kit-notification-bell kitShellActions noun="tickets" [items]="news" (opened)="log('bell opened')" />
+  }
+  @if (values()['banner']) {
+    <kit-info-bar kitShellBanner icon="visibility" tone="tertiary" actionLabel="Exit" (action)="log('exit')">Viewing as <strong>lenzi</strong></kit-info-bar>
+  }
+  @if (values()['below']) {
+    <kit-info-bar kitShellBelow icon="cloud_off">Offline · data from 14:32</kit-info-bar>
+  }
+  <main class="page">
+    @for (row of rows; track row) {
+      <div class="row">
+        <span class="name">Consumption {{ row }}</span>
+        <span class="detail">Scroll: the top bar stays, its glass over the page.</span>
+      </div>
+    }
+  </main>
+</kit-app-shell>

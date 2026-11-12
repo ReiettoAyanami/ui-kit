@@ -1,0 +1,33 @@
+/* "delta:" dim, the change bright, or in the colour of where it went (RULES.md, "Status colours"). */
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 1ch;
+  font: var(--mat-sys-body-large);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.label {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.change {
+  display: inline-flex;
+  align-items: center;
+  color: var(--mat-sys-on-surface);
+}
+
+.change.good {
+  color: var(--kit-status-good);
+}
+
+.change.bad {
+  color: var(--kit-status-bad);
+}
+
+/* Material's triangle is 10 px wide in the middle of its 24 px box: the box's empty sides are
+   trimmed, so it sits close to the number. */
+.arrow {
+  margin: 0 -5px 0 -7px;
+}

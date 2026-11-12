@@ -1,0 +1,22 @@
+<button
+  mat-icon-button
+  type="button"
+  class="trigger"
+  [attr.aria-label]="label()"
+  [matMenuTriggerFor]="menu"
+  (click)="stop($event)"
+  (keydown.enter)="stop($event)"
+  (keydown.space)="stop($event)"
+>
+  <mat-icon>more_vert</mat-icon>
+</button>
+<mat-menu #menu="matMenu" xPosition="before">
+  @for (item of actions(); track item.id) {
+    <button mat-menu-item type="button" [class.destructive]="item.destructive" [disabled]="item.disabled" (click)="action.emit(item.id)">
+      @if (item.icon) {
+        <mat-icon>{{ item.icon }}</mat-icon>
+      }
+      <span>{{ item.label }}</span>
+    </button>
+  }
+</mat-menu>

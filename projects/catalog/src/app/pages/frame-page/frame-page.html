@@ -1,0 +1,7 @@
+@if (doc()) {
+  @if (demo(); as demo) {
+    <ng-container *ngComponentOutlet="demo; inputs: inputs()" />
+  }
+} @else {
+  <kit-status-message kind="error" text="No demo with this name." />
+}

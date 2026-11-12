@@ -1,0 +1,7 @@
+<mat-card appearance="outlined" class="card" (click)="events.log('card opened')">
+  <kit-card-menu class="menu" [label]="'' + values()['label']" [actions]="actions()" (action)="events.log('menu: ' + $event)" />
+  <mat-card-content class="content">
+    <span class="name"><kit-identity-dot [id]="1" /> Birra</span>
+    <span class="detail">6 active batches</span>
+  </mat-card-content>
+</mat-card>

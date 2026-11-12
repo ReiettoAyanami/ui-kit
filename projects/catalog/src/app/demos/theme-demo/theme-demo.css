@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px 16px;
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.chip {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: var(--kit-border) solid var(--mat-sys-outline-variant);
+}
+
+.type {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sample {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sample-name {
+  font: var(--mat-sys-body-medium);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.sample-text {
+  overflow-wrap: anywhere;
+}

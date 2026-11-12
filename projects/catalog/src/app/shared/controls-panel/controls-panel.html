@@ -1,0 +1,80 @@
+<section class="panel" aria-label="Parameters">
+  <header class="head">
+    <h2 class="title">Parameters</h2>
+    @if (controls().length) {
+      <button mat-button type="button" (click)="reset.emit()">Reset</button>
+    }
+  </header>
+
+  @for (control of controls(); track control.key) {
+    @let value = values()[control.key];
+    <div class="control">
+      @switch (control.type) {
+        @case ('boolean') {
+          <mat-slide-toggle [checked]="!!value" (change)="set(control.key, $event.checked)">{{ control.label }}</mat-slide-toggle>
+        }
+        @case ('number') {
+          <span class="label" [id]="'label-' + control.key">{{ control.label }}</span>
+          <div class="number">
+            <mat-slider [min]="control.min ?? 0" [max]="control.max ?? 100" [step]="control.step ?? 1" discrete>
+              <input matSliderThumb [value]="value" [attr.aria-labelledby]="'label-' + control.key" (valueChange)="set(control.key, $event)" />
+            </mat-slider>
+            <input
+              class="number-field"
+              type="number"
+              [min]="control.min ?? null"
+              [max]="control.max ?? null"
+              [step]="control.step ?? 1"
+              [value]="value"
+              [attr.aria-label]="control.label"
+              (change)="set(control.key, number($any($event.target).value, control))"
+            />
+          </div>
+        }
+        @case ('select') {
+          @if ((control.options ?? []).length <= 3) {
+            <span class="label" [id]="'label-' + control.key">{{ control.label }}</span>
+            <mat-button-toggle-group
+              class="choices"
+              hideSingleSelectionIndicator
+              [attr.aria-labelledby]="'label-' + control.key"
+              [value]="value"
+              (change)="set(control.key, $event.value)"
+            >
+              @for (option of control.options; track option.value) {
+                <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
+              }
+            </mat-button-toggle-group>
+          } @else {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ control.label }}</mat-label>
+              <mat-select [value]="value" (selectionChange)="set(control.key, $event.value)">
+                @for (option of control.options; track option.value) {
+                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+        }
+        @case ('color') {
+          <span class="label">{{ control.label }}</span>
+          <div class="color">
+            <input type="color" [value]="value" [attr.aria-label]="control.label" (input)="set(control.key, $any($event.target).value)" />
+            <span class="color-value">{{ value }}</span>
+          </div>
+        }
+        @default {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ control.label }}</mat-label>
+            <input matInput [value]="value ?? ''" (input)="set(control.key, $any($event.target).value)" />
+          </mat-form-field>
+        }
+      }
+      @if (control.hint) {
+        <p class="hint">{{ control.hint }}</p>
+      }
+    </div>
+  } @empty {
+    <p class="hint">Nothing to change: the demo shows it as it is.</p>
+  }
+</section>

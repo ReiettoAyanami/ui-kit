@@ -1,0 +1,26 @@
+<!-- The page never moves: hiding the app around it (bare) must not create the page again. -->
+<mat-sidenav-container class="kit-shell" [class.kit-shell-bare]="isBare()">
+  <!-- Opened, the focus goes to the current page's entry, not to the first one: a focused entry is
+       drawn highlighted, and the first page looked selected on every page (lenzi, 2026-10-03). -->
+  <mat-sidenav
+    class="kit-shell-drawer"
+    fixedInViewport
+    [fixedTopGap]="8"
+    [fixedBottomGap]="8"
+    mode="over"
+    autoFocus='[aria-current="page"]'
+  ><ng-content select="[kitShellNav]" /></mat-sidenav>
+
+  <mat-sidenav-content class="kit-shell-content">
+    <div class="kit-shell-banner"><ng-content select="[kitShellBanner]" /></div>
+    <mat-toolbar class="kit-shell-bar">
+      <button mat-icon-button type="button" class="kit-shell-menu" [attr.aria-label]="menuLabel()" (click)="openNav($event)">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="kit-shell-title">{{ shownTitle() }}</span>
+      <ng-content select="[kitShellActions]" />
+    </mat-toolbar>
+    <div class="kit-shell-below"><ng-content select="[kitShellBelow]" /></div>
+    <ng-content />
+  </mat-sidenav-content>
+</mat-sidenav-container>

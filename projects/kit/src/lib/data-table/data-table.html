@@ -1,0 +1,56 @@
+<!-- A phone scrolls the table sideways; the names stay at the left. -->
+<div class="table-scroll">
+  <table
+    mat-table
+    [dataSource]="sorted()"
+    matSort
+    [matSortActive]="sort()"
+    [matSortDirection]="direction()"
+    (matSortChange)="sortChange.emit($event)"
+    [attr.aria-label]="label()"
+  >
+    <ng-container matColumnDef="name" sticky>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ nameHeader() }}</th>
+      <td mat-cell *matCellDef="let row">
+        <span class="name">
+          @if (row.color) {
+            <span class="dot" [style.background-color]="row.color"></span>
+          }
+          <span class="name-lines">
+            <span class="name-text">{{ row.name }}</span>
+            @for (detail of row.details ?? []; track $index) {
+              <span class="name-detail">{{ detail }}</span>
+            }
+          </span>
+        </span>
+      </td>
+    </ng-container>
+
+    @for (column of columns(); track column.key) {
+      <ng-container [matColumnDef]="column.key">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          [arrowPosition]="column.text ? 'after' : 'before'"
+          [class.number]="!column.text"
+          [attr.title]="column.description ?? null"
+        >
+          {{ column.label }}
+        </th>
+        <td mat-cell *matCellDef="let row" [class.number]="!column.text">{{ cell(row, column) }}</td>
+      </ng-container>
+    }
+
+    <tr mat-header-row *matHeaderRowDef="columnIds(); sticky: true"></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; columns: columnIds()"
+      class="row"
+      tabindex="0"
+      [attr.aria-label]="row.label ?? 'Open ' + row.name"
+      (click)="opened.emit(row)"
+      (keydown.enter)="opened.emit(row)"
+    ></tr>
+  </table>
+</div>
