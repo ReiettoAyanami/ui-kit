@@ -11,17 +11,18 @@ import { CodeEditor } from '../code-editor/code-editor';
 import { languageOf } from '../highlight';
 import { KitFiles } from '../kit-files';
 import { KitServer } from '../kit-server';
+import { SaveHint } from '../save-hint/save-hint';
 
 /**
  * The real code of a piece of the kit, file by file, as it is on disk, in an editor (lenzi,
  * 2026-11-12: "everything that involves code/configuration file must be put into a code-like textarea
- * where the user can edit, and they will take effect"). With the development server, "Save to the
+ * where the user can edit, and they will take effect"). For the admin on the development server, "Save to the
  * kit" writes the file and the catalog rebuilds with it: the demo shows the change. Elsewhere it can
  * be read and copied. A file changed and not saved keeps its draft while another file is open.
  */
 @Component({
   selector: 'app-code-view',
-  imports: [CodeEditor, LenziStatusMessage, MatButtonModule, MatButtonToggleModule, MatIconModule],
+  imports: [CodeEditor, LenziStatusMessage, MatButtonModule, MatButtonToggleModule, MatIconModule, SaveHint],
   templateUrl: './code-view.html',
   styleUrl: './code-view.css',
 })

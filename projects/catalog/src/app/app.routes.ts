@@ -31,6 +31,8 @@ export const routes: Routes = [
   },
   { path: 'variables', title: 'Variables', loadComponent: () => import('./pages/variables-page/variables-page').then((m) => m.VariablesPage) },
   { path: 'libraries', title: 'Libraries', loadComponent: () => import('./pages/libraries-page/libraries-page').then((m) => m.LibrariesPage) },
+  { path: 'history', title: 'History', loadComponent: () => import('./pages/history-page/history-page').then((m) => m.HistoryPage) },
+  { path: 'admin', title: 'Admin', loadComponent: () => import('./pages/admin-page/admin-page').then((m) => m.AdminPage) },
   // A demo alone, for the frame of its component page: the page without the shell around it.
   { matcher: frameMatcher, data: { bare: true }, loadComponent: () => import('./pages/frame-page/frame-page').then((m) => m.FramePage) },
   { path: '**', title: 'Not found', component: LenziNotFound, data: { linkLabel: 'Go to the overview', link: '/' } },

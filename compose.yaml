@@ -1,8 +1,18 @@
 # The catalog as it is deployed: `docker compose up -d --build`, then http://localhost:8080.
+# The admin's user and password come from .env (see .env.example); without them it only shows the kit.
+# What the admin saves (the variables, the history) is kept in the volume, across new images.
+# Behind a reverse proxy with https: add TRUST_PROXY=true to .env, so the session's cookie is Secure.
 services:
   catalog:
     build: .
     image: ui-kit-catalog
     ports:
       - "8080:8080"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - catalog-data:/app/data
     restart: unless-stopped
+volumes:
+  catalog-data:

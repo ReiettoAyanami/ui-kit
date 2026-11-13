@@ -26,7 +26,11 @@ export class App {
     { label: 'AI rules', icon: 'smart_toy', link: '/ai-rules' },
     { label: 'Variables', icon: 'tune', link: '/variables' },
     { label: 'Libraries', icon: 'inventory_2', link: '/libraries' },
+    { label: 'History', icon: 'history', link: '/history' },
   ];
+
+  /** Apart from the pages: where the one admin signs in to change the kit. */
+  protected readonly bottom: LenziNavEntry[] = [{ label: 'Admin', icon: 'admin_panel_settings', link: '/admin' }];
 
   constructor() {
     // The variables changed and not saved yet apply from the first page.

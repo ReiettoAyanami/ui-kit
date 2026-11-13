@@ -1,0 +1,128 @@
+<main class="page">
+  <h1 class="title">History</h1>
+  <p class="lead">What was changed, and the way back from each change: in this browser, and in the kit.</p>
+
+  <section class="part" aria-labelledby="history-now">
+    <header class="part-head">
+      <h2 class="part-title" id="history-now">Different from the kit, in this browser</h2>
+      @if (different().length) {
+        <button mat-stroked-button type="button" (click)="discardAll()">Back to the kit, all of them</button>
+      }
+    </header>
+    <p class="part-text">Variables changed here and not saved: only this browser sees them.</p>
+    @for (item of different(); track item.name) {
+      <article class="card">
+        <div class="names">
+          <span class="name">{{ item.label }}</span>
+          <code class="variable">{{ item.name }}</code>
+        </div>
+        <div class="values">
+          <lenzi-figure label="In the kit">
+            <span class="value">@if (item.kit.color) {<span class="swatch" [style.background]="item.kit.color"></span>}{{ item.kit.text }}</span>
+          </lenzi-figure>
+          <lenzi-figure label="Here, now">
+            <span class="value">@if (item.now.color) {<span class="swatch" [style.background]="item.now.color"></span>}{{ item.now.text }}</span>
+          </lenzi-figure>
+        </div>
+        <div class="buttons">
+          <button mat-stroked-button type="button" (click)="backToKit(item.name)"><mat-icon>undo</mat-icon>Back to the kit's value</button>
+        </div>
+      </article>
+    } @empty {
+      <lenzi-status-message text="Nothing differs from the kit in this browser" compact />
+    }
+  </section>
+
+  <section class="part" aria-labelledby="history-browser">
+    <header class="part-head">
+      <h2 class="part-title" id="history-browser">Changed in this browser</h2>
+      @if (logCount()) {
+        <button mat-stroked-button type="button" (click)="clearLog()">Forget the list</button>
+      }
+    </header>
+    <p class="part-text">Every change of a variable made here, the newest first. Going back changes it here only.</p>
+    @for (item of changes(); track item.change.at + item.change.name) {
+      <article class="card">
+        <div class="names">
+          <span class="name">{{ item.label }}</span>
+          <code class="variable">{{ item.change.name }}</code>
+        </div>
+        <div class="values">
+          <lenzi-figure label="From">
+            <span class="value">@if (item.from.color) {<span class="swatch" [style.background]="item.from.color"></span>}{{ item.from.text }}</span>
+          </lenzi-figure>
+          <lenzi-figure label="To">
+            <span class="value">@if (item.to.color) {<span class="swatch" [style.background]="item.to.color"></span>}{{ item.to.text }}</span>
+          </lenzi-figure>
+          <lenzi-figure label="When" [value]="item.when" />
+        </div>
+        <div class="buttons">
+          <button mat-stroked-button type="button" [disabled]="item.current" (click)="goBack(item.change)">
+            <mat-icon>undo</mat-icon>{{ item.current ? 'It is there now' : 'Back to ' + item.from.text }}
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <lenzi-status-message text="No changes made in this browser" compact />
+    }
+    @if (logCount() > changes().length) {
+      <button mat-button type="button" class="more" (click)="logLimit.set(logLimit() + 20)">Show more</button>
+    }
+  </section>
+
+  <section class="part" aria-labelledby="history-kit">
+    <header class="part-head">
+      <h2 class="part-title" id="history-kit">Saved into the kit</h2>
+    </header>
+    <p class="part-text">Every save the admin made from the catalog, the newest first. Undoing a save is a save too.</p>
+    <app-save-hint what="variables" kept="in this browser, and the saves cannot be undone" />
+    @if (savesFailure(); as failure) {
+      <lenzi-status-message kind="error" [text]="failure" compact />
+    } @else if (kitSaves(); as saves) {
+      @for (item of saves; track item.save.id) {
+        <article class="card">
+          <div class="names">
+            <span class="name">{{ item.title }}</span>
+            <span class="variable">{{ item.save.kind === 'file' ? 'A file of the kit' : 'Variables' }}</span>
+          </div>
+          <div class="values">
+            <lenzi-figure label="When" [value]="item.when" />
+            <lenzi-figure label="Saved by" [value]="item.save.user" />
+            @if (item.size; as size) {
+              <lenzi-figure label="Before" [value]="size.before" />
+              <lenzi-figure label="After" [value]="size.after" />
+            }
+          </div>
+          @for (change of item.changes; track change.name) {
+            <div class="change">
+              <div class="names">
+                <span class="name small">{{ change.label }}</span>
+                <code class="variable">{{ change.name }}</code>
+              </div>
+              <div class="values">
+                <lenzi-figure label="From">
+                  <span class="value">@if (change.from.color) {<span class="swatch" [style.background]="change.from.color"></span>}{{ change.from.text }}</span>
+                </lenzi-figure>
+                <lenzi-figure label="To">
+                  <span class="value">@if (change.to.color) {<span class="swatch" [style.background]="change.to.color"></span>}{{ change.to.text }}</span>
+                </lenzi-figure>
+              </div>
+            </div>
+          }
+          @if (item.canUndo) {
+            <div class="buttons">
+              <button mat-stroked-button type="button" (click)="undo(item.save, item.title)"><mat-icon>undo</mat-icon>Undo this save</button>
+            </div>
+          }
+        </article>
+      } @empty {
+        <lenzi-status-message text="No saves yet" compact />
+      }
+      @if (savesCount() > saves.length) {
+        <button mat-button type="button" class="more" (click)="savesLimit.set(savesLimit() + 20)">Show more</button>
+      }
+    } @else {
+      <lenzi-status-message kind="loading" compact />
+    }
+  </section>
+</main>

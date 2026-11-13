@@ -1,14 +1,22 @@
-// The kit's server (Fastify, like the apps' APIs). Two jobs:
-// - development (`npm start`, tools/dev.mjs): the catalog's Variables page saves through it into
-//   projects/kit/src/styles/tokens.json and tokens.css (KIT_ALLOW_SAVE=true, on 127.0.0.1 only);
+// The kit's server (Fastify, like the apps' APIs). Everyone reads; only the admin changes (lenzi,
+// 2026-11-12: "pagina admin per abilitare la modifica (unico utente). L'endpoint pubblico mostra solo
+// le info."): one user and one password from the environment (auth.mjs), signed in on the catalog's
+// Admin page. Two jobs:
+// - development (`npm start`, tools/dev.mjs): the admin saves the variables into
+//   projects/kit/src/styles/tokens.json and tokens.css, and the kit's files (KIT_ALLOW_FILES=true);
 // - production (Docker): it serves the built catalog, every unknown address answered by index.html
-//   (the catalog routes in the browser), and the variables read-only.
+//   (the catalog routes in the browser). The admin changes the variables on the fly (lenzi,
+//   2026-11-13): they are kept apart from the image (TOKENS_VALUES, on a volume) and every visitor
+//   gets them (/api/tokens.css). The kit's files need a new build, so they are not changed there.
+// Every save is kept (history.mjs) and can be undone.
 import Fastify from 'fastify';
-import { stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { TOKENS_CSS, TOKENS_JSON, applyValues, readTokens, writeTokens } from './tokens.mjs';
+import { createAuth, sessionCookie } from './auth.mjs';
+import { createHistory, publicEntry } from './history.mjs';
+import { TOKENS_CSS, TOKENS_JSON, applyValues, renderCss, readTokens, tokensByName, writeTokens } from './tokens.mjs';
 
 /** The kit's folder in this workspace: the only place the catalog may write into. */
 export const KIT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'projects', 'kit');
@@ -41,17 +49,101 @@ function problem(reply, status, code, title, detail, errors = []) {
 }
 
 /**
- * @param {{ publicDir?: string | null, tokensJson?: string, tokensCss?: string, kitDir?: string, allowSave?: boolean, logger?: boolean }} options
+ * @param {object} options
+ * @param {string | null} [options.publicDir] the built catalog to serve (none in development)
+ * @param {string} [options.tokensJson] the variables as the kit has them
+ * @param {string} [options.tokensCss] the CSS written from them (development)
+ * @param {string | null} [options.valuesPath] where saved values are kept apart from tokensJson, which
+ *   is then never written (Docker: the image's variables, and the admin's changes on a volume)
+ * @param {string} [options.kitDir] the kit's folder
+ * @param {boolean} [options.allowFiles] the admin may change the kit's files too (development)
+ * @param {string} [options.adminUser] @param {string} [options.adminPassword] without both, nobody can save
+ * @param {string | null} [options.historyPath] where the saves are kept (none: not kept)
+ * @param {boolean} [options.trustProxy] behind a reverse proxy: its word on https and on the address
+ * @param {boolean} [options.logger]
  */
 export async function buildServer({
   publicDir = null,
   tokensJson = TOKENS_JSON,
   tokensCss = TOKENS_CSS,
+  valuesPath = null,
   kitDir = KIT_DIR,
-  allowSave = false,
+  allowFiles = false,
+  adminUser = '',
+  adminPassword = '',
+  historyPath = null,
+  trustProxy = false,
   logger = false,
 } = {}) {
-  const app = Fastify({ logger });
+  const app = Fastify({ logger, trustProxy });
+  const auth = createAuth({ user: adminUser, password: adminPassword });
+  const history = createHistory(historyPath);
+
+  const signedIn = (request) => auth.signedIn(request.headers.cookie);
+  /** Answers why not and gives false, unless the admin is signed in. */
+  function adminOnly(request, reply) {
+    if (signedIn(request)) return true;
+    if (!auth.configured) {
+      problem(reply, 403, 'save-disabled', 'Saving is off', 'This server has no admin: set KIT_ADMIN_USER and KIT_ADMIN_PASSWORD in its environment (.env) and start it again.');
+    } else {
+      problem(reply, 401, 'sign-in-required', 'Sign in first', 'Only the admin changes the kit: sign in on the Admin page.');
+    }
+    return false;
+  }
+
+  /** The variables as they are now: the kit's, with the values saved apart (the ones still valid). */
+  async function currentTokens() {
+    const document = await readTokens(tokensJson);
+    if (!valuesPath) return document;
+    const saved = await readFile(valuesPath, 'utf8').then(JSON.parse).catch(() => ({}));
+    const known = tokensByName(document);
+    const valid = Object.fromEntries(Object.entries(saved).filter(([name, value]) => known.has(name) && applyValues(document, { [name]: value }).document));
+    return applyValues(document, valid).document;
+  }
+
+  /** Keeps the document: in the kit's files, or (apart) only what differs from them. */
+  async function storeTokens(document) {
+    if (!valuesPath) return writeTokens(document, tokensJson, tokensCss);
+    const kit = tokensByName(await readTokens(tokensJson));
+    const values = {};
+    for (const [name, token] of tokensByName(document)) if (kit.get(name)?.value !== token.value) values[name] = token.value;
+    await mkdir(dirname(valuesPath), { recursive: true });
+    await writeFile(valuesPath, `${JSON.stringify(values, null, 2)}\n`);
+  }
+
+  /** Saves the values and keeps the save: the answer for the page, or the problem. */
+  async function saveValues(request, reply, values, restores = null) {
+    const before = await currentTokens();
+    const result = applyValues(before, values);
+    if (result.errors) {
+      return problem(
+        reply,
+        400,
+        'invalid-variables',
+        'Invalid variables',
+        'Some values cannot be saved.',
+        result.errors.map((error) => ({ field: error.name, message: error.reason })),
+      );
+    }
+    const was = tokensByName(before);
+    const changes = [...tokensByName(result.document)]
+      .filter(([name, token]) => was.get(name).value !== token.value)
+      .map(([name, token]) => ({ name, from: was.get(name).value, to: token.value }));
+    await storeTokens(result.document);
+    const entry = changes.length ? await history.add({ kind: 'variables', changes }, { user: auth.user, restores }) : null;
+    return { ...result.document, canSave: true, entry: entry && publicEntry(entry) };
+  }
+
+  /** Writes a file of the kit and keeps the save (with the text it replaced). */
+  async function saveFile(target, content, restores = null) {
+    const before = await readFile(target.absolute, 'utf8');
+    await writeFile(target.absolute, content);
+    if (before === content) return null;
+    return history.add(
+      { kind: 'file', path: target.relative, before, bytesBefore: Buffer.byteLength(before), bytesAfter: Buffer.byteLength(content) },
+      { user: auth.user, restores },
+    );
+  }
 
   // A few headers every page of the kit's apps sends.
   app.addHook('onSend', async (_request, reply) => {
@@ -59,8 +151,44 @@ export async function buildServer({
     reply.header('Referrer-Policy', 'same-origin');
   });
 
-  // Whether it can write into the kit: the catalog's editors save, or only show.
-  app.get('/api/health', async () => ({ ok: true, canSave: allowSave }));
+  app.get('/api/health', async () => ({ ok: true }));
+
+  // Who is looking: whether an admin exists here, whether this browser is signed in as it, and whether
+  // this server changes the kit's files too (the catalog's editors save, or only show).
+  const session = (request) => ({ configured: auth.configured, signedIn: signedIn(request), user: signedIn(request) ? auth.user : null, files: allowFiles });
+  app.get('/api/session', async (request) => session(request));
+
+  app.post(
+    '/api/session',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['user', 'password'],
+          properties: { user: { type: 'string', maxLength: 200 }, password: { type: 'string', maxLength: 1000 } },
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!auth.configured) {
+        return problem(reply, 403, 'save-disabled', 'No admin on this server', 'Set KIT_ADMIN_USER and KIT_ADMIN_PASSWORD in its environment (.env) and start it again.');
+      }
+      const wait = auth.locked(request.ip);
+      if (wait > 0) {
+        reply.header('Retry-After', wait);
+        return problem(reply, 429, 'too-many-attempts', 'Too many attempts', `Try again in ${wait} seconds.`);
+      }
+      const made = auth.signIn(request.ip, request.body.user, request.body.password);
+      if (!made) return problem(reply, 401, 'wrong-credentials', 'Wrong user or password', 'Check them and try again.');
+      reply.header('Set-Cookie', sessionCookie(made.token, made.maxAge, request.protocol === 'https'));
+      return { configured: true, signedIn: true, user: auth.user, files: allowFiles };
+    },
+  );
+
+  app.delete('/api/session', async (request, reply) => {
+    reply.header('Set-Cookie', sessionCookie('', 0, request.protocol === 'https'));
+    return { configured: auth.configured, signedIn: false, user: null, files: allowFiles };
+  });
 
   // A file of the kit, changed in the catalog's editor (its Code tab, libraries.json): written as it is,
   // and the development server rebuilds the catalog with it. Development only.
@@ -77,8 +205,9 @@ export async function buildServer({
       },
     },
     async (request, reply) => {
-      if (!allowSave) {
-        return problem(reply, 403, 'save-disabled', 'Saving is off', 'This server shows the kit. Changing its files needs the development server (npm start).');
+      if (!adminOnly(request, reply)) return reply;
+      if (!allowFiles) {
+        return problem(reply, 403, 'files-not-here', 'Files are not changed here', 'This server changes the variables only. The kit\'s files change on the development server (npm start), and a new build shows them.');
       }
       const { path, content } = request.body;
       const target = await editablePath(kitDir, path);
@@ -90,13 +219,17 @@ export async function buildServer({
           return problem(reply, 400, 'invalid-json', 'Not valid JSON', `${target.relative}: ${error.message}`);
         }
       }
-      await writeFile(target.absolute, content);
-      return { path: target.relative };
+      const entry = await saveFile(target, content);
+      return { path: target.relative, entry: entry && publicEntry(entry) };
     },
   );
 
-  // The variables, and whether this server can save them (the Variables page says so).
-  app.get('/api/tokens', async () => ({ ...(await readTokens(tokensJson)), canSave: allowSave }));
+  // The variables as they are now, and whether whoever asks can save them.
+  app.get('/api/tokens', async (request) => ({ ...(await currentTokens()), canSave: signedIn(request) }));
+
+  // The same as CSS: every page of the catalog loads it after its own styles, so what the admin saved
+  // on a server that keeps the values apart is what every visitor sees, without a new build.
+  app.get('/api/tokens.css', async (_request, reply) => reply.type('text/css; charset=utf-8').header('Cache-Control', 'no-cache').send(renderCss(await currentTokens())));
 
   app.put(
     '/api/tokens',
@@ -110,24 +243,34 @@ export async function buildServer({
       },
     },
     async (request, reply) => {
-      if (!allowSave) {
-        return problem(reply, 403, 'save-disabled', 'Saving is off', 'This server shows the kit. Saving the variables needs the development server (npm start).');
-      }
-      const result = applyValues(await readTokens(tokensJson), request.body.values);
-      if (result.errors) {
-        return problem(
-          reply,
-          400,
-          'invalid-variables',
-          'Invalid variables',
-          'Some values cannot be saved.',
-          result.errors.map((error) => ({ field: error.name, message: error.reason })),
-        );
-      }
-      await writeTokens(result.document, tokensJson, tokensCss);
-      return { ...result.document, canSave: true };
+      if (!adminOnly(request, reply)) return reply;
+      return saveValues(request, reply, request.body.values);
     },
   );
+
+  // Every save, the newest first: what changed and when, for everyone (without the replaced texts).
+  app.get('/api/history', async () => ({ entries: (await history.read()).reverse().map(publicEntry) }));
+
+  // A save undone: the variables back to what they were before it, the file back to the text it
+  // replaced. It is a save too, kept like the others (so it can be undone in its turn).
+  app.post('/api/history/:id/restore', async (request, reply) => {
+    if (!adminOnly(request, reply)) return reply;
+    const entry = await history.find(request.params.id);
+    if (!entry) return problem(reply, 404, 'not-found', 'No such save', 'It is not in the history any more.');
+    if (entry.kind === 'variables') {
+      const known = tokensByName(await currentTokens());
+      const values = Object.fromEntries(entry.changes.filter((change) => known.has(change.name)).map((change) => [change.name, change.from]));
+      const answer = await saveValues(request, reply, values, entry.id);
+      return answer === reply ? reply : { entry: answer.entry };
+    }
+    if (!allowFiles) {
+      return problem(reply, 403, 'files-not-here', 'Files are not changed here', 'This server changes the variables only. The kit\'s files change on the development server (npm start).');
+    }
+    const target = await editablePath(kitDir, entry.path);
+    if (!target.absolute) return problem(reply, 400, 'not-editable', 'This file cannot be changed', target.reason);
+    const made = await saveFile(target, entry.before, entry.id);
+    return { entry: made && publicEntry(made) };
+  });
 
   if (publicDir) {
     const { default: fastifyStatic } = await import('@fastify/static');
@@ -147,14 +290,22 @@ export async function buildServer({
 }
 
 // `node server/server.mjs`: PORT (4301), HOST (127.0.0.1), PUBLIC_DIR (the built catalog, none in
-// development), KIT_ALLOW_SAVE ("true" in development), TOKENS_JSON and TOKENS_CSS (the files).
+// development), KIT_ADMIN_USER and KIT_ADMIN_PASSWORD (the admin; without them nothing is saved),
+// KIT_ALLOW_FILES ("true" in development: the admin changes the kit's files too), TOKENS_JSON and
+// TOKENS_CSS (the files), TOKENS_VALUES (saved values kept apart: Docker), HISTORY_FILE (the saves),
+// TRUST_PROXY ("true" behind a reverse proxy).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const app = await buildServer({
     publicDir: process.env.PUBLIC_DIR || null,
     kitDir: process.env.KIT_DIR || KIT_DIR,
     tokensJson: process.env.TOKENS_JSON || TOKENS_JSON,
     tokensCss: process.env.TOKENS_CSS || TOKENS_CSS,
-    allowSave: process.env.KIT_ALLOW_SAVE === 'true',
+    valuesPath: process.env.TOKENS_VALUES || null,
+    allowFiles: process.env.KIT_ALLOW_FILES === 'true',
+    adminUser: process.env.KIT_ADMIN_USER || '',
+    adminPassword: process.env.KIT_ADMIN_PASSWORD || '',
+    historyPath: process.env.HISTORY_FILE || null,
+    trustProxy: process.env.TRUST_PROXY === 'true',
     logger: true,
   });
   await app.listen({ port: Number(process.env.PORT || 4301), host: process.env.HOST || '127.0.0.1' });

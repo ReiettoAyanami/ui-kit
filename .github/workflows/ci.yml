@@ -38,5 +38,8 @@ jobs:
           curl -fs http://localhost:8080/ | grep -q '<app-root>'
           curl -fs http://localhost:8080/components/add-button | grep -q '<app-root>'
           curl -fs http://localhost:8080/kit-src/AI-RULES.md | grep -q '# AI rules'
+          curl -fs http://localhost:8080/api/tokens.css | grep -q -- '--lenzi-glass'
+          # no admin in the environment: it shows the kit and saves nothing
+          curl -fs http://localhost:8080/api/session | grep -q '"configured":false'
           test "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'content-type: application/json' -d '{"values":{}}' http://localhost:8080/api/tokens)" = 403
           docker rm -f catalog

@@ -1,0 +1,127 @@
+.page {
+  box-sizing: border-box;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+.title {
+  margin: 16px 0 8px;
+  font: var(--mat-sys-headline-medium);
+}
+
+.lead {
+  margin: 0 0 8px;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.part-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.part-title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+}
+
+.part-text {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* One change: what changed bold on top, its variable under it, then each fact as its own figure
+   (name on top, value under), and the way back. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font: var(--mat-sys-title-medium);
+  overflow-wrap: anywhere;
+}
+
+.name.small {
+  font: var(--mat-sys-body-large);
+  font-weight: 700;
+}
+
+.variable {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.values {
+  display: grid;
+  gap: 8px 24px;
+}
+
+@media (min-width: 600px) {
+  .values {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+.value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+
+/* A colour as it was: shown, not changed here (the Variables page changes it). */
+.swatch {
+  flex: none;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: 50%;
+}
+
+/* One variable of a save that changed several. */
+.change {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.more {
+  align-self: center;
+}

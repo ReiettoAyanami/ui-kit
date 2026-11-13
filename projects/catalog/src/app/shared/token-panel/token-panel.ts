@@ -12,6 +12,7 @@ import { LenziColorPicker, describeError, readPreference, writePreference } from
 
 import { KitServer } from '../kit-server';
 import { LiveTokens } from '../live-tokens';
+import { SaveHint } from '../save-hint/save-hint';
 import { tokensToCss } from '../token-css';
 import { TokenEditor } from '../token-editor/token-editor';
 import { TokenDef, TokenGroup, TokensApi } from '../tokens-api';
@@ -37,13 +38,13 @@ function split(value: string): { number: number; unit: string } {
  * Global variables, each with its own control (lenzi, 2026-11-12: "ogni variabile ha il suo toggle
  * giusto"): a slider with its unit, a colour picker, a curve; what it is for and why it has its value. A
  * toggle at the top turns them into CSS text to edit (`Controls | Text`). Every change applies at once,
- * here and in every demo; "Save to the kit" writes tokens.json and tokens.css (development server),
+ * here and in every demo; "Save to the kit" (the admin, signed in) writes them into the kit,
  * "Discard" goes back. The Variables page shows all of them, a piece's Variables tab the ones its
  * styles read.
  */
 @Component({
   selector: 'app-token-panel',
-  imports: [LenziColorPicker, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, TokenEditor],
+  imports: [LenziColorPicker, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, SaveHint, TokenEditor],
   templateUrl: './token-panel.html',
   styleUrl: './token-panel.css',
 })
@@ -130,8 +131,8 @@ export class TokenPanel {
     this.message.set(null);
     try {
       await firstValueFrom(this.api.save(values));
-      for (const name of Object.keys(values)) this.live.reset(name);
-      this.snackBar.open('Saved into the kit: tokens.json and tokens.css', 'OK', { duration: 4000 });
+      await this.live.saved(Object.keys(values));
+      this.snackBar.open('Saved into the kit', 'OK', { duration: 4000 });
       this.saved.emit();
     } catch (error) {
       this.message.set(`Not saved: ${describeError(error)}`);

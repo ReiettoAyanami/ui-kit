@@ -1,0 +1,52 @@
+<main class="page">
+  <h1 class="title">Admin</h1>
+  <p class="lead">
+    Everyone reads the catalog and may try changes in their own browser. Only the admin saves them into the kit.
+  </p>
+
+  @if (server.session(); as session) {
+    @if (session.signedIn) {
+      <section class="panel" aria-label="Signed in">
+        <lenzi-figure-grid>
+          <lenzi-figure label="Signed in as" [value]="session.user" />
+          <lenzi-figure label="Variables and colours" value="Saved for everyone, at once" />
+          <lenzi-figure label="The kit's files" [value]="files()" />
+          <lenzi-figure label="The session" value="Ends in a week, or when the password changes" />
+        </lenzi-figure-grid>
+        <div class="buttons">
+          <a mat-stroked-button routerLink="/variables">Change the variables</a>
+          <a mat-stroked-button routerLink="/history">See the history</a>
+          <button mat-flat-button type="button" (click)="signOut()">Sign out</button>
+        </div>
+      </section>
+    } @else if (session.configured) {
+      <form class="panel" aria-label="Sign in" (submit)="signIn($event)">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>User</mat-label>
+          <input matInput name="username" autocomplete="username" autocapitalize="none" spellcheck="false" [value]="user()" (input)="user.set($any($event.target).value)" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" name="password" autocomplete="current-password" [value]="password()" (input)="password.set($any($event.target).value)" />
+        </mat-form-field>
+        @if (error(); as error) {
+          <p class="error" role="alert">{{ error }}</p>
+        }
+        <div class="buttons">
+          <button mat-flat-button type="submit" [disabled]="sending() || !user() || !password()">Sign in</button>
+        </div>
+      </form>
+    } @else {
+      <section class="panel" aria-label="No admin">
+        <lenzi-status-message text="This server has no admin: nothing can be saved from the catalog." />
+        <p class="how">
+          The admin is one user and one password in the server's environment: copy <code>.env.example</code> to <code>.env</code>, set
+          <code>KIT_ADMIN_USER</code> and <code>KIT_ADMIN_PASSWORD</code>, and start the server again (<code>npm start</code>, or
+          <code>docker compose up -d</code>).
+        </p>
+      </section>
+    }
+  } @else {
+    <lenzi-status-message kind="loading" />
+  }
+</main>

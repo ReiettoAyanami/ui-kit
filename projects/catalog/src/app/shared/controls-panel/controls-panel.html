@@ -46,9 +46,9 @@
               }
             </mat-button-toggle-group>
           } @else {
+            <span class="label" [id]="'label-' + control.key">{{ control.label }}</span>
             <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>{{ control.label }}</mat-label>
-              <mat-select [value]="value" (selectionChange)="set(control.key, $event.value)">
+              <mat-select [value]="value" [attr.aria-labelledby]="'label-' + control.key" (selectionChange)="set(control.key, $event.value)">
                 @for (option of control.options; track option.value) {
                   <mat-option [value]="option.value">{{ option.label }}</mat-option>
                 }
@@ -64,9 +64,9 @@
           </div>
         }
         @default {
+          <span class="label" [id]="'label-' + control.key">{{ control.label }}</span>
           <mat-form-field appearance="outline" subscriptSizing="dynamic">
-            <mat-label>{{ control.label }}</mat-label>
-            <input matInput [value]="value ?? ''" (input)="set(control.key, $any($event.target).value)" />
+            <input matInput [value]="value ?? ''" [attr.aria-labelledby]="'label-' + control.key" (input)="set(control.key, $any($event.target).value)" />
           </mat-form-field>
         }
       }

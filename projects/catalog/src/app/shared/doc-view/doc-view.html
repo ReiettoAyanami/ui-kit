@@ -20,8 +20,8 @@
       }
     </div>
   }
-  @if (server.canSave() === false && mode() === 'edit') {
-    <p class="hint">Saving needs the development server (<code>npm start</code>): here the changes stay on this page.</p>
+  @if (mode() === 'edit') {
+    <app-save-hint what="files" kept="on this page" />
   }
   @if (message(); as message) {
     <p class="hint" role="status">{{ message }}</p>

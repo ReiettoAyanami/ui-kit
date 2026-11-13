@@ -1,0 +1,11 @@
+@switch (reason()) {
+  @case ('sign-in') {
+    <p class="hint">Only the admin saves into the kit: <a routerLink="/admin">sign in on the Admin page</a>. Until then the changes stay {{ kept() }}.</p>
+  }
+  @case ('no-admin') {
+    <p class="hint">Nothing is saved on this server (it has no admin, see the <a routerLink="/admin">Admin page</a>): the changes stay {{ kept() }}.</p>
+  }
+  @case ('no-files') {
+    <p class="hint">This server saves the variables only. The kit's files change on the development server (<code>npm start</code>), and a new build shows them.</p>
+  }
+}

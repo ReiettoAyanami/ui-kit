@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 
 import {
@@ -25,7 +26,7 @@ import { TokensApi } from '../../shared/tokens-api';
 /**
  * The global variables of the look (RULES.md, every value comes from them): every one with its control
  * or all of them as text (TokenPanel), next to a preview of real pieces in them. A change applies at
- * once, here and in every demo; "Save to the kit" writes tokens.json and tokens.css (`npm start`).
+ * once, here and in every demo; "Save to the kit" (the admin) writes them into the kit.
  */
 @Component({
   selector: 'app-variables-page',
@@ -39,6 +40,7 @@ import { TokensApi } from '../../shared/tokens-api';
     MatButtonToggleModule,
     MatIconModule,
     MatMenuModule,
+    RouterLink,
     TokenPanel,
   ],
   templateUrl: './variables-page.html',

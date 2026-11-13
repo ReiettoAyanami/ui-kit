@@ -10,16 +10,17 @@ import { CodeEditor } from '../code-editor/code-editor';
 import { KitFiles } from '../kit-files';
 import { KitServer } from '../kit-server';
 import { Markdown } from '../markdown/markdown';
+import { SaveHint } from '../save-hint/save-hint';
 
 /**
  * A document of the kit (RULES.md, AI-RULES.md, a piece's README.md and AI.md), to read and to
  * change (lenzi, 2026-11-12: "rules, ai notes, code devono essere modificabili"): a toggle at the
  * top, Read or Edit. Edit shows the Markdown in an editor; Read shows the draft as it reads, so a
- * change is seen at once. "Save to the kit" writes the file (development server); "Discard" goes back.
+ * change is seen at once. "Save to the kit" writes the file (the admin, on the development server); "Discard" goes back.
  */
 @Component({
   selector: 'app-doc-view',
-  imports: [CodeEditor, LenziStatusMessage, Markdown, MatButtonModule, MatButtonToggleModule],
+  imports: [CodeEditor, LenziStatusMessage, Markdown, MatButtonModule, MatButtonToggleModule, SaveHint],
   templateUrl: './doc-view.html',
   styleUrl: './doc-view.css',
 })

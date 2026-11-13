@@ -10,6 +10,7 @@ import { LenziFigure, LenziFigureGrid, LenziStatusMessage, couldNotLoad, describ
 import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { KitFiles } from '../../shared/kit-files';
 import { KitServer } from '../../shared/kit-server';
+import { SaveHint } from '../../shared/save-hint/save-hint';
 
 interface Library {
   name: string;
@@ -32,7 +33,7 @@ interface Libraries {
  */
 @Component({
   selector: 'app-libraries-page',
-  imports: [CodeEditor, LenziFigure, LenziFigureGrid, LenziStatusMessage, MatButtonModule, MatExpansionModule, MatIconModule],
+  imports: [CodeEditor, LenziFigure, LenziFigureGrid, LenziStatusMessage, MatButtonModule, MatExpansionModule, MatIconModule, SaveHint],
   templateUrl: './libraries-page.html',
   styleUrl: './libraries-page.css',
 })

@@ -1,6 +1,6 @@
 # Development inside a container, with the repo mounted: `docker compose -f compose.dev.yaml up`,
-# then http://localhost:4300. The Variables page saves into the mounted repo (tokens.json and
-# tokens.css), and the catalog reloads with them. Commands run inside it:
+# then http://localhost:4300. Signed in on the Admin page (the admin of the repo's .env), the catalog
+# saves into the mounted repo (the variables, the kit's files) and reloads with them. Commands run inside it:
 #   docker compose -f compose.dev.yaml exec catalog npx ng generate component lib/<name> --project kit
 services:
   catalog:

@@ -29,8 +29,24 @@ can be changed there, and takes effect:**
   `projects/kit/src/styles/tokens.json` and `tokens.css`. A colour is changed from the colour itself: a
   click opens the colour selector (`LenziColorPicker`).
 - **Libraries**: `libraries.json`.
+- **History**: what differs from the kit in this browser, every change made in it, and every save into
+  the kit (kept by the server), each with its way back.
 
-Saving needs the development server (`npm start`); elsewhere the changes stay in the browser.
+## The admin
+
+Everyone reads the catalog and may try changes in their own browser; **only the admin saves them into
+the kit**. The admin is one user and one password in the server's environment: copy `.env.example` to
+`.env` (never in the repo), set `KIT_ADMIN_USER` and `KIT_ADMIN_PASSWORD`, start the server, and sign in
+on the catalog's **Admin** page. Without them nobody can sign in and nothing is saved.
+
+| Signed in on | Variables and colours | The kit's files (code, rules, AI notes, libraries) |
+| --- | --- | --- |
+| `npm start` | saved into `tokens.json` and `tokens.css` | saved into the repo; the catalog rebuilds |
+| Docker | saved on the fly, for every visitor (kept in the volume, apart from the image) | read only: they need a new build |
+
+Every save is kept (`.kit/history.jsonl` in development, the volume in Docker) and can be undone from
+the History page. Variables changed in the deployed catalog stay in its volume: to make them the kit's
+own, copy them from its Variables page (`Text`) into the repo's, and save there.
 
 ## Docker
 
@@ -40,7 +56,8 @@ docker compose -f compose.dev.yaml up         # development in a container, the 
 ```
 
 The image (`Dockerfile`) builds the library and the catalog, then serves the catalog with the kit's
-server (Fastify) on port 8080; there nothing is saved (the editors work, in the browser only). The CI (`.github/workflows/ci.yml`)
+server (Fastify) on port 8080. With the admin of `.env` signed in, the variables are changed there on the
+fly (volume `catalog-data`); the kit's files are not. Behind a proxy with https, set `TRUST_PROXY=true`. The CI (`.github/workflows/ci.yml`)
 runs the tests and the builds, then builds the image, starts it and asks it for pages, at every push:
 the catalog is always deployable.
 
@@ -48,7 +65,7 @@ the catalog is always deployable.
 
 | Script | What it does |
 | --- | --- |
-| `npm start` | the catalog in development, with the server that saves the variables and the kit's files |
+| `npm start` | the catalog in development, with the server that saves the variables and the kit's files for the admin (`.env`) |
 | `npm test` | the library's tests, the catalog's, the server's, and that every page has its files |
 | `npm run build` | the package (`dist/kit`) and the catalog (`dist/catalog`) |
 | `npm run pack` | the package as a tarball (`dist/lenzi-ui-kit-<version>.tgz`), for `ng add` |
@@ -99,7 +116,7 @@ projects/kit/              the package @lenzi/ui-kit
   src/styles/              kit.scss, _theme.scss, global.css, tokens.json → tokens.css, fonts.css, docs/
   charts/ three/ http/     the secondary entry points
 projects/catalog/          the catalog app (demos, pages, registry)
-server/                    the kit's server: saves the variables and the kit's files (development), serves the catalog (Docker)
+server/                    the kit's server: the admin's sign-in, the variables and the kit's files saved, their history; serves the catalog (Docker)
 tools/                     the dev launcher, the libraries' versions, the documents' test
 ```
 

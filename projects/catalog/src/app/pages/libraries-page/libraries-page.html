@@ -49,8 +49,8 @@
             <button mat-flat-button type="button" [disabled]="!changed() || !!jsonError() || saving()" (click)="save()">Save to the kit</button>
           </span>
         </div>
-      } @else if (server.canSave() === false) {
-        <p class="hint">Changing it needs the development server (<code>npm start</code>): here it can be read and copied.</p>
+      } @else {
+        <app-save-hint what="files" kept="nowhere: the file can be read and copied" />
       }
       @if (message(); as message) {
         <p class="hint" role="status">{{ message }}</p>

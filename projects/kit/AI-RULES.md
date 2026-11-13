@@ -78,10 +78,11 @@ styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the ap
   care, update its README, AI notes, demo and usage, and tell lenzi which apps must follow.
 - **A new library**: not without lenzi's yes; then it goes in `libraries.json` with its role and rules.
 - **lenzi changes the kit from the catalog too** (2026-11-12: code and configuration "must be put into a
-  code-like textarea where the user can edit, and they will take effect"). With `npm start`: the **Code**
+  code-like textarea where the user can edit, and they will take effect"). With `npm start`, signed in on
+  the **Admin** page (2026-11-12: "pagina admin per abilitare la modifica (unico utente)"): the **Code**
   tab saves a piece's files, **Rules** and **AI notes** save its `README.md` and `AI.md` (the Rules and AI
   rules pages save these two documents), **Variables** saves the tokens, the Libraries page saves
-  `libraries.json`. So a file may have changed since you last read it: read it again before editing, and
+  `libraries.json`; the **History** page lists every save and undoes it. So a file may have changed since you last read it: read it again before editing, and
   never write over what he wrote.
 - After a change: `npm test`, `npm run build`, then look at the catalog.
 

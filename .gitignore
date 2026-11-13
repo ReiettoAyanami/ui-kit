@@ -42,3 +42,7 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# The admin's credentials, and what the development server keeps (the history of the saves)
+.env
+/.kit

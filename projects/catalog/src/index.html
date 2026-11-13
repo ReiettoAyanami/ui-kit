@@ -8,6 +8,9 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
   </head>
   <body>
+    <!-- The variables as the kit's server has them now, after the bundle's own: what the admin saved on
+         the deployed catalog reaches every page without a new build. No server: the bundle's values. -->
+    <link rel="stylesheet" href="api/tokens.css" data-kit-variables />
     <app-root></app-root>
   </body>
 </html>

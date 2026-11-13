@@ -16,11 +16,9 @@
   <span class="buttons">
     <button mat-button type="button" [disabled]="!changed().length" (click)="copyCss()">Copy as CSS</button>
     <button mat-stroked-button type="button" [disabled]="!changed().length" (click)="discard()">Discard</button>
-    <button mat-flat-button type="button" [disabled]="!changed().length || !server.canSave() || saving()" (click)="save()">Save to the kit</button>
+    <button mat-flat-button type="button" [disabled]="!changed().length || !server.canSaveVariables() || saving()" (click)="save()">Save to the kit</button>
   </span>
-  @if (server.canSave() === false) {
-    <p class="hint">Saving needs the development server (<code>npm start</code>): here the changes stay in this browser.</p>
-  }
+  <app-save-hint class="hint" what="variables" />
   @if (message(); as message) {
     <p class="hint error" role="alert">{{ message }}</p>
   }
