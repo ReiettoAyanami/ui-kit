@@ -1,32 +1,33 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { KitServer } from '../kit-server';
 
 /**
- * Why what is on the page cannot be saved into the kit from this browser, and what to do about it: no
- * admin on this server, not signed in (with the way to the Admin page), or a server that changes the
- * variables only. Nothing when it can be saved, or while that is not known yet.
+ * What whoever changes something on the page should know about where the change goes. A visitor: that
+ * it is theirs alone and gone at the next reload (`visitor`, said only where a visitor can change
+ * something: the pages of the components). The admin: that this server saves the variables only,
+ * where it does not change the kit's files. Nothing otherwise, or while it is not known who is looking.
  */
 @Component({
   selector: 'app-save-hint',
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './save-hint.html',
   styleUrl: './save-hint.css',
 })
 export class SaveHint {
   /** What would be saved: the variables, or files of the kit (code, documents). */
   readonly what = input.required<'variables' | 'files'>();
-  /** Where the changes stay meanwhile: "in this browser", "on this page". */
-  readonly kept = input('in this browser');
+  /** The sentence for a visitor; none where a visitor changes nothing. */
+  readonly visitor = input<string | null>(null);
 
   private readonly server = inject(KitServer);
 
-  protected readonly reason = computed<'no-admin' | 'sign-in' | 'no-files' | null>(() => {
+  protected readonly text = computed<string | null>(() => {
     const session = this.server.session();
     if (!session) return null;
-    if (session.signedIn) return this.what() === 'files' && !session.files ? 'no-files' : null;
-    if (this.what() === 'files' && session.configured && !session.files) return 'no-files';
-    return session.configured ? 'sign-in' : 'no-admin';
+    if (!session.signedIn) return this.visitor();
+    return this.what() === 'files' && !session.files
+      ? "This server saves the variables only. The kit's files change on the development server (npm start), and a new build shows them."
+      : null;
   });
 }

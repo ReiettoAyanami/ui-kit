@@ -9,7 +9,6 @@ import { LenziConfirmData, LenziConfirmDialog, LenziDialogs, LenziFigure, LenziS
 
 import { KitSave, KitServer } from '../../shared/kit-server';
 import { LiveTokens, VariableChange } from '../../shared/live-tokens';
-import { SaveHint } from '../../shared/save-hint/save-hint';
 import { TokenDef, TokensApi } from '../../shared/tokens-api';
 
 const WHEN = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
@@ -26,11 +25,11 @@ interface Shown {
  * What was changed, and the way back from each change (lenzi, 2026-11-12: "Aggiungi anche pagina di
  * history delle modifiche"), in three parts: what differs now from the kit in this browser; what was
  * changed in this browser, change by change; what was saved into the kit, kept by the server, which
- * the admin can undo.
+ * the admin can undo. A visitor reads the third only: their own changes do not outlive the page.
  */
 @Component({
   selector: 'app-history-page',
-  imports: [LenziFigure, LenziStatusMessage, MatButtonModule, MatIconModule, SaveHint],
+  imports: [LenziFigure, LenziStatusMessage, MatButtonModule, MatIconModule],
   templateUrl: './history-page.html',
   styleUrl: './history-page.css',
 })

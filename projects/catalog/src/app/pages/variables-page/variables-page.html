@@ -2,9 +2,13 @@
   <header class="head">
     <h1 class="title">Variables</h1>
     <p class="lead">
-      The global variables of the look: every value of the kit comes from one of them. A change applies at once, on every page
-      of the catalog and in every demo, in this browser. Save, for the admin, writes them into the kit; every change is on
-      the <a routerLink="/history">History</a> page, with its way back.
+      The global variables of the look: every value of the kit comes from one of them.
+      @if (server.admin()) {
+        A change applies at once, on every page of the catalog and in every demo, in this browser. Save writes them into the
+        kit; every change is on the <a routerLink="/history">History</a> page, with its way back.
+      } @else {
+        Each can be tried on the page of a component that uses it (its Variables tab).
+      }
     </p>
   </header>
 

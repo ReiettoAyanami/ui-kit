@@ -39,8 +39,8 @@ function split(value: string): { number: number; unit: string } {
  * giusto"): a slider with its unit, a colour picker, a curve; what it is for and why it has its value. A
  * toggle at the top turns them into CSS text to edit (`Controls | Text`). Every change applies at once,
  * here and in every demo; "Save to the kit" (the admin, signed in) writes them into the kit,
- * "Discard" goes back. The Variables page shows all of them, a piece's Variables tab the ones its
- * styles read.
+ * "Discard" goes back. The Variables page shows all of them (the admin changes them there, a visitor
+ * reads them), a piece's Variables tab the ones its styles read (a visitor may try them there).
  */
 @Component({
   selector: 'app-token-panel',
@@ -54,6 +54,12 @@ export class TokenPanel {
   readonly label = input('Variables');
   /** The bar with the changes sticks under the top bar while the variables scroll. */
   readonly sticky = input(false, { transform: booleanAttribute });
+  /**
+   * A visitor may change them too, for themselves and until the page is reloaded (lenzi, 2026-11-13:
+   * "enable the edit (in browser) just for the components"): a piece's Variables tab. Without it only the
+   * admin changes them (the Variables page), and a visitor reads their values.
+   */
+  readonly publicEdit = input(false, { transform: booleanAttribute });
   /** Saved: the host reads the variables again. */
   readonly saved = output<void>();
 
@@ -61,6 +67,8 @@ export class TokenPanel {
   private readonly api = inject(TokensApi);
   private readonly snackBar = inject(MatSnackBar);
   protected readonly server = inject(KitServer);
+
+  protected readonly canEdit = computed(() => this.publicEdit() || this.server.admin());
 
   /** Controls or text: this browser remembers which. */
   protected readonly mode = signal(readPreference<'controls' | 'text'>(MODE_KEY, (v) => (v === 'controls' || v === 'text' ? v : null), 'controls'));
@@ -102,6 +110,7 @@ export class TokenPanel {
 
   /** A new value: applied at once; the same as the saved one is no change. */
   protected set(token: TokenDef, value: string): void {
+    if (!this.canEdit()) return;
     if (value === token.value) this.live.reset(token.name);
     else this.live.set(token.name, value);
     this.message.set(null);

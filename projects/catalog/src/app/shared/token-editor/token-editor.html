@@ -1,4 +1,4 @@
-<app-code-editor [value]="text()" (valueChange)="edited($event)" language="css" [label]="label()" />
+<app-code-editor [value]="text()" (valueChange)="edited($event)" language="css" [label]="label()" [readonly]="readonly()" />
 @if (errors().length) {
   <ul class="errors" role="alert">
     @for (error of errors(); track error) {

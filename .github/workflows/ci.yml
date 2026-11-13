@@ -41,5 +41,6 @@ jobs:
           curl -fs http://localhost:8080/api/tokens.css | grep -q -- '--lenzi-glass'
           # no admin in the environment: it shows the kit and saves nothing
           curl -fs http://localhost:8080/api/session | grep -q '"configured":false'
+          curl -fs http://localhost:8080/api/pages | grep -q '"hidden":\[\]'
           test "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'content-type: application/json' -d '{"values":{}}' http://localhost:8080/api/tokens)" = 403
           docker rm -f catalog

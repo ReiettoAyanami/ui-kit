@@ -37,7 +37,9 @@
         <mat-panel-title>libraries.json</mat-panel-title>
         <mat-panel-description>The file this page is drawn from</mat-panel-description>
       </mat-expansion-panel-header>
-      <p class="hint">Edit it: the page above follows what you write. Save writes it into the kit.</p>
+      @if (server.canSave()) {
+        <p class="hint">Edit it: the page above follows what you write. Save writes it into the kit.</p>
+      }
       <app-code-editor [value]="source()" (valueChange)="source.set($event); message.set(null)" language="json" label="libraries.json" [readonly]="server.canSave() !== true" />
       @if (jsonError(); as error) {
         <p class="hint warn" role="alert">Not valid JSON: {{ error }}</p>
@@ -50,7 +52,7 @@
           </span>
         </div>
       } @else {
-        <app-save-hint what="files" kept="nowhere: the file can be read and copied" />
+        <app-save-hint what="files" />
       }
       @if (message(); as message) {
         <p class="hint" role="status">{{ message }}</p>

@@ -17,6 +17,7 @@ import { DocView } from '../../shared/doc-view/doc-view';
 import { TokenPanel } from '../../shared/token-panel/token-panel';
 import { TokenGroup, TokensApi } from '../../shared/tokens-api';
 import { DOCS, KitDoc, Values, codedControls, defaults, docById, readUsage } from '../../registry';
+import { PublicPages } from '../../shared/public-pages';
 
 const TABS = ['playground', 'rules', 'ai', 'code', 'variables'] as const;
 type Tab = (typeof TABS)[number];
@@ -54,6 +55,7 @@ export class ComponentPage {
   private readonly files = inject(KitFiles);
   private readonly tokensApi = inject(TokensApi);
   private readonly router = inject(Router);
+  private readonly publicPages = inject(PublicPages);
 
   protected readonly doc = computed(() => docById(this.id()));
   protected readonly values = linkedSignal<Values>(() => {
@@ -65,8 +67,10 @@ export class ComponentPage {
   protected readonly tabIndex = computed(() => Math.max(0, TABS.indexOf((this.tab() ?? 'playground') as Tab)));
 
   protected readonly neighbours = computed(() => {
-    const index = DOCS.findIndex((doc) => doc.id === this.id());
-    return { previous: DOCS[index - 1] ?? null, next: DOCS[index + 1] ?? null };
+    // among the pages whoever is looking may see
+    const docs = DOCS.filter((doc) => this.publicPages.shows(`components/${doc.id}`));
+    const index = docs.findIndex((doc) => doc.id === this.id());
+    return index < 0 ? { previous: null, next: null } : { previous: docs[index - 1] ?? null, next: docs[index + 1] ?? null };
   });
 
 

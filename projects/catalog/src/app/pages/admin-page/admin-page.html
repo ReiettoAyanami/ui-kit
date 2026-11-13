@@ -1,7 +1,8 @@
 <main class="page">
   <h1 class="title">Admin</h1>
   <p class="lead">
-    Everyone reads the catalog and may try changes in their own browser. Only the admin saves them into the kit.
+    Everyone reads the pages the admin shows them, and may try changes on a component's page until they load it again. Only
+    the admin saves into the kit.
   </p>
 
   @if (server.session(); as session) {
@@ -18,6 +19,48 @@
           <a mat-stroked-button routerLink="/history">See the history</a>
           <button mat-flat-button type="button" (click)="signOut()">Sign out</button>
         </div>
+      </section>
+
+      <section class="public" aria-labelledby="admin-public">
+        <h2 class="part-title" id="admin-public">What the public sees</h2>
+        <p class="part-text">
+          Every page the catalog has, from its routes and its components. A hidden page is out of the menu and of the lists, its
+          address says "not found", and the server refuses its documents and its code to anyone but you. Saved at once.
+        </p>
+        <lenzi-figure-grid>
+          <lenzi-figure label="Public pages" [value]="counts().shown + ' of ' + counts().all" />
+        </lenzi-figure-grid>
+        @if (pagesError(); as error) {
+          <p class="error" role="alert">{{ error }}</p>
+        }
+        @if (publicPages.hidden() === null) {
+          <lenzi-status-message kind="loading" compact />
+        } @else {
+          @for (group of groups(); track group.name) {
+            <div class="panel group">
+              <header class="group-head">
+                <div class="names">
+                  <h3 class="group-title">{{ group.name }}</h3>
+                  <span class="group-count">{{ group.shown }} of {{ group.rows.length }} public</span>
+                </div>
+                <span class="buttons">
+                  <button mat-button type="button" [disabled]="savingPages() || group.shown === group.rows.length" (click)="setPublic(pagesOf(group.rows), true)">
+                    Show all
+                  </button>
+                  <button mat-button type="button" [disabled]="savingPages() || group.shown === 0" (click)="setPublic(pagesOf(group.rows), false)">Hide all</button>
+                </span>
+              </header>
+              @for (row of group.rows; track row.page.key) {
+                <mat-slide-toggle class="page-toggle" [checked]="row.shown" [disabled]="savingPages()" (change)="setPublic([row.page], $event.checked)">
+                  <span class="names">
+                    <span class="page-title">{{ row.page.title }}</span>
+                    <code class="page-address">/{{ row.page.key }}</code>
+                  </span>
+                </mat-slide-toggle>
+              }
+            </div>
+          }
+        }
       </section>
     } @else if (session.configured) {
       <form class="panel" aria-label="Sign in" (submit)="signIn($event)">

@@ -5,27 +5,31 @@
   </mat-button-toggle-group>
 </div>
 
-<div class="actions" [class.sticky]="sticky()" role="region" aria-label="Changes">
-  <span class="state">
-    @if (changed().length) {
-      {{ changed().length }} {{ changed().length === 1 ? 'change' : 'changes' }} not saved, applied everywhere
-    } @else {
-      No change
+@if (canEdit()) {
+  <div class="actions" [class.sticky]="sticky()" role="region" aria-label="Changes">
+    <span class="state">
+      @if (changed().length) {
+        {{ changed().length }} {{ changed().length === 1 ? 'change' : 'changes' }}{{ server.admin() ? ' not saved, applied everywhere' : ', applied everywhere on this visit' }}
+      } @else {
+        No change
+      }
+    </span>
+    <span class="buttons">
+      <button mat-button type="button" [disabled]="!changed().length" (click)="copyCss()">Copy as CSS</button>
+      <button mat-stroked-button type="button" [disabled]="!changed().length" (click)="discard()">Discard</button>
+      @if (server.admin()) {
+        <button mat-flat-button type="button" [disabled]="!changed().length || saving()" (click)="save()">Save to the kit</button>
+      }
+    </span>
+    <app-save-hint class="hint" what="variables" visitor="Yours alone: these changes go away when the page is loaded again." />
+    @if (message(); as message) {
+      <p class="hint error" role="alert">{{ message }}</p>
     }
-  </span>
-  <span class="buttons">
-    <button mat-button type="button" [disabled]="!changed().length" (click)="copyCss()">Copy as CSS</button>
-    <button mat-stroked-button type="button" [disabled]="!changed().length" (click)="discard()">Discard</button>
-    <button mat-flat-button type="button" [disabled]="!changed().length || !server.canSaveVariables() || saving()" (click)="save()">Save to the kit</button>
-  </span>
-  <app-save-hint class="hint" what="variables" />
-  @if (message(); as message) {
-    <p class="hint error" role="alert">{{ message }}</p>
-  }
-</div>
+  </div>
+}
 
 @if (mode() === 'text') {
-  <app-token-editor [groups]="groups()" [label]="label()" />
+  <app-token-editor [groups]="groups()" [label]="label()" [readonly]="!canEdit()" />
 } @else {
   @for (group of groups(); track group.id) {
     <section class="group" [id]="group.id">
@@ -47,19 +51,19 @@
 
           @if (isNumeric(token)) {
             <div class="number">
-              <mat-slider [min]="token.min ?? 0" [max]="token.max ?? 100" [step]="token.step ?? 1">
+              <mat-slider [min]="token.min ?? 0" [max]="token.max ?? 100" [step]="token.step ?? 1" [disabled]="!canEdit()">
                 <input matSliderThumb [value]="numberOf(token)" [attr.aria-label]="token.label" (valueChange)="setNumber(token, $event)" />
               </mat-slider>
               <span class="value">{{ value(token) }}</span>
             </div>
           } @else if (token.type === 'color') {
             <div class="color">
-              <lenzi-color-picker [value]="value(token)" [label]="token.label" [size]="36" (valueChange)="set(token, $event)" />
+              <lenzi-color-picker [value]="value(token)" [label]="token.label" [size]="36" [disabled]="!canEdit()" (valueChange)="set(token, $event)" />
               <span class="value">{{ value(token) }}</span>
             </div>
           } @else {
             <mat-form-field appearance="outline" subscriptSizing="dynamic" class="easing">
-              <mat-select [value]="value(token)" [attr.aria-label]="token.label" (selectionChange)="set(token, $event.value)">
+              <mat-select [value]="value(token)" [attr.aria-label]="token.label" [disabled]="!canEdit()" (selectionChange)="set(token, $event.value)">
                 @for (easing of easings; track easing.value) {
                   <mat-option [value]="easing.value">{{ easing.label }}</mat-option>
                 }

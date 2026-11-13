@@ -20,13 +20,15 @@ import {
   couldNotLoad,
 } from '@lenzi/ui-kit';
 
+import { KitServer } from '../../shared/kit-server';
 import { TokenPanel } from '../../shared/token-panel/token-panel';
 import { TokensApi } from '../../shared/tokens-api';
 
 /**
  * The global variables of the look (RULES.md, every value comes from them): every one with its control
- * or all of them as text (TokenPanel), next to a preview of real pieces in them. A change applies at
- * once, here and in every demo; "Save to the kit" (the admin) writes them into the kit.
+ * or all of them as text (TokenPanel), next to a preview of real pieces in them. The admin changes
+ * them here: a change applies at once, here and in every demo, and "Save to the kit" writes them into
+ * the kit. A visitor reads them (and tries them on a component's page).
  */
 @Component({
   selector: 'app-variables-page',
@@ -50,6 +52,7 @@ export class VariablesPage {
   private readonly api = inject(TokensApi);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
+  protected readonly server = inject(KitServer);
 
   protected readonly tokens = rxResource({ stream: () => this.api.load() });
   protected readonly failure = computed(() => (this.tokens.error() ? couldNotLoad('the variables', this.tokens.error()) : null));

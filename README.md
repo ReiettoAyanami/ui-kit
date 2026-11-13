@@ -34,8 +34,7 @@ can be changed there, and takes effect:**
 
 ## The admin
 
-Everyone reads the catalog and may try changes in their own browser; **only the admin saves them into
-the kit**. The admin is one user and one password in the server's environment: copy `.env.example` to
+Everyone reads the pages the admin shows them; **only the admin saves into the kit**. The admin is one user and one password in the server's environment: copy `.env.example` to
 `.env` (never in the repo), set `KIT_ADMIN_USER` and `KIT_ADMIN_PASSWORD`, start the server, and sign in
 on the catalog's **Admin** page. Without them nobody can sign in and nothing is saved.
 
@@ -43,6 +42,18 @@ on the catalog's **Admin** page. Without them nobody can sign in and nothing is 
 | --- | --- | --- |
 | `npm start` | saved into `tokens.json` and `tokens.css` | saved into the repo; the catalog rebuilds |
 | Docker | saved on the fly, for every visitor (kept in the volume, apart from the image) | read only: they need a new build |
+
+**What the public sees.** Signed in, the Admin page lists every page of the catalog with a toggle, public
+or hidden. The list is not written by hand: it is read from the routes (`app.routes.ts`) and from the
+registry (one page per piece), so a new page is in it by itself (`shared/site-pages.ts`). A hidden page is
+out of the menu and of the lists, its address says "not found", and the deployed server refuses its
+documents and code (`kit-src/…`) to anyone but the admin. The compiled demos stay inside the catalog's
+JavaScript: hiding a page keeps it out of sight, it does not make its code secret. The choice is kept in
+`.kit/pages.json` (development) or the volume (Docker).
+
+**What a visitor can change.** Only on the pages of the components (parameters, usage code, a draft of the
+rules and AI notes, the variables the piece uses), only in their browser, and only until the page is loaded
+again. The other pages are read only for them. The admin's unsaved changes are kept by the browser, as before.
 
 Every save is kept (`.kit/history.jsonl` in development, the volume in Docker) and can be undone from
 the History page. Variables changed in the deployed catalog stay in its volume: to make them the kit's

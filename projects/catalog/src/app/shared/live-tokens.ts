@@ -1,6 +1,8 @@
-import { DOCUMENT, Injectable, effect, inject, signal } from '@angular/core';
+import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { readPreference, writePreference } from '@lenzi/ui-kit';
+
+import { ADMIN_HINT, KitServer } from './kit-server';
 
 const KEY = 'kit-catalog.live-variables';
 const LOG_KEY = 'kit-catalog.variables-log';
@@ -21,47 +23,64 @@ export interface VariableChange {
   at: number;
 }
 
-function storedJson<T>(key: string, valid: (parsed: unknown) => parsed is T, fallback: T): T {
-  return readPreference<T>(
-    key,
-    (value) => {
-      try {
-        const parsed: unknown = JSON.parse(value);
-        return valid(parsed) ? parsed : null;
-      } catch {
-        return null;
-      }
-    },
-    fallback,
-  );
+/** A list or a record kept as JSON in a storage; the fallback when there is none, or it is not one. */
+function storedJson<T>(storage: Storage | null, key: string, valid: (parsed: unknown) => parsed is T, fallback: T): T {
+  try {
+    const parsed: unknown = JSON.parse(storage?.getItem(key) ?? 'null');
+    return valid(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
-/** The changes not saved yet, as this browser keeps them. */
-function stored(): Record<string, string> {
-  return storedJson(KEY, (parsed): parsed is Record<string, string> => typeof parsed === 'object' && parsed !== null, {});
-}
-
-function storedLog(): VariableChange[] {
-  return storedJson(LOG_KEY, (parsed): parsed is VariableChange[] => Array.isArray(parsed), []);
-}
+const isRecord = (parsed: unknown): parsed is Record<string, string> => typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+const isLog = (parsed: unknown): parsed is VariableChange[] => Array.isArray(parsed);
 
 /**
  * The global variables changed on the Variables page and not saved yet: they apply at once, on this
  * page and in every demo's frame (the browser keeps them, and each frame follows), until they are
  * saved into the kit or discarded. Every change is also written down (`log`, the History page: lenzi,
  * 2026-11-12, "Aggiungi anche pagina di history delle modifiche"), so there is always a way back.
+ *
+ * The admin's changes are kept by the browser until saved or discarded. A visitor's are "a temporary
+ * edit going away with the first refresh" (lenzi, 2026-11-13): kept for this tab only (its frames
+ * follow), and dropped when a page of the catalog is loaded again.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class LiveTokens {
   private readonly document = inject(DOCUMENT);
-  readonly overrides = signal<Record<string, string>>(stored());
+  private readonly server = inject(KitServer);
+
+  /**
+   * Kept between visits (the admin) or for this tab until a reload (a visitor). Before the server
+   * says who is looking: as on the last visit.
+   */
+  private readonly kept = computed(() => this.server.session()?.signedIn ?? readPreference(ADMIN_HINT, (value) => value === '1', false));
+
+  readonly overrides = signal<Record<string, string>>({});
   /** What was changed in this browser, the oldest first. */
-  readonly log = signal<VariableChange[]>(storedLog());
+  readonly log = signal<VariableChange[]>([]);
   private applied = new Set<string>();
 
   constructor() {
+    // A page loaded again: a visitor's changes are gone. A demo's frame is not a page of its own: it
+    // follows the page it is in.
+    if (!this.document.location.pathname.startsWith('/frame/')) {
+      this.write(false, KEY, null);
+      this.write(false, LOG_KEY, null);
+    }
+    this.overrides.set(storedJson(this.storage(this.kept()), KEY, isRecord, {}));
+    this.log.set(storedJson(this.storage(this.kept()), LOG_KEY, isLog, []));
+    // Who is looking decides where the changes are: read them from there (again when the admin signs in or out).
+    effect(() => {
+      const kept = this.kept();
+      untracked(() => {
+        this.overrides.set(storedJson(this.storage(kept), KEY, isRecord, {}));
+        this.log.set(storedJson(this.storage(kept), LOG_KEY, isLog, []));
+      });
+    });
     effect(() => {
       const overrides = this.overrides();
       const style = this.document.documentElement.style;
@@ -71,8 +90,10 @@ export class LiveTokens {
     });
     // Another page of the catalog (the Variables page, a demo's frame) changed them.
     this.document.defaultView?.addEventListener('storage', (event) => {
-      if (event.key === KEY) this.overrides.set(stored());
-      if (event.key === LOG_KEY) this.log.set(storedLog());
+      const mine = this.storage(this.kept());
+      if (event.storageArea !== mine && event.key !== KIT_CHANGED_KEY) return;
+      if (event.key === KEY) this.overrides.set(storedJson(mine, KEY, isRecord, {}));
+      if (event.key === LOG_KEY) this.log.set(storedJson(mine, LOG_KEY, isLog, []));
       if (event.key === KIT_CHANGED_KEY) void this.readKitCss();
     });
   }
@@ -129,13 +150,13 @@ export class LiveTokens {
   /** Forgets what was written down (the variables stay as they are). */
   clearLog(): void {
     this.log.set([]);
-    writePreference(LOG_KEY, '[]');
+    this.write(this.kept(), LOG_KEY, '[]');
   }
 
   private update(overrides: Record<string, string>, record = true): void {
     if (record) this.record(this.overrides(), overrides);
     this.overrides.set(overrides);
-    writePreference(KEY, JSON.stringify(overrides));
+    this.write(this.kept(), KEY, JSON.stringify(overrides));
   }
 
   /** The kit's value of a variable, as the page has it under this browser's change. */
@@ -167,6 +188,25 @@ export class LiveTokens {
     if (log === this.log()) return;
     log = log.slice(-MAX_LOG);
     this.log.set(log);
-    writePreference(LOG_KEY, JSON.stringify(log));
+    this.write(this.kept(), LOG_KEY, JSON.stringify(log));
+  }
+
+  /** Where the changes are: the browser's lasting storage, or this tab's. None where the browser keeps nothing. */
+  private storage(kept: boolean): Storage | null {
+    try {
+      const view = this.document.defaultView;
+      return (kept ? view?.localStorage : view?.sessionStorage) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private write(kept: boolean, key: string, value: string | null): void {
+    try {
+      if (value === null) this.storage(kept)?.removeItem(key);
+      else this.storage(kept)?.setItem(key, value);
+    } catch {
+      // not kept: the change still applies on this page
+    }
   }
 }

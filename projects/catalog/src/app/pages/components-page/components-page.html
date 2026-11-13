@@ -15,6 +15,6 @@
       </div>
     </section>
   } @empty {
-    <lenzi-status-message [text]="'Nothing with “' + q() + '” in the kit'" />
+    <lenzi-status-message [text]="q() ? 'Nothing with “' + q() + '” in the kit' : 'No components to show'" />
   }
 </main>

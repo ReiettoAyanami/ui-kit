@@ -1,8 +1,10 @@
 <div class="top">
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Read or edit" [value]="mode()" (change)="mode.set($event.value)">
-    <mat-button-toggle value="read">Read</mat-button-toggle>
-    <mat-button-toggle value="edit">Edit</mat-button-toggle>
-  </mat-button-toggle-group>
+  @if (canEdit()) {
+    <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Read or edit" [value]="mode()" (change)="choose($event.value)">
+      <mat-button-toggle value="read">Read</mat-button-toggle>
+      <mat-button-toggle value="edit">Edit</mat-button-toggle>
+    </mat-button-toggle-group>
+  }
   <code class="path">projects/kit/{{ path() }}</code>
 </div>
 
@@ -12,16 +14,16 @@
   @if (changed() || mode() === 'edit') {
     <div class="bar">
       <span class="state">{{ changed() ? 'Changed, not saved' : 'Edit the Markdown: Read shows it as it will read' }}</span>
-      @if (server.canSave()) {
-        <span class="buttons">
-          <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>
+      <span class="buttons">
+        <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>
+        @if (server.canSave()) {
           <button mat-flat-button type="button" [disabled]="!changed() || saving()" (click)="save()">Save to the kit</button>
-        </span>
-      }
+        }
+      </span>
     </div>
   }
   @if (mode() === 'edit') {
-    <app-save-hint what="files" kept="on this page" />
+    <app-save-hint what="files" visitor="Yours alone: this edit goes away when the page is loaded again." />
   }
   @if (message(); as message) {
     <p class="hint" role="status">{{ message }}</p>

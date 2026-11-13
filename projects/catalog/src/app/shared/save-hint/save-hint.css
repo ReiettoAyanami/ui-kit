@@ -13,8 +13,3 @@
   color: var(--mat-sys-on-surface-variant);
   overflow-wrap: anywhere;
 }
-
-.hint a {
-  color: var(--mat-sys-primary);
-  font-weight: 700;
-}

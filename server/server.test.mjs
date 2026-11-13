@@ -240,3 +240,43 @@ test('a JSON file must stay JSON; in Docker even the admin does not change files
   assert.equal(refused.statusCode, 403);
   assert.equal(refused.json().title, 'Files are not changed here');
 });
+
+test('the admin chooses the pages the public sees; what a hidden page reads is refused to the public', async () => {
+  const { dir, tokensJson } = await scratch();
+  const publicDir = join(dir, 'public');
+  await mkdir(join(publicDir, 'kit-src'), { recursive: true });
+  await writeFile(join(publicDir, 'index.html'), '<app-root></app-root>');
+  await writeFile(join(publicDir, 'kit-src', 'RULES.md'), '# Rules');
+  await writeFile(join(publicDir, 'kit-src', 'AI-RULES.md'), '# AI rules');
+  const pagesPath = join(dir, 'data', 'pages.json');
+  const options = { publicDir, tokensJson, pagesPath, historyPath: join(dir, 'data', 'history.jsonl'), ...ADMIN };
+  const app = await buildServer(options);
+  assert.deepEqual((await app.inject({ method: 'GET', url: '/api/pages' })).json(), { hidden: [] });
+  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md' })).statusCode, 200);
+
+  const choice = { hidden: ['rules', 'history'], resources: ['kit-src/RULES.md', 'api/history'] };
+  assert.equal((await app.inject({ method: 'PUT', url: '/api/pages', payload: choice })).statusCode, 401);
+  const headers = await signIn(app);
+  const saved = await app.inject({ method: 'PUT', url: '/api/pages', headers, payload: choice });
+  assert.deepEqual(saved.json(), { hidden: ['history', 'rules'] });
+
+  // the public: the hidden page's document and API are not there, the page's address is the catalog's (which says not found)
+  assert.deepEqual((await app.inject({ method: 'GET', url: '/api/pages' })).json(), { hidden: ['history', 'rules'] });
+  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md' })).statusCode, 404);
+  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md?x=1' })).statusCode, 404);
+  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/%52ULES.md' })).statusCode, 404);
+  assert.equal((await app.inject({ method: 'GET', url: '//kit-src/./x/..//RULES.md' })).statusCode, 404);
+  assert.equal((await app.inject({ method: 'GET', url: '/api/history' })).statusCode, 404);
+  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/AI-RULES.md' })).statusCode, 200);
+  assert.equal((await app.inject({ method: 'GET', url: '/rules' })).body, '<app-root></app-root>');
+  // the admin still reads everything
+  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md', headers })).statusCode, 200);
+  assert.equal((await app.inject({ method: 'GET', url: '/api/history', headers })).statusCode, 200);
+
+  // kept across a restart; nothing strange is accepted
+  const again = await buildServer(options);
+  assert.equal((await again.inject({ method: 'GET', url: '/kit-src/RULES.md' })).statusCode, 404);
+  const strange = await app.inject({ method: 'PUT', url: '/api/pages', headers, payload: { hidden: ['rules'], resources: ['../server.mjs'] } });
+  assert.equal(strange.statusCode, 400);
+  assert.equal(strange.json().title, 'Invalid pages');
+});

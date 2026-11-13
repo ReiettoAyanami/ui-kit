@@ -21,11 +21,12 @@ ENV NODE_ENV=production \
     PUBLIC_DIR=/app/public \
     TOKENS_JSON=/app/tokens/tokens.json \
     TOKENS_VALUES=/app/data/variables.json \
-    HISTORY_FILE=/app/data/history.jsonl
+    HISTORY_FILE=/app/data/history.jsonl \
+    PAGES_FILE=/app/data/pages.json
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
-COPY server/server.mjs server/tokens.mjs server/auth.mjs server/history.mjs ./
+COPY server/server.mjs server/tokens.mjs server/auth.mjs server/history.mjs server/pages.mjs ./
 COPY --from=build /workspace/dist/catalog/browser /app/public
 COPY --from=build /workspace/projects/kit/src/styles/tokens.json /app/tokens/tokens.json
 RUN mkdir -p /app/data && chown node:node /app/data

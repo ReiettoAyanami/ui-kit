@@ -7,13 +7,13 @@
       and the same rules.
     </p>
     <lenzi-figure-grid class="numbers">
-      <lenzi-figure label="Pages of components" [value]="components" />
-      <lenzi-figure label="Categories" [value]="categories" />
+      <lenzi-figure label="Pages of components" [value]="components()" />
+      <lenzi-figure label="Categories" [value]="categories()" />
     </lenzi-figure-grid>
   </header>
 
   <nav class="sections" aria-label="Sections">
-    @for (section of sections; track section.link) {
+    @for (section of sections(); track section.link) {
       <a class="section" [routerLink]="section.link">
         <mat-icon class="icon" aria-hidden="true">{{ section.icon }}</mat-icon>
         <span class="section-text">

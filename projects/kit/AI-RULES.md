@@ -82,7 +82,8 @@ styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the ap
   the **Admin** page (2026-11-12: "pagina admin per abilitare la modifica (unico utente)"): the **Code**
   tab saves a piece's files, **Rules** and **AI notes** save its `README.md` and `AI.md` (the Rules and AI
   rules pages save these two documents), **Variables** saves the tokens, the Libraries page saves
-  `libraries.json`; the **History** page lists every save and undoes it. So a file may have changed since you last read it: read it again before editing, and
+  `libraries.json`; the **History** page lists every save and undoes it. The Admin page also chooses which
+  pages the public sees; a visitor edits only on a component's page, until it is loaded again. So a file may have changed since you last read it: read it again before editing, and
   never write over what he wrote.
 - After a change: `npm test`, `npm run build`, then look at the catalog.
 

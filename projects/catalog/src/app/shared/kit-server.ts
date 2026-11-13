@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, tap } from 'rxjs';
+
+import { writePreference } from '@lenzi/ui-kit';
 
 /** Who is looking at the catalog, as the kit's server says. */
 export interface KitSession {
@@ -27,6 +29,9 @@ export interface KitSave {
   bytesAfter?: number;
 }
 
+/** Remembered between visits, so the admin's browser starts as the admin's before the server answers. */
+export const ADMIN_HINT = 'kit-catalog.admin';
+
 const NOBODY: KitSession = { configured: false, signedIn: false, user: null, files: false };
 
 /**
@@ -44,6 +49,8 @@ export class KitServer {
   /** null until known; without a server, nobody. */
   readonly session = signal<KitSession | null>(null);
 
+  /** The admin is signed in here (false until known). */
+  readonly admin = computed(() => this.session()?.signedIn === true);
   /** The variables can be saved from this browser; null until known. */
   readonly canSaveVariables = computed(() => this.session()?.signedIn ?? null);
   /** The kit's files can be saved from this browser; null until known. */
@@ -57,6 +64,10 @@ export class KitServer {
       .get<KitSession>('api/session')
       .pipe(catchError(() => of(NOBODY)))
       .subscribe((session) => this.session.set(session));
+    effect(() => {
+      const session = this.session();
+      if (session) writePreference(ADMIN_HINT, session.signedIn ? '1' : '0');
+    });
   }
 
   /** A wrong user or password fails with the server's words (an ApiError). */

@@ -18,6 +18,8 @@ import { TokenDef, TokenGroup } from '../tokens-api';
 })
 export class TokenEditor {
   readonly groups = input.required<readonly TokenGroup[]>();
+  /** Shown, not changed. */
+  readonly readonly = input(false);
   readonly label = input('Variables');
 
   private readonly live = inject(LiveTokens);

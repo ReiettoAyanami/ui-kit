@@ -1,7 +1,14 @@
 <main class="page">
   <h1 class="title">History</h1>
-  <p class="lead">What was changed, and the way back from each change: in this browser, and in the kit.</p>
+  <p class="lead">
+    @if (server.admin()) {
+      What was changed, and the way back from each change: in this browser, and in the kit.
+    } @else {
+      What was saved into the kit, and when.
+    }
+  </p>
 
+  @if (server.admin()) {
   <section class="part" aria-labelledby="history-now">
     <header class="part-head">
       <h2 class="part-title" id="history-now">Different from the kit, in this browser</h2>
@@ -70,12 +77,13 @@
     }
   </section>
 
+  }
+
   <section class="part" aria-labelledby="history-kit">
     <header class="part-head">
       <h2 class="part-title" id="history-kit">Saved into the kit</h2>
     </header>
     <p class="part-text">Every save the admin made from the catalog, the newest first. Undoing a save is a save too.</p>
-    <app-save-hint what="variables" kept="in this browser, and the saves cannot be undone" />
     @if (savesFailure(); as failure) {
       <lenzi-status-message kind="error" [text]="failure" compact />
     } @else if (kitSaves(); as saves) {

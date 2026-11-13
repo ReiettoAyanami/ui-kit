@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, booleanAttribute, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -30,10 +30,22 @@ export class DocView {
   /** What the document is: "the rules", "the AI notes" (the messages say it). */
   readonly what = input('the document');
 
+  /**
+   * A visitor may edit it too, as a draft on this page, gone at the next reload (lenzi, 2026-11-13:
+   * "enable the edit (in browser) just for the components"). Without it only the admin has the Edit side.
+   */
+  readonly publicEdit = input(false, { transform: booleanAttribute });
+
   private readonly files = inject(KitFiles);
   protected readonly server = inject(KitServer);
 
-  protected readonly mode = signal<'read' | 'edit'>('read');
+  protected readonly canEdit = computed(() => this.publicEdit() || this.server.admin());
+  private readonly chosen = signal<'read' | 'edit'>('read');
+  protected readonly mode = computed(() => (this.canEdit() ? this.chosen() : 'read'));
+
+  protected choose(mode: 'read' | 'edit'): void {
+    this.chosen.set(mode);
+  }
   private readonly file = rxResource({ params: () => this.path(), stream: ({ params }) => this.files.text(params) });
   protected readonly draft = linkedSignal(() => (this.file.hasValue() ? this.file.value() : null));
   protected readonly changed = computed(() => this.file.hasValue() && this.draft() !== null && this.draft() !== this.file.value());

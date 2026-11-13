@@ -53,3 +53,64 @@
   background: var(--mat-sys-surface-container-high);
   color: var(--mat-sys-tertiary);
 }
+
+/* What the public sees: every page with its toggle, in its group. */
+.public {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.part-title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+}
+
+.part-text {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.group {
+  gap: 12px;
+}
+
+.group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.group-title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.group-count {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* A page: its name bold, its address under it. */
+.page-title {
+  font: var(--mat-sys-body-large);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.page-address {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-tertiary);
+  overflow-wrap: anywhere;
+}
