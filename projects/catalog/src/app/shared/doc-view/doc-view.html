@@ -23,7 +23,7 @@
     </div>
   }
   @if (mode() === 'edit') {
-    <app-save-hint what="files" visitor="Yours alone: this edit goes away when the page is loaded again." />
+    <app-save-hint what="files" />
   }
   @if (message(); as message) {
     <p class="hint" role="status">{{ message }}</p>

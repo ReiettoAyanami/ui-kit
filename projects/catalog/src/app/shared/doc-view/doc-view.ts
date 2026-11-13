@@ -1,4 +1,4 @@
-import { Component, booleanAttribute, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -13,8 +13,8 @@ import { Markdown } from '../markdown/markdown';
 import { SaveHint } from '../save-hint/save-hint';
 
 /**
- * A document of the kit (RULES.md, AI-RULES.md, a piece's README.md and AI.md), to read and to
- * change (lenzi, 2026-11-12: "rules, ai notes, code devono essere modificabili"): a toggle at the
+ * A document of the kit (RULES.md, AI-RULES.md, a piece's README.md and AI.md), to read and, for the
+ * admin, to change (lenzi, 2026-11-12: "rules, ai notes, code devono essere modificabili"): a toggle at the
  * top, Read or Edit. Edit shows the Markdown in an editor; Read shows the draft as it reads, so a
  * change is seen at once. "Save to the kit" writes the file (the admin, on the development server); "Discard" goes back.
  */
@@ -30,16 +30,14 @@ export class DocView {
   /** What the document is: "the rules", "the AI notes" (the messages say it). */
   readonly what = input('the document');
 
-  /**
-   * A visitor may edit it too, as a draft on this page, gone at the next reload (lenzi, 2026-11-13:
-   * "enable the edit (in browser) just for the components"). Without it only the admin has the Edit side.
-   */
-  readonly publicEdit = input(false, { transform: booleanAttribute });
-
   private readonly files = inject(KitFiles);
   protected readonly server = inject(KitServer);
 
-  protected readonly canEdit = computed(() => this.publicEdit() || this.server.admin());
+  /**
+   * Only the admin has the Edit side (lenzi, 2026-11-13: "the public shouldn't see the edit buttons";
+   * on a component's page too: "vedo ancora i tasti edit e non edit"). A visitor reads.
+   */
+  protected readonly canEdit = this.server.admin;
   private readonly chosen = signal<'read' | 'edit'>('read');
   protected readonly mode = computed(() => (this.canEdit() ? this.chosen() : 'read'));
 

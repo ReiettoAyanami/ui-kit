@@ -58,9 +58,9 @@ Variables is hidden, a component's Variables tab still works: the public gets na
 each is for and why. The choice is kept in `.kit/pages.json` (development) or the volume (Docker). In
 development the kit's files are served by `ng serve`, not by this server: the refusal is the deployed one's.
 
-**What a visitor can change.** Only on the pages of the components (parameters, usage code, a draft of the
-rules and AI notes, the variables the piece uses), only in their browser, and only until the page is loaded
-again. The other pages are read only for them. The admin's unsaved changes are kept by the browser, as before.
+**What a visitor can change.** Only a component's playground (its parameters, its usage code) and the
+variables the piece uses, only in their browser, and only until the page is loaded again. Everything else is
+read only for them: no Edit side on rules, AI notes or code, anywhere. The admin's unsaved changes are kept by the browser, as before.
 
 Every save is kept (`.kit/history.jsonl` in development, the volume in Docker) and can be undone from
 the History page. Variables changed in the deployed catalog stay in its volume: to make them the kit's

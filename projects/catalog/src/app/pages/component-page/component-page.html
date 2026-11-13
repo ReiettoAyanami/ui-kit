@@ -44,7 +44,7 @@
       <mat-tab label="Rules">
         <ng-template matTabContent>
           <div class="doc">
-            <app-doc-view [path]="doc.readme" what="the rules" publicEdit />
+            <app-doc-view [path]="doc.readme" what="the rules" />
           </div>
         </ng-template>
       </mat-tab>
@@ -56,7 +56,7 @@
               <mat-icon aria-hidden="true">smart_toy</mat-icon>
               <span>Instructions for Claude: how to use this piece and what never to do with it. Claude reads this very file.</span>
             </p>
-            <app-doc-view [path]="doc.ai" what="the AI notes" publicEdit />
+            <app-doc-view [path]="doc.ai" what="the AI notes" />
           </div>
         </ng-template>
       </mat-tab>
