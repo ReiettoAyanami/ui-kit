@@ -22,13 +22,16 @@ ENV NODE_ENV=production \
     TOKENS_JSON=/app/tokens/tokens.json \
     TOKENS_VALUES=/app/data/variables.json \
     HISTORY_FILE=/app/data/history.jsonl \
-    PAGES_FILE=/app/data/pages.json
+    PAGES_FILE=/app/data/pages.json \
+    SITE_PAGES_FILE=/app/site-pages.json
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 COPY server/server.mjs server/tokens.mjs server/auth.mjs server/history.mjs server/pages.mjs ./
 COPY --from=build /workspace/dist/catalog/browser /app/public
 COPY --from=build /workspace/projects/kit/src/styles/tokens.json /app/tokens/tokens.json
+# the catalog's pages and what each reads (npm run build → npm run pages): what the public may be given
+COPY --from=build /workspace/dist/site-pages.json /app/site-pages.json
 RUN mkdir -p /app/data && chown node:node /app/data
 VOLUME /app/data
 USER node

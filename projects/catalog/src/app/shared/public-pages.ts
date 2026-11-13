@@ -1,29 +1,31 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { CanMatchFn, Router } from '@angular/router';
+import { CanMatchFn } from '@angular/router';
 import { Observable, catchError, combineLatest, filter, map, of, take, tap, throwError } from 'rxjs';
 
 import { KitServer } from './kit-server';
-import { SitePageData, hiddenResources, sitePages } from './site-pages';
+import { DOCS } from '../registry';
+import { sitePages } from '../site-map';
 
 /**
  * Which pages of the catalog the public sees (lenzi, 2026-11-13: "In the admin page i should be able
- * to decide what pages get exposed to the public and which not"). The list is the catalog's own routes
- * (site-pages.ts); the choice is the server's, the same for every visitor. A hidden page is not in
- * the menu or in a list, its address says "not found", and the server refuses what it reads. The
- * admin sees everything.
+ * to decide what pages get exposed to the public and which not"). The list is the catalog's site map
+ * (site-map.ts); the choice is the server's, the same for every visitor. A hidden page is not in the
+ * menu or in a list, its address says "not found", and the server gives what it reads to the admin
+ * only. The catalog itself (the overview, the components) is always public. The admin sees everything.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class PublicPages {
   private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
   private readonly server = inject(KitServer);
 
-  /** Every page there is, from the routes and the registry. */
-  readonly all = computed(() => sitePages(this.router.config));
+  /** Every page there is, from the site map and the registry. */
+  readonly all = sitePages(DOCS);
+  /** The ones the admin shows or hides; the rest (the catalog itself) is always public. */
+  readonly toggled = this.all.filter((page) => !page.always);
   /** The hidden ones; null until known (without a server: none). */
   readonly hidden = signal<ReadonlySet<string> | null>(null);
 
@@ -59,7 +61,7 @@ export class PublicPages {
       else next.add(key);
     }
     this.hidden.set(next);
-    return this.http.put<{ hidden: string[] }>('api/pages', { hidden: [...next], resources: hiddenResources(this.all(), next) }).pipe(
+    return this.http.put<{ hidden: string[] }>('api/pages', { hidden: [...next] }).pipe(
       tap((answer) => this.hidden.set(new Set(answer.hidden))),
       catchError((error: unknown) => {
         this.hidden.set(before);
@@ -73,6 +75,7 @@ export class PublicPages {
 export const publicPage: CanMatchFn = (route, segments) => {
   const pages = inject(PublicPages);
   const paths = segments.map((segment) => segment.path);
-  const key = (route.data as SitePageData | undefined)?.pageKey?.(paths) ?? paths.join('/');
+  const pageKey = route.data?.['pageKey'] as ((segments: string[]) => string) | undefined;
+  const key = pageKey?.(paths) ?? paths.join('/');
   return pages.whenKnown().pipe(map(() => pages.shows(key)));
 };

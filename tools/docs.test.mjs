@@ -2,23 +2,12 @@
 // "every component has a page for itself, its rules" (lenzi, 2026-11-12). Run by `npm test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync, writeFileSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import ts from 'typescript';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+import { ROOT as root, loadRegistry as registry } from './load-ts.mjs';
+
 const kit = join(root, 'projects', 'kit');
-
-/** The catalog's registry, transpiled as it is (its demos are lazy imports: they never run here). */
-async function registry() {
-  const source = readFileSync(join(root, 'projects', 'catalog', 'src', 'app', 'registry.ts'), 'utf8');
-  const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } });
-  const file = join(mkdtempSync(join(tmpdir(), 'kit-registry-')), 'registry.mjs');
-  writeFileSync(file, outputText);
-  return import(pathToFileURL(file).href);
-}
 
 test('every file a page shows exists in the kit', async () => {
   const { DOCS } = await registry();

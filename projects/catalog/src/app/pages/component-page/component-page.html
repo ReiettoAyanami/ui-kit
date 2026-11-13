@@ -78,7 +78,10 @@
               @if (variables.value().length) {
                 <p class="intro">
                   The global variables its styles read: change one and every piece that uses it changes at once, here and in
-                  the demo. All of them are on the <a routerLink="/variables">Variables</a> page.
+                  the demo.
+                  @if (variablesPage()) {
+                    All of them are on the <a routerLink="/variables">Variables</a> page.
+                  }
                 </p>
                 <app-token-panel [groups]="variables.value()" [label]="'Variables of ' + doc.name" publicEdit (saved)="variables.reload()" />
               } @else {

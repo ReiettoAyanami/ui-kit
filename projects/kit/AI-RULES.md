@@ -83,7 +83,10 @@ styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the ap
   tab saves a piece's files, **Rules** and **AI notes** save its `README.md` and `AI.md` (the Rules and AI
   rules pages save these two documents), **Variables** saves the tokens, the Libraries page saves
   `libraries.json`; the **History** page lists every save and undoes it. The Admin page also chooses which
-  pages the public sees; a visitor edits only on a component's page, until it is loaded again. So a file may have changed since you last read it: read it again before editing, and
+  pages the public sees (the catalog itself always; the documents' pages are his to hide); a visitor edits
+  only on a component's page, until it is loaded again. **A new page of the catalog is added in
+  `projects/catalog/src/app/site-map.ts`** (and its component in `app.routes.ts`), with every file it reads:
+  the deployed server gives the public only what a public page reads. So a file may have changed since you last read it: read it again before editing, and
   never write over what he wrote.
 - After a change: `npm test`, `npm run build`, then look at the catalog.
 

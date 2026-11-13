@@ -43,13 +43,20 @@ on the catalog's **Admin** page. Without them nobody can sign in and nothing is 
 | `npm start` | saved into `tokens.json` and `tokens.css` | saved into the repo; the catalog rebuilds |
 | Docker | saved on the fly, for every visitor (kept in the volume, apart from the image) | read only: they need a new build |
 
-**What the public sees.** Signed in, the Admin page lists every page of the catalog with a toggle, public
-or hidden. The list is not written by hand: it is read from the routes (`app.routes.ts`) and from the
-registry (one page per piece), so a new page is in it by itself (`shared/site-pages.ts`). A hidden page is
-out of the menu and of the lists, its address says "not found", and the deployed server refuses its
-documents and code (`kit-src/…`) to anyone but the admin. The compiled demos stay inside the catalog's
-JavaScript: hiding a page keeps it out of sight, it does not make its code secret. The choice is kept in
-`.kit/pages.json` (development) or the volume (Docker).
+**What the public sees.** The catalog itself is always public: the overview, the list of the components and
+each of their pages. The other pages (Rules, AI rules, Variables, Libraries, History) are the admin's to
+show or hide, one toggle each on the Admin page. Which pages exist is said in one place,
+`projects/catalog/src/app/site-map.ts` (the fixed pages) with the registry (one page per piece): the routes,
+the Admin page's list and the server's list all come from it, so a new page is everywhere by itself.
+
+A hidden page is out of the menu, its address says "not found", and **the deployed server is closed by
+default**: `npm run build` writes `dist/site-pages.json` (every page with the files it reads), and of the
+kit's files and of what the pages read, the public is given only what a public page reads. The documents of
+a hidden page, a file no page shows, a new file: the admin's alone. Nothing of those pages' content is in
+the catalog's JavaScript (they are fetched when the page opens), so hidden means unreachable. While
+Variables is hidden, a component's Variables tab still works: the public gets names and values, not what
+each is for and why. The choice is kept in `.kit/pages.json` (development) or the volume (Docker). In
+development the kit's files are served by `ng serve`, not by this server: the refusal is the deployed one's.
 
 **What a visitor can change.** Only on the pages of the components (parameters, usage code, a draft of the
 rules and AI notes, the variables the piece uses), only in their browser, and only until the page is loaded
@@ -78,7 +85,7 @@ the catalog is always deployable.
 | --- | --- |
 | `npm start` | the catalog in development, with the server that saves the variables and the kit's files for the admin (`.env`) |
 | `npm test` | the library's tests, the catalog's, the server's, and that every page has its files |
-| `npm run build` | the package (`dist/kit`) and the catalog (`dist/catalog`) |
+| `npm run build` | the package (`dist/kit`), the catalog (`dist/catalog`) and the list of its pages for the server (`dist/site-pages.json`) |
 | `npm run pack` | the package as a tarball (`dist/lenzi-ui-kit-<version>.tgz`), for `ng add` |
 | `npm run tokens` | `tokens.css` again from `tokens.json` |
 | `npm run libraries` | the versions in `libraries.json`, read again from the kit, substance-tracker and vtiger-reader |
@@ -128,7 +135,7 @@ projects/kit/              the package @lenzi/ui-kit
   charts/ three/ http/     the secondary entry points
 projects/catalog/          the catalog app (demos, pages, registry)
 server/                    the kit's server: the admin's sign-in, the variables and the kit's files saved, their history; serves the catalog (Docker)
-tools/                     the dev launcher, the libraries' versions, the documents' test
+tools/                     the dev launcher, the libraries' versions, the list of the pages, the documents' test
 ```
 
 ## Licence

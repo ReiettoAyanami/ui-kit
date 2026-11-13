@@ -241,42 +241,98 @@ test('a JSON file must stay JSON; in Docker even the admin does not change files
   assert.equal(refused.json().title, 'Files are not changed here');
 });
 
-test('the admin chooses the pages the public sees; what a hidden page reads is refused to the public', async () => {
+/** A built catalog with a few files of the kit, and its pages as the build writes them down. */
+async function scratchSite() {
   const { dir, tokensJson } = await scratch();
   const publicDir = join(dir, 'public');
-  await mkdir(join(publicDir, 'kit-src'), { recursive: true });
+  await mkdir(join(publicDir, 'kit-src', 'src', 'lib', 'add-button'), { recursive: true });
   await writeFile(join(publicDir, 'index.html'), '<app-root></app-root>');
+  await writeFile(join(publicDir, 'main.js'), 'console.log(1)');
   await writeFile(join(publicDir, 'kit-src', 'RULES.md'), '# Rules');
   await writeFile(join(publicDir, 'kit-src', 'AI-RULES.md'), '# AI rules');
-  const pagesPath = join(dir, 'data', 'pages.json');
-  const options = { publicDir, tokensJson, pagesPath, historyPath: join(dir, 'data', 'history.jsonl'), ...ADMIN };
+  await writeFile(join(publicDir, 'kit-src', 'package.json'), '{}');
+  await writeFile(join(publicDir, 'kit-src', 'src', 'lib', 'add-button', 'README.md'), '# Add button');
+  const sitePagesPath = join(dir, 'site-pages.json');
+  await writeFile(
+    sitePagesPath,
+    JSON.stringify({
+      pages: [
+        { key: '', title: 'ui-kit', always: true, resources: [] },
+        { key: 'rules', title: 'Rules', always: false, resources: ['kit-src/RULES.md'] },
+        { key: 'ai-rules', title: 'AI rules', always: false, resources: ['kit-src/AI-RULES.md'] },
+        { key: 'variables', title: 'Variables', always: false, resources: [] },
+        { key: 'history', title: 'History', always: false, resources: ['api/history'] },
+        { key: 'components/add-button', title: 'Add button', always: true, resources: ['kit-src/src/lib/add-button/README.md'] },
+      ],
+    }),
+  );
+  return { publicDir, tokensJson, sitePagesPath, pagesPath: join(dir, 'data', 'pages.json'), historyPath: join(dir, 'data', 'history.jsonl'), ...ADMIN };
+}
+
+const status = async (app, url, headers = {}) => (await app.inject({ method: 'GET', url, headers })).statusCode;
+
+test('the admin chooses the pages the public sees; what a hidden page reads is the admin\'s alone', async () => {
+  const options = await scratchSite();
   const app = await buildServer(options);
   assert.deepEqual((await app.inject({ method: 'GET', url: '/api/pages' })).json(), { hidden: [] });
-  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md' })).statusCode, 200);
+  assert.equal(await status(app, '/kit-src/RULES.md'), 200);
 
-  const choice = { hidden: ['rules', 'history'], resources: ['kit-src/RULES.md', 'api/history'] };
+  const choice = { hidden: ['rules', 'history'] };
   assert.equal((await app.inject({ method: 'PUT', url: '/api/pages', payload: choice })).statusCode, 401);
   const headers = await signIn(app);
   const saved = await app.inject({ method: 'PUT', url: '/api/pages', headers, payload: choice });
   assert.deepEqual(saved.json(), { hidden: ['history', 'rules'] });
 
-  // the public: the hidden page's document and API are not there, the page's address is the catalog's (which says not found)
+  // the public: the hidden page's document and API are not there, however the address is written
   assert.deepEqual((await app.inject({ method: 'GET', url: '/api/pages' })).json(), { hidden: ['history', 'rules'] });
-  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md' })).statusCode, 404);
-  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md?x=1' })).statusCode, 404);
-  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/%52ULES.md' })).statusCode, 404);
-  assert.equal((await app.inject({ method: 'GET', url: '//kit-src/./x/..//RULES.md' })).statusCode, 404);
-  assert.equal((await app.inject({ method: 'GET', url: '/api/history' })).statusCode, 404);
-  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/AI-RULES.md' })).statusCode, 200);
+  for (const url of ['/kit-src/RULES.md', '/kit-src/RULES.md?x=1', '/kit-src/%52ULES.md', '//kit-src/./x/..//RULES.md', '/api/history']) {
+    assert.equal(await status(app, url), 404, url);
+  }
+  // what the public pages read is still there, and so is the catalog (its own address says not found)
+  assert.equal(await status(app, '/kit-src/AI-RULES.md'), 200);
+  assert.equal(await status(app, '/kit-src/src/lib/add-button/README.md'), 200);
   assert.equal((await app.inject({ method: 'GET', url: '/rules' })).body, '<app-root></app-root>');
+  assert.equal(await status(app, '/main.js'), 200);
   // the admin still reads everything
-  assert.equal((await app.inject({ method: 'GET', url: '/kit-src/RULES.md', headers })).statusCode, 200);
-  assert.equal((await app.inject({ method: 'GET', url: '/api/history', headers })).statusCode, 200);
+  assert.equal(await status(app, '/kit-src/RULES.md', headers), 200);
+  assert.equal(await status(app, '/api/history', headers), 200);
 
-  // kept across a restart; nothing strange is accepted
+  // kept across a restart
   const again = await buildServer(options);
-  assert.equal((await again.inject({ method: 'GET', url: '/kit-src/RULES.md' })).statusCode, 404);
-  const strange = await app.inject({ method: 'PUT', url: '/api/pages', headers, payload: { hidden: ['rules'], resources: ['../server.mjs'] } });
-  assert.equal(strange.statusCode, 400);
-  assert.equal(strange.json().title, 'Invalid pages');
+  assert.equal(await status(again, '/kit-src/RULES.md'), 404);
+});
+
+test('closed by default: a file of the kit no public page reads is the admin\'s alone', async () => {
+  const options = await scratchSite();
+  const app = await buildServer(options);
+  const headers = await signIn(app);
+  assert.equal(await status(app, '/kit-src/package.json'), 404);
+  assert.equal(await status(app, '/kit-src/nothing-here.md'), 404);
+  assert.equal(await status(app, '/kit-src/package.json', headers), 200);
+});
+
+test('the catalog itself cannot be hidden, nor a page that does not exist', async () => {
+  const app = await buildServer(await scratchSite());
+  const headers = await signIn(app);
+  for (const [page, detail] of [['components/add-button', '/components/add-button is always public.'], ['', '/ is always public.'], ['nothing', 'Not a page of the catalog: nothing']]) {
+    const answer = await app.inject({ method: 'PUT', url: '/api/pages', headers, payload: { hidden: [page] } });
+    assert.equal(answer.statusCode, 400, page);
+    assert.equal(answer.json().detail, detail);
+  }
+  assert.equal(await status(app, '/kit-src/src/lib/add-button/README.md'), 200);
+});
+
+test('while the Variables page is hidden the public gets names and values, not what they are for and why', async () => {
+  const app = await buildServer(await scratchSite());
+  const headers = await signIn(app);
+  const glass = async (h = {}) =>
+    (await app.inject({ method: 'GET', url: '/api/tokens', headers: h })).json().groups.flatMap((g) => g.tokens).find((t) => t.name === '--lenzi-glass');
+  assert.ok((await glass()).why.length > 0);
+  await app.inject({ method: 'PUT', url: '/api/pages', headers, payload: { hidden: ['variables'] } });
+  assert.deepEqual(
+    (({ name, label, value, description, why }) => ({ name, label, value, description, why }))(await glass()),
+    { name: '--lenzi-glass', label: 'Window opacity', value: '56%', description: '', why: '' },
+  );
+  assert.ok((await glass(headers)).why.length > 0);
+  assert.match((await app.inject({ method: 'GET', url: '/api/tokens.css' })).body, /--lenzi-glass: 56%;/);
 });

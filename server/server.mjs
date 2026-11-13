@@ -9,7 +9,8 @@
 //   2026-11-13): they are kept apart from the image (TOKENS_VALUES, on a volume) and every visitor
 //   gets them (/api/tokens.css). The kit's files need a new build, so they are not changed there.
 // Every save is kept (history.mjs) and can be undone. The admin also chooses which pages the public
-// sees (pages.mjs): what a hidden page reads from here is refused to anyone else.
+// sees (pages.mjs): the catalog itself is always public; of everything else the public gets only what
+// a public page reads (closed by default, from the pages the build wrote down).
 import Fastify from 'fastify';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, posix, resolve, sep } from 'node:path';
@@ -17,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createAuth, sessionCookie } from './auth.mjs';
 import { createHistory, publicEntry } from './history.mjs';
-import { createPages, invalidPages } from './pages.mjs';
+import { createPages } from './pages.mjs';
 import { TOKENS_CSS, TOKENS_JSON, applyValues, renderCss, readTokens, tokensByName, writeTokens } from './tokens.mjs';
 
 /** The kit's folder in this workspace: the only place the catalog may write into. */
@@ -62,6 +63,8 @@ function problem(reply, status, code, title, detail, errors = []) {
  * @param {string} [options.adminUser] @param {string} [options.adminPassword] without both, nobody can save
  * @param {string | null} [options.historyPath] where the saves are kept (none: not kept)
  * @param {string | null} [options.pagesPath] where the pages hidden from the public are kept
+ * @param {string | null} [options.sitePagesPath] the catalog's pages, written by its build (`npm run pages`):
+ *   with it the public reads only what the public pages read; without it (development) nothing is refused
  * @param {boolean} [options.trustProxy] behind a reverse proxy: its word on https and on the address
  * @param {boolean} [options.logger]
  */
@@ -76,13 +79,14 @@ export async function buildServer({
   adminPassword = '',
   historyPath = null,
   pagesPath = null,
+  sitePagesPath = null,
   trustProxy = false,
   logger = false,
 } = {}) {
   const app = Fastify({ logger, trustProxy });
   const auth = createAuth({ user: adminUser, password: adminPassword });
   const history = createHistory(historyPath);
-  const pages = await createPages(pagesPath);
+  const pages = await createPages({ path: pagesPath, sitePagesPath });
 
   const signedIn = (request) => auth.signedIn(request.headers.cookie);
   /** Answers why not and gives false, unless the admin is signed in. */
@@ -156,8 +160,8 @@ export async function buildServer({
     reply.header('Referrer-Policy', 'same-origin');
   });
 
-  // What a page hidden from the public reads from here (its documents and code under kit-src/, an
-  // API) does not exist for anyone but the admin.
+  // Closed by default: the kit's files (kit-src/) and what the pages read (an API) exist for the public
+  // only when a public page reads them. The documents of a hidden page, a file no page shows: the admin's.
   app.addHook('onRequest', async (request, reply) => {
     let resource;
     try {
@@ -182,19 +186,16 @@ export async function buildServer({
       schema: {
         body: {
           type: 'object',
-          required: ['hidden', 'resources'],
-          properties: {
-            hidden: { type: 'array', items: { type: 'string' } },
-            resources: { type: 'array', items: { type: 'string' } },
-          },
+          required: ['hidden'],
+          properties: { hidden: { type: 'array', items: { type: 'string' } } },
         },
       },
     },
     async (request, reply) => {
       if (!adminOnly(request, reply)) return reply;
-      const reason = invalidPages(request.body);
+      const reason = pages.invalid(request.body.hidden);
       if (reason) return problem(reply, 400, 'invalid-pages', 'Invalid pages', reason);
-      return { hidden: await pages.set(request.body) };
+      return { hidden: await pages.set(request.body.hidden) };
     },
   );
 
@@ -269,8 +270,23 @@ export async function buildServer({
     },
   );
 
-  // The variables as they are now, and whether whoever asks can save them.
-  app.get('/api/tokens', async (request) => ({ ...(await currentTokens()), canSave: signedIn(request) }));
+  // The variables as they are now, and whether whoever asks can save them. While the Variables page is
+  // hidden the public gets their names and values only (a component's page still shows the ones it
+  // uses): what each is for and why, the page's content, stays the admin's.
+  app.get('/api/tokens', async (request) => {
+    const document = await currentTokens();
+    if (signedIn(request) || !pages.isHidden('variables')) return { ...document, canSave: signedIn(request) };
+    return {
+      about: '',
+      groups: document.groups.map((group) => ({
+        id: group.id,
+        label: group.label,
+        description: '',
+        tokens: group.tokens.map(({ description: _description, why: _why, ...token }) => ({ ...token, description: '', why: '' })),
+      })),
+      canSave: false,
+    };
+  });
 
   // The same as CSS: every page of the catalog loads it after its own styles, so what the admin saved
   // on a server that keeps the values apart is what every visitor sees, without a new build.
@@ -338,8 +354,14 @@ export async function buildServer({
 // development), KIT_ADMIN_USER and KIT_ADMIN_PASSWORD (the admin; without them nothing is saved),
 // KIT_ALLOW_FILES ("true" in development: the admin changes the kit's files too), TOKENS_JSON and
 // TOKENS_CSS (the files), TOKENS_VALUES (saved values kept apart: Docker), HISTORY_FILE (the saves),
-// PAGES_FILE (the pages hidden from the public), TRUST_PROXY ("true" behind a reverse proxy).
+// PAGES_FILE (the pages hidden from the public), SITE_PAGES_FILE (the catalog's pages, from its build:
+// needed to serve the catalog), TRUST_PROXY ("true" behind a reverse proxy).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  // Serving the catalog without knowing its pages would serve every file of the kit to anyone.
+  if (process.env.PUBLIC_DIR && !process.env.SITE_PAGES_FILE) {
+    console.error('SITE_PAGES_FILE is not set: the catalog is not served without the list of its pages (npm run build writes dist/site-pages.json).');
+    process.exit(1);
+  }
   const app = await buildServer({
     publicDir: process.env.PUBLIC_DIR || null,
     kitDir: process.env.KIT_DIR || KIT_DIR,
@@ -351,6 +373,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     adminPassword: process.env.KIT_ADMIN_PASSWORD || '',
     historyPath: process.env.HISTORY_FILE || null,
     pagesPath: process.env.PAGES_FILE || null,
+    sitePagesPath: process.env.SITE_PAGES_FILE || null,
     trustProxy: process.env.TRUST_PROXY === 'true',
     logger: true,
   });

@@ -66,6 +66,9 @@ export class ComponentPage {
 
   protected readonly tabIndex = computed(() => Math.max(0, TABS.indexOf((this.tab() ?? 'playground') as Tab)));
 
+  /** Whoever is looking may see the Variables page (the admin may hide it). */
+  protected readonly variablesPage = computed(() => this.publicPages.shows('variables'));
+
   protected readonly neighbours = computed(() => {
     // among the pages whoever is looking may see
     const docs = DOCS.filter((doc) => this.publicPages.shows(`components/${doc.id}`));

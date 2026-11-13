@@ -10,7 +10,7 @@ import { LenziConfirmData, LenziConfirmDialog, LenziDialogs, LenziFigure, LenziF
 
 import { KitServer } from '../../shared/kit-server';
 import { PublicPages } from '../../shared/public-pages';
-import { PAGES_GROUP, SitePage } from '../../shared/site-pages';
+import { SitePage } from '../../site-map';
 
 /**
  * Where the catalog's one admin signs in (lenzi, 2026-11-12: "pagina admin per abilitare la modifica
@@ -19,8 +19,9 @@ import { PAGES_GROUP, SitePage } from '../../shared/site-pages';
  * variables everywhere, the kit's files where the server changes them. The user and the password are
  * the server's (its .env), never the catalog's.
  *
- * Signed in, the admin also chooses which pages the public sees (lenzi, 2026-11-13): every page the
- * catalog has, read from its routes and its registry (PublicPages), each with its toggle.
+ * Signed in, the admin also chooses which pages the public sees (lenzi, 2026-11-13): the pages of the
+ * site map that are not the catalog itself, each with its toggle (PublicPages). The overview and the
+ * components are always public.
  */
 @Component({
   selector: 'app-admin-page',
@@ -34,20 +35,14 @@ export class AdminPage {
 
   protected readonly publicPages = inject(PublicPages);
 
-  /** Every page of the catalog, in its groups: the fixed pages first, then the registry's categories in the order they come. */
-  protected readonly groups = computed(() => {
+  /** The pages the admin shows or hides, from the site map; the catalog itself is not among them. */
+  protected readonly rows = computed(() => {
     const hidden = this.publicPages.hidden() ?? new Set<string>();
-    const groups = new Map<string, { page: SitePage; shown: boolean }[]>([[PAGES_GROUP, []]]);
-    for (const page of this.publicPages.all()) {
-      if (!groups.has(page.group)) groups.set(page.group, []);
-      groups.get(page.group)!.push({ page, shown: !hidden.has(page.key) });
-    }
-    return [...groups].map(([name, rows]) => ({ name, rows, shown: rows.filter((row) => row.shown).length }));
+    return this.publicPages.toggled.map((page) => ({ page, shown: !hidden.has(page.key) }));
   });
-  protected readonly counts = computed(() => {
-    const rows = this.groups().flatMap((group) => group.rows);
-    return { all: rows.length, shown: rows.filter((row) => row.shown).length };
-  });
+  protected readonly shownCount = computed(() => this.rows().filter((row) => row.shown).length);
+  /** The overview, the components and each piece: always public. */
+  protected readonly alwaysCount = this.publicPages.all.filter((page) => page.always && page.key !== 'admin').length;
   protected readonly savingPages = signal(false);
   protected readonly pagesError = signal<string | null>(null);
 
@@ -92,8 +87,8 @@ export class AdminPage {
     }
   }
 
-  protected pagesOf(rows: readonly { page: SitePage }[]): SitePage[] {
-    return rows.map((row) => row.page);
+  protected setAll(shown: boolean): void {
+    void this.setPublic(this.rows().map((row) => row.page), shown);
   }
 
   /** Signing out asks first (RULES.md), not destructive. */

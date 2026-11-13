@@ -34,7 +34,9 @@
   @for (group of groups(); track group.id) {
     <section class="group" [id]="group.id">
       <h2 class="group-title">{{ group.label }}</h2>
-      <p class="group-description">{{ group.description }}</p>
+      @if (group.description) {
+        <p class="group-description">{{ group.description }}</p>
+      }
       @for (token of group.tokens; track token.name) {
         <div class="token" [class.changed]="isChanged(token)">
           <div class="token-head">
@@ -74,8 +76,12 @@
             </mat-form-field>
           }
 
-          <p class="token-description">{{ token.description }}</p>
-          <p class="token-why">{{ token.why }}</p>
+          @if (token.description) {
+            <p class="token-description">{{ token.description }}</p>
+          }
+          @if (token.why) {
+            <p class="token-why">{{ token.why }}</p>
+          }
         </div>
       }
     </section>
