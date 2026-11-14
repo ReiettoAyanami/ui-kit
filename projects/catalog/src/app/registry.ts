@@ -140,6 +140,18 @@ const glowAttributes = (v: Values) => [
   bound('animate', v['animate'], true),
 ];
 
+/** How the boids differ in size, and their leaders (lenzi, 2026-11-14: "il 'leader' dovrebbe essere piú grande"). */
+const BOID_SIZE_CONTROLS: readonly Control[] = [
+  { key: 'boidSizeVariety', label: 'Boids differ in size (0 to 1)', type: 'number', default: 0.4, min: 0, max: 1, step: 0.05 },
+  { key: 'leaderSize', label: 'A colony’s leader, times larger', type: 'number', default: 1.9, min: 0.5, max: 4, step: 0.1 },
+  { key: 'leaderPull', label: 'How much its colony follows it (0 not)', type: 'number', default: 0.4, min: 0, max: 3, step: 0.1 },
+];
+const boidSizeAttributes = (v: Values) => [
+  bound('boidSizeVariety', v['boidSizeVariety'], 0.4),
+  bound('leaderSize', v['leaderSize'], 1.9),
+  bound('leaderPull', v['leaderPull'], 0.4),
+];
+
 export const DOCS: readonly KitDoc[] = [
   // Foundations ----------------------------------------------------------------------------------
   {
@@ -1217,6 +1229,7 @@ ${tag('lenzi-blob-background', [
       },
       { key: 'edgeMargin', label: 'Turns away from (px)', type: 'number', default: 80, min: 0, max: 300, step: 10 },
       { key: 'boidSize', label: 'Width of a boid (px)', type: 'number', default: 7, min: 2, max: 40, step: 1 },
+      ...BOID_SIZE_CONTROLS,
       {
         key: 'shape',
         label: 'A boid is',
@@ -1253,6 +1266,7 @@ ${tag('lenzi-flock-background', [
   plain('edges', v['edges'], 'wrap'),
   bound('edgeMargin', v['edgeMargin'], 80),
   bound('boidSize', v['boidSize'], 7),
+  ...boidSizeAttributes(v),
   plain('shape', v['shape'], 'dart'),
   bound('trails', v['trails'], 0),
   bound('scare', v['scare'], 3),
@@ -1314,6 +1328,7 @@ ${tag('lenzi-flock-background', [
       { key: 'minSpeed', label: 'Slowest (px/s)', type: 'number', default: 60, min: 0, max: 300, step: 10 },
       { key: 'wander', label: 'Turns of its own (0 none)', type: 'number', default: 0.25, min: 0, max: 2, step: 0.05 },
       { key: 'boidSize', label: 'Width of a boid (px)', type: 'number', default: 9, min: 2, max: 40, step: 1 },
+      ...BOID_SIZE_CONTROLS,
       {
         key: 'shape',
         label: 'A boid is',
@@ -1352,6 +1367,7 @@ ${tag('lenzi-blob-flock-background', [
   bound('minSpeed', v['minSpeed'], 60),
   bound('wander', v['wander'], 0.25),
   bound('boidSize', v['boidSize'], 9),
+  ...boidSizeAttributes(v),
   plain('shape', v['shape'], 'drop'),
   bound('trails', v['trails'], 0),
   bound('scare', v['scare'], 3),

@@ -58,8 +58,8 @@ function openMouth(mouth: string): { d: string; width: number } {
   // a little lighter than the ω (2026-11-14: "linea leggermente meno pesante sulla v"), its ends inside the
   // ω's line, so it grows out of it with no seam ("si vede che l'hai attaccata dopo")
   const width = Math.min(a.thick, b.thick) * 0.72;
-  // deep enough that the mouth reads open, not a dot under the ω
-  const depth = (b.x - a.x) * 0.95;
+  // deep enough that the mouth reads open, not a dot under the ω; a little stubby ("leggermente più tozza")
+  const depth = (b.x - a.x) * 0.8;
   const tip = { x: (a.x + b.x) / 2, y: Math.max(a.y, b.y) + depth };
   return { d: `M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${tip.x.toFixed(1)} ${tip.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`, width };
 }

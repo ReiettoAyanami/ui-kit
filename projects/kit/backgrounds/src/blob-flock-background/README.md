@@ -15,7 +15,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   to 86% of a round outline, and a circle or a squircle reaches its full radius).
 - **Colonies** (`colonies`, 4; lenzi: "aumenta le colonie"): flocks of their own. A boid heads the same way
   as, and stays with, only its own colony; it keeps apart from every boid. 380 boids by default, 9 px wide
-  (`boidSize`; "make them a bit bigger").
+  (`boidSize`; "make them a bit bigger"), drops (`shape="drop"`), each a little different in size
+  (`boidSizeVariety`); each colony's leader larger (`leaderSize`) and a little followed (`leaderPull`), as in
+  the flock background.
 - **Thrown blobs** (`throwable`; lenzi, 2026-11-14: "drag the blobs around ... kinda like throwing them
   around"): the pointer takes a blob (a hand shows over one) and throws it; it flies on, slows down, bounces
   off the edges and drifts back to its path. The boids fly round it wherever it goes. Pressing on the page's

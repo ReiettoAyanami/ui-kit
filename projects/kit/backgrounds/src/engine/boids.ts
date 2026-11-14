@@ -58,6 +58,11 @@ export interface BoidsSettings {
    * and stays with, only the boids of its colony; it keeps apart from every boid. 1: one flock.
    */
   colonies?: number;
+  /**
+   * How much a boid follows its colony's leader (lenzi, 2026-11-14: "il 'leader' dovrebbe essere piú
+   * grande"): the first boid of each colony is its leader; 0, it leads nobody.
+   */
+  leaderPull?: number;
 }
 
 export const DEFAULT_BOIDS: BoidsSettings = {
@@ -78,6 +83,7 @@ export const DEFAULT_BOIDS: BoidsSettings = {
   edges: 'wrap',
   edgeMargin: 80,
   colonies: 1,
+  leaderPull: 0,
 };
 
 /** The most boids a flock holds: beyond this a CPU flock is not smooth. */
@@ -115,6 +121,8 @@ export class Boids {
   y = new Float32Array(0);
   vx = new Float32Array(0);
   vy = new Float32Array(0);
+  /** Each boid's own number, 0..1, drawn once: what makes it a little different (its size). */
+  own = new Float32Array(0);
 
   private settings: BoidsSettings;
   private width: number;
@@ -146,6 +154,16 @@ export class Boids {
 
   get count(): number {
     return this.x.length;
+  }
+
+  /** How many leaders: one a colony (the first boid of each). */
+  get leaders(): number {
+    return Math.min(this.count, Math.max(1, Math.floor(this.settings.colonies ?? 1)));
+  }
+
+  /** Whether a boid leads its colony. */
+  isLeader(index: number): boolean {
+    return index < this.leaders;
   }
 
   /** New settings: the boids there stay where they are; more or fewer when the count changes. */
@@ -218,6 +236,7 @@ export class Boids {
     this.y = grow(this.y);
     this.vx = grow(this.vx);
     this.vy = grow(this.vy);
+    this.own = grow(this.own);
     const speed = (this.settings.minSpeed + this.settings.maxSpeed) / 2;
     for (let i = kept; i < count; i++) {
       const heading = this.random() * Math.PI * 2;
@@ -225,6 +244,7 @@ export class Boids {
       this.y[i] = this.random() * this.height;
       this.vx[i] = Math.cos(heading) * speed;
       this.vy[i] = Math.sin(heading) * speed;
+      this.own[i] = this.random();
     }
     this.cellOf = new Int32Array(count);
     this.sorted = new Int32Array(count);
@@ -356,6 +376,22 @@ export class Boids {
         steer(centreX, centreY, s.cohesion);
       } else {
         steer(awayX, awayY, s.separation);
+      }
+      // its colony's leader, if it has one and is not it: towards it, the nearest way round
+      const leaderPull = s.leaderPull ?? 0;
+      const leader = i % colonies;
+      if (leaderPull > 0 && leader !== i && leader < n) {
+        let lx = x[leader]! - px;
+        let ly = y[leader]! - py;
+        if (wrap) {
+          if (lx > width / 2) lx -= width;
+          else if (lx < -width / 2) lx += width;
+          if (ly > height / 2) ly -= height;
+          else if (ly < -height / 2) ly += height;
+        }
+        // close to it, it flies with the others instead of piling onto it
+        const distance = Math.hypot(lx, ly);
+        steer(lx, ly, leaderPull * Math.min(1, distance / (see * 2)));
       }
 
       let arrived = false;

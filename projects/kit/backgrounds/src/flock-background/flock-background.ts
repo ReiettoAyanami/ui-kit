@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, input, numberAttribute } from '@angular/core';
 
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boids';
-import { BoidShape, FlockScene } from '../engine/flock-scene';
+import { BoidShape, DEFAULT_BOID_SIZES, DEFAULT_LEADER_PULL, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziScares } from '../scare/scares';
@@ -59,6 +59,11 @@ export class LenziFlockBackground extends LenziGlowBackground {
   readonly boidSize = input(7, { transform: numberAttribute });
   /** A dot, or a dart that points where it flies. */
   readonly shape = input<BoidShape>('dart');
+  /** How much the boids differ in size, 0 (all alike) to 1. */
+  readonly boidSizeVariety = input(DEFAULT_BOID_SIZES.variety, { transform: numberAttribute });
+  /** How many times larger each colony's leader is, and how much its colony follows it. */
+  readonly leaderSize = input(DEFAULT_BOID_SIZES.leader, { transform: numberAttribute });
+  readonly leaderPull = input(DEFAULT_LEADER_PULL, { transform: numberAttribute });
   /** How long a boid's light stays behind it, 0 (no trail) to 1. */
   readonly trails = input(0, { transform: numberAttribute });
 
@@ -106,7 +111,7 @@ export class LenziFlockBackground extends LenziGlowBackground {
       },
       draw: () => {
         const flock = this.current();
-        scene.draw(flock, this.colours(flock.count), Math.max(0.5, this.boidSize() / 2), this.shape(), 1);
+        scene.draw(flock, this.colours(flock.count), Math.max(0.5, this.boidSize() / 2), this.shape(), 1, { variety: this.boidSizeVariety(), leader: this.leaderSize() });
       },
       dispose: () => scene.dispose(),
     };
@@ -132,6 +137,7 @@ export class LenziFlockBackground extends LenziGlowBackground {
       edges: this.edges(),
       edgeMargin: this.edgeMargin(),
       colonies: this.colonies(),
+      leaderPull: this.leaderPull(),
     };
     if (!this.flock || this.flockSeed !== this.seed()) {
       this.flockSeed = this.seed();

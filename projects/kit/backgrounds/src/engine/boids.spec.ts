@@ -1,4 +1,5 @@
 import { Boids, BoidsSettings, MAX_BOIDS } from './boids';
+import { boidScales } from './flock-scene';
 
 /** A flock with every rule off, so a test turns on the one it is about. */
 const QUIET: Partial<BoidsSettings> = { separation: 0, alignment: 0, cohesion: 0, follow: 'none', wander: 0, minSpeed: 0, viewAngle: 360 };
@@ -98,6 +99,27 @@ describe('a flock of boids', () => {
     run(flock, 0.5);
     expect(flock.y[0]!).toBeLessThan(970);
     flock.setScares([], 0);
+  });
+
+  it('gives each colony a leader (its first boid), which the others of its colony follow', () => {
+    const flock = new Boids({ ...QUIET, count: 6, colonies: 2, leaderPull: 1 }, 4000, 4000);
+    expect(flock.leaders).toBe(2);
+    expect([0, 1, 2].map((i) => flock.isLeader(i))).toEqual([true, true, false]);
+    // boid 2 (colony 0) far to the right of its leader, boid 0
+    place(flock, [[1000, 2000, 0, 0], [3000, 3000, 0, 0], [1600, 2000, 0, 0], [3000, 1000, 0, 0], [500, 500, 0, 0], [3500, 3500, 0, 0]]);
+    run(flock, 1);
+    expect(flock.x[2]!).toBeLessThan(1600);
+  });
+
+  it('every boid its own size, a little different; the leaders larger', () => {
+    const flock = new Boids({ count: 200, colonies: 4 }, 800, 600);
+    const scales = boidScales(flock, flock.count, { variety: 0.4, leader: 1.9 });
+    expect([...scales.subarray(0, 4)]).toEqual([1.9, 1.9, 1.9, 1.9].map(Math.fround));
+    const others = [...scales.subarray(4)];
+    expect(Math.min(...others)).toBeGreaterThanOrEqual(0.8 - 1e-6);
+    expect(Math.max(...others)).toBeLessThanOrEqual(1.2 + 1e-6);
+    expect(Math.max(...others) - Math.min(...others)).toBeGreaterThan(0.2);
+    expect([...boidScales(flock, flock.count, { variety: 0, leader: 1 })].every((scale) => scale === 1)).toBe(true);
   });
 
   it('says which boid is nearest a point', () => {

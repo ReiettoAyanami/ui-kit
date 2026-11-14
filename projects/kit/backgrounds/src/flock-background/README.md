@@ -14,6 +14,10 @@ apart, head the same way and stay together, around the pointer or onto it.
   `followRadius` say how much and from how far.
 - **Scared of elements**: `lenziScare` on any element of the page; `scare` is how much (see `scare/README.md`).
 - **Colonies** (`colonies`, 1): flocks of their own, each heading its own way, all keeping apart.
+- **Sizes and leaders** (lenzi, 2026-11-14: "i boid dovrebbero essere tutti leggermente di dimensioni
+  diverse, il 'leader' dovrebbe essere piú grande"): every boid a little larger or smaller than `boidSize`
+  (`boidSizeVariety`, 0.4: from 0.8 to 1.2 times); the first boid of each colony is its leader,
+  `leaderSize` (1.9) times larger, and its colony follows it a little (`leaderPull`, 0.4; 0 not).
 - **Edges**: `wrap` (back in from the other side) or `avoid` (turns away from `edgeMargin`).
 - **Drawn with WebGL2, no library**: one instanced call, a dart pointing where it flies or a dot, added light
   (a crowd is brighter), optional `trails`.
