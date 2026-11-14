@@ -48,8 +48,10 @@
 /* The top bar stays at the top while the page scrolls under its glass. Under the page windows
    (z-index 20) and the "+" (10). It floats away from the edges with rounded corners on every
    screen (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le
-   versioni"). */
-.lenzi-shell-bar {
+   versioni"), on its sides too (lenzi, 2026-11-14: "la top bar dovrebbe avere padding anche ai lati").
+   Two classes, as above: Material's toolbar styles come after these, and with one class its
+   `margin: 0` and `width: 100%` won, the bar touching the screen's sides. */
+.lenzi-shell-bar.mat-toolbar {
   position: sticky;
   top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px));
   z-index: 5;
