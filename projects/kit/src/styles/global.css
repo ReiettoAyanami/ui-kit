@@ -516,11 +516,25 @@ html {
   mask-composite: exclude;
 }
 
-.lenzi-lit.lenzi-lit-clipped::before,
-.lenzi-lit.lenzi-lit-clipped::after,
-.lenzi-solid.lenzi-lit-clipped::before,
-.lenzi-solid.lenzi-lit-clipped::after {
+/* A surface that cuts what leaves it cuts at its border's outer edge, so the light lies on its border
+   (inside it, it would look like a second outline: lenzi, 2026-11-14, "has a double outline now"). */
+.lenzi-lit.lenzi-lit-clipped,
+.lenzi-solid.lenzi-lit-clipped {
+  overflow: clip;
+  overflow-clip-margin: border-box;
+}
+
+/* A surface that scrolls cannot: its light stays inside it, and no line runs inside its border. */
+.lenzi-lit.lenzi-lit-scrolls::before,
+.lenzi-lit.lenzi-lit-scrolls::after,
+.lenzi-solid.lenzi-lit-scrolls::before,
+.lenzi-solid.lenzi-lit-scrolls::after {
   inset: 0;
+}
+
+.lenzi-lit.lenzi-lit-scrolls::after,
+.lenzi-solid.lenzi-lit-scrolls::after {
+  display: none;
 }
 
 /* Where the browser has paint worklets (LenziLightField loads one): the lamps' light is painted, with

@@ -1,6 +1,6 @@
 import { DestroyRef, Directive, ElementRef, afterNextRender, inject } from '@angular/core';
 
-import { LenziLightField } from './light-field';
+import { LenziLightField, fitLight } from './light-field';
 
 /**
  * A solid element in the light (lenzi, 2026-11-14: "it could be cool to introduce a faint hard shadow ...
@@ -28,7 +28,7 @@ export class LenziSolid {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const style = getComputedStyle(element);
-      element.classList.toggle('lenzi-lit-clipped', style.overflowX !== 'visible' || style.overflowY !== 'visible');
+      fitLight(element);
       // solid is opaque (2026-11-14: a "solid" toggle group showed the list under it): an element that is
       // see-through by itself (a toggle group, a list, an outlined button) takes the page's surface
       element.classList.toggle('lenzi-solid-fill', !opaque(style.backgroundColor));

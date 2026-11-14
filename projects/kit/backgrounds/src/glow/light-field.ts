@@ -75,6 +75,22 @@ interface Box {
   bottom: number;
 }
 
+/**
+ * Makes room for the light on a surface's border (`lenziLit`, `lenziSolid` call it once). A surface that
+ * cuts what leaves it (`overflow: hidden`, a toggle group) would cut the light on its border, and a line of
+ * light inside the border looks like a second outline (lenzi, 2026-11-14: "has a double outline now"): it
+ * cuts at its border's outer edge instead (`.lenzi-lit-clipped`: `overflow: clip`, the same for what it
+ * holds). A surface that scrolls cannot: the light stays inside it, with no line (`.lenzi-lit-scrolls`).
+ */
+export function fitLight(surface: HTMLElement): void {
+  const style = surface.ownerDocument.defaultView?.getComputedStyle(surface);
+  if (!style) return;
+  const overflow = [style.overflowX, style.overflowY];
+  const scrolls = overflow.some((value) => value === 'auto' || value === 'scroll');
+  surface.classList.toggle('lenzi-lit-scrolls', scrolls);
+  surface.classList.toggle('lenzi-lit-clipped', !scrolls && overflow.includes('hidden'));
+}
+
 /** A CSS variable as its `var()`, any other colour as it is. */
 export const cssColor = (color: string): string => (color.trim().startsWith('--') ? `var(${color.trim()})` : color.trim());
 
@@ -281,7 +297,8 @@ export class LenziLightField {
     if (surface.origin) return surface.origin;
     const style = this.document.defaultView?.getComputedStyle(surface.element);
     if (!style) return (surface.origin = { x: 0, y: 0 });
-    const clipped = style.overflowX !== 'visible' || style.overflowY !== 'visible';
+    // only a surface that scrolls keeps its light inside its border (fitLight)
+    const clipped = surface.element.classList.contains('lenzi-lit-scrolls');
     const sides = [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth].map((width) => parseFloat(width) || 0);
     const inset = clipped ? '0px' : sides.map((width) => `${-width}px`).join(' ');
     if (surface.element.style.getPropertyValue('--lenzi-light-inset') !== inset) surface.element.style.setProperty('--lenzi-light-inset', inset);

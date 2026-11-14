@@ -1,6 +1,6 @@
 import { DestroyRef, Directive, ElementRef, afterNextRender, inject } from '@angular/core';
 
-import { LenziLightField } from '../glow/light-field';
+import { LenziLightField, fitLight } from '../glow/light-field';
 import { LenziAmbientLight } from './ambient-light';
 
 /**
@@ -22,9 +22,7 @@ export class LenziLit {
     const field = inject(LenziLightField);
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
-      // a surface that cuts what leaves it would cut the light on its border: the light stays inside it
-      const style = getComputedStyle(surface);
-      surface.classList.toggle('lenzi-lit-clipped', style.overflowX !== 'visible' || style.overflowY !== 'visible');
+      fitLight(surface);
       // the background's light, and the light of the glowing elements around it (lenziGlow)
       const detach = light.attach(surface);
       const leave = field.addSurface(surface);
