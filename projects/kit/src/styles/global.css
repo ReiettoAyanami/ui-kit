@@ -479,6 +479,19 @@ html {
   background-color: var(--lenzi-solid-surface, var(--mat-sys-surface));
 }
 
+/* Every surface takes only its own light. Custom properties inherit, so a surface with none of its own would
+   draw the light of the surface that holds it (lenzi, 2026-11-14: "if i try to move the play button, the
+   light moves on multiple surfaces": the cards showed the floor's light, in the floor's coordinates). What
+   LenziLightField and LenziAmbientLight write inline wins over this; what they take away falls back here. */
+:where(.lenzi-lit, .lenzi-solid) {
+  --lenzi-light-data: none;
+  --lenzi-lamps-veil: none;
+  --lenzi-lamps-rim: none;
+  --lenzi-ambient-veil: none;
+  --lenzi-ambient-rim: none;
+  --lenzi-light-blend: screen;
+}
+
 .lenzi-lit.lenzi-lit::before,
 .lenzi-lit.lenzi-lit::after,
 .lenzi-solid.lenzi-solid::before,
