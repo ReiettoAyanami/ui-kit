@@ -1,0 +1,41 @@
+@switch (behind()) {
+  @case ('flock') {
+    <lenzi-flock-background [count]="500" [trails]="0.5" />
+  }
+  @case ('picture') {
+    <lenzi-background image="demo/hills.svg" />
+  }
+  @default {
+    <lenzi-blob-background />
+  }
+}
+
+<ng-template #card>
+  <mat-card-content>
+    <p class="name">Now playing</p>
+    <p class="words">A card over the background.</p>
+  </mat-card-content>
+</ng-template>
+
+<ng-template #bar>
+  <span class="name">A bar</span>
+  <span class="words">It follows the light under it.</span>
+</ng-template>
+
+@if (lit()) {
+  <mat-card appearance="outlined" lenziLit class="card"><ng-container [ngTemplateOutlet]="card" /></mat-card>
+  <div lenziLit class="bar"><ng-container [ngTemplateOutlet]="bar" /></div>
+  <div class="buttons">
+    <button mat-stroked-button lenziLit type="button"><mat-icon>thumb_up</mat-icon>Like</button>
+    <button mat-stroked-button lenziLit type="button"><mat-icon>share</mat-icon>Share</button>
+    <button mat-stroked-button lenziLit type="button"><mat-icon>bookmark</mat-icon>Save</button>
+  </div>
+} @else {
+  <mat-card appearance="outlined" class="card"><ng-container [ngTemplateOutlet]="card" /></mat-card>
+  <div class="bar solid"><ng-container [ngTemplateOutlet]="bar" /></div>
+  <div class="buttons">
+    <button mat-stroked-button type="button"><mat-icon>thumb_up</mat-icon>Like</button>
+    <button mat-stroked-button type="button"><mat-icon>share</mat-icon>Share</button>
+    <button mat-stroked-button type="button"><mat-icon>bookmark</mat-icon>Save</button>
+  </div>
+}

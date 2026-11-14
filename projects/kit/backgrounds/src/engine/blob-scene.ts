@@ -21,6 +21,7 @@ uniform vec3 lobesB[MAX];
 uniform vec3 tint[MAX];
 uniform float merge;       // how softly they join, CSS px
 uniform float soft;        // how soft the edge is, CSS px
+uniform float level;       // how much light a blob is
 out vec4 color;
 
 // shapes.ts's shapeRadius, here: the superformula's rounded polygon times the scallop of the lobes
@@ -38,7 +39,9 @@ void main() {
   vec2 p = vec2(gl_FragCoord.x, height - gl_FragCoord.y) / scale;
   float k = max(merge, 1.0);
   float weights = 0.0;
+  float shares = 0.0;
   vec3 colours = vec3(0.0);
+  float depth = 0.0;
   for (int i = 0; i < MAX; i++) {
     if (i >= count) break;
     vec2 d = p - place[i].xy;
@@ -47,17 +50,23 @@ void main() {
     if (far > place[i].z + k * 12.0 + soft) continue;
     float angle = atan(d.y, d.x) + turn[i].x;
     float radius = mix(shapeRadius(superA[i], lobesA[i], angle), shapeRadius(superB[i], lobesB[i], angle), turn[i].y) * place[i].z;
-    float weight = exp(min((radius - far) / k, 60.0));
-    weights += weight;
-    colours += tint[i] * weight;
+    float inside = min((radius - far) / k, 60.0);
+    weights += exp(inside);
+    // the colours join more slowly than the edges: two blobs that met are one shape long before they
+    // are one colour, and no line shows where they met
+    float share = exp(inside / 4.0);
+    shares += share;
+    colours += tint[i] * share;
+    // how near the blob's middle, whatever its shape (from the shape's own edge the dips of a clover
+    // would be drawn all the way to its centre)
+    depth += share * clamp(1.0 - far / place[i].z, 0.0, 1.0);
   }
   if (weights <= 0.0) { color = vec4(0.0); return; }
   // the soft join of every edge: inside is negative
   float edge = -k * log(weights);
   float fill = smoothstep(soft, -soft, edge);
   // a little more light towards the middle of a blob
-  float depth = clamp(-edge / (k * 6.0 + 60.0), 0.0, 1.0);
-  color = vec4(colours / weights * fill * (0.72 + 0.28 * depth), fill);
+  color = vec4(colours / shares * fill * level * (0.8 + 0.2 * depth / shares), fill);
 }`;
 
 export class BlobScene {
@@ -77,8 +86,9 @@ export class BlobScene {
    * @param colors r, g, b of every blob (linear), one after the other
    * @param merge how softly the blobs join, CSS px
    * @param soft how soft their edge is, CSS px
+   * @param level how much light a blob is (1: its colour at full, before the background's own brightness)
    */
-  draw(blobs: readonly BlobState[], colors: Float32Array, merge: number, soft: number): void {
+  draw(blobs: readonly BlobState[], colors: Float32Array, merge: number, soft: number, level = 1): void {
     const { engine, program } = this;
     const gl = engine.gl;
     const count = Math.min(MAX_BLOBS, blobs.length);
@@ -106,6 +116,7 @@ export class BlobScene {
     gl.uniform3fv(engine.uniform(program, 'tint'), colors.subarray(0, MAX_BLOBS * 3).length === MAX_BLOBS * 3 ? colors.subarray(0, MAX_BLOBS * 3) : padded(colors));
     gl.uniform1f(engine.uniform(program, 'merge'), merge);
     gl.uniform1f(engine.uniform(program, 'soft'), Math.max(0.5, soft));
+    gl.uniform1f(engine.uniform(program, 'level'), level);
     engine.fullscreen();
   }
 }

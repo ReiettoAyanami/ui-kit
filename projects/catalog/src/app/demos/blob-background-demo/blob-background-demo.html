@@ -1,0 +1,30 @@
+<lenzi-blob-background
+  [shapes]="shapes()"
+  [count]="num('count', 6)"
+  [size]="num('size', 0.2)"
+  [sizeVariety]="num('sizeVariety', 0.45)"
+  [travel]="num('travel', 0.6)"
+  [morph]="num('morph', 0.5)"
+  [spin]="num('spin', 1.2)"
+  [merge]="num('merge', 0.35)"
+  [soft]="num('soft', 2)"
+  [pull]="num('pull', 0)"
+  [spread]="num('spread', 0.2)"
+  [seed]="num('seed', 1)"
+  [brightness]="num('brightness', 1)"
+  [glow]="num('glow', 1)"
+  [halo]="num('halo', 0.6)"
+  [blur]="num('blur', 0)"
+  [speed]="num('speed', 1)"
+  [animate]="values()['animate'] !== false"
+  [accent]="text('accent', '--mat-sys-primary')"
+  [base]="text('base', '--mat-sys-surface')"
+/>
+
+<mat-card appearance="outlined" lenziLit class="card">
+  <mat-card-content>
+    <p class="name">A lit card</p>
+    <p class="words">Glass over the blobs: it takes their light where they pass.</p>
+    <button mat-stroked-button lenziLit type="button"><mat-icon>thumb_up</mat-icon>A lit button</button>
+  </mat-card-content>
+</mat-card>

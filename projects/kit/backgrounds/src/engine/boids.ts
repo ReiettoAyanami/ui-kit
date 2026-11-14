@@ -314,8 +314,16 @@ export class Boids {
         nx = ((nx % width) + width) % width;
         ny = ((ny % height) + height) % height;
       } else {
-        nx = Math.min(width, Math.max(0, nx));
-        ny = Math.min(height, Math.max(0, ny));
+        // a boid that still reaches an edge (flying straight at it, it can only brake, and it never
+        // flies slower than its slowest) bounces off it
+        if (nx <= 0 || nx >= width) {
+          vx[i] = nx <= 0 ? Math.abs(nvx) : -Math.abs(nvx);
+          nx = Math.min(width, Math.max(0, nx));
+        }
+        if (ny <= 0 || ny >= height) {
+          vy[i] = ny <= 0 ? Math.abs(nvy) : -Math.abs(nvy);
+          ny = Math.min(height, Math.max(0, ny));
+        }
       }
       x[i] = nx;
       y[i] = ny;

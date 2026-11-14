@@ -1,0 +1,30 @@
+/* What the glowing backgrounds share (LenziGlowBackground): behind the whole page, fixed to the
+   window, or behind the box they are in (`.lenzi-backdrop`). Never in the way of a click. The colour
+   under the canvas is the base colour, so nothing flashes before the first frame. */
+:host {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: -1;
+  display: block;
+  /* the tallest the window gets: on a phone the picture does not change size while the address bar hides */
+  height: 100vh;
+  height: 100lvh;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--lenzi-glow-base, var(--mat-sys-surface));
+}
+
+:host(.lenzi-background-box) {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  border-radius: inherit;
+}
+
+/* No WebGL2: a still picture of soft light in the accent, so the page keeps its mood. */
+:host(.lenzi-background-still) {
+  background-image:
+    radial-gradient(38% 46% at 26% 32%, color-mix(in oklch, var(--lenzi-glow-accent, var(--mat-sys-primary)) 38%, transparent), transparent 72%),
+    radial-gradient(34% 40% at 74% 66%, color-mix(in oklch, var(--lenzi-glow-accent, var(--mat-sys-primary)) 28%, transparent), transparent 72%),
+    radial-gradient(26% 30% at 60% 16%, color-mix(in oklch, var(--lenzi-glow-accent, var(--mat-sys-primary)) 18%, transparent), transparent 70%);
+}

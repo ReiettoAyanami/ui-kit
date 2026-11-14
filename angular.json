@@ -32,7 +32,8 @@
               "**/*.spec.ts",
               "../charts/**/*.spec.ts",
               "../three/**/*.spec.ts",
-              "../http/**/*.spec.ts"
+              "../http/**/*.spec.ts",
+              "../backgrounds/**/*.spec.ts"
             ]
           }
         }

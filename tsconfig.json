@@ -18,6 +18,9 @@
       ],
       "@lenzi/ui-kit/http": [
         "./projects/kit/http/src/public-api.ts"
+      ],
+      "@lenzi/ui-kit/backgrounds": [
+        "./projects/kit/backgrounds/src/public-api.ts"
       ]
     },
     "noImplicitReturns": true,

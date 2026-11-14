@@ -12,7 +12,8 @@
     "src/**/*.ts",
     "charts/src/**/*.ts",
     "three/src/**/*.ts",
-    "http/src/**/*.ts"
+    "http/src/**/*.ts",
+    "backgrounds/src/**/*.ts"
   ],
   "exclude": [
     "**/*.spec.ts"

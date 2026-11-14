@@ -16,7 +16,9 @@ import { LinearRgb } from './color';
 export const LIGHT_WIDTH = 32;
 export const LIGHT_HEIGHT = 18;
 
-const BLOOM_LEVELS = 6;
+const BLOOM_LEVELS = 7;
+/** How much glow `glow` 1 is: right outside a large object, about the object's own light. */
+const GLOW = 2.6;
 const BLUR_LEVELS = 7;
 
 interface Target {
@@ -100,6 +102,7 @@ uniform vec3 base;
 uniform float core;
 uniform float glow;
 uniform float light;
+uniform float outside;
 uniform float dither;
 out vec4 color;
 vec3 encode(vec3 c) {
@@ -108,12 +111,17 @@ vec3 encode(vec3 c) {
 }
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main() {
-  vec3 l = max(texture(scene, uv).rgb, 0.0) * core + max(texture(bloom, uv).rgb, 0.0) * glow;
-  // dark: light added onto the base, bending towards white instead of clipping
-  vec3 added = base + (1.0 - base) * (1.0 - exp(-l));
-  // light: the objects' own colour as a haze over the base, thicker where there is more light
+  vec4 object = texture(scene, uv);
+  // the glow is around the objects, not over them (their alpha says where they are): an object is as
+  // bright as "core" says, whatever its size, and a large one is not washed out by its own glow
+  vec3 l = max(object.rgb, 0.0) * core + max(texture(bloom, uv).rgb, 0.0) * glow * (1.0 - outside * clamp(object.a, 0.0, 1.0));
   float most = max(l.r, max(l.g, l.b));
-  vec3 haze = mix(base, l / max(most, 1e-4), 1.0 - exp(-most * 1.6));
+  vec3 own = l / max(most, 1e-4);
+  // dark: light added onto the base. More light is more of the object's own colour, never white: the
+  // accent stays the accent, and two objects' colours stay apart
+  vec3 added = base + (1.0 - base) * own * (1.0 - exp(-most));
+  // light: the objects' own colour as a haze over the base, thicker where there is more light
+  vec3 haze = mix(base, own, 1.0 - exp(-most * 1.6));
   vec3 c = encode(mix(added, haze, light));
   // a breath of noise: a dark glow in 8 bits would show its steps
   color = vec4(c + (hash(gl_FragCoord.xy) - 0.5) * dither / 255.0, 1.0);
@@ -260,19 +268,24 @@ export class GlowEngine {
     }
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE);
-    const wide = 0.35 + 0.65 * Math.min(1, Math.max(0, frame.halo));
+    // every wider halving weighs `wide` times the one before it: a tight glow is mostly the narrow
+    // ones, a wide glow all of them
+    const wide = 0.5 + 0.55 * Math.min(1, Math.max(0, frame.halo));
+    let weight = 0;
     for (let level = this.bloom.length - 1; level > 0; level--) {
       this.into(this.bloom[level - 1]!);
       this.kawase(this.up, this.bloom[level]!, 1, wide);
     }
+    for (let level = 0; level < this.bloom.length; level++) weight += wide ** level;
     gl.disable(gl.BLEND);
-    const levels = Math.max(1, this.bloom.length);
+    // the same glow in all, however wide: `halo` spreads it, `glow` is how much there is
+    const strength = (frame.glow * GLOW) / Math.max(1, weight);
     const bloom = this.bloom[0] ?? current;
     const deepest = this.bloom[this.bloom.length - 1] ?? current;
 
     // 3. on the base colour
     this.into(this.final);
-    this.compose(current, bloom, frame, frame.core, (frame.glow * 2.2) / levels, 1);
+    this.compose(current, bloom, frame, frame.core, strength, 1, 1);
 
     // 4. the blur of the finished picture
     const shown = this.blurred(this.final, frame.blur * this.scale);
@@ -284,7 +297,7 @@ export class GlowEngine {
 
     // 6. the light of the whole picture, very small: what the page's lit surfaces take
     this.into(this.lightTarget);
-    this.compose(deepest, deepest, frame, frame.core, frame.glow * 1.2, 0);
+    this.compose(deepest, deepest, frame, frame.core, frame.glow * 1.2, 0, 0);
   }
 
   /** The finished light, very small: LIGHT_WIDTH × LIGHT_HEIGHT pixels (r, g, b, a), the top row first. */
@@ -340,7 +353,8 @@ export class GlowEngine {
     this.fullscreen();
   }
 
-  private compose(scene: Target, bloom: Target, frame: GlowFrame, core: number, glow: number, dither: number): void {
+  /** `outside` 1: the glow only around the objects (the picture); 0: everywhere (the light map, where there are no edges). */
+  private compose(scene: Target, bloom: Target, frame: GlowFrame, core: number, glow: number, dither: number, outside: number): void {
     const gl = this.gl;
     const program = this.composite;
     gl.useProgram(program);
@@ -350,6 +364,7 @@ export class GlowEngine {
     gl.uniform1f(this.uniform(program, 'core'), core);
     gl.uniform1f(this.uniform(program, 'glow'), glow);
     gl.uniform1f(this.uniform(program, 'light'), frame.light ? 1 : 0);
+    gl.uniform1f(this.uniform(program, 'outside'), outside);
     gl.uniform1f(this.uniform(program, 'dither'), dither);
     this.fullscreen();
   }

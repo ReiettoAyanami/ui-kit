@@ -184,6 +184,27 @@ the rule says what, the variable says how much.
 - **Edge to edge** (an Android app): what must stay readable keeps away from the system bars by the
   safe-area insets; the kit's shell already does.
 
+## Backgrounds
+
+- **Three kinds** (lenzi, 2026-11-13: "normal (color, photo, ecc) and the glowing ones (for now blob and
+  flock)"): `LenziBackground` (a colour, a gradient, a photo; only CSS), `LenziBlobBackground` and
+  `LenziFlockBackground` (WebGL2, no library). **One background per page**, behind it or behind one box.
+- **The glowing objects take the accent**, each moved a little from it (lenzi: "some displacement variable
+  ... the displacement shouldn't be too much by default"): the hue by ±12° by default (`spread` 0.2).
+- **On a solid colour, dark or light** (lenzi: "a solid color (dark or light depending on the theme)"): on a
+  dark one the glow is added light; on a light one a haze of colour. The kit stays dark only: the light base
+  is ready for a light theme, not a light theme.
+- **Every background has a blur** over the finished picture (lenzi: "so that you can also use the
+  blobs/flocks for other artistic purposes").
+- **Readable first**: a blob is a deep shade of the accent at the default brightness; text over a background
+  keeps its contrast.
+- **Surfaces over a background are lit only where the app asks** (`lenziLit`; lenzi: "like the youtube
+  backlight feature where elements get slightly alominated by it"): glass that shows the background through
+  it, with its light as a veil and along the border. Without it, cards stay solid. Reduce transparency makes
+  them solid and unlit.
+- **Decoration**: hidden from screen readers, never in the way of a click; stopped out of view and with
+  reduced motion; a still picture where there is no WebGL2.
+
 ## 3D
 
 - **Only through `LenziThreeCanvas`**, in the theme's colours, on a lazy route.

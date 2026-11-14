@@ -32,6 +32,11 @@
       "output": "docs/http"
     },
     {
+      "input": "backgrounds/src",
+      "glob": "**/*.md",
+      "output": "docs/backgrounds"
+    },
+    {
       "input": ".",
       "glob": "{RULES,AI-RULES}.md",
       "output": "."

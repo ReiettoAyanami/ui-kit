@@ -1,0 +1,22 @@
+:host {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+.card {
+  width: min(100%, 340px);
+}
+
+.name {
+  margin: 0 0 4px;
+  font: var(--mat-sys-title-medium);
+}
+
+.words {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

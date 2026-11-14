@@ -1,0 +1,39 @@
+<lenzi-flock-background
+  [count]="num('count', standard.count)"
+  [maxSpeed]="num('maxSpeed', standard.maxSpeed)"
+  [minSpeed]="num('minSpeed', standard.minSpeed)"
+  [maxForce]="num('maxForce', standard.maxForce)"
+  [perception]="num('perception', standard.perception)"
+  [viewAngle]="num('viewAngle', standard.viewAngle)"
+  [separationDistance]="num('separationDistance', standard.separationDistance)"
+  [separation]="num('separation', standard.separation)"
+  [alignment]="num('alignment', standard.alignment)"
+  [cohesion]="num('cohesion', standard.cohesion)"
+  [follow]="follow()"
+  [followWeight]="num('followWeight', standard.followWeight)"
+  [followRadius]="num('followRadius', standard.followRadius)"
+  [wander]="num('wander', standard.wander)"
+  [edges]="text('edges', 'wrap') === 'avoid' ? 'avoid' : 'wrap'"
+  [edgeMargin]="num('edgeMargin', standard.edgeMargin)"
+  [boidSize]="num('boidSize', 7)"
+  [shape]="text('shape', 'dart') === 'dot' ? 'dot' : 'dart'"
+  [trails]="num('trails', 0)"
+  [spread]="num('spread', 0.2)"
+  [seed]="num('seed', 1)"
+  [brightness]="num('brightness', 1)"
+  [glow]="num('glow', 1)"
+  [halo]="num('halo', 0.6)"
+  [blur]="num('blur', 0)"
+  [speed]="num('speed', 1)"
+  [animate]="values()['animate'] !== false"
+  [accent]="text('accent', '--mat-sys-primary')"
+  [base]="text('base', '--mat-sys-surface')"
+/>
+
+<mat-card appearance="outlined" lenziLit class="card">
+  <mat-card-content>
+    <p class="name">Move the pointer</p>
+    <p class="words">The flock flies around it, or onto it. This card is lit by the boids that pass under it.</p>
+    <button mat-stroked-button lenziLit type="button"><mat-icon>thumb_up</mat-icon>A lit button</button>
+  </mat-card-content>
+</mat-card>

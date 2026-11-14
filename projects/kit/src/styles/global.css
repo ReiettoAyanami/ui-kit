@@ -25,6 +25,7 @@ html {
 :root.reduce-transparency {
   --lenzi-glass: 100%;
   --lenzi-glass-bar: 100%;
+  --lenzi-lit-glass: 100%;
   --lenzi-glass-filter: none;
   --lenzi-scrim-filter: none;
 }
@@ -33,6 +34,7 @@ html {
   :root {
     --lenzi-glass: 100%;
     --lenzi-glass-bar: 100%;
+    --lenzi-lit-glass: 100%;
     --lenzi-glass-filter: none;
     --lenzi-scrim-filter: none;
   }
@@ -425,6 +427,91 @@ html {
    classes: Material's own rule (display: flex) comes after this file, and would win over one. */
 @media (max-width: 599.98px) {
   .mat-expansion-panel-header .mat-expansion-panel-header-description {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Backgrounds (@lenzi/ui-kit/backgrounds; lenzi, 2026-11-13)
+   --------------------------------------------------------------------------------------------- */
+
+/* A box with a background of its own (`fill="box"`): the background stays inside it, under what
+   the box holds and over the box's own colour, and takes its corners. */
+.lenzi-backdrop {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* A surface lit by the background (`lenziLit`; lenzi, 2026-11-13: "the glow in the light should
+   behave like the youtube backlight feature where elements get slightly alominated by it", and
+   YouTube's buttons "like they're glass ... responsive to flock / blob position and color"). It is
+   glass: its own colour (--lenzi-lit-surface, the page's surface unless set), see-through, over the
+   background blurred. And it takes the background's light (LenziAmbientLight puts the part of the
+   light behind the surface in .lenzi-lit-light): a veil over its colour, and a brighter line along
+   its border. Each class twice: above Material's own background of a card or a button. Only where
+   the app asks: without `lenziLit` cards and panels stay solid. */
+:where(.lenzi-lit) {
+  position: relative;
+}
+
+.lenzi-lit.lenzi-lit {
+  isolation: isolate;
+  background-color: color-mix(in srgb, var(--lenzi-lit-surface, var(--mat-sys-surface)) var(--lenzi-lit-glass), transparent);
+  backdrop-filter: var(--lenzi-glass-filter);
+}
+
+.lenzi-lit-light {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: var(--lenzi-light-blend, screen);
+}
+
+.lenzi-lit-light.lenzi-lit-on {
+  display: block;
+}
+
+.lenzi-lit-light::before,
+.lenzi-lit-light::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--lenzi-light-image);
+  background-size: var(--lenzi-light-size);
+  background-position: var(--lenzi-light-at);
+  background-repeat: no-repeat;
+}
+
+.lenzi-lit-light::before {
+  opacity: var(--lenzi-lit-veil);
+}
+
+/* The line along the border: the light again, kept only where the border is. */
+.lenzi-lit-light::after {
+  padding: var(--lenzi-border);
+  opacity: var(--lenzi-lit-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* Reduce transparency: solid again (--lenzi-lit-glass is 100% then), and no light on it. */
+:root.reduce-transparency .lenzi-lit-light {
+  display: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lenzi-lit-light {
     display: none;
   }
 }

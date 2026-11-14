@@ -52,11 +52,12 @@ export const CATEGORIES = [
   'Feedback',
   'Dialogs',
   'Services',
+  'Backgrounds',
   '3D',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 
-export type Entry = '@lenzi/ui-kit' | '@lenzi/ui-kit/charts' | '@lenzi/ui-kit/three' | '@lenzi/ui-kit/http' | 'styles';
+export type Entry = '@lenzi/ui-kit' | '@lenzi/ui-kit/charts' | '@lenzi/ui-kit/three' | '@lenzi/ui-kit/http' | '@lenzi/ui-kit/backgrounds' | 'styles';
 
 export interface KitDoc {
   id: string;
@@ -91,6 +92,51 @@ const attr = (name: string, value: string | number | boolean | null | undefined)
   value === '' || value === null || value === undefined || value === false ? '' : value === true ? ` ${name}` : ` ${name}="${value}"`;
 const ICONS = ['payments', 'inventory_2', 'numbers', 'sell', 'schedule', 'insights'].map((value) => ({ value, label: value }));
 const TONES = ['neutral', 'secondary', 'tertiary'].map((value) => ({ value, label: value }));
+
+/** A tag with one attribute a line: only the attributes given (the others are as the piece has them by itself). */
+const tag = (name: string, attributes: readonly string[]) => {
+  const written = attributes.filter(Boolean);
+  return written.length ? `<${name}\n${written.map((attribute) => `  ${attribute}`).join('\n')}\n/>` : `<${name} />`;
+};
+/** An attribute only when it is not the piece's own value: bound (`[n]="3"`) or plain (`n="three"`). */
+const bound = (name: string, value: Value | undefined, standard: Value) => (value === undefined || value === standard ? '' : `[${name}]="${value}"`);
+const plain = (name: string, value: Value | undefined, standard: Value) => (value === undefined || value === standard ? '' : `${name}="${value}"`);
+
+const BACKGROUND_FILES = (folder: string) => ['ts', 'html', 'css', 'spec.ts'].map((extension) => `backgrounds/src/${folder}/${folder}.${extension}`);
+const GLOW_FILES = ['backgrounds/src/glow-background/glow-background.ts', 'backgrounds/src/glow-background/glow-background.css', 'backgrounds/src/engine/glow-engine.ts', 'backgrounds/src/engine/color.ts'];
+const ACCENTS = ['--mat-sys-primary', '--mat-sys-tertiary', '--mat-sys-secondary', '--lenzi-status-good'].map((value) => ({ value, label: value }));
+const BASES = [
+  { value: '--mat-sys-surface', label: 'the page (--mat-sys-surface)' },
+  { value: '--mat-sys-surface-container-lowest', label: 'almost black (--mat-sys-surface-container-lowest)' },
+  { value: '#f3eefc', label: 'a light page (#f3eefc)' },
+];
+const BLOB_SHAPE_CHOICES = ['circle', 'squircle', 'triangle', 'pentagon', 'hexagon', 'clover4', 'clover8', 'flower', 'cookie6', 'cookie9', 'cookie12', 'sunny', 'burst'];
+
+/** What every glowing background takes: its colours, its glow, its blur, its time. */
+const GLOW_CONTROLS: readonly Control[] = [
+  { key: 'accent', label: 'Accent', type: 'select', default: '--mat-sys-primary', options: ACCENTS },
+  { key: 'base', label: 'Colour under them', type: 'select', default: '--mat-sys-surface', options: BASES },
+  { key: 'spread', label: 'Colours apart (0 the same, 1 a lot)', type: 'number', default: 0.2, min: 0, max: 1, step: 0.05 },
+  { key: 'seed', label: 'Seed', type: 'number', default: 1, min: 1, max: 99, step: 1 },
+  { key: 'brightness', label: 'Brightness of the objects', type: 'number', default: 1, min: 0, max: 3, step: 0.1 },
+  { key: 'glow', label: 'Glow', type: 'number', default: 1, min: 0, max: 3, step: 0.1 },
+  { key: 'halo', label: 'Glow width (0 tight, 1 wide)', type: 'number', default: 0.6, min: 0, max: 1, step: 0.05 },
+  { key: 'blur', label: 'Blur of the picture (px)', type: 'number', default: 0, min: 0, max: 80, step: 1 },
+  { key: 'speed', label: 'Speed of time', type: 'number', default: 1, min: 0, max: 3, step: 0.1 },
+  { key: 'animate', label: 'Moving', type: 'boolean', default: true, code: { attr: 'animate', otherwise: true } },
+];
+const glowAttributes = (v: Values) => [
+  plain('accent', v['accent'], '--mat-sys-primary'),
+  plain('base', v['base'], '--mat-sys-surface'),
+  bound('spread', v['spread'], 0.2),
+  bound('seed', v['seed'], 1),
+  bound('brightness', v['brightness'], 1),
+  bound('glow', v['glow'], 1),
+  bound('halo', v['halo'], 0.6),
+  bound('blur', v['blur'], 0),
+  bound('speed', v['speed'], 1),
+  bound('animate', v['animate'], true),
+];
 
 export const DOCS: readonly KitDoc[] = [
   // Foundations ----------------------------------------------------------------------------------
@@ -1006,6 +1052,253 @@ readonly rows = keptValue(this.list, () => this.filter().substanceId);
 readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? v : null), 'week'));`,
 usageLanguage: 'typescript',
     height: 360,
+  },
+  // Backgrounds ----------------------------------------------------------------------------------
+  {
+    id: 'background',
+    name: 'Background',
+    category: 'Backgrounds',
+    summary: 'A plain background behind a page or a box: a colour, a gradient over it, a photo under the gradient.',
+    api: '<lenzi-background>',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-13 ("normal (color, photo, ecc)")',
+    files: BACKGROUND_FILES('background'),
+    ...docs('backgrounds/src/background'),
+    demo: () => import('./demos/background-demo/background-demo').then((m) => m.BackgroundDemo),
+    controls: [
+      {
+        key: 'color',
+        label: 'Colour',
+        type: 'select',
+        default: '--mat-sys-surface',
+        options: ['--mat-sys-surface', '--mat-sys-surface-container-lowest', '--mat-sys-primary-container'].map((value) => ({ value, label: value })),
+      },
+      {
+        key: 'gradient',
+        label: 'Gradient over it',
+        type: 'select',
+        default: 'linear-gradient(to top, var(--mat-sys-surface), transparent 60%)',
+        options: [
+          { value: 'none', label: 'none' },
+          { value: 'radial-gradient(120% 90% at 50% 0%, color-mix(in oklch, var(--mat-sys-primary) 45%, transparent), transparent 70%)', label: 'the accent, from the top' },
+          { value: 'linear-gradient(135deg, color-mix(in oklch, var(--mat-sys-primary) 40%, transparent), color-mix(in oklch, var(--mat-sys-tertiary) 30%, transparent))', label: 'the two accents, across' },
+          { value: 'linear-gradient(to top, var(--mat-sys-surface), transparent 60%)', label: 'the page, rising from the bottom' },
+        ],
+        code: { attr: 'gradient', otherwise: 'none' },
+      },
+      { key: 'image', label: 'Photo (an address)', type: 'text', default: 'demo/hills.svg', code: { attr: 'image', otherwise: '' } },
+      {
+        key: 'fit',
+        label: 'The photo',
+        type: 'select',
+        default: 'cover',
+        options: [
+          { value: 'cover', label: 'covers the space' },
+          { value: 'contain', label: 'whole inside it' },
+          { value: 'tile', label: 'repeated' },
+        ],
+      },
+      { key: 'dim', label: 'Colour back over the picture (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.05 },
+      { key: 'blur', label: 'Blur of the picture (px)', type: 'number', default: 0, min: 0, max: 80, step: 1 },
+    ],
+    usage: (v) => `import { LenziBackground } from '@lenzi/ui-kit/backgrounds';
+
+${tag('lenzi-background', [
+  plain('color', v['color'], '--mat-sys-surface'),
+  plain('gradient', v['gradient'], 'none'),
+  plain('image', v['image'], ''),
+  plain('fit', v['fit'], 'cover'),
+  bound('dim', v['dim'], 0),
+  bound('blur', v['blur'], 0),
+])}`,
+    usageLanguage: 'html',
+    height: 420,
+  },
+  {
+    id: 'blob-background',
+    name: 'Blob background',
+    category: 'Backgrounds',
+    summary: 'Glowing soft shapes in the accent colour that drift, change shape and melt into each other.',
+    api: '<lenzi-blob-background>',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-13 ("supershapes like the ones that materialui uses ... able to merge together")',
+    files: [...BACKGROUND_FILES('blob-background'), 'backgrounds/src/engine/blob-field.ts', 'backgrounds/src/engine/blob-scene.ts', 'backgrounds/src/engine/shapes.ts', ...GLOW_FILES],
+    ...docs('backgrounds/src/blob-background'),
+    demo: () => import('./demos/blob-background-demo/blob-background-demo').then((m) => m.BlobBackgroundDemo),
+    controls: [
+      { key: 'count', label: 'Blobs', type: 'number', default: 6, min: 1, max: 16, step: 1 },
+      { key: 'size', label: 'Size (share of the smaller side)', type: 'number', default: 0.2, min: 0.04, max: 0.6, step: 0.01 },
+      { key: 'sizeVariety', label: 'Sizes apart (0 the same, 1 a lot)', type: 'number', default: 0.45, min: 0, max: 1, step: 0.05 },
+      { key: 'travel', label: 'How far they wander (0 to 1)', type: 'number', default: 0.6, min: 0, max: 1, step: 0.05 },
+      { key: 'morph', label: 'Shape changes (0 never, 1 every 6 s)', type: 'number', default: 0.5, min: 0, max: 3, step: 0.1 },
+      { key: 'spin', label: 'Turns a minute', type: 'number', default: 1.2, min: 0, max: 12, step: 0.1 },
+      {
+        key: 'shapes',
+        label: 'Shapes',
+        type: 'select',
+        default: 'mixed',
+        options: [{ value: 'mixed', label: "mixed (the kit's choice)" }, ...BLOB_SHAPE_CHOICES.map((value) => ({ value, label: value }))],
+        code: { match: /\[shapes\]="\['([a-z0-9]+)'\]"/, otherwise: 'mixed' },
+      },
+      { key: 'merge', label: 'How softly they join (0 to 1)', type: 'number', default: 0.35, min: 0, max: 1, step: 0.05 },
+      { key: 'soft', label: 'Soft edge (px)', type: 'number', default: 2, min: 0, max: 80, step: 1 },
+      { key: 'pull', label: 'Drawn by the pointer (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.05 },
+      ...GLOW_CONTROLS,
+    ],
+    usage: (v) => `import { LenziBlobBackground } from '@lenzi/ui-kit/backgrounds';
+
+${tag('lenzi-blob-background', [
+  bound('count', v['count'], 6),
+  bound('size', v['size'], 0.2),
+  bound('sizeVariety', v['sizeVariety'], 0.45),
+  bound('travel', v['travel'], 0.6),
+  bound('morph', v['morph'], 0.5),
+  bound('spin', v['spin'], 1.2),
+  v['shapes'] === 'mixed' ? '' : `[shapes]="['${v['shapes']}']"`,
+  bound('merge', v['merge'], 0.35),
+  bound('soft', v['soft'], 2),
+  bound('pull', v['pull'], 0),
+  ...glowAttributes(v),
+])}`,
+    usageLanguage: 'html',
+    height: 520,
+  },
+  {
+    id: 'flock-background',
+    name: 'Flock background',
+    category: 'Backgrounds',
+    summary: 'A glowing flock of boids in the accent colour that follows the pointer; every number of the flock is a parameter.',
+    api: '<lenzi-flock-background>',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-13 ("The flocks need to be following the mouse ... every variable should be configurable")',
+    files: [...BACKGROUND_FILES('flock-background'), 'backgrounds/src/engine/boids.ts', 'backgrounds/src/engine/boids.spec.ts', 'backgrounds/src/engine/flock-scene.ts', ...GLOW_FILES],
+    ...docs('backgrounds/src/flock-background'),
+    demo: () => import('./demos/flock-background-demo/flock-background-demo').then((m) => m.FlockBackgroundDemo),
+    controls: [
+      { key: 'count', label: 'Boids', type: 'number', default: 240, min: 0, max: 4000, step: 10 },
+      {
+        key: 'follow',
+        label: 'The pointer',
+        type: 'select',
+        default: 'near',
+        options: [
+          { value: 'near', label: 'near: around it, loosely' },
+          { value: 'target', label: 'target: onto it, slowing to a stop' },
+          { value: 'none', label: 'none: not followed' },
+        ],
+      },
+      { key: 'followWeight', label: 'Weight of the pointer', type: 'number', default: 0.9, min: 0, max: 5, step: 0.1 },
+      { key: 'followRadius', label: 'Distance where the pull fades (px)', type: 'number', default: 140, min: 10, max: 600, step: 10 },
+      { key: 'separation', label: 'Keep apart (weight)', type: 'number', default: 1.6, min: 0, max: 5, step: 0.1 },
+      { key: 'alignment', label: 'Head the same way (weight)', type: 'number', default: 1, min: 0, max: 5, step: 0.1 },
+      { key: 'cohesion', label: 'Stay together (weight)', type: 'number', default: 0.9, min: 0, max: 5, step: 0.1 },
+      { key: 'separationDistance', label: 'Too close (px)', type: 'number', default: 26, min: 0, max: 150, step: 1 },
+      { key: 'perception', label: 'How far a boid sees (px)', type: 'number', default: 70, min: 10, max: 300, step: 5 },
+      { key: 'viewAngle', label: 'How wide it sees (degrees)', type: 'number', default: 270, min: 30, max: 360, step: 10 },
+      { key: 'maxSpeed', label: 'Fastest (px/s)', type: 'number', default: 150, min: 20, max: 600, step: 10 },
+      { key: 'minSpeed', label: 'Slowest (px/s)', type: 'number', default: 60, min: 0, max: 300, step: 10 },
+      { key: 'maxForce', label: 'How hard it turns (px/s²)', type: 'number', default: 220, min: 10, max: 1000, step: 10 },
+      { key: 'wander', label: 'Turns of its own (0 none)', type: 'number', default: 0.25, min: 0, max: 2, step: 0.05 },
+      {
+        key: 'edges',
+        label: 'At the edges',
+        type: 'select',
+        default: 'wrap',
+        options: [
+          { value: 'wrap', label: 'wrap: back in from the other side' },
+          { value: 'avoid', label: 'avoid: turns away before them' },
+        ],
+      },
+      { key: 'edgeMargin', label: 'Turns away from (px)', type: 'number', default: 80, min: 0, max: 300, step: 10 },
+      { key: 'boidSize', label: 'Width of a boid (px)', type: 'number', default: 7, min: 2, max: 40, step: 1 },
+      {
+        key: 'shape',
+        label: 'A boid is',
+        type: 'select',
+        default: 'dart',
+        options: [
+          { value: 'dart', label: 'a dart, pointing where it flies' },
+          { value: 'dot', label: 'a dot' },
+        ],
+      },
+      { key: 'trails', label: 'Trails (0 none, 1 long)', type: 'number', default: 0, min: 0, max: 1, step: 0.05 },
+      ...GLOW_CONTROLS,
+    ],
+    usage: (v) => `import { LenziFlockBackground } from '@lenzi/ui-kit/backgrounds';
+
+${tag('lenzi-flock-background', [
+  bound('count', v['count'], 240),
+  plain('follow', v['follow'], 'near'),
+  bound('followWeight', v['followWeight'], 0.9),
+  bound('followRadius', v['followRadius'], 140),
+  bound('separation', v['separation'], 1.6),
+  bound('alignment', v['alignment'], 1),
+  bound('cohesion', v['cohesion'], 0.9),
+  bound('separationDistance', v['separationDistance'], 26),
+  bound('perception', v['perception'], 70),
+  bound('viewAngle', v['viewAngle'], 270),
+  bound('maxSpeed', v['maxSpeed'], 150),
+  bound('minSpeed', v['minSpeed'], 60),
+  bound('maxForce', v['maxForce'], 220),
+  bound('wander', v['wander'], 0.25),
+  plain('edges', v['edges'], 'wrap'),
+  bound('edgeMargin', v['edgeMargin'], 80),
+  bound('boidSize', v['boidSize'], 7),
+  plain('shape', v['shape'], 'dart'),
+  bound('trails', v['trails'], 0),
+  ...glowAttributes(v),
+])}`,
+    usageLanguage: 'html',
+    height: 520,
+  },
+  {
+    id: 'lit-surface',
+    name: 'Lit surfaces',
+    category: 'Backgrounds',
+    summary: 'A card, a bar or a button over a background turns into glass and takes the background’s light.',
+    api: '[lenziLit], LenziAmbientLight',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-13 ("like the youtube backlight feature where elements get slightly alominated by it")',
+    files: ['backgrounds/src/ambient-light/lit.ts', 'backgrounds/src/ambient-light/ambient-light.ts', 'backgrounds/src/ambient-light/lit.spec.ts', 'backgrounds/src/ambient-light/ambient-light.spec.ts', 'src/styles/global.css'],
+    ...docs('backgrounds/src/ambient-light'),
+    demo: () => import('./demos/lit-surface-demo/lit-surface-demo').then((m) => m.LitSurfaceDemo),
+    controls: [
+      { key: 'lit', label: 'Lit (lenziLit)', type: 'boolean', default: true, code: { match: /\slenziLit[\s>]/ } },
+      {
+        key: 'behind',
+        label: 'Behind them',
+        type: 'select',
+        default: 'blobs',
+        options: [
+          { value: 'blobs', label: 'blobs' },
+          { value: 'flock', label: 'a flock' },
+          { value: 'picture', label: 'a picture (glass only: it sheds no light)' },
+        ],
+        code: false,
+      },
+      { key: 'glass', label: 'Lit surface opacity (%)', type: 'number', default: 46, min: 0, max: 100, step: 1, code: { match: /--lenzi-lit-glass:\s*(-?[\d.]+)%/ } },
+      { key: 'veil', label: 'Light on the surface (%)', type: 'number', default: 34, min: 0, max: 100, step: 1, code: { match: /--lenzi-lit-veil:\s*(-?[\d.]+)%/ } },
+      { key: 'rim', label: 'Light on the border (%)', type: 'number', default: 80, min: 0, max: 100, step: 1, code: { match: /--lenzi-lit-rim:\s*(-?[\d.]+)%/ } },
+      { key: 'reduce', label: 'Reduce transparency', type: 'boolean', default: false, code: { match: /setReduceTransparency\(true\)/ } },
+    ],
+    usage: (v) => `<!-- import { LenziBlobBackground, LenziLit } from '@lenzi/ui-kit/backgrounds'; -->
+<lenzi-blob-background />
+
+<mat-card appearance="outlined"${v['lit'] ? ' lenziLit' : ''}>…</mat-card>
+<button mat-stroked-button${v['lit'] ? ' lenziLit' : ''} type="button">Like</button>
+
+<!-- How lit, for every surface: global variables (the Variables page saves them into the kit) -->
+<style>
+  :root {
+    --lenzi-lit-glass: ${v['glass']}%;
+    --lenzi-lit-veil: ${v['veil']}%;
+    --lenzi-lit-rim: ${v['rim']}%;
+  }
+</style>
+
+<!-- Reduce transparency makes them solid and unlit: LenziAppearance.setReduceTransparency(${v['reduce']}) -->`,
+    usageLanguage: 'html',
+    height: 480,
   },
   // 3D -------------------------------------------------------------------------------------------
   {

@@ -1,0 +1,14 @@
+@if (picture(); as picture) {
+  <div
+    class="picture"
+    [style.background-image]="picture"
+    [style.background-size]="fit() === 'tile' ? 'auto' : fit()"
+    [style.background-repeat]="fit() === 'tile' ? 'repeat' : 'no-repeat'"
+    [style.background-position]="position()"
+    [style.filter]="blur() > 0 ? 'blur(' + blur() + 'px)' : null"
+    [style.inset]="blur() > 0 ? -2 * blur() + 'px' : null"
+  ></div>
+  @if (dim() > 0) {
+    <div class="veil" [style.opacity]="dim()"></div>
+  }
+}

@@ -49,6 +49,11 @@
             }
           } else if (action.click) {
             pick(action.click)?.click();
+          } else if (action.move) {
+            // {"move": [0.8, 0.25]}: the mouse over the page, at that share of the frame (what follows
+            // the pointer through the window, like a background, sees it)
+            const view = frame.contentWindow;
+            view.dispatchEvent(new view.PointerEvent('pointermove', { clientX: width * action.move[0], clientY: height * action.move[1], pointerType: 'mouse', bubbles: true }));
           } else if (action.scroll) {
             pick(action.scroll)?.scrollIntoView({ block: action.block ?? 'center' });
           } else if (action.key) {

@@ -13,6 +13,7 @@
     "src/**/*.spec.ts",
     "charts/src/**/*.spec.ts",
     "three/src/**/*.spec.ts",
-    "http/src/**/*.spec.ts"
+    "http/src/**/*.spec.ts",
+    "backgrounds/src/**/*.spec.ts"
   ]
 }

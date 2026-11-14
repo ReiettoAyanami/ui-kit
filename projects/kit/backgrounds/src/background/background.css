@@ -1,0 +1,32 @@
+/* Behind the whole page, fixed to the window, or behind the box it is in (`.lenzi-backdrop`). Never in
+   the way of a click. */
+:host {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: -1;
+  display: block;
+  /* the tallest the window gets: on a phone a photo does not change size while the address bar hides */
+  height: 100vh;
+  height: 100lvh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+:host(.lenzi-background-box) {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  border-radius: inherit;
+}
+
+/* The picture over the colour; a blurred one is drawn larger than the box, so its faded edges stay
+   out of sight. The veil is the colour again, over the picture. */
+.picture,
+.veil {
+  position: absolute;
+  inset: 0;
+}
+
+.veil {
+  background-color: inherit;
+}

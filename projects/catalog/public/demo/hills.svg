@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!-- The catalog's stand-in for a photo (LenziBackground's demo): hills at dusk, drawn, so the repo holds no one's picture. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1436"/>
+      <stop offset="0.45" stop-color="#5a3a8c"/>
+      <stop offset="0.72" stop-color="#d9779a"/>
+      <stop offset="1" stop-color="#ffc48a"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.68" cy="0.62" r="0.35">
+      <stop offset="0" stop-color="#fff2c9" stop-opacity="0.95"/>
+      <stop offset="0.25" stop-color="#ffd08a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffd08a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#sun)"/>
+  <circle cx="1088" cy="560" r="46" fill="#fff6dc"/>
+  <g fill="#ffffff">
+    <circle cx="210" cy="120" r="1.6" opacity="0.8"/>
+    <circle cx="470" cy="70" r="1.2" opacity="0.7"/>
+    <circle cx="640" cy="190" r="1.4" opacity="0.6"/>
+    <circle cx="930" cy="90" r="1.8" opacity="0.8"/>
+    <circle cx="1240" cy="150" r="1.2" opacity="0.7"/>
+    <circle cx="1450" cy="80" r="1.5" opacity="0.8"/>
+    <circle cx="120" cy="260" r="1.1" opacity="0.5"/>
+    <circle cx="1360" cy="280" r="1.1" opacity="0.5"/>
+  </g>
+  <path d="M0 640 C 180 560 320 600 480 570 S 760 480 940 560 S 1300 620 1600 520 V900 H0 Z" fill="#6b3f86"/>
+  <path d="M0 720 C 220 640 380 700 600 660 S 980 600 1180 670 S 1460 700 1600 650 V900 H0 Z" fill="#43285f"/>
+  <path d="M0 800 C 260 730 420 790 700 760 S 1100 720 1320 780 S 1520 800 1600 770 V900 H0 Z" fill="#26173b"/>
+</svg>

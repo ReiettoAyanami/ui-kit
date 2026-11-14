@@ -1,0 +1,47 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: 24px;
+}
+
+.card {
+  width: min(100%, 320px);
+}
+
+/* A surface of the page's own: a border like every surface above the page, the kit's radius. */
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  width: min(100%, 440px);
+  padding: 12px 20px;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-bar-radius);
+}
+
+.bar.solid {
+  background-color: var(--mat-sys-surface);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.name {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.words {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

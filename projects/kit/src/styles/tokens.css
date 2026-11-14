@@ -8,6 +8,9 @@
   --lenzi-glass-saturate: 160%;
   --lenzi-scrim-blur: 6px;
   --lenzi-scrim-opacity: 32%;
+  --lenzi-lit-glass: 46%;
+  --lenzi-lit-veil: 34%;
+  --lenzi-lit-rim: 80%;
 
   /* Borders */
   --lenzi-border: 2px;
