@@ -87,7 +87,10 @@ the rule says what, the variable says how much.
 - **Every surface that rises above the page has a border** in `outline-variant`: cards, panels,
   dialogs, page windows, the drawer, tables.
 - **The top bar and the drawer float** 8 px from the screen's edges, rounded 16 px on every side
-  (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le versioni").
+  (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le versioni"). **Scrolled
+  past its height it shrinks to its menu button**, without the title, and a page's search bar rides beside
+  it (lenzi, 2026-11-14: "dovrebbe compattarsi con un animazione verso l'icona di apertura/chiusura ... ma
+  (se c'é) deve affiancare la barra di ricerca"; `LenziAppShell`, `lenziShellSearch`).
 - **Menus, selects and autocomplete panels are rounded on every side** (12 px), a few px away from
   their field; **the chosen option is a pill** inside them (lenzi, 2026-10-02).
 

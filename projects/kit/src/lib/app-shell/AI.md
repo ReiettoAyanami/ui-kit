@@ -6,6 +6,10 @@
 - Things go in by attribute (`lenziShellNav`, `lenziShellActions`, `lenziShellBanner`, `lenziShellBelow`); never
   put them in the page's own template to "look like" they are in the bar.
 - A sign-in page: `data: { bare: true }` on its route.
+- Scrolled past it, the bar shrinks to its menu button by itself (`compact`): nothing to wire. A page with a
+  search bar gives it `lenziShellSearch` (`<lenzi-search-bar lenziShellSearch …>`), as a child of the page's
+  own column, not of a short wrapper (it sticks inside its parent): it then rides beside the shrunk bar.
+  Never make a search bar sticky by hand, never move it into the bar.
 - Pages start under the bar: give a page `padding: 8px 16px 64px` and a `max-width` with `margin: 0 auto`;
   do not add a top margin for the bar.
 - Never: a second toolbar, a permanent side navigation, a bottom navigation bar, a drawer that stays open on

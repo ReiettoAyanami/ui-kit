@@ -1,5 +1,5 @@
 <!-- The page never moves: hiding the app around it (bare) must not create the page again. -->
-<mat-sidenav-container class="lenzi-shell" [class.lenzi-shell-bare]="isBare()">
+<mat-sidenav-container class="lenzi-shell" [class.lenzi-shell-bare]="isBare()" [class.lenzi-shell-compact]="compact()">
   <!-- Opened, the focus goes to the current page's entry, not to the first one: a focused entry is
        drawn highlighted, and the first page looked selected on every page (lenzi, 2026-10-03). -->
   <mat-sidenav

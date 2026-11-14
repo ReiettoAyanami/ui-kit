@@ -73,6 +73,27 @@ describe('LenziAppShell', () => {
     expect((await at('/tickets', null, true)).querySelector('.lenzi-shell')?.classList.contains('lenzi-shell-bare')).toBe(true);
   });
 
+  it('scrolled past the bar it shrinks (compact), and comes back at the top; a bare page never shrinks', async () => {
+    const scrollTo = async (y: number) => {
+      Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+      window.dispatchEvent(new Event('scroll'));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    };
+    const element = await at('/tickets');
+    const shell = () => element.querySelector('.lenzi-shell')!;
+    await scrollTo(400);
+    await vi.waitFor(() => expect(shell().classList.contains('lenzi-shell-compact')).toBe(true));
+    await scrollTo(0);
+    await vi.waitFor(() => expect(shell().classList.contains('lenzi-shell-compact')).toBe(false));
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'login', data: { bare: true }, component: Page }]), { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } }] });
+    const bare = await at('/login');
+    await scrollTo(400);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(bare.querySelector('.lenzi-shell')!.classList.contains('lenzi-shell-compact')).toBe(false);
+    await scrollTo(0);
+  });
+
   it('the menu button opens the drawer, closeNav closes it', async () => {
     const element = await at('/tickets');
     element.querySelector<HTMLButtonElement>('.lenzi-shell-menu')!.click();

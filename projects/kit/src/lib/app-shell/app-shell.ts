@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, computed, inject, input, viewChild } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, ElementRef, ViewEncapsulation, computed, inject, input, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -72,6 +72,43 @@ export class LenziAppShell {
     const bare = this.bare();
     return bare === 'route' ? this.routeBare() : bare;
   });
+
+  /**
+   * Scrolled past the top bar: it has shrunk to its menu button, without the title (lenzi, 2026-11-14:
+   * "quando scendi oltre la sua altezza dovrebbe compattarsi con un animazione verso l'icona di
+   * apertura/chiusura, non mostrando il titolo della pagina"); a `LenziShellSearch` moves beside it.
+   */
+  readonly compact = signal(false);
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+
+  constructor() {
+    const view = inject(DOCUMENT).defaultView;
+    if (!view) return;
+    let pending = 0;
+    const check = () => {
+      pending = 0;
+      this.compact.set(!this.isBare() && view.scrollY > this.barBottom());
+    };
+    const onScroll = () => (pending ||= view.requestAnimationFrame(check));
+    view.addEventListener('scroll', onScroll, { passive: true });
+    inject(DestroyRef).onDestroy(() => {
+      view.removeEventListener('scroll', onScroll);
+      if (pending) view.cancelAnimationFrame(pending);
+    });
+  }
+
+  /** Where the top bar ends when the page is at its top, px: its height, its gap and the banner's above it. */
+  private barBottom(): number {
+    const view = this.host.ownerDocument.defaultView;
+    let bottom = 0;
+    for (const selector of [':scope > .mat-drawer-container > .mat-drawer-content > .lenzi-shell-banner', ':scope > .mat-drawer-container > .mat-drawer-content > .lenzi-shell-bar']) {
+      const element = this.host.querySelector<HTMLElement>(selector);
+      if (!element || element.offsetHeight === 0) continue;
+      bottom += element.offsetHeight + (parseFloat(view?.getComputedStyle(element).marginTop ?? '') || 0);
+    }
+    return bottom;
+  }
 
   /**
    * Opens the drawer. Its origin goes with it: closing gives the focus back to the menu button,

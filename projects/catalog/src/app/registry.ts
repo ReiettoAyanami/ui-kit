@@ -392,7 +392,7 @@ usageLanguage: 'html',
     api: '<lenzi-app-shell>',
     entry: '@lenzi/ui-kit',
     origin: 'substance-tracker and vtiger-reader app.html / app.css',
-    files: component('app-shell'),
+    files: [...component('app-shell'), ...lib('app-shell', 'shell-search.ts', 'shell-search.spec.ts')],
     ...docs('src/lib/app-shell'),
     demo: () => import('./demos/app-shell-demo/app-shell-demo').then((m) => m.AppShellDemo),
     controls: [

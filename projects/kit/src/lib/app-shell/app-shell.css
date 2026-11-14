@@ -7,8 +7,16 @@
    container, auto on the content) won; the top bar then stuck to a box that never scrolls, and left
    with the page (lenzi, 2026-11-14: "quando scrolli la barra sopra non sparisca ma stia su"). */
 .lenzi-shell.mat-drawer-container {
+  /* the top bar's height, Material's toolbar's: what it shrinks to, and what a search bar beside it lines up with */
+  --lenzi-shell-bar-height: var(--mat-toolbar-standard-height, 64px);
   min-height: 100dvh;
   overflow: visible;
+}
+
+@media (max-width: 599px) {
+  .lenzi-shell.mat-drawer-container {
+    --lenzi-shell-bar-height: var(--mat-toolbar-mobile-height, 56px);
+  }
 }
 
 /* The drawer floats inside the safe area, away from the edges (global.css rounds it and gives it
@@ -56,16 +64,20 @@
   top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px));
   z-index: 5;
   box-sizing: border-box;
-  width: auto;
+  width: calc(100% - 2 * var(--lenzi-float-gap));
   margin: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px)) var(--lenzi-float-gap) var(--lenzi-float-gap);
   border-radius: var(--lenzi-bar-radius);
   backdrop-filter: var(--lenzi-glass-filter);
+  transition:
+    width var(--lenzi-standard-duration) var(--lenzi-standard-easing),
+    padding var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
 /* The menu button at the bar's edge, the title after it, taking the room up to the actions. */
 .lenzi-shell-menu {
   margin-left: -8px;
   margin-right: 8px;
+  transition: margin var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
 .lenzi-shell-title {
@@ -73,6 +85,70 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.lenzi-shell-title,
+.lenzi-shell-bar [lenziShellActions] {
+  transition:
+    opacity var(--lenzi-standard-duration) var(--lenzi-standard-easing),
+    visibility var(--lenzi-standard-duration) allow-discrete;
+}
+
+/* Scrolled past it, the bar shrinks to its menu button (lenzi, 2026-11-14: "quando scendi oltre la sua
+   altezza dovrebbe compattarsi con un animazione verso l'icona di apertura/chiusura, non mostrando il
+   titolo della pagina"): as wide as it is high, the button in its middle; the title and the actions fade
+   and leave the tab order. Same height as before, so nothing under it moves. */
+.lenzi-shell-compact .lenzi-shell-bar.mat-toolbar {
+  width: var(--lenzi-shell-bar-height);
+  padding-inline: 0;
+  overflow: hidden;
+}
+
+.lenzi-shell-compact .lenzi-shell-menu {
+  margin-left: calc((var(--lenzi-shell-bar-height) - var(--mat-icon-button-state-layer-size, 40px)) / 2);
+  margin-right: 0;
+}
+
+.lenzi-shell-compact .lenzi-shell-title,
+.lenzi-shell-compact .lenzi-shell-bar [lenziShellActions] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* A page's search bar (LenziShellSearch): it sticks at the top, level with the bar ("ma (se c'é) deve
+   affiancare la barra di ricerca"); under the bar while the bar is whole, just past it once it has shrunk,
+   on the bars' glass. --lenzi-shell-search-left is where the page puts it (the directive measures it). */
+.lenzi-shell-search {
+  position: sticky;
+  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px) + (var(--lenzi-shell-bar-height) - var(--lenzi-search-height)) / 2);
+  z-index: 4;
+  box-sizing: border-box;
+  transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-standard-easing);
+}
+
+.lenzi-shell-search .mat-mdc-text-field-wrapper {
+  border-radius: calc(var(--lenzi-search-height) / 2);
+  transition: background-color var(--lenzi-standard-duration) var(--lenzi-standard-easing);
+}
+
+.lenzi-shell-compact .lenzi-shell-search {
+  padding-inline-start: max(0px, calc(env(safe-area-inset-left, 0px) + 2 * var(--lenzi-float-gap) + var(--lenzi-shell-bar-height) - var(--lenzi-shell-search-left, 0px)));
+}
+
+.lenzi-shell-compact .lenzi-shell-search .mat-mdc-text-field-wrapper {
+  background-color: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-glass-bar), transparent);
+  backdrop-filter: var(--lenzi-glass-filter);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lenzi-shell-bar.mat-toolbar,
+  .lenzi-shell-menu,
+  .lenzi-shell-title,
+  .lenzi-shell-bar [lenziShellActions],
+  .lenzi-shell-search,
+  .lenzi-shell-search .mat-mdc-text-field-wrapper {
+    transition: none;
+  }
 }
 
 /* A bar above the top bar that cannot be closed ("Viewing as"): it sticks, and the top bar sticks

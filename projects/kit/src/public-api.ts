@@ -11,6 +11,7 @@ export * from './lib/appearance/appearance';
 
 // Layout
 export * from './lib/app-shell/app-shell';
+export * from './lib/app-shell/shell-search';
 export * from './lib/nav-list/nav-list';
 export * from './lib/not-found/not-found';
 export * from './lib/version-label/version-label';
