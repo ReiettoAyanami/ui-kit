@@ -1395,7 +1395,59 @@ ${tag('lenzi-flock-background', [
     ...docs('svgs/src/cat'),
     demo: () => import('./demos/cat-demo/cat-demo').then((m) => m.CatDemo),
     controls: [
-      { key: 'size', label: 'Size (px)', type: 'number', default: 120, min: 32, max: 240, step: 4, code: { attr: 'size', otherwise: 96 } },
+      {
+        key: 'expression',
+        label: 'Expression',
+        type: 'select',
+        default: 'happy',
+        options: [
+          { value: 'happy', label: 'happy' },
+          { value: 'sleepy', label: 'sleepy' },
+          { value: 'sad', label: 'sad' },
+          { value: 'none', label: 'none (seen from behind)' },
+        ],
+      },
+      {
+        key: 'back',
+        label: 'Back',
+        type: 'select',
+        default: 'plain',
+        options: [
+          { value: 'plain', label: 'plain' },
+          { value: 'hard-hat', label: 'with a hard hat' },
+        ],
+      },
+      {
+        key: 'material',
+        label: 'Material',
+        type: 'select',
+        default: 'solid',
+        options: [
+          { value: 'plain', label: 'plain: the page’s surface' },
+          { value: 'glass', label: 'glass (lenziLit)' },
+          { value: 'lamp', label: 'lamp (lenziGlow)' },
+          { value: 'solid', label: 'solid (lenziSolid): it casts its shadow' },
+        ],
+        code: { attr: 'material', otherwise: 'plain' },
+      },
+      {
+        key: 'color',
+        label: 'Lamp colour',
+        type: 'select',
+        default: '#b388ff',
+        options: [
+          { value: '--mat-sys-primary', label: 'violet (--mat-sys-primary)' },
+          { value: '#9c6bff', label: 'deep violet' },
+          { value: '#b388ff', label: 'lavender' },
+          { value: '#e6d6ff', label: 'pale lilac' },
+          { value: '#f4ecff', label: 'violet white' },
+          { value: '--mat-sys-tertiary', label: 'cyan (--mat-sys-tertiary)' },
+          { value: '#ffb74d', label: 'amber' },
+          { value: '#ff4f8b', label: 'pink' },
+        ],
+        code: { attr: 'glowColor', otherwise: '#b388ff' },
+      },
+      { key: 'size', label: 'Size (px)', type: 'number', default: 160, min: 32, max: 320, step: 4, code: { attr: 'size', otherwise: 96 } },
       { key: 'animated', label: 'Moving', type: 'boolean', default: true, code: { absent: /\[animated\]="false"/ } },
       {
         key: 'behind',
@@ -1415,19 +1467,22 @@ ${tag('lenzi-flock-background', [
     ],
     usage: (v) => `<!-- import { LenziCat } from '@lenzi/ui-kit/svgs'; -->
 
-<!-- the page's surface; a label makes it an image for a screen reader -->
-<lenzi-cat mood="happy" size="${v['size']}" label="A happy cat"${v['animated'] ? '' : ' [animated]="false"'} />
+<!-- an expression (happy, sleepy, sad, none) over a back (plain, hard-hat), in a material
+     (plain, glass, lamp, solid); a label makes it an image for a screen reader -->
+${tag('lenzi-cat', [
+  `expression="${v['expression']}"`,
+  plain('back', v['back'], 'plain'),
+  plain('material', v['material'], 'plain'),
+  `glowColor="${v['color']}"`,
+  bound('glowStrength', v['strength'], 1),
+  bound('glowReach', v['reach'], 220),
+  `size="${v['size']}"`,
+  v['animated'] ? '' : '[animated]="false"',
+  'label="lenzi’s cat"',
+])}
 
-<!-- a lamp: its lines glow, it lights what is around it -->
-<lenzi-cat mood="builder" material="lamp" glowColor="#f4ecff"${v['strength'] === 1 ? '' : ` [glowStrength]="${v['strength']}"`}${v['reach'] === 220 ? '' : ` [glowReach]="${v['reach']}"`} />
-
-<!-- glass: the light and the background show through it -->
-<lenzi-cat mood="sleepy" material="glass" />
-
-<!-- solid: it casts the cat's shadow on a lit floor -->
-<lenzi-cat mood="sad" material="solid" />
-
-<!-- moods: happy, sleepy, sad, back, builder -->`,
+<!-- a solid cat casts its shadow, and the light of a lamp lies, on a lit floor -->
+<main lenziLit class="lenzi-lit-under">…</main>`,
     usageLanguage: 'html',
     height: 640,
   },

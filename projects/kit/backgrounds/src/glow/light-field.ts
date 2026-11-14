@@ -164,8 +164,8 @@ export class LenziLightField {
 
   /**
    * An element that stops the light (`lenziSolid`): it casts a shadow, of its box with its rounded corners,
-   * or of `outline` (points as fractions of its box, 0..1: a drawing that is not a box, a cat), read at
-   * every frame. Gives back how to take it away.
+   * or of `outline` (a polygon, points as fractions of its box, 0..1: a drawing that is not a box, a cat;
+   * hollows are kept), read at every frame. Gives back how to take it away.
    */
   addCaster(element: HTMLElement, outline?: () => LenziOutline | null): () => void {
     this.casters.set(element, outline ?? (() => null));
@@ -263,7 +263,8 @@ export class LenziLightField {
           // a shadow falls only on what lies under the element (lenzi, 2026-11-14: "The one on the bottom
           // shouldn't be able to cast to the one on top")
           .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box) && above(caster.element, surface.element))
-          .map((caster) => (caster.outline ? shadowOfOutline(caster.outline, from) : shadowOf(caster.box, from, caster.radius)).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
+          .flatMap((caster) => (caster.outline ? shadowsOfOutline(caster.outline, from) : [shadowOf(caster.box, from, caster.radius)]))
+          .map((polygon) => polygon.map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
         // the lamp's box in the surface's px: its light fades off its outline, all round it
         const lampBox = [light.box.left - box.left, light.box.top - box.top, light.box.right - box.left, light.box.bottom - box.top].map(Math.round);
         data.push([...lampBox, Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
@@ -454,6 +455,52 @@ export function shadowOfOutline(points: readonly (readonly [number, number])[], 
     return [x + (dx / length) * SHADOW_LENGTH, y + (dy / length) * SHADOW_LENGTH] as [number, number];
   });
   return hull([...near, ...far]).flat();
+}
+
+/**
+ * The shadow of a drawing's outline (screen px, any shape, hollows too) from a point of light, as polygons
+ * whose union it is: the drawing itself, and each side that faces the light carried far away from it. So
+ * the shadow keeps the drawing's shape (lenzi, 2026-11-14, of a cat's shadow drawn from its hull: "Not
+ * quite"): the gap between its ears, the curve of its tail.
+ */
+export function shadowsOfOutline(points: readonly (readonly [number, number])[], light: { x: number; y: number }): number[][] {
+  const count = points.length;
+  let area = 0;
+  for (let i = 0; i < count; i++) {
+    const [x0, y0] = points[i]!;
+    const [x1, y1] = points[(i + 1) % count]!;
+    area += x0 * y1 - x1 * y0;
+  }
+  const far = ([x, y]: readonly [number, number]) => {
+    const dx = x - light.x;
+    const dy = y - light.y;
+    const length = Math.hypot(dx, dy) || 1;
+    return [x + (dx / length) * SHADOW_LENGTH, y + (dy / length) * SHADOW_LENGTH];
+  };
+  const polygons: number[][] = [points.flat()];
+  for (let i = 0; i < count; i++) {
+    const a = points[i]!;
+    const b = points[(i + 1) % count]!;
+    // a side faces the light when the light is on its outer side
+    const side = (b[0] - a[0]) * (light.y - a[1]) - (b[1] - a[1]) * (light.x - a[0]);
+    if (side * area < 0) polygons.push([...a, ...b, ...far(b), ...far(a)]);
+  }
+  // all turning the same way, so where they overlap (nonzero) they add up instead of cancelling out
+  return polygons.map(clockwise);
+}
+
+/** A flat polygon (x, y, …) turning the same way as every other one. */
+function clockwise(polygon: number[]): number[] {
+  let area = 0;
+  const count = polygon.length / 2;
+  for (let i = 0; i < count; i++) {
+    const j = (i + 1) % count;
+    area += polygon[i * 2]! * polygon[j * 2 + 1]! - polygon[j * 2]! * polygon[i * 2 + 1]!;
+  }
+  if (area >= 0) return polygon;
+  const reversed: number[] = [];
+  for (let i = count - 1; i >= 0; i--) reversed.push(polygon[i * 2]!, polygon[i * 2 + 1]!);
+  return reversed;
 }
 
 /** An outline given as fractions of a box, on the screen. */

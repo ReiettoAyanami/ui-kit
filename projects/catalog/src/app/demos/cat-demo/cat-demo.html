@@ -10,42 +10,35 @@
   }
 }
 
-<!-- The floor: lit by the lamps, under the cats, so the solid ones' shadows fall on it. -->
+<!-- The floor: lit by the lamps, under the cat, so a solid cat's shadow falls on it. -->
 <div class="field lenzi-lit-under" lenziLit [class.over-background]="behind() !== 'dark'">
-  @for (item of items(); track item.mood; let index = $index) {
-    <div class="item" cdkDrag cdkDragBoundary=".field">
-      <div class="bar">
-        <mat-icon class="handle" aria-hidden="true">drag_indicator</mat-icon>
-        <lenzi-color-picker
-          [label]="item.name + ' cat light colour'"
-          [size]="24"
-          [value]="item.color"
-          [choices]="choices"
-          [disabled]="item.material !== 'lamp'"
-          (valueChange)="paint(index, $event)"
-          (picked)="paint(index, $event)"
-        />
-      </div>
-      <mat-button-toggle-group
-        class="materials"
-        [attr.aria-label]="item.name + ' cat material'"
-        [value]="item.material"
-        (change)="make(index, $event.value)"
-      >
-        @for (material of materials; track material.value) {
-          <mat-button-toggle [value]="material.value">{{ material.label }}</mat-button-toggle>
-        }
-      </mat-button-toggle-group>
-      <lenzi-cat
-        [mood]="item.mood"
-        [material]="item.material"
-        [size]="size()"
-        [animated]="animated()"
-        [glowColor]="item.color"
-        [glowStrength]="strength()"
-        [glowReach]="reach()"
-        [label]="item.name + ' cat'"
-      />
-    </div>
-  }
+  <div class="item" cdkDrag cdkDragBoundary=".field" (cdkDragEnded)="dropped()">
+    <button
+      mat-fab
+      type="button"
+      [attr.aria-label]="bulb() ? 'Switch off the bulb' : 'Switch on the bulb'"
+      [attr.aria-pressed]="bulb()"
+      [lenziGlow]="bulb()"
+      glowColor="#f4ecff"
+      [glowStrength]="strength()"
+      [glowReach]="reach()"
+      (click)="tapped()"
+    >
+      <mat-icon>{{ bulb() ? 'lightbulb' : 'lightbulb_outline' }}</mat-icon>
+    </button>
+  </div>
+
+  <div class="item" cdkDrag cdkDragBoundary=".field">
+    <lenzi-cat
+      [expression]="expression()"
+      [back]="back()"
+      [material]="material()"
+      [size]="size()"
+      [animated]="animated()"
+      [glowColor]="color()"
+      [glowStrength]="strength()"
+      [glowReach]="reach()"
+      label="lenzi's cat"
+    />
+  </div>
 </div>

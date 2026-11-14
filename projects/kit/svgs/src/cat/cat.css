@@ -54,7 +54,7 @@
   animation: lenzi-cat-breathe 4.2s ease-in-out infinite;
 }
 
-.animated.mood-sleepy {
+.animated.expression-sleepy {
   animation-duration: 6.4s;
 }
 
@@ -65,7 +65,7 @@
 }
 
 /* closed eyes do not blink */
-.animated.mood-sleepy .eye {
+.animated.expression-sleepy .eye {
   animation: none;
 }
 

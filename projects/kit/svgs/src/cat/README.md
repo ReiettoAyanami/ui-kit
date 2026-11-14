@@ -6,14 +6,16 @@ traced into vectors, in the theme's colours.
 
 ## What
 
-- **Five moods** (`mood`): `happy`, `sleepy`, `sad`, `back` (from behind), `builder` (from behind, with a
-  hard hat: something being built).
+- **An expression over a back** (lenzi, 2026-11-14: "make me choose what expression and what back to use"):
+  `expression` is `happy`, `sleepy`, `sad` or `none` (seen from behind); `back` is `plain` or `hard-hat`
+  (something being built). Any expression goes over either back.
 - **A material shaped as the cat** (`material`): its body takes it inside its outline, not in a box.
   - `plain`: the page's surface, a little lighter than the page (`--lenzi-cat-fill`).
   - `glass`: a lit surface (`lenziLit`): the background and the lamps' light show through it.
   - `lamp`: a glowing element (`lenziGlow`): its lines glow in its colour (`glowColor`), and it lights the
     lit surfaces around it (`glowStrength`, `glowReach`, as `lenziGlow`).
-  - `solid`: a solid element (`lenziSolid`): on a lit floor it casts the cat's shadow, not a box's.
+  - `solid`: a solid element (`lenziSolid`): on a lit floor it casts the cat's shadow, not a box's: its
+    outline, hollows too (the gap between its ears, the curve of its tail).
 - **Its lines** are its border: the theme's text colour (`--lenzi-cat-ink`), the lamp's colour when it is a lamp.
 - **A little life** (`animated`, on by default): it breathes, blinks (not when sleepy: its eyes are closed)
   and twitches its whiskers. Nothing moves with reduced motion.
@@ -31,7 +33,8 @@ traced into vectors, in the theme's colours.
 
 | Input | Type | Default |
 | --- | --- | --- |
-| `mood` | `'happy' \| 'sleepy' \| 'sad' \| 'back' \| 'builder'` | `'happy'` |
+| `expression` | `'happy' \| 'sleepy' \| 'sad' \| 'none'` | `'happy'` |
+| `back` | `'plain' \| 'hard-hat'` | `'plain'` |
 | `material` | `'plain' \| 'glass' \| 'lamp' \| 'solid'` | `'plain'` |
 | `size` | number, px | `96` |
 | `animated` | boolean | `true` |

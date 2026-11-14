@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LenziCat } from './cat';
-import { CAT_FACES, CAT_SHAPES } from './cat-art';
+import { CAT_BACKS, CAT_EXPRESSIONS } from './cat-art';
 
 describe('LenziCat', () => {
   let fixture: ComponentFixture<LenziCat>;
@@ -17,19 +17,21 @@ describe('LenziCat', () => {
     await fixture.whenStable();
   });
 
-  it('draws the happy cat: the body, its lines and its face, each piece on its own', () => {
+  it('draws the happy cat: the back, its lines and its face, each piece on its own', () => {
     const paths = [...host().querySelectorAll('svg path')].map((path) => path.getAttribute('d'));
-    expect(paths[0]).toBe(CAT_SHAPES.body.ink);
-    expect(paths).toContain(CAT_FACES.happy.eyeLeft);
+    expect(paths[0]).toBe(CAT_BACKS.plain.ink);
+    expect(paths).toContain(CAT_EXPRESSIONS.happy.eyeLeft);
     expect(host().querySelectorAll('.eye')).toHaveLength(2);
     expect(host().querySelectorAll('.whiskers')).toHaveLength(2);
   });
 
-  it('has no face from behind, and the hard hat as the builder', async () => {
-    await set({ mood: 'back' });
+  it('takes any expression over any back, or none (seen from behind)', async () => {
+    await set({ expression: 'sleepy', back: 'hard-hat' });
+    const paths = [...host().querySelectorAll('svg path')].map((path) => path.getAttribute('d'));
+    expect(paths[0]).toBe(CAT_BACKS['hard-hat'].ink);
+    expect(paths).toContain(CAT_EXPRESSIONS.sleepy.mouth);
+    await set({ expression: 'none' });
     expect(host().querySelector('.eye')).toBeNull();
-    await set({ mood: 'builder' });
-    expect(host().querySelector('svg path')?.getAttribute('d')).toBe(CAT_SHAPES.builder.ink);
   });
 
   it('gives its body the material asked for, shaped as the cat', async () => {

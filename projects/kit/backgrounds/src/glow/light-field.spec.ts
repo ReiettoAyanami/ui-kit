@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { LenziLamp, LenziLightField, above, cssColor, shadowOf } from './light-field';
+import { LenziLamp, LenziLightField, above, cssColor, shadowOf, shadowsOfOutline } from './light-field';
 
 /** An element at a fixed place on the screen (jsdom lays nothing out). */
 function placed(left: number, top: number, width: number, height: number): HTMLElement {
@@ -180,10 +180,32 @@ describe('LenziLightField', () => {
     field.update(1);
     const [[, , , , , , , , , shadows]] = JSON.parse(floor.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
     const points: [number, number][] = [];
-    for (let i = 0; i < shadows[0].length; i += 2) points.push([shadows[0][i], shadows[0][i + 1]]);
+    for (const polygon of shadows as number[][]) for (let i = 0; i < polygon.length; i += 2) points.push([polygon[i]!, polygon[i + 1]!]);
     // the tip is part of it; the box's corners near the lamp are not
     expect(points).toContainEqual([300, 200]);
     expect(points).not.toContainEqual([300, 150]);
+  });
+
+  it('keeps a drawing’s hollows in its shadow: a V from a light straight above', () => {
+    // a V (two arms and the gap between them) with a light far above: the gap stays lit right under the V's opening
+    const v: [number, number][] = [[0, 0], [10, 0], [50, 80], [90, 0], [100, 0], [55, 100], [45, 100]];
+    const shadows = shadowsOfOutline(v, { x: 50, y: -10000 });
+    // the shape itself, and only the sides that face the light (the two tops and the inner sides of the gap)
+    expect(shadows[0]).toHaveLength(v.length * 2);
+    expect(shadows.length).toBeGreaterThan(1);
+    expect(shadows.length).toBeLessThan(v.length + 1);
+    // no polygon covers the middle of the gap (50, 40)
+    const covers = (polygon: number[], x: number, y: number) => {
+      let inside = false;
+      for (let i = 0, j = polygon.length - 2; i < polygon.length; j = i, i += 2) {
+        const [xi, yi, xj, yj] = [polygon[i]!, polygon[i + 1]!, polygon[j]!, polygon[j + 1]!];
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    };
+    expect(shadows.some((polygon) => covers(polygon, 50, 40))).toBe(false);
+    // but what is right under an arm is in its shadow
+    expect(shadows.some((polygon) => covers(polygon, 5, 300))).toBe(true);
   });
 
   it('says which of two elements is drawn above: what one holds, then z-index, then the later one', () => {

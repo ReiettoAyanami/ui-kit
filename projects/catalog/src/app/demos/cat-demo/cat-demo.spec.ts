@@ -14,9 +14,17 @@ describe('CatDemo', () => {
     await fixture.whenStable();
   });
 
-  it('shows one cat of each kind, each with its material', () => {
-    const cats = (fixture.nativeElement as HTMLElement).querySelectorAll('lenzi-cat');
-    expect(cats).toHaveLength(5);
-    expect((fixture.nativeElement as HTMLElement).querySelectorAll('mat-button-toggle-group')).toHaveLength(5);
+  it('shows one cat, and a bulb to light it', () => {
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelectorAll('lenzi-cat')).toHaveLength(1);
+    expect(page.querySelector('button[mat-fab]')?.classList).toContain('lenzi-glow-on');
+  });
+
+  it('draws the expression and the back the parameters choose', async () => {
+    fixture.componentRef.setInput('values', { expression: 'none', back: 'hard-hat', material: 'glass' });
+    await fixture.whenStable();
+    const cat = (fixture.nativeElement as HTMLElement).querySelector('lenzi-cat')!;
+    expect(cat.querySelector('.eye')).toBeNull();
+    expect(cat.querySelector('.shape')?.classList).toContain('lenzi-lit');
   });
 });
