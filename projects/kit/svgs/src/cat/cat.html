@@ -23,14 +23,22 @@
   }
 
   <!-- its lines, over it: in the lamp's colour when it is a lamp -->
-  <svg class="ink" [class.lit]="material() === 'lamp'" [style.--lenzi-cat-lamp]="lampColor()" [attr.viewBox]="viewBox" aria-hidden="true">
+  <svg #ink class="ink" [class.lit]="material() === 'lamp'" [style.--lenzi-cat-lamp]="lampColor()" [attr.viewBox]="viewBox" aria-hidden="true">
     <path fill-rule="evenodd" [attr.d]="shape().ink" />
     @if (face(); as face) {
-      <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeLeft" />
-      <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeRight" />
-      <path class="mouth" fill-rule="evenodd" [attr.d]="face.mouth" />
-      <path class="whiskers left" fill-rule="evenodd" [attr.d]="face.whiskersLeft" />
-      <path class="whiskers right" fill-rule="evenodd" [attr.d]="face.whiskersRight" />
+      <!-- watching, the face leans a little towards what it looks at -->
+      <g #faceGroup class="face">
+        <!-- watching, the eyes themselves turn towards what it looks at (no pupils: lenzi's drawing has none) -->
+        <g #eyeLeft class="gaze">
+          <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeLeft" />
+        </g>
+        <g #eyeRight class="gaze">
+          <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeRight" />
+        </g>
+        <path class="mouth" fill-rule="evenodd" [attr.d]="face.mouth" />
+        <path class="whiskers left" fill-rule="evenodd" [attr.d]="face.whiskersLeft" />
+        <path class="whiskers right" fill-rule="evenodd" [attr.d]="face.whiskersRight" />
+      </g>
     }
   </svg>
 </div>

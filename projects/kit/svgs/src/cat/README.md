@@ -7,8 +7,13 @@ traced into vectors, in the theme's colours.
 ## What
 
 - **An expression over a back** (lenzi, 2026-11-14: "make me choose what expression and what back to use"):
-  `expression` is `happy`, `sleepy`, `sad` or `none` (seen from behind); `back` is `plain` or `hard-hat`
-  (something being built). Any expression goes over either back.
+  `expression` is `happy`, `sleepy`, `sad`, `watching` or `none` (seen from behind); `back` is `plain` or
+  `hard-hat` (something being built). Any expression goes over either back.
+- **Watching** (lenzi, 2026-11-14: "make it so that it follows the mouse cursor with the eyes a bit"): the
+  happy face's open eyes turn towards the pointer, the rest of the face leaning a little the same way. No
+  pupils (2026-11-14: "nu pupils wth"): the eyes are lenzi's, empty ovals. When the pointer is not on
+  the page (it left the window, or a touch screen), it looks at the nearest boid of a flock on the page
+  (`LenziSights`: nothing to set), or straight ahead.
 - **A material shaped as the cat** (`material`): its body takes it inside its outline, not in a box.
   - `plain`: the page's surface, a little lighter than the page (`--lenzi-cat-fill`).
   - `glass`: a lit surface (`lenziLit`): the background and the lamps' light show through it.
@@ -33,7 +38,7 @@ traced into vectors, in the theme's colours.
 
 | Input | Type | Default |
 | --- | --- | --- |
-| `expression` | `'happy' \| 'sleepy' \| 'sad' \| 'none'` | `'happy'` |
+| `expression` | `'happy' \| 'sleepy' \| 'sad' \| 'watching' \| 'none'` | `'happy'` |
 | `back` | `'plain' \| 'hard-hat'` | `'plain'` |
 | `material` | `'plain' \| 'glass' \| 'lamp' \| 'solid'` | `'plain'` |
 | `size` | number, px | `96` |

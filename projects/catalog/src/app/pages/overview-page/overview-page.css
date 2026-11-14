@@ -1,4 +1,14 @@
+/* The cat: fixed in the corner, half below the screen, behind the page's words, and never in the way. */
+.mascot {
+  position: fixed;
+  right: clamp(8px, 4vw, 64px);
+  z-index: 0;
+  pointer-events: none;
+}
+
 .page {
+  position: relative;
+  z-index: 1;
   box-sizing: border-box;
   max-width: 1040px;
   margin: 0 auto;

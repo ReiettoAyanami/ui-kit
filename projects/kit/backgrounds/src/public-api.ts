@@ -7,6 +7,8 @@ export * from './background/background';
 export * from './glow-background/glow-background';
 export * from './blob-background/blob-background';
 export * from './flock-background/flock-background';
+export * from './blob-flock-background/blob-flock-background';
+export * from './sights/sights';
 export * from './ambient-light/ambient-light';
 export * from './ambient-light/lit';
 export * from './glow/glow';

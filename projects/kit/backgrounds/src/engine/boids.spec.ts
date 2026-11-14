@@ -30,6 +30,36 @@ describe('a flock of boids', () => {
     expect(new Boids({ count: 1e9 }, 100, 100).count).toBe(MAX_BOIDS);
   });
 
+  it('flies round an obstacle instead of through it', () => {
+    const flock = new Boids({ ...QUIET, count: 1, minSpeed: 100, maxSpeed: 120 }, 2000, 600);
+    // straight at a round obstacle, a little off its middle
+    place(flock, [[100, 305, 120, 0]]);
+    flock.setObstacles([{ x: 500, y: 300, radius: 120 }]);
+    let closest = Infinity;
+    for (let step = 0; step < 60 * 8; step++) {
+      flock.step(1 / 60);
+      closest = Math.min(closest, Math.hypot(flock.x[0]! - 500, flock.y[0]! - 300));
+    }
+    expect(closest).toBeGreaterThan(120 * 0.86 - 1);
+    // and it went round it, not back where it came from
+    expect(flock.x[0]).toBeGreaterThan(500);
+  });
+
+  it('is pushed out of an obstacle that moved onto it', () => {
+    const flock = new Boids({ ...QUIET, count: 1 }, 800, 600);
+    place(flock, [[410, 300, 0, 0]]);
+    flock.setObstacles([{ x: 400, y: 300, radius: 100 }]);
+    flock.step(1 / 60);
+    expect(Math.hypot(flock.x[0]! - 400, flock.y[0]! - 300)).toBeGreaterThanOrEqual(85);
+  });
+
+  it('says which boid is nearest a point', () => {
+    const flock = new Boids({ ...QUIET, count: 3 }, 800, 600);
+    place(flock, [[100, 100, 0, 0], [500, 300, 0, 0], [700, 500, 0, 0]]);
+    expect(flock.nearest(480, 320)).toEqual({ x: 500, y: 300 });
+    expect(new Boids({ count: 0 }, 10, 10).nearest(0, 0)).toBeNull();
+  });
+
   it('keeps apart: two boids too close move away from each other', () => {
     const flock = new Boids({ ...QUIET, count: 2, separation: 2, separationDistance: 40 }, 800, 600);
     place(flock, [[400, 300, 0, 0], [410, 300, 0, 0]]);

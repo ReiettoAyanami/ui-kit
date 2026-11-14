@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { LenziSights } from '@lenzi/ui-kit/backgrounds';
+
 import { LenziCat } from './cat';
 import { CAT_BACKS, CAT_EXPRESSIONS } from './cat-art';
 
@@ -32,6 +34,28 @@ describe('LenziCat', () => {
     expect(paths).toContain(CAT_EXPRESSIONS.sleepy.mouth);
     await set({ expression: 'none' });
     expect(host().querySelector('.eye')).toBeNull();
+  });
+
+  it('watching, turns its eyes (no pupils) to the pointer, or else to the nearest thing that moves', async () => {
+    const sights = TestBed.inject(LenziSights);
+    await set({ expression: 'watching' });
+    expect(host().querySelector('.pupil, ellipse')).toBeNull();
+    const eyes = host().querySelectorAll<SVGGElement>('.gaze');
+    expect(eyes).toHaveLength(2);
+    const shift = (element: Element) => Number(/translate\((-?[\d.]+)/.exec(element.getAttribute('transform') ?? '')?.[1] ?? 0);
+    // no pointer: a boid far to the right
+    const leave = sights.add({}, () => ({ x: 5000, y: 0 }));
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    expect(shift(eyes[0]!)).toBeGreaterThan(0);
+    expect(shift(host().querySelector('.face')!)).toBeGreaterThan(0);
+    leave();
+    // the pointer, far to the left
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: -5000, clientY: 0 }));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(shift(eyes[1]!)).toBeLessThan(0);
+    // another expression: the face is back in its place
+    await set({ expression: 'happy' });
+    expect(host().querySelector('.face')?.getAttribute('transform')).toBeNull();
   });
 
   it('gives its body the material asked for, shaped as the cat', async () => {

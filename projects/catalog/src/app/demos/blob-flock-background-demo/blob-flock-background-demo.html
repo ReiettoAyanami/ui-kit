@@ -1,0 +1,41 @@
+<lenzi-blob-flock-background
+  [blobs]="num('blobs', 5)"
+  [blobSize]="num('blobSize', blobs.size)"
+  [travel]="num('travel', blobs.travel)"
+  [morph]="num('morph', blobs.morph)"
+  [spin]="num('spin', blobs.spin)"
+  [merge]="num('merge', 0.35)"
+  [boids]="num('boids', 300)"
+  [avoid]="num('avoid', 2)"
+  [follow]="follow()"
+  [followWeight]="num('followWeight', boids.followWeight)"
+  [followRadius]="num('followRadius', boids.followRadius)"
+  [separation]="num('separation', boids.separation)"
+  [alignment]="num('alignment', boids.alignment)"
+  [cohesion]="num('cohesion', boids.cohesion)"
+  [maxSpeed]="num('maxSpeed', boids.maxSpeed)"
+  [minSpeed]="num('minSpeed', boids.minSpeed)"
+  [wander]="num('wander', boids.wander)"
+  [boidSize]="num('boidSize', 7)"
+  [shape]="text('shape', 'dart') === 'dot' ? 'dot' : 'dart'"
+  [trails]="num('trails', 0)"
+  [spread]="num('spread', 0.2)"
+  [seed]="num('seed', 1)"
+  [brightness]="num('brightness', 1)"
+  [glow]="num('glow', 1)"
+  [halo]="num('halo', 0.6)"
+  [blur]="num('blur', 0)"
+  [speed]="num('speed', 1)"
+  [animate]="values()['animate'] !== false"
+  [accent]="text('accent', '--mat-sys-primary')"
+  [base]="text('base', '--mat-sys-surface')"
+/>
+
+<mat-card appearance="outlined" lenziLit class="card">
+  <mat-card-content>
+    <p class="name">Round the blobs</p>
+    <p class="words">The flock flies round every blob and follows the pointer. Take the pointer out of the frame: the cat watches the nearest boid.</p>
+  </mat-card-content>
+</mat-card>
+
+<lenzi-cat class="cat" expression="watching" [size]="120" />

@@ -1,9 +1,10 @@
-import { Component, input, numberAttribute } from '@angular/core';
+import { Component, DestroyRef, inject, input, numberAttribute } from '@angular/core';
 
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boids';
 import { FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
+import { LenziSights } from '../sights/sights';
 
 /** The longest step of the flock, in seconds: a slow frame does not throw the boids around. */
 const LONGEST_STEP = 1 / 30;
@@ -60,6 +61,17 @@ export class LenziFlockBackground extends LenziGlowBackground {
 
   private flock: Boids | null = null;
   private flockSeed = 1;
+
+  constructor() {
+    super();
+    // its boids are something to look at (LenziSights)
+    const leave = inject(LenziSights).add(this, (point) => {
+      const origin = this.origin();
+      const boid = this.flock?.nearest(point.x - origin.x, point.y - origin.y);
+      return boid ? { x: boid.x + origin.x, y: boid.y + origin.y } : null;
+    });
+    inject(DestroyRef).onDestroy(leave);
+  }
 
   protected override trail(): number {
     // a trail of 1 would never fade

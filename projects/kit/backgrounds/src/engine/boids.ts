@@ -63,6 +63,17 @@ export const DEFAULT_BOIDS: BoidsSettings = {
 /** The most boids a flock holds: beyond this a CPU flock is not smooth. */
 export const MAX_BOIDS = 4000;
 
+/**
+ * Something the boids fly around (lenzi, 2026-11-14: "a background that is the combination of flocks and
+ * blobs the latter being a obstacle for the flocks"): a round shape, CSS px. Near it they turn away and
+ * slide along it; one that gets inside (the obstacle moved onto it) is pushed out to its edge.
+ */
+export interface BoidsObstacle {
+  x: number;
+  y: number;
+  radius: number;
+}
+
 export class Boids {
   x = new Float32Array(0);
   y = new Float32Array(0);
@@ -73,6 +84,8 @@ export class Boids {
   private width: number;
   private height: number;
   private target: { x: number; y: number } | null = null;
+  private obstacles: readonly BoidsObstacle[] = [];
+  private avoid = 2;
   private readonly random: () => number;
   // the space in cells as wide as a boid sees: only the boids of the cells around are looked at
   private cellOf = new Int32Array(0);
@@ -116,6 +129,26 @@ export class Boids {
   /** Where the flock goes (the pointer), or nowhere. */
   setTarget(target: { x: number; y: number } | null): void {
     this.target = target;
+  }
+
+  /** What the boids fly around now (they may move), and how hard they turn away from it (0: they fly through). */
+  setObstacles(obstacles: readonly BoidsObstacle[], weight = 2): void {
+    this.obstacles = obstacles;
+    this.avoid = Math.max(0, weight);
+  }
+
+  /** The boid nearest a point (CSS px of the space), or null when there is none. */
+  nearest(x: number, y: number): { x: number; y: number } | null {
+    let best = -1;
+    let least = Infinity;
+    for (let i = 0; i < this.count; i++) {
+      const d = (this.x[i]! - x) ** 2 + (this.y[i]! - y) ** 2;
+      if (d < least) {
+        least = d;
+        best = i;
+      }
+    }
+    return best < 0 ? null : { x: this.x[best]!, y: this.y[best]! };
   }
 
   private populate(wanted: number): void {
@@ -273,6 +306,25 @@ export class Boids {
           steer(tx, ty, s.followWeight * Math.min(1, distance / radius));
         }
       }
+      if (this.avoid > 0) {
+        // the obstacles near it: away from them, and along them the way it is already going, so it flows round
+        const margin = Math.max(24, see * 0.8);
+        for (const obstacle of this.obstacles) {
+          const ox = px - obstacle.x;
+          const oy = py - obstacle.y;
+          const d = Math.hypot(ox, oy) || 1e-6;
+          const gap = d - obstacle.radius;
+          if (gap > margin) continue;
+          const near = Math.min(2, 1 - gap / margin);
+          const nx = ox / d;
+          const ny = oy / d;
+          // along it: the side of the tangent its heading is on
+          const side = -ny * hx + nx * hy >= 0 ? 1 : -1;
+          // mostly along it, out more the closer it is: it flows round instead of turning back
+          const out = 0.35 * near;
+          steer(nx * out + -ny * side, ny * out + nx * side, this.avoid * near);
+        }
+      }
       if (s.wander > 0) {
         // a turn of its own, across its heading
         const turn = (this.random() * 2 - 1) * s.wander * s.maxForce;
@@ -325,8 +377,30 @@ export class Boids {
           ny = Math.min(height, Math.max(0, ny));
         }
       }
+      // inside an obstacle (it moved onto the boid): out to its edge, no longer flying into it
+      if (this.avoid > 0) {
+        for (const obstacle of this.obstacles) {
+          const ox = nx - obstacle.x;
+          const oy = ny - obstacle.y;
+          const d = Math.hypot(ox, oy);
+          const edge = obstacle.radius * INSIDE;
+          if (d >= edge) continue;
+          const ux = d > 1e-6 ? ox / d : 1;
+          const uy = d > 1e-6 ? oy / d : 0;
+          nx = obstacle.x + ux * edge;
+          ny = obstacle.y + uy * edge;
+          const inward = vx[i]! * ux + vy[i]! * uy;
+          if (inward < 0) {
+            vx[i] = vx[i]! - inward * ux;
+            vy[i] = vy[i]! - inward * uy;
+          }
+        }
+      }
       x[i] = nx;
       y[i] = ny;
     }
   }
 }
+
+/** How far into an obstacle a boid may go before it is pushed out: its shape's dips and lobes are not round. */
+const INSIDE = 0.86;

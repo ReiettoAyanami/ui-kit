@@ -200,6 +200,12 @@ export abstract class LenziGlowBackground implements OnChanges {
     return this.engine?.cssHeight ?? 1;
   }
 
+  /** Where the space is on the screen (its top left, CSS px from the window's). */
+  protected origin(): { x: number; y: number } {
+    const box = this.host.getBoundingClientRect();
+    return { x: box.left, y: box.top };
+  }
+
   /** Where the pointer is in that space, or null (not there, or not followed). */
   protected pointerInside(): { x: number; y: number } | null {
     if (!this.pointer() || !this.pointerAt) return null;
