@@ -17,7 +17,7 @@
   [edges]="text('edges', 'wrap') === 'avoid' ? 'avoid' : 'wrap'"
   [edgeMargin]="num('edgeMargin', standard.edgeMargin)"
   [boidSize]="num('boidSize', 7)"
-  [shape]="text('shape', 'dart') === 'dot' ? 'dot' : 'dart'"
+  [shape]="shape()"
   [trails]="num('trails', 0)"
   [scare]="num('scare', 3)"
   [spread]="num('spread', 0.2)"

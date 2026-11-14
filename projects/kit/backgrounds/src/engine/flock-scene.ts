@@ -28,18 +28,51 @@ const FRAGMENT = `#version 300 es
 precision highp float;
 in vec2 corner;
 in vec3 hue;
-uniform float dart;        // 0: a dot; 1: a dart
+uniform float kind;        // 0: a dot; 1: a dart; 2: a drop
+uniform float stretch;     // how much longer than wide
 uniform float brightness;
 out vec4 color;
+
+// a circle of radius r1 at the origin and one of r2 at (0, h), joined by the lines tangent to both (Inigo
+// Quilez's uneven capsule): below 0 inside
+float unevenCapsule(vec2 p, float r1, float r2, float h) {
+  p.x = abs(p.x);
+  float b = (r1 - r2) / h;
+  float a = sqrt(1.0 - b * b);
+  float k = dot(p, vec2(-b, a));
+  if (k < 0.0) return length(p) - r1;
+  if (k > a * h) return length(p - vec2(0.0, h)) - r2;
+  return dot(p, vec2(a, b)) - r1;
+}
+
 void main() {
-  float dot_ = pow(max(0.0, 1.0 - length(corner)), 1.5);
-  // a dart: wide and bright at the head (corner.x = 1), thin and faint at the tail
-  float along = corner.x * 0.5 + 0.5;
-  float width = mix(0.1, 0.85, along * along);
-  float body = smoothstep(width, width * 0.25, abs(corner.y)) * smoothstep(0.0, 0.3, along) * smoothstep(1.0, 0.8, along);
-  float light = mix(dot_, body, dart) * brightness;
+  float light;
+  if (kind < 0.5) {
+    light = pow(max(0.0, 1.0 - length(corner)), 1.5);
+  } else if (kind < 1.5) {
+    // a dart: wide and bright at the head (corner.x = 1), thin and faint at the tail
+    float along = corner.x * 0.5 + 0.5;
+    float width = mix(0.1, 0.85, along * along);
+    light = smoothstep(width, width * 0.25, abs(corner.y)) * smoothstep(0.0, 0.3, along) * smoothstep(1.0, 0.8, along);
+  } else {
+    // a drop (lenzi, 2026-11-14: "rendi i boids delle gocce piú che triangoli", "la coda arrotondata"): a round
+    // head ahead, narrowing to a small round tail; brighter at the head
+    vec2 q = vec2(corner.x * stretch, corner.y);
+    float head = stretch - 0.9;
+    float tail = -stretch + 0.32;
+    float edge = unevenCapsule(vec2(q.y, head - q.x), 0.9, 0.32, head - tail);
+    float along = clamp((q.x - tail) / (head - tail), 0.0, 1.0);
+    light = smoothstep(0.18, -0.18, edge) * mix(0.5, 1.0, along);
+  }
+  light *= brightness;
   color = vec4(hue * light, light);
 }`;
+
+/** What a boid looks like: a dot, a dart, a drop. */
+export type BoidShape = 'dot' | 'dart' | 'drop';
+
+/** How much longer than wide each shape is (its length from its middle, in half widths). */
+export const BOID_STRETCH: Readonly<Record<BoidShape, number>> = { dot: 1, dart: 2.6, drop: 2.2 };
 
 export class FlockScene {
   private readonly program: WebGLProgram;
@@ -70,9 +103,9 @@ export class FlockScene {
   /**
    * @param colors r, g, b of every boid (linear); sent to the GPU only when it is another array
    * @param size half a boid's width, CSS px
-   * @param shape a dot, or a dart pointing where it flies
+   * @param shape a dot, a dart pointing where it flies, or a drop (its round head ahead)
    */
-  draw(flock: Boids, colors: Float32Array, size: number, shape: 'dot' | 'dart', brightness: number): void {
+  draw(flock: Boids, colors: Float32Array, size: number, shape: BoidShape, brightness: number): void {
     const { engine, program } = this;
     const gl = engine.gl;
     const count = Math.min(flock.count, Math.floor(colors.length / 3));
@@ -96,8 +129,8 @@ export class FlockScene {
     gl.useProgram(program);
     gl.uniform2f(engine.uniform(program, 'space'), engine.cssWidth, engine.cssHeight);
     gl.uniform1f(engine.uniform(program, 'size'), size);
-    gl.uniform1f(engine.uniform(program, 'stretch'), shape === 'dart' ? 2.6 : 1);
-    gl.uniform1f(engine.uniform(program, 'dart'), shape === 'dart' ? 1 : 0);
+    gl.uniform1f(engine.uniform(program, 'stretch'), BOID_STRETCH[shape]);
+    gl.uniform1f(engine.uniform(program, 'kind'), shape === 'dot' ? 0 : shape === 'dart' ? 1 : 2);
     gl.uniform1f(engine.uniform(program, 'brightness'), brightness);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
     gl.bindVertexArray(null);

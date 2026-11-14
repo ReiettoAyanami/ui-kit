@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 
-import { BoidsFollow, DEFAULT_BOIDS, DEFAULT_BLOBS, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { BoidShape, BoidsFollow, DEFAULT_BOIDS, DEFAULT_BLOBS, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
 import { LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { Values } from '../../registry';
@@ -29,6 +29,11 @@ export class BlobFlockBackgroundDemo {
 
   protected text(key: string, otherwise: string): string {
     return String(this.values()[key] ?? otherwise);
+  }
+
+  protected shape(otherwise: BoidShape): BoidShape {
+    const shape = this.text('shape', otherwise);
+    return shape === 'dot' || shape === 'dart' || shape === 'drop' ? shape : otherwise;
   }
 
   protected follow(): BoidsFollow {

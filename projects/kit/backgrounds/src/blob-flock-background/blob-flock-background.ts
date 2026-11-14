@@ -6,7 +6,7 @@ import { BlobThrow } from '../engine/blob-throw';
 import { LenziScares } from '../scare/scares';
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boids';
 import { linearToHex } from '../engine/color';
-import { FlockScene } from '../engine/flock-scene';
+import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
@@ -75,7 +75,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly scare = input(3, { transform: numberAttribute });
   /** A boid's width, px (2026-11-14: "make them a bit bigger"), and its shape. */
   readonly boidSize = input(9, { transform: numberAttribute });
-  readonly shape = input<'dot' | 'dart'>('dart');
+  readonly shape = input<BoidShape>('drop');
   /** How long a boid's light stays behind it, 0 to 1 (the blobs leave a trail too). */
   readonly trails = input(0, { transform: numberAttribute });
   /** The pointer can take a blob and throw it; the boids fly round it wherever it goes. */
@@ -184,7 +184,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
    * plus the edge's softness, so no part of a boid is drawn over a blob.
    */
   private obstacles(flock: Boids, blobs: readonly BlobState[]): void {
-    const pad = Math.max(0.5, this.boidSize() / 2) * 2.6 + Math.max(0, this.soft());
+    const pad = Math.max(0.5, this.boidSize() / 2) * BOID_STRETCH[this.shape()] + Math.max(0, this.soft());
     flock.setField(blobs.length ? blobEdge(blobs, this.mergePx()) : null, this.avoid(), pad);
   }
 

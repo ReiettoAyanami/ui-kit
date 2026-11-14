@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 
-import { BoidsFollow, DEFAULT_BOIDS, LenziFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { BoidShape, BoidsFollow, DEFAULT_BOIDS, LenziFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
 
 import { Values } from '../../registry';
 
@@ -26,6 +26,11 @@ export class FlockBackgroundDemo {
 
   protected text(key: string, otherwise: string): string {
     return String(this.values()[key] ?? otherwise);
+  }
+
+  protected shape(): BoidShape {
+    const shape = this.text('shape', 'dart');
+    return shape === 'dot' || shape === 'drop' ? shape : 'dart';
   }
 
   protected follow(): BoidsFollow {

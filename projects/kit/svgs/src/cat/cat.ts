@@ -100,7 +100,6 @@ export class LenziCat {
 
   /** Being petted now. */
   protected readonly petted = signal(false);
-  protected readonly closedEyes = CAT_EXPRESSIONS.sleepy;
 
   /** Where the drift is now, -1..1. */
   private readonly swing = signal(0);

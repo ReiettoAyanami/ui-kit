@@ -84,7 +84,6 @@ describe('LenziCat', () => {
     await set({ expression: 'watching', pettable: true });
     host().getBoundingClientRect = () => new DOMRect(100, 100, 200, 280);
     const figure = host().querySelector('.figure')!;
-    expect(host().querySelectorAll('.shut')).toHaveLength(2);
     // a stroke over it
     window.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, clientY: 200 }));
     window.dispatchEvent(new PointerEvent('pointermove', { clientX: 190, clientY: 210 }));

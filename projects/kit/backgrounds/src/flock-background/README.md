@@ -42,7 +42,7 @@ apart, head the same way and stay together, around the pointer or onto it.
 | input | `wander` | `number` | `0.25` |
 | input | `edges` / `edgeMargin` | `'wrap' \| 'avoid'` / px | `'wrap'` / `80` |
 | input | `boidSize` | `number` px | `7` |
-| input | `shape` | `'dart' \| 'dot'` | `'dart'` |
+| input | `shape` | `'dart' \| 'dot' \| 'drop'` (a drop: round head, narrowing to a round tail) | `'dart'` |
 | input | `trails` | `number` 0..1 | `0` |
 | input | `fill` | `'page' \| 'box'` | `'page'` |
 | input | `accent` / `base` | a variable or a CSS colour | `'--mat-sys-primary'` / `'--mat-sys-surface'` |

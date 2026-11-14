@@ -84,35 +84,23 @@
   animation-delay: 0.15s;
 }
 
-/* Petted (lenzi: "when you pet him, animate his eyes closing", then "more akin to when he blinks, but
-   slower"): the open eyes close as in a blink, slowly, down to a line; there the closed, content eyes take
-   their place. Opening, the other way: the closed eyes go, the open ones grow back from the line.
-   `scale`, not `transform`: the blink animates `transform`, and the two add up. */
+/* Petted (lenzi: "when you pet him, animate his eyes closing", "more akin to when he blinks, but slower",
+   "riusa la stessa animazione che usi in idle"): the idle blink, slower, held: the open eyes squash to a
+   line and stay so while it is petted, then open back the same way. `scale`, not `transform`: the blink
+   animates `transform`, and the two add up. */
 .eye {
   transform-box: fill-box;
   transform-origin: 50% 60%;
-  transition:
-    scale 420ms cubic-bezier(0.45, 0, 0.55, 1),
-    opacity 0ms linear;
-}
-
-.shut {
-  opacity: 0;
-  transition: opacity 90ms linear;
+  transition: scale 420ms cubic-bezier(0.45, 0, 0.55, 1);
 }
 
 .petted .eye {
   scale: 1 0.08;
-  opacity: 0;
-  /* gone only once it is a line */
-  transition:
-    scale 420ms cubic-bezier(0.45, 0, 0.55, 1),
-    opacity 90ms 380ms linear;
 }
 
-.petted .shut {
-  opacity: 1;
-  transition: opacity 90ms 380ms linear;
+/* while it is held shut, no blink on top of it */
+.animated.petted .eye {
+  animation: none;
 }
 
 @keyframes lenzi-cat-breathe {

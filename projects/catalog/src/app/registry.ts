@@ -1225,6 +1225,7 @@ ${tag('lenzi-blob-background', [
         options: [
           { value: 'dart', label: 'a dart, pointing where it flies' },
           { value: 'dot', label: 'a dot' },
+          { value: 'drop', label: 'a drop: round head, round tail' },
         ],
       },
       { key: 'trails', label: 'Trails (0 none, 1 long)', type: 'number', default: 0, min: 0, max: 1, step: 0.05 },
@@ -1317,8 +1318,9 @@ ${tag('lenzi-flock-background', [
         key: 'shape',
         label: 'A boid is',
         type: 'select',
-        default: 'dart',
+        default: 'drop',
         options: [
+          { value: 'drop', label: 'a drop: round head, round tail' },
           { value: 'dart', label: 'a dart, pointing where it flies' },
           { value: 'dot', label: 'a dot' },
         ],
@@ -1350,7 +1352,7 @@ ${tag('lenzi-blob-flock-background', [
   bound('minSpeed', v['minSpeed'], 60),
   bound('wander', v['wander'], 0.25),
   bound('boidSize', v['boidSize'], 9),
-  plain('shape', v['shape'], 'dart'),
+  plain('shape', v['shape'], 'drop'),
   bound('trails', v['trails'], 0),
   bound('scare', v['scare'], 3),
   v['throwable'] ? 'throwable' : '',

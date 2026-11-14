@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, input, numberAttribute } from '@angular/core';
 
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boids';
-import { FlockScene } from '../engine/flock-scene';
+import { BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziScares } from '../scare/scares';
@@ -58,7 +58,7 @@ export class LenziFlockBackground extends LenziGlowBackground {
   /** A boid's width, in px. */
   readonly boidSize = input(7, { transform: numberAttribute });
   /** A dot, or a dart that points where it flies. */
-  readonly shape = input<'dot' | 'dart'>('dart');
+  readonly shape = input<BoidShape>('dart');
   /** How long a boid's light stays behind it, 0 (no trail) to 1. */
   readonly trails = input(0, { transform: numberAttribute });
 

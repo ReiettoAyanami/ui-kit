@@ -23,3 +23,4 @@ export * from './engine/shapes';
 export * from './engine/boids';
 export * from './engine/blob-field';
 export * from './engine/blob-throw';
+export { BOID_STRETCH, type BoidShape } from './engine/flock-scene';
