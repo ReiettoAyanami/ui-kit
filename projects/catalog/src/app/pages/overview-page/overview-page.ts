@@ -38,8 +38,8 @@ export class OverviewPage {
   protected readonly blobMaterials: readonly BlobMaterial[] = ['lamp', 'glass', 'lamp', 'glass', 'lamp', 'glass'];
   protected readonly blobSizes: readonly number[] = [0.2, 0.2, 0.085, 0.085, 0.065, 0.065];
   protected readonly fleets: readonly LenziBlobFlock[] = [
-    { material: 'glass', count: 20, colonies: 3 },
-    { material: 'lamp', count: 24, colonies: 3 },
+    { material: 'glass', count: 42, colonies: 3 },
+    { material: 'lamp', count: 48, colonies: 3 },
   ];
 
   protected readonly mascot = signal(MASCOT_LEAST);

@@ -445,10 +445,17 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         colonies: Math.max(1, Math.floor(spec.colonies ?? 1)),
         maxSpeed: shared.maxSpeed * BLOB_BOID_SPEED,
         minSpeed: shared.minSpeed * BLOB_BOID_SPEED,
-        // kept apart by a drop's length and a little more: a fleet of drops, not a puddle
-        separationDistance: Math.max(shared.separationDistance, size * 4.8),
-        separation: Math.max(shared.separation, 2.2),
-        perception: Math.max(shared.perception, size * 8),
+        // kept apart by about a drop's length: a fleet of drops, not a puddle; but a flock, not a line
+        // (2026-11-14: "the blob boids tend to go in a line": strong keeping apart, a strong pull to the leader
+        // and a view that missed what is behind strung them out, each following the one ahead): they see all
+        // round and far, stay together more than they keep apart, follow the leader lightly
+        separationDistance: Math.max(shared.separationDistance, size * 3.4),
+        perception: Math.max(shared.perception, size * 12),
+        viewAngle: 360,
+        cohesion: Math.max(shared.cohesion, 1.6),
+        alignment: Math.min(shared.alignment, 0.8),
+        leaderPull: Math.min(shared.leaderPull ?? 0, 0.15),
+        sizeSpeed: Math.min(shared.sizeSpeed ?? 0, 0.15),
       };
       const old = this.fleets[f];
       if (old && old.spec.material === spec.material) {
