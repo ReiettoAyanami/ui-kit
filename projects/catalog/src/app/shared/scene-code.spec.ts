@@ -28,6 +28,21 @@ describe('a scene in a link', () => {
       { material: 'lamp', size: 0.1, shape: 'burst', x: 1, y: 0, layer: 3 },
       { material: 'lamp', size: 0.1 },
     ]);
+    expect(
+      cleanScene({
+        blobs: [
+          { material: 'glass', size: 0.1, colour: '#AABBCC', tint: 3, emitting: true, fixed: true, weight: 99 },
+          { material: 'solid', size: 0.1, colour: 'red', emitting: true, fixed: 'yes', weight: 'heavy' },
+        ],
+        fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],
+      }),
+    ).toEqual({
+      blobs: [
+        { material: 'glass', size: 0.1, colour: '#aabbcc', tint: 1, emitting: true, fixed: true, weight: 4 },
+        { material: 'solid', size: 0.1 },
+      ],
+      fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],
+    });
     expect(scene.name).toBe('Mine');
     expect(scene.blobs.length).toBe(SCENE_LIMITS.blobs);
     expect(scene.blobs[0]).toEqual({ material: 'lamp', size: 0.5 });

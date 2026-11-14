@@ -124,12 +124,7 @@
           }
           @case ('blob') {
             @if (chosenBlob(); as blob) {
-              <p class="label">Made of</p>
-              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Made of" [value]="blob.material" (change)="setBlob({ material: $event.value })">
-                @for (material of materials; track material) {
-                  <mat-button-toggle [value]="material">{{ materialNames[material] }}</mat-button-toggle>
-                }
-              </mat-button-toggle-group>
+              <ng-container [ngTemplateOutlet]="look" [ngTemplateOutletContext]="{ $implicit: blob, noun: 'blob' }" />
               <p class="label">Shape</p>
               <mat-chip-listbox class="shapes" aria-label="Shape" hideSingleSelectionIndicator [value]="blob.shape ?? ''" (change)="setShape($event.value ?? '')">
                 @for (shape of shapeChoices; track shape.value) {
@@ -156,6 +151,16 @@
                   <mat-button-toggle [value]="layer">{{ layer }}</mat-button-toggle>
                 }
               </mat-button-toggle-group>
+              <mat-slide-toggle class="toggle" [checked]="blob.fixed === true" (change)="setBlob({ fixed: $event.checked })">
+                It stays put (it does not wander, it cannot be thrown)
+              </mat-slide-toggle>
+              <p class="label">Weight (the heavier, the slower it turns)</p>
+              <div class="number">
+                <mat-slider [min]="weights[0]" [max]="weights[1]" step="0.05">
+                  <input matSliderThumb [value]="blob.weight ?? 1" aria-label="Weight" (valueChange)="setBlob({ weight: $event })" />
+                </mat-slider>
+                <span class="value">{{ shown(blob.weight ?? 1) }}</span>
+              </div>
               <button mat-stroked-button type="button" class="remove" (click)="remove()">
                 <mat-icon>delete</mat-icon>
                 Remove the blob
@@ -170,12 +175,9 @@
                 <mat-button-toggle value="blob-boid">A blob-boid</mat-button-toggle>
               </mat-button-toggle-group>
               @if (fleet.kind === 'blob-boid') {
-                <p class="label">Made of</p>
-                <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Made of" [value]="fleet.material ?? 'lamp'" (change)="setFleet({ material: $event.value })">
-                  @for (material of materials; track material) {
-                    <mat-button-toggle [value]="material">{{ materialNames[material] }}</mat-button-toggle>
-                  }
-                </mat-button-toggle-group>
+                <ng-container [ngTemplateOutlet]="look" [ngTemplateOutletContext]="{ $implicit: fleet, noun: 'fleet' }" />
+              } @else {
+                <ng-container [ngTemplateOutlet]="paint" [ngTemplateOutletContext]="{ $implicit: fleet, noun: 'fleet' }" />
               }
               <p class="label">Level (it flies round only what is on its own)</p>
               <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Level" [value]="layerOf(fleet, fleet.kind)" (change)="setLayer($event.value)">
@@ -217,3 +219,63 @@
     </mat-card>
   }
 </main>
+
+<!-- What a blob or a blob-boid fleet looks like (lenzi, 2026-11-15: "it should be solid/glass and emitting/not emitting",
+     "both for boids and blobs"; "a configurable color with a color picker"; "glass should have a tint parameter"). -->
+<ng-template #look let-thing let-noun="noun">
+  <p class="label">Body</p>
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Body" [value]="bodyOf(thing.material ?? 'lamp')" (change)="setLook($event.value, emitsOf(thing))">
+    <mat-button-toggle value="solid">Solid</mat-button-toggle>
+    <mat-button-toggle value="glass">Glass</mat-button-toggle>
+  </mat-button-toggle-group>
+  <p class="label">Light</p>
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Light" [value]="emitsOf(thing)" (change)="setLook(bodyOf(thing.material ?? 'lamp'), $event.value)">
+    <mat-button-toggle [value]="true">Emitting</mat-button-toggle>
+    <mat-button-toggle [value]="false">Not emitting</mat-button-toggle>
+  </mat-button-toggle-group>
+  <ng-container [ngTemplateOutlet]="paint" [ngTemplateOutletContext]="{ $implicit: thing, noun: noun }" />
+  @if (bodyOf(thing.material ?? 'lamp') === 'glass') {
+    <p class="label">Tint (how much of its colour the glass takes)</p>
+    <div class="number">
+      <mat-slider min="0" max="1" step="0.05">
+        <input matSliderThumb [value]="thing.tint ?? defaultTint" aria-label="Tint" (valueChange)="setTint($event)" />
+      </mat-slider>
+      <span class="value">{{ shown(thing.tint ?? defaultTint) }}</span>
+    </div>
+  }
+</ng-template>
+
+<!-- A colour, or a few it shifts among (lenzi, 2026-11-15: "metti anche opzione color: multi (un toggle) per decidere dei
+     colori tra cui shiftare come la home"). -->
+<ng-template #paint let-thing let-noun="noun">
+  <p class="label">Colour</p>
+  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Colour" [value]="isMulti(thing)" (change)="setMulti($event.value)">
+    <mat-button-toggle [value]="false">One colour</mat-button-toggle>
+    <mat-button-toggle [value]="true">Many, shifting</mat-button-toggle>
+  </mat-button-toggle-group>
+  <div class="colour">
+    @if (isMulti(thing)) {
+      @for (colour of thing.colours; track $index) {
+        <span class="swatch">
+          <lenzi-color-picker [value]="colour" [label]="'The ' + noun + '’s colour ' + ($index + 1)" (picked)="setPaletteColour($index, $event)" />
+          @if (thing.colours.length > 2) {
+            <button mat-icon-button type="button" [attr.aria-label]="'Take colour ' + ($index + 1) + ' out'" (click)="removePaletteColour($index)">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </span>
+      }
+      @if (thing.colours.length < limits.colours) {
+        <button mat-button type="button" (click)="addPaletteColour()">
+          <mat-icon>add</mat-icon>
+          Add a colour
+        </button>
+      }
+    } @else {
+      <lenzi-color-picker [value]="colourOf(thing)" [label]="'The ' + noun + '’s colour'" (picked)="setColour($event)" />
+      @if (thing.colour) {
+        <button mat-button type="button" (click)="setColour(null)">Back to the default</button>
+      }
+    }
+  </div>
+</ng-template>

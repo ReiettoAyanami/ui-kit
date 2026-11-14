@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { blobHome } from '@lenzi/ui-kit/backgrounds';
 
 import { HOME_SCENE } from '../../scenes';
-import { SceneMakerPage, fleetDefault, layerOf, placed } from './scene-maker-page';
+import { SceneMakerPage, bodyOf, emitsOf, fleetDefault, layerOf, lookFor, placed } from './scene-maker-page';
 
 async function open() {
   TestBed.configureTestingModule({ providers: [provideRouter([])] });
@@ -41,7 +41,9 @@ describe('SceneMakerPage', () => {
     expect(page.querySelector('.window')?.textContent).toContain('Stay together');
     await click('A blob-boid');
     expect(maker.scene().fleets[0]).toEqual(expect.objectContaining({ kind: 'blob-boid', material: 'glass' }));
-    expect(page.querySelector('.window')?.textContent).toContain('Made of');
+    expect(page.querySelector('.window')?.textContent).toContain('Body');
+    expect(page.querySelector('.window')?.textContent).toContain('Light');
+    expect(page.querySelector('.window lenzi-color-picker')).not.toBeNull();
   });
 
   it('adds a blob and a fleet, opening their windows, and removes them', async () => {
@@ -101,6 +103,49 @@ describe('SceneMakerPage', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(maker.scene().blobs[1]!.layer).toBe(2);
+  });
+
+  it('a body and its light: solid or glass, emitting or not ("solid/glass and emitting/not emitting")', () => {
+    expect([bodyOf('lamp'), bodyOf('solid'), bodyOf('glass')]).toEqual(['solid', 'solid', 'glass']);
+    expect([emitsOf({ material: 'lamp' }), emitsOf({ material: 'solid' }), emitsOf({ material: 'glass' }), emitsOf({ material: 'glass', emitting: true })]).toEqual([true, false, false, true]);
+    expect(lookFor('solid', true)).toEqual({ material: 'lamp' });
+    expect(lookFor('solid', false)).toEqual({ material: 'solid' });
+    expect(lookFor('glass', true)).toEqual({ material: 'glass', emitting: true });
+    expect(lookFor('glass', false)).toEqual({ material: 'glass' });
+  });
+
+  it("a blob's window: body and light, its colour (one, or many shifting), glass's tint, staying put, its weight", async () => {
+    const { page, click, maker, fixture } = await open();
+    const press = async (label: string, value: string) => {
+      const button = [...page.querySelectorAll<HTMLButtonElement>(`.window [aria-label="${label}"] button`)].find((b) => b.textContent?.trim() === value)!;
+      button.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+    await click('Glass blob');
+    await press('Light', 'Emitting');
+    expect(maker.scene().blobs[1]).toEqual(expect.objectContaining({ material: 'glass', emitting: true }));
+    await press('Body', 'Solid');
+    expect(maker.scene().blobs[1]!.material).toBe('lamp');
+    expect('emitting' in maker.scene().blobs[1]!).toBe(false);
+    await press('Light', 'Not emitting');
+    expect(maker.scene().blobs[1]!.material).toBe('solid');
+
+    await press('Colour', 'Many, shifting');
+    expect(maker.scene().blobs[1]!.colours?.length).toBe(2);
+    expect(page.querySelectorAll('.window lenzi-color-picker').length).toBe(2);
+    await click('Add a colour');
+    expect(maker.scene().blobs[1]!.colours?.length).toBe(3);
+    await press('Colour', 'One colour');
+    expect(maker.scene().blobs[1]!.colours).toBeUndefined();
+    expect(maker.scene().blobs[1]!.colour).toBe('#d5baff');
+
+    const stay = page.querySelector<HTMLButtonElement>('.window mat-slide-toggle button')!;
+    stay.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().blobs[1]!.fixed).toBe(true);
+    expect(page.querySelector('.window')?.textContent).toContain('Weight');
   });
 
   it('a blob keeps the shape chosen for it, or (Changing) changes again', async () => {

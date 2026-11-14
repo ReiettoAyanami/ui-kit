@@ -1,12 +1,13 @@
 import { Component, booleanAttribute, input, numberAttribute } from '@angular/core';
 
-import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from '../engine/blob-field';
+import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobsAt, paletteOf, specSettings } from '../engine/blob-field';
+import { MATERIAL_LAYERS } from '../blob-flock-background/blob-flock-background';
 import { BlobThrow } from '../engine/blob-throw';
-import { linearToHex } from '../engine/color';
+import { LinearRgb, PALETTE_STEP, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { LenziSourceLamp } from '../glow/light-field';
-import { BlobMaterial, MaterialScene } from '../engine/blob-materials';
+import { BlobMaterial, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { GlowEngine } from '../engine/glow-engine';
-import { knownShapes, ownShapes } from '../engine/shapes';
+import { knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 
 /**
@@ -70,10 +71,12 @@ export class LenziBlobBackground extends LenziGlowBackground {
   readonly materials = input<readonly BlobMaterial[]>(['lamp']);
   /** Each blob's own size (a share of the smaller side), in order and round again; null: `size` and `sizeVariety`. */
   readonly blobSizes = input<readonly number[] | null>(null);
-  /** Each blob's own place (a share of the space, 0 to 1 each way), in order; a blob without one has its seeded place. */
-  readonly blobHomes = input<readonly ({ x: number; y: number } | null)[] | null>(null);
-  /** Each blob's own shape (BLOB_SHAPES' names), in order: it keeps it; a blob without one changes among `shapes`. */
-  readonly blobShapes = input<readonly (string | null)[] | null>(null);
+  /**
+   * The blobs one by one (a scene's): each its material, size and, when said, its place, shape, level, colour, tint,
+   * whether it stays put and its weight (`LenziBlobSpec`). Given, it is the blobs: `count`, `materials` and
+   * `blobSizes` are left aside.
+   */
+  readonly blobSpecs = input<readonly LenziBlobSpec[] | null>(null);
 
   private elapsed = 0;
   private readonly throws = new BlobThrow();
@@ -91,13 +94,13 @@ export class LenziBlobBackground extends LenziGlowBackground {
     // only the lamps: glass and solid blobs shed no light
     return this.drawn
       .map((blob, index) => ({ blob, index }))
-      .filter(({ index }) => this.materialOf(index) === 'lamp')
+      .filter(({ index }) => this.materialOf(index) === 'lamp' || (this.materialOf(index) === 'glass' && this.blobSpecs()?.[index]?.emitting === true))
       .map(({ blob, index }) => ({
         left: blob.x - blob.radius,
         right: blob.x + blob.radius,
         top: blob.y - blob.radius,
         bottom: blob.y + blob.radius,
-        color: linearToHex([tints[index * 3]!, tints[index * 3 + 1]!, tints[index * 3 + 2]!]),
+        color: linearToHex(this.blobTint(index, tints)),
         strength: strength * BLOB_LAMP,
         reach: blob.radius * 2.4,
       }));
@@ -127,7 +130,8 @@ export class LenziBlobBackground extends LenziGlowBackground {
             to: blob.to,
             mix: blob.mix,
             material: this.materialOf(index),
-            tint: [tints[index * 3] ?? 1, tints[index * 3 + 1] ?? 1, tints[index * 3 + 2] ?? 1],
+            tint: this.blobTint(index, tints),
+            ...this.ownLook(index, tints),
           })),
           { level: BLOB_LIGHT, soft: Math.max(0, this.soft()), ...this.surfaceLook },
         );
@@ -140,18 +144,43 @@ export class LenziBlobBackground extends LenziGlowBackground {
     };
   }
 
-  /** A blob's material: the list, round again. */
+  /** A blob's material: its own, or the list's, round again. */
   private materialOf(index: number): BlobMaterial {
+    const spec = this.blobSpecs()?.[index];
+    if (spec) return spec.material;
     const list = this.materials();
     return list.length ? list[index % list.length]! : 'lamp';
   }
 
+  /** A blob's colour: the one it is shifting through now, its own (a `#rrggbb`), or the accent moved a little. */
+  private blobTint(index: number, tints: Float32Array): LinearRgb {
+    const palette = paletteOf(this.blobSpecs()?.[index]?.colours);
+    if (palette) return paletteAt(palette.map(hexToLinear), this.elapsed / (PALETTE_STEP * palette.length) + index * 0.37);
+    const own = this.blobSpecs()?.[index]?.colour;
+    if (own && /^#[0-9a-f]{6}$/i.test(own)) return hexToLinear(own);
+    return [tints[index * 3] ?? 1, tints[index * 3 + 1] ?? 1, tints[index * 3 + 2] ?? 1];
+  }
+
+  /** A blob's level, glass and solid colour and glass's tint, as far as it says them. */
+  private ownLook(index: number, tints: Float32Array): Pick<MaterialObject, 'layer' | 'colour' | 'tintAmount' | 'emit'> {
+    const spec = this.blobSpecs()?.[index];
+    if (!spec) return {};
+    return {
+      layer: spec.layer ?? MATERIAL_LAYERS[spec.material],
+      ...(spec.colour || paletteOf(spec.colours) ? { colour: this.blobTint(index, tints) } : {}),
+      ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
+      ...(spec.emitting ? { emit: true } : {}),
+    };
+  }
+
   protected override grabbable(x: number, y: number): boolean {
-    return this.throwable() && this.throws.blobAt(this.drawn, x, y) >= 0;
+    const index = this.throwable() ? this.throws.blobAt(this.drawn, x, y) : -1;
+    // a blob made fast is never taken ("an option to make a blob unmovable")
+    return index >= 0 && this.blobSpecs()?.[index]?.fixed !== true;
   }
 
   protected override grab(x: number, y: number, time: number): boolean {
-    return this.throwable() && this.throws.grab(this.drawn, x, y, time);
+    return this.grabbable(x, y) && this.throws.grab(this.drawn, x, y, time);
   }
 
   protected override dragTo(x: number, y: number, time: number): void {
@@ -175,8 +204,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
       pull: this.pull(),
       seed: this.seed(),
       ...(this.blobSizes()?.length ? { sizes: this.blobSizes()! } : {}),
-      ...(this.blobHomes()?.length ? { homes: this.blobHomes()! } : {}),
-      ...ownShapes(this.blobShapes()),
+      ...(this.blobSpecs() ? specSettings(this.blobSpecs()!) : {}),
     };
     return blobsAt(settings, this.elapsed, this.width, this.height, this.pointerInside());
   }

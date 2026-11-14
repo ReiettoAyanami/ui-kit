@@ -99,6 +99,27 @@ export function displacedColor(accent: LinearRgb, index: number, spread = DEFAUL
   return oklchToLinear({ l: Math.min(0.98, Math.max(0.05, base.l + lightness)), c: Math.max(0, base.c * (1 + chroma)), h: (base.h + hue + 360) % 360 });
 }
 
+/**
+ * A colour that shifts among a few (lenzi, 2026-11-15: "opzione color: multi ... per decidere dei colori tra cui
+ * shiftare come la home"): at `t` (0 to 1, round again) along the loop from the first to the last and back to the
+ * first, each held a little and eased into the next.
+ */
+export function paletteAt(palette: readonly LinearRgb[], t: number): LinearRgb {
+  if (palette.length === 0) return [1, 1, 1];
+  if (palette.length === 1) return palette[0]!;
+  const along = (((t % 1) + 1) % 1) * palette.length;
+  const from = Math.floor(along);
+  const a = palette[from % palette.length]!;
+  const b = palette[(from + 1) % palette.length]!;
+  // held for a third of its stretch, then eased into the next
+  const k = Math.min(1, Math.max(0, (along - from - 0.33) / 0.67));
+  const mix = k * k * (3 - 2 * k);
+  return [a[0] + (b[0] - a[0]) * mix, a[1] + (b[1] - a[1]) * mix, a[2] + (b[2] - a[2]) * mix];
+}
+
+/** How long a shifting colour takes from one of its colours to the next, seconds. */
+export const PALETTE_STEP = 6;
+
 /** The colours of `count` objects, as one array (r, g, b, r, g, b, …) for the GPU. */
 export function displacedColors(accent: LinearRgb, count: number, spread = DEFAULT_SPREAD, seed = 1): Float32Array {
   const colors = new Float32Array(count * 3);

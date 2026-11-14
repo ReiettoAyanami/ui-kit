@@ -85,12 +85,6 @@ export function shapeOutline(name: BlobShapeName, points = 72): string {
   return `M${corners.join('L')}Z`;
 }
 
-/** The blobs' own shapes as the blob field takes them (`ownShapes`): the known names, nothing for the rest. */
-export function ownShapes(names: readonly (string | null)[] | null | undefined): { ownShapes?: (BlobShapeName | null)[] } {
-  if (!names?.length) return {};
-  return { ownShapes: names.map((name) => (name && name in BLOB_SHAPES ? (name as BlobShapeName) : null)) };
-}
-
 export function knownShapes(names: readonly string[] | null | undefined): BlobShapeName[] {
   const known = (names ?? []).filter((name): name is BlobShapeName => name in BLOB_SHAPES);
   return known.length ? known : DEFAULT_BLOB_SHAPES;

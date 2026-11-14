@@ -1,10 +1,9 @@
 import { Component, booleanAttribute, computed, input } from '@angular/core';
 
 import { LenziBlobBackground } from '../blob-background/blob-background';
-import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWays, MATERIAL_LAYERS } from '../blob-flock-background/blob-flock-background';
-import { DEFAULT_BLOBS } from '../engine/blob-field';
+import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWays } from '../blob-flock-background/blob-flock-background';
+import { DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
 import { BlobMaterial } from '../engine/blob-materials';
-import { BlobShapeName } from '../engine/shapes';
 import { BoidsFollow } from '../engine/boids';
 import { LenziBackgroundFill } from '../glow-background/glow-background';
 
@@ -21,14 +20,13 @@ export interface LenziScenePlace {
 }
 
 /**
- * A blob of a scene: what it is made of, its size (a share of the screen's shorter side) and its shape (lenzi,
- * 2026-11-14: "make user choose shape of blob"): kept, or (not said) changing from one into another.
+ * A blob of a scene, as the backgrounds take it (`LenziBlobSpec`): what it is made of, its size (a share of the
+ * screen's shorter side) and, when said, its place and level, its shape (lenzi, 2026-11-14: "make user choose
+ * shape of blob": kept; not said, changing from one into another), its colour ("every blob ... should have a
+ * configurable color") and, glass, its tint ("glass should have a tint parameter"), whether it stays put and its
+ * weight (2026-11-15: "an option to make a blob unmovable and a weigh parameter so that it spins more/less").
  */
-export interface LenziSceneBlob extends LenziScenePlace {
-  material: BlobMaterial;
-  size: number;
-  shape?: BlobShapeName;
-}
+export type LenziSceneBlob = LenziBlobSpec;
 
 /** What a fleet's leader is, and so every one of its boids: a boid (a drop of light) or a blob-boid. */
 export type LenziSceneFleetKind = 'boid' | 'blob-boid';
@@ -48,6 +46,14 @@ export interface LenziSceneFleet extends LenziFleetWays, LenziScenePlace {
   colonies?: number;
   /** How wide one of them is, px (boids 9, blob-boids 11 when not said). */
   size?: number;
+  /** Its colour (a `#rrggbb`, each one moved a little from it); none: the accent's. */
+  colour?: string;
+  /** Two or more colours it shifts among, each one at its own place along the loop ("color: multi"). */
+  colours?: string[];
+  /** Glass blob-boids: how much of their colour they take, 0 to 1. */
+  tint?: number;
+  /** Glass blob-boids that shine too (solid ones that shine are of lamps). */
+  emitting?: boolean;
 }
 
 /**
@@ -70,13 +76,8 @@ export interface LenziScene {
 export interface LenziSceneLayout {
   /** With fleets the blobs and the flocks (LenziBlobFlockBackground), without only the blobs (LenziBlobBackground). */
   flocking: boolean;
-  materials: BlobMaterial[];
-  sizes: number[];
-  /** Each blob's place (null: its seeded one) and level. */
-  homes: ({ x: number; y: number } | null)[];
-  layers: number[];
-  /** Each blob's own shape; null: changing. */
-  shapes: (BlobShapeName | null)[];
+  /** The blobs, one by one. */
+  blobs: LenziBlobSpec[];
   /** The boid fleets, each its own flock with its leader's ways. */
   boidFlocks: LenziBoidFlock[];
   /** The blob-boid fleets, each its own flock of its material. */
@@ -85,13 +86,18 @@ export interface LenziSceneLayout {
   throwable: boolean;
 }
 
-/** A fleet's ways, sizes, place and level, only the ones it says. */
-function fleetSettings(fleet: LenziSceneFleet): LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number } {
-  const out: LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number } = {};
-  for (const key of ['colonies', 'size', 'maxSpeed', 'minSpeed', 'separation', 'alignment', 'cohesion', 'wander', 'sizeVariety', 'x', 'y', 'layer'] as const) {
+type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; emitting?: boolean };
+
+/** A fleet's ways, sizes, place, level, colour and tint, only the ones it says. */
+function fleetSettings(fleet: LenziSceneFleet): FleetSettings {
+  const out: FleetSettings = {};
+  for (const key of ['colonies', 'size', 'maxSpeed', 'minSpeed', 'separation', 'alignment', 'cohesion', 'wander', 'sizeVariety', 'x', 'y', 'layer', 'tint'] as const) {
     const value = fleet[key];
     if (typeof value === 'number' && Number.isFinite(value)) out[key] = value;
   }
+  if (fleet.colour) out.colour = fleet.colour;
+  if (fleet.colours?.length) out.colours = [...fleet.colours];
+  if (fleet.emitting) out.emitting = true;
   return out;
 }
 
@@ -101,11 +107,7 @@ export function sceneLayout(scene: LenziScene): LenziSceneLayout {
   const blobFleets = scene.fleets.filter((fleet) => fleet.kind === 'blob-boid' && fleet.count > 0);
   return {
     flocking: boidFleets.length + blobFleets.length > 0,
-    materials: scene.blobs.map((blob) => blob.material),
-    sizes: scene.blobs.map((blob) => blob.size),
-    homes: scene.blobs.map((blob) => (typeof blob.x === 'number' && typeof blob.y === 'number' ? { x: blob.x, y: blob.y } : null)),
-    layers: scene.blobs.map((blob) => blob.layer ?? MATERIAL_LAYERS[blob.material]),
-    shapes: scene.blobs.map((blob) => blob.shape ?? null),
+    blobs: [...scene.blobs],
     boidFlocks: boidFleets.map((fleet) => ({ count: fleet.count, ...fleetSettings(fleet) })),
     blobFlocks: blobFleets.map((fleet) => ({ material: fleet.material ?? 'lamp', count: fleet.count, ...fleetSettings(fleet) })),
     follow: scene.follow ?? 'near',

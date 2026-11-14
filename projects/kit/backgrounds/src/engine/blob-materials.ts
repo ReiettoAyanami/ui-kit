@@ -41,7 +41,27 @@ export interface MaterialObject {
    * way it flies). Its middle is `x`, `y`.
    */
   drop?: boolean;
+  /**
+   * Its level (lenzi, 2026-11-14: "same material blobs on different z index shouldnt fuse"): it melts only into
+   * the objects of its material on its own level; a higher level is drawn over a lower one. 0 when not said.
+   */
+  layer?: number;
+  /** Glass and solid: its own colour (linear); none: the look's (`glass`, `solid`). A lamp's colour is its `tint`. */
+  colour?: LinearRgb;
+  /** Glass: how much of its colour it takes, 0 to 1 ("glass should have a tint parameter"); none: the look's. */
+  tintAmount?: number;
+  /**
+   * Glass that shines too (lenzi, 2026-11-15: "it should be solid/glass and emitting/not emitting"): its light is
+   * drawn as a lamp's, in its colour, and the glass over it. (A solid thing that shines is a lamp.)
+   */
+  emit?: boolean;
 }
+
+/** Whether an object sheds light: a lamp, or glass that shines. */
+export const shines = (object: MaterialObject): boolean => object.material === 'lamp' || (object.material === 'glass' && object.emit === true);
+
+/** The most levels kept apart: a scene's objects on more are drawn with the highest of these. */
+export const MAX_MATERIAL_LAYERS = 4;
 
 /** A drop's head, its tail and their places along it, in its radii (as the boids' drops: `flock-scene.ts`). */
 export const DROP = { head: 0.8, tail: -1.6, tailRadius: 0.35, length: 2.2 } as const;
@@ -91,7 +111,7 @@ flat out vec4 vSuperA;
 flat out vec4 vLobesA;
 flat out vec4 vSuperB;
 flat out vec4 vLobesB;
-flat out vec3 vTint;
+flat out vec4 vTint;
 void main() {
   vec2 corner = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1)) * 2.0 - 1.0;
   // a drop is longer than it is wide
@@ -104,7 +124,7 @@ void main() {
   vLobesA = lobesA;
   vSuperB = superB;
   vLobesB = lobesB;
-  vTint = tint.rgb;
+  vTint = tint;
 }`;
 
 const FIELD_FRAGMENT = `#version 300 es
@@ -116,9 +136,11 @@ flat in vec4 vSuperA;
 flat in vec4 vLobesA;
 flat in vec4 vSuperB;
 flat in vec4 vLobesB;
-flat in vec3 vTint;
+flat in vec4 vTint;     // a lamp's colour; glass's colour and how much of it; solid's colour
 layout(location = 0) out vec4 weights;  // glass, solid, lamp, lamp's colour shares
 layout(location = 1) out vec4 colours;  // the lamps' colours by share, and their depth by share
+layout(location = 2) out vec4 glassTint;  // glass: its colour by share and amount, and its amount by share
+layout(location = 3) out vec4 solidTint;  // solid: its colour by share, and its share
 
 // shapes.ts's shapeRadius: the superformula's rounded polygon times the scallop of the lobes
 float shapeRadius(vec4 s, vec3 l, float angle) {
@@ -168,13 +190,23 @@ void main() {
     float share = exp(inside / 4.0);
     float depth = clamp(edge / vPlace.z, 0.0, 1.0);
     weights = vec4(0.0, 0.0, w, share);
-    colours = vec4(vTint * share, share * depth);
+    colours = vec4(vTint.rgb * share, share * depth);
+    glassTint = vec4(0.0);
+    solidTint = vec4(0.0);
   } else if (vTurn.z < 1.5) {
-    weights = vec4(w, 0.0, 0.0, 0.0);
-    colours = vec4(0.0);
+    // glass: where two meet, their colours and amounts by how much of each is there; glass that shines is a
+    // lamp too, in its colour, under itself
+    float shining = vLobesA.w;
+    float share = exp(inside / 4.0) * shining;
+    weights = vec4(w, 0.0, w * shining, share);
+    colours = vec4(vTint.rgb * share, share * clamp(edge / vPlace.z, 0.0, 1.0));
+    glassTint = vec4(vTint.rgb * w * vTint.a, w * vTint.a);
+    solidTint = vec4(0.0);
   } else {
     weights = vec4(0.0, w, 0.0, 0.0);
     colours = vec4(0.0);
+    glassTint = vec4(0.0);
+    solidTint = vec4(vTint.rgb * w, w);
   }
 }`;
 
@@ -206,16 +238,26 @@ uniform sampler2D blurred;
 uniform sampler2D light;
 uniform sampler2D ambient;
 uniform vec2 ambientTexel;
-uniform sampler2D weights;
+// each level's fields (up to ${MAX_MATERIAL_LAYERS}), the lowest first: the weights, glass's colour and amount, solid's colour
+uniform int layers;
+uniform sampler2D weights0;
+uniform sampler2D weights1;
+uniform sampler2D weights2;
+uniform sampler2D weights3;
+uniform sampler2D glass0;
+uniform sampler2D glass1;
+uniform sampler2D glass2;
+uniform sampler2D glass3;
+uniform sampler2D solid0;
+uniform sampler2D solid1;
+uniform sampler2D solid2;
+uniform sampler2D solid3;
 uniform float lightGain;
 uniform vec2 lightStep;   // how far apart the light is sampled for its direction, uv
-uniform vec3 glass;
-uniform float glassAmount;
 uniform float veil;
 uniform float rim;
 uniform vec3 border;
 uniform float borderPx;   // device px
-uniform vec3 solid;
 out vec4 color;
 vec3 decode(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
 vec3 encode(vec3 c) {
@@ -238,7 +280,9 @@ vec3 wide(vec2 at) {
   return sum / 10.0;
 }
 float luminance(vec2 at) { return dot(texture(ambient, at).rgb, vec3(0.2126, 0.7152, 0.0722)); }
-void main() {
+
+// one level's glass and solid things over the picture so far
+vec3 level(vec3 c, sampler2D weights, sampler2D glassTints, sampler2D solidTints, vec3 around, vec3 here, vec2 lightWay) {
   vec4 w = texture(weights, uv);
   float glassEdge = -log(max(w.r, 1e-6));
   float solidEdge = -log(max(w.g, 1e-6));
@@ -249,27 +293,18 @@ void main() {
   float solidIn = -solidEdge / max(length(solidSlope), 1e-5);
   float glassFill = w.r > 1e-5 ? clamp(glassIn + 0.5, 0.0, 1.0) : 0.0;
   float solidFill = w.g > 1e-5 ? clamp(solidIn + 0.5, 0.0, 1.0) : 0.0;
-  vec3 c = decode(texture(picture, uv).rgb);
-  if (glassFill <= 0.0 && solidFill <= 0.0) {
-    color = vec4(encode(c), 1.0);
-    return;
-  }
-  // the light: what reaches a face from all around (as the page's lit surfaces take the background's light:
-  // wide, so a lamp under a solid thing does not show through it), and on an edge the glow right there too;
-  // and where it comes from (towards more light, wide)
-  vec3 around = wide(uv) * ${AMBIENT.toFixed(1)} * lightGain;
-  vec3 here = texture(light, uv).rgb * lightGain + around;
-  vec2 towards = vec2(luminance(uv + vec2(lightStep.x, 0.0)) - luminance(uv - vec2(lightStep.x, 0.0)),
-                      luminance(uv + vec2(0.0, lightStep.y)) - luminance(uv - vec2(0.0, lightStep.y)));
-  vec2 lightWay = length(towards) > 1e-6 ? normalize(towards) : vec2(0.0);
-
   if (glassFill > 0.0) {
     vec2 out_ = length(glassSlope) > 1e-6 ? normalize(glassSlope) : vec2(0.0);
     float facing = max(0.0, dot(out_, lightWay));
     float band = clamp(borderPx - glassIn + 0.5, 0.0, 1.0);
+    // its colour and how much of it (lenzi, 2026-11-14: "glass should have a tint parameter"): where two meet, as
+    // much of each as there is of it
+    vec4 t = texture(glassTints, uv);
+    float amount = clamp(t.a / max(w.r, 1e-6), 0.0, 1.0);
+    vec3 tint = t.rgb / max(t.a, 1e-6);
     // glass: what is behind it, blurred, under its own colour; the light on its face; its edge lit on the
     // side that faces the light
-    vec3 g = mix(decode(texture(blurred, uv).rgb), glass, glassAmount) + ${FROST.toFixed(3)};
+    vec3 g = mix(decode(texture(blurred, uv).rgb), tint, amount) + ${FROST.toFixed(3)};
     g += shine(around) * veil;
     g = mix(g, border, band * 0.8);
     g += shine(here * (0.35 + 0.65 * facing)) * rim * band;
@@ -279,13 +314,32 @@ void main() {
     vec2 out_ = length(solidSlope) > 1e-6 ? normalize(solidSlope) : vec2(0.0);
     float facing = max(0.0, dot(out_, lightWay));
     float band = clamp(borderPx - solidIn + 0.5, 0.0, 1.0);
+    vec4 t = texture(solidTints, uv);
     // solid: its own colour, the light on it as it is here (more on the side towards a light, by itself);
     // the side that faces the light only on its edge (inside, the field is flat and says no side)
-    vec3 s = solid + shine(around) * veil * 0.6;
+    vec3 s = t.rgb / max(t.a, 1e-6) + shine(around) * veil * 0.6;
     s = mix(s, border, band * 0.8);
     s += shine(here * (0.35 + 0.65 * facing)) * rim * band;
     c = mix(c, s, solidFill);
   }
+  return c;
+}
+
+void main() {
+  vec3 c = decode(texture(picture, uv).rgb);
+  // the light: what reaches a face from all around (as the page's lit surfaces take the background's light:
+  // wide, so a lamp under a solid thing does not show through it), and on an edge the glow right there too;
+  // and where it comes from (towards more light, wide)
+  vec3 around = wide(uv) * ${AMBIENT.toFixed(1)} * lightGain;
+  vec3 here = texture(light, uv).rgb * lightGain + around;
+  vec2 towards = vec2(luminance(uv + vec2(lightStep.x, 0.0)) - luminance(uv - vec2(lightStep.x, 0.0)),
+                      luminance(uv + vec2(0.0, lightStep.y)) - luminance(uv - vec2(0.0, lightStep.y)));
+  vec2 lightWay = length(towards) > 1e-6 ? normalize(towards) : vec2(0.0);
+  // the levels, the lowest first: a higher one over it, never melted into it
+  c = level(c, weights0, glass0, solid0, around, here, lightWay);
+  if (layers > 1) c = level(c, weights1, glass1, solid1, around, here, lightWay);
+  if (layers > 2) c = level(c, weights2, glass2, solid2, around, here, lightWay);
+  if (layers > 3) c = level(c, weights3, glass3, solid3, around, here, lightWay);
   color = vec4(encode(c), 1.0);
 }`;
 
@@ -293,7 +347,11 @@ void main() {
 // is walked through the solid field, and a lamp whose way crosses it lights that place no more
 const SHADOW = `#version 300 es
 precision highp float;
-uniform sampler2D field;               // the fields: green is the solid one
+uniform sampler2D field0;              // each level's fields: green is the solid one
+uniform sampler2D field1;
+uniform sampler2D field2;
+uniform sampler2D field3;
+uniform int layers;
 uniform int lampCount;
 uniform vec4 lamps[${MAX_LAMPS}];      // x, y, radius, strength (CSS px)
 uniform vec2 space;                    // CSS px
@@ -301,10 +359,18 @@ uniform float height;                  // of the target, px
 uniform float scale;                   // target px in a CSS px
 out vec4 color;
 vec2 at(vec2 css) { return vec2(css.x / space.x, 1.0 - css.y / space.y); }
+// the solid field at a place: the most of any level's (every solid thing casts its shadow)
+float solidAt(vec2 uv) {
+  float s = texture(field0, uv).g;
+  if (layers > 1) s = max(s, texture(field1, uv).g);
+  if (layers > 2) s = max(s, texture(field2, uv).g);
+  if (layers > 3) s = max(s, texture(field3, uv).g);
+  return s;
+}
 void main() {
   vec2 p = vec2(gl_FragCoord.x, height - gl_FragCoord.y) / scale;
   // under a solid thing: it covers this place, no shadow of its own
-  if (texture(field, at(p)).g > 0.5) { color = vec4(0.0, 0.0, 0.0, 1.0); return; }
+  if (solidAt(at(p)) > 0.5) { color = vec4(0.0, 0.0, 0.0, 1.0); return; }
   float total = 0.0;
   float blocked = 0.0;
   for (int i = 0; i < ${MAX_LAMPS}; i++) {
@@ -320,7 +386,7 @@ void main() {
     float reach = 1.0 - lamp.z / far;
     for (int s = 1; s <= ${SHADOW_STEPS}; s++) {
       float t = reach * float(s) / ${SHADOW_STEPS.toFixed(1)};
-      if (texture(field, at(p + way * t)).g > 1.0) {
+      if (solidAt(at(p + way * t)) > 1.0) {
         blocked += here;
         break;
       }
@@ -338,8 +404,10 @@ export class MaterialScene {
   private readonly buffer: WebGLBuffer;
   private data = new Float32Array(0);
   private objects: readonly MaterialObject[] = [];
+  /** The objects by level, the lowest first: each level its own fields (they never melt into another's). */
+  private levels: MaterialObject[][] = [[]];
   private look: MaterialLook | null = null;
-  private fieldTarget: GlowTarget | null = null;
+  private fieldTargets: GlowTarget[] = [];
   private shadowTarget: GlowTarget | null = null;
   private has = { lamp: false, glass: false, solid: false };
   private shadowed = false;
@@ -369,58 +437,81 @@ export class MaterialScene {
     this.objects = objects.slice(0, MAX_MATERIAL_OBJECTS);
     this.look = look;
     this.has = { lamp: false, glass: false, solid: false };
-    for (const object of this.objects) this.has[object.material] = true;
+    for (const object of this.objects) {
+      this.has[object.material] = true;
+      if (shines(object)) this.has.lamp = true;
+    }
+    // the levels there are, the lowest first; past the most kept apart, the highest of them
+    const found = [...new Set(this.objects.map((object) => object.layer ?? 0))].sort((a, b) => a - b);
+    const slotOf = new Map(found.map((layer, i) => [layer, Math.min(i, MAX_MATERIAL_LAYERS - 1)]));
+    this.levels = Array.from({ length: Math.max(1, Math.min(found.length, MAX_MATERIAL_LAYERS)) }, () => [] as MaterialObject[]);
+    for (const object of this.objects) this.levels[slotOf.get(object.layer ?? 0) ?? 0]!.push(object);
   }
 
-  /** Before the light: the fields, and the shadow (lamps and solid things both there). */
+  /** Before the light: each level's fields, and the shadow (lamps and solid things both there). */
   prepare(): void {
     const engine = this.engine;
     const gl = engine.gl;
+    const look = this.look;
     this.fit();
-    const target = this.fieldTarget!;
-    engine.into(target);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    const count = this.objects.length;
-    if (count > 0) {
+    gl.useProgram(this.field);
+    gl.uniform2f(engine.uniform(this.field, 'space'), engine.cssWidth, engine.cssHeight);
+    this.levels.forEach((objects, slot) => {
+      engine.into(this.fieldTargets[slot]!);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      const count = objects.length;
+      if (count === 0) return;
       if (this.data.length < count * FLOATS) this.data = new Float32Array(Math.max(count, 64) * FLOATS);
       const data = this.data;
-      this.objects.forEach((object, i) => {
+      objects.forEach((object, i) => {
         const a = shapeUniforms(object.from);
         const b = shapeUniforms(object.to);
         const at = i * FLOATS;
+        // a lamp's colour; glass's own (or the look's; one that shines, its own light's) and how much of it; solid's
+        // own, or its tint (2026-11-15: "solid shouldn't be trasparent": in the page's own colour it looked a hole)
+        const tint =
+          object.material === 'lamp'
+            ? [...object.tint, 0]
+            : object.material === 'glass'
+              ? [...(object.colour ?? (object.emit ? object.tint : (look?.glass ?? object.tint))), Math.min(1, Math.max(0, object.tintAmount ?? look?.glassAmount ?? 0.5))]
+              : [...(object.colour ?? object.tint), 1];
         data.set([object.x, object.y, Math.max(0.5, object.radius), Math.max(0.5, object.merge)], at);
         data.set([object.rotation, object.mix, BLOB_MATERIALS.indexOf(object.material), object.drop ? 1 : 0], at + 4);
-        data.set([a[0], a[1], a[2], a[3], a[4], a[5], a[6], 0], at + 8);
+        // the free place after the first shape's lobes: whether glass shines
+        data.set([a[0], a[1], a[2], a[3], a[4], a[5], a[6], object.material === 'glass' && object.emit ? 1 : 0], at + 8);
         data.set([b[0], b[1], b[2], b[3], b[4], b[5], b[6], 0], at + 16);
-        data.set([object.tint[0], object.tint[1], object.tint[2], 0], at + 24);
+        data.set(tint, at + 24);
       });
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(this.field);
-      gl.uniform2f(engine.uniform(this.field, 'space'), engine.cssWidth, engine.cssHeight);
       gl.bindVertexArray(this.vertexArray);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, count * FLOATS), gl.DYNAMIC_DRAW);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
       gl.bindVertexArray(null);
       gl.disable(gl.BLEND);
-    }
+    });
     this.shadowed = this.has.lamp && this.has.solid && this.drawShadow();
   }
 
-  /** The lamps' light, added into the scene. */
+  /** The lamps' light, added into the scene: each level's lamps, apart. */
   drawLight(): void {
     const look = this.look;
-    if (!this.has.lamp || !look || !this.fieldTarget) return;
+    if (!this.has.lamp || !look) return;
     const engine = this.engine;
     const gl = engine.gl;
     gl.useProgram(this.lamps);
-    engine.useTexture(this.lamps, 'weights', this.fieldTarget.textures[0]!, 0);
-    engine.useTexture(this.lamps, 'colours', this.fieldTarget.textures[1]!, 1);
     gl.uniform1f(engine.uniform(this.lamps, 'level'), look.level);
     gl.uniform1f(engine.uniform(this.lamps, 'soft'), Math.max(0.75, look.soft * engine.scale));
-    engine.fullscreen();
+    this.levels.forEach((objects, slot) => {
+      const target = this.fieldTargets[slot];
+      if (!target || !objects.some(shines)) return;
+      engine.useTexture(this.lamps, 'weights', target.textures[0]!, 0);
+      engine.useTexture(this.lamps, 'colours', target.textures[1]!, 1);
+      engine.fullscreen();
+    });
   }
 
   /** The share of the glow stopped at every place, or null (nothing solid, or no lamp). */
@@ -431,7 +522,7 @@ export class MaterialScene {
   /** The glass and the solid things over the finished picture; false when there are none. */
   drawSurfaces(inputs: GlowSurfaceInputs): boolean {
     const look = this.look;
-    if ((!this.has.glass && !this.has.solid) || !look || !this.fieldTarget) return false;
+    if ((!this.has.glass && !this.has.solid) || !look || this.fieldTargets.length === 0) return false;
     const engine = this.engine;
     const gl = engine.gl;
     const program = this.surfaces;
@@ -439,41 +530,51 @@ export class MaterialScene {
     engine.useTexture(program, 'picture', inputs.picture, 0);
     engine.useTexture(program, 'blurred', inputs.blurred, 1);
     engine.useTexture(program, 'light', inputs.light, 2);
-    engine.useTexture(program, 'weights', this.fieldTarget.textures[0]!, 3);
-    engine.useTexture(program, 'ambient', inputs.ambient, 4);
+    engine.useTexture(program, 'ambient', inputs.ambient, 3);
+    // each level's fields (the levels not there: the first's, never read)
+    for (let slot = 0; slot < MAX_MATERIAL_LAYERS; slot++) {
+      const target = this.fieldTargets[Math.min(slot, this.levels.length - 1)]!;
+      engine.useTexture(program, `weights${slot}`, target.textures[0]!, 4 + slot * 3);
+      engine.useTexture(program, `glass${slot}`, target.textures[2]!, 5 + slot * 3);
+      engine.useTexture(program, `solid${slot}`, target.textures[3]!, 6 + slot * 3);
+    }
+    gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
     gl.uniform2f(engine.uniform(program, 'ambientTexel'), 1 / inputs.ambientSize[0], 1 / inputs.ambientSize[1]);
     gl.uniform1f(engine.uniform(program, 'lightGain'), inputs.lightGain);
     // the light's direction is read 80 px apart: the side a light is on, not its grain
     gl.uniform2f(engine.uniform(program, 'lightStep'), 80 / engine.cssWidth, 80 / engine.cssHeight);
-    gl.uniform3f(engine.uniform(program, 'glass'), ...look.glass);
-    gl.uniform1f(engine.uniform(program, 'glassAmount'), look.glassAmount);
     gl.uniform1f(engine.uniform(program, 'veil'), look.veil);
     gl.uniform1f(engine.uniform(program, 'rim'), look.rim);
     gl.uniform3f(engine.uniform(program, 'border'), ...look.border);
     gl.uniform1f(engine.uniform(program, 'borderPx'), look.borderWidth * engine.scale);
-    gl.uniform3f(engine.uniform(program, 'solid'), ...look.solid);
     engine.fullscreen();
     return true;
   }
 
   dispose(): void {
     const gl = this.engine.gl;
-    this.engine.freeTarget(this.fieldTarget);
+    for (const target of this.fieldTargets) this.engine.freeTarget(target);
     this.engine.freeTarget(this.shadowTarget);
-    this.fieldTarget = this.shadowTarget = null;
+    this.fieldTargets = [];
+    this.shadowTarget = null;
     gl.deleteBuffer(this.buffer);
     gl.deleteVertexArray(this.vertexArray);
   }
 
-  /** The targets as large as the canvas wants: the fields half its size, the shadow a quarter. */
+  /** The targets as large as the canvas wants: each level's fields half its size, the shadow a quarter. */
   private fit(): void {
     const engine = this.engine;
     const width = Math.max(2, engine.pixelWidth >> 1);
     const height = Math.max(2, engine.pixelHeight >> 1);
-    if (!this.fieldTarget || this.fieldTarget.width !== width || this.fieldTarget.height !== height) {
-      engine.freeTarget(this.fieldTarget);
-      this.fieldTarget = engine.makeTarget(width, height, true, 2);
+    // the fields of a level: the weights, the lamps' colours, glass's colour and amount, solid's colour
+    for (let slot = 0; slot < this.levels.length; slot++) {
+      const target = this.fieldTargets[slot];
+      if (target && target.width === width && target.height === height) continue;
+      engine.freeTarget(target ?? null);
+      this.fieldTargets[slot] = engine.makeTarget(width, height, true, 4);
     }
+    // a level fewer: its fields go
+    for (const spare of this.fieldTargets.splice(this.levels.length)) engine.freeTarget(spare);
     const shadowWidth = Math.max(2, engine.pixelWidth >> 2);
     const shadowHeight = Math.max(2, engine.pixelHeight >> 2);
     if (!this.shadowTarget || this.shadowTarget.width !== shadowWidth || this.shadowTarget.height !== shadowHeight) {
@@ -490,16 +591,19 @@ export class MaterialScene {
     if (!target) return false;
     // the largest lamps: the ones whose shadows show
     const lamps = this.objects
-      .filter((object) => object.material === 'lamp')
+      .filter(shines)
       .sort((a, b) => b.radius - a.radius)
       .slice(0, MAX_LAMPS);
-    if (lamps.length === 0 || !this.fieldTarget) return false;
+    if (lamps.length === 0 || this.fieldTargets.length === 0) return false;
     const lampData = new Float32Array(MAX_LAMPS * 4);
     lamps.forEach((lamp, i) => lampData.set([lamp.x, lamp.y, Math.max(1, lamp.radius), 1], i * 4));
     engine.into(target);
     gl.disable(gl.BLEND);
     gl.useProgram(this.shadow);
-    engine.useTexture(this.shadow, 'field', this.fieldTarget.textures[0]!, 0);
+    for (let slot = 0; slot < MAX_MATERIAL_LAYERS; slot++) {
+      engine.useTexture(this.shadow, `field${slot}`, this.fieldTargets[Math.min(slot, this.fieldTargets.length - 1)]!.textures[0]!, slot);
+    }
+    gl.uniform1i(engine.uniform(this.shadow, 'layers'), this.levels.length);
     gl.uniform1i(engine.uniform(this.shadow, 'lampCount'), lamps.length);
     gl.uniform4fv(engine.uniform(this.shadow, 'lamps'), lampData);
     gl.uniform2f(engine.uniform(this.shadow, 'space'), engine.cssWidth, engine.cssHeight);

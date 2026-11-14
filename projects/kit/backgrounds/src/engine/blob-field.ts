@@ -4,6 +4,7 @@
 // just a moment. Pure numbers; the blob scene draws them. A plain module (no schematic makes one).
 
 import { seeded } from './color';
+import type { BlobMaterial } from './blob-materials';
 import { BLOB_SHAPES, BlobShape, BlobShapeName, shapeRadius, superReach } from './shapes';
 
 /** The most blobs a background holds (the shader's arrays). */
@@ -42,6 +43,51 @@ export interface BlobSettings {
    * one changes among `shapes` (lenzi, 2026-11-14: "make user choose shape of blob").
    */
   ownShapes?: readonly (BlobShapeName | null | undefined)[];
+  /** Each blob that never leaves its place (lenzi, 2026-11-15: "an option to make a blob unmovable"), in order. */
+  fixed?: readonly (boolean | null | undefined)[];
+  /** Each blob's weight, in order (1 when not said): the heavier, the slower it turns ("a weigh parameter so that it spins more/less"). */
+  weights?: readonly (number | null | undefined)[];
+}
+
+/**
+ * One blob as a scene (or an app) says it: what it is made of and how large it is (a share of the smaller side);
+ * the rest only when said: its place (a share of the space), its shape (kept), its level (it melts only into its
+ * material on its own level), its colour (a `#rrggbb`) and, glass, how much of it it takes, whether it never leaves
+ * its place (`fixed`: it does not wander, it cannot be thrown) and its weight (the heavier, the slower it turns).
+ */
+export interface LenziBlobSpec {
+  material: BlobMaterial;
+  size: number;
+  x?: number;
+  y?: number;
+  shape?: BlobShapeName;
+  layer?: number;
+  colour?: string;
+  /** Two or more colours (each a `#rrggbb`) it shifts among, slowly, round again; given, `colour` is left aside. */
+  colours?: string[];
+  tint?: number;
+  fixed?: boolean;
+  weight?: number;
+  /** Glass that shines too, in its colour (a solid thing that shines is a lamp: `material: 'lamp'`). */
+  emitting?: boolean;
+}
+
+/** The colours a blob or a fleet shifts among (two or more `#rrggbb`), or null. */
+export function paletteOf(colours: readonly string[] | undefined): string[] | null {
+  const known = (colours ?? []).filter((colour) => /^#[0-9a-f]{6}$/i.test(colour));
+  return known.length >= 2 ? known : null;
+}
+
+/** What the blob field takes from a list of blobs. */
+export function specSettings(specs: readonly LenziBlobSpec[]): Pick<BlobSettings, 'count' | 'sizes' | 'homes' | 'ownShapes' | 'fixed' | 'weights'> {
+  return {
+    count: specs.length,
+    sizes: specs.map((spec) => spec.size),
+    homes: specs.map((spec) => (typeof spec.x === 'number' && typeof spec.y === 'number' ? { x: spec.x, y: spec.y } : null)),
+    ownShapes: specs.map((spec) => (spec.shape && spec.shape in BLOB_SHAPES ? spec.shape : null)),
+    fixed: specs.map((spec) => spec.fixed === true),
+    weights: specs.map((spec) => (typeof spec.weight === 'number' ? spec.weight : null)),
+  };
 }
 
 /** Where a blob is at home when nothing says, as a share of the space: what its number and the seed give. */
@@ -91,7 +137,8 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
     const place = settings.homes?.[i];
     const homeX = place ? place.x : seededX;
     const homeY = place ? place.y : seededY;
-    const reach = settings.travel * 0.4;
+    // a blob made fast does not wander
+    const reach = settings.fixed?.[i] ? 0 : settings.travel * 0.4;
     // two slow loops on each axis, never in step: a path that does not repeat for a long time
     const loop = (amplitude: number) => {
       const a = Math.sin(time * (0.11 + 0.13 * random()) + random() * 6.283);
@@ -106,7 +153,9 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
     const own = settings.sizes?.length ? settings.sizes[i % settings.sizes.length]! : varied;
     const radius = own * side * breath;
     const direction = random() < 0.5 ? -1 : 1;
-    const rotation = random() * 6.283 + direction * time * ((settings.spin * Math.PI * 2) / 60) * (0.5 + random());
+    // the heavier, the slower it turns
+    const weight = Math.max(0.05, settings.weights?.[i] ?? 1);
+    const rotation = random() * 6.283 + (direction * time * ((settings.spin * Math.PI * 2) / 60) * (0.5 + random())) / weight;
 
     // the shape it has and the one it is turning into: a new one every period, changing in its last part
     const first = Math.floor(random() * shapes.length);
@@ -124,7 +173,7 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
       mix = smooth(Math.min(1, Math.max(0, ((clock - turn) - 0.55) / 0.45)));
     }
 
-    if (pointer && settings.pull > 0) {
+    if (pointer && settings.pull > 0 && !settings.fixed?.[i]) {
       // drawn by the pointer, the near ones more
       const dx = pointer.x - x;
       const dy = pointer.y - y;

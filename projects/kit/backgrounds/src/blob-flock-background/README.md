@@ -46,10 +46,14 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   say is the inputs'. Without it, one flock of `boids` in `colonies`, as before. A scene (`LenziScene`) gives them.
   A fleet with `x`, `y` (a share of the space) is born around its leader there, not already flying; a boid
   fleet's `layer` is its own level (`boidLayer` when not said).
-- **Blobs put somewhere, of a shape of their own** (`blobHomes`, `blobShapes`, in order; lenzi, 2026-11-14:
-  "make every object selectable and moveable", "make user choose shape of blob"): a blob with a place wanders
-  from there (by `travel`), one with a shape keeps it; the others have their seeded place and change shapes, as
-  before.
+- **Blobs one by one** (`blobSpecs`, `LenziBlobSpec`; a scene's): each its material and size and, when said, its
+  place (it wanders from there), shape (kept), level, colour or colours to shift among, glass's tint and shining,
+  whether it stays put (not wandering, not thrown) and its weight (the heavier, the slower it turns). Given, it is
+  the blobs; without it, `blobs`, `materials`, `blobSizes` and `blobLayers` as before. A fleet takes `colour`,
+  `colours`, `tint` and `emitting` too.
+- **Levels kept apart**: one field per level (up to four), drawn from the lowest up: blobs of one material on two
+  levels do not melt, the higher drawn over the lower. A solid thing without a colour is in its tint, not the
+  page's colour (2026-11-15: "solid shouldn't be trasparent").
 - **Layers** (z-levels; lenzi, 2026-11-14: "the z-index of the blobs decides which is an obstacle to what
   (they're obstacles only to objects that are on the same z-level)"): something stops only what is on its
   own layer. By default the lamps, the solid things, the boids and the lamp blob-boids are on layer 0 and

@@ -1,13 +1,13 @@
 import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
 
-import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobsAt } from '../engine/blob-field';
+import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobEdge, blobsAt, paletteOf, specSettings } from '../engine/blob-field';
 import { BlobMaterial, DROP, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { BlobThrow } from '../engine/blob-throw';
 import { Boids, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_BOID_SIZES, roundField } from '../engine/boids';
-import { LinearRgb, linearToHex } from '../engine/color';
+import { LinearRgb, PALETTE_STEP, displacedColors, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
-import { BLOB_SHAPES, knownShapes, ownShapes } from '../engine/shapes';
+import { BLOB_SHAPES, knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziSourceLamp } from '../glow/light-field';
 import { LenziScares } from '../scare/scares';
@@ -34,6 +34,14 @@ export interface LenziBlobFlock extends LenziFleetWays {
   /** Where its leader is put, as a share of the space (0 to 1 each way): the fleet is born around it. */
   x?: number;
   y?: number;
+  /** Its colour (a `#rrggbb`; a lamp fleet's moved a little drop by drop); none: the accent's. */
+  colour?: string;
+  /** Two or more colours it shifts among, each drop at its own place along the loop; given, `colour` is left aside. */
+  colours?: string[];
+  /** Glass: how much of its colour it takes, 0 to 1. */
+  tint?: number;
+  /** Glass that shines too, in its colour (a solid fleet that shines is of lamps). */
+  emitting?: boolean;
 }
 
 /**
@@ -68,6 +76,10 @@ export interface LenziBoidFlock extends LenziFleetWays {
   /** Where its leader is put, as a share of the space (0 to 1 each way): the fleet is born around it. */
   x?: number;
   y?: number;
+  /** Its colour (a `#rrggbb`, moved a little boid by boid); none: the accent's. */
+  colour?: string;
+  /** Two or more colours it shifts among, each boid at its own place along the loop; given, `colour` is left aside. */
+  colours?: string[];
 }
 
 /** A fleet's leader's place in a space, px; null: the fleet has none (born anywhere). */
@@ -119,6 +131,8 @@ const BLOB_BOID_SPEED = 0.7;
 const BLOB_BOID_SHAPE = BLOB_SHAPES.circle;
 /** How much brighter a lamp blob-boid is than a lamp blob (a blob is a deep shade, for the words over it). */
 const LAMP_DROP_LIGHT = 2;
+/** No colours: a fleet of its own colour does not take the accent's. */
+const NO_COLOURS = new Float32Array(0);
 
 interface Fleet {
   spec: LenziBlobFlock;
@@ -140,6 +154,11 @@ interface BlobBoid {
   heading: number;
   /** Its fleet's layer. */
   layer: number;
+  /** Its fleet's own colour (a lamp's moved a little drop by drop), and how much of it glass takes. */
+  colour?: LinearRgb;
+  tintAmount?: number;
+  /** Glass that shines. */
+  emit?: boolean;
 }
 
 /**
@@ -166,10 +185,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly sizeVariety = input(DEFAULT_BLOBS.sizeVariety, { transform: numberAttribute });
   /** Each blob's own size (a share of the smaller side), in order and round again; null: `blobSize` and `sizeVariety`. */
   readonly blobSizes = input<readonly number[] | null>(null);
-  /** Each blob's own place (a share of the space, 0 to 1 each way), in order; a blob without one has its seeded place. */
-  readonly blobHomes = input<readonly ({ x: number; y: number } | null)[] | null>(null);
-  /** Each blob's own shape (BLOB_SHAPES' names), in order: it keeps it; a blob without one changes among `shapes`. */
-  readonly blobShapes = input<readonly (string | null)[] | null>(null);
+  /**
+   * The blobs one by one (a scene's): each its material, size and, when said, its place, shape, level, colour, tint,
+   * whether it stays put and its weight (`LenziBlobSpec`). Given, it is the blobs: `blobs`, `materials`,
+   * `blobSizes` and `blobLayers` are left aside.
+   */
+  readonly blobSpecs = input<readonly LenziBlobSpec[] | null>(null);
   /** Each blob's material, in order and round again: a lamp, glass or solid. */
   readonly materials = input<readonly LenziBlobMaterial[]>(['lamp']);
   /** How far a blob wanders from its place, 0 to 1. */
@@ -247,6 +268,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private flocks: BoidFleet[] = [];
   private fleets: Fleet[] = [];
   private flockSeed = Number.NaN;
+  /** The colours of the boid fleets that have one of their own, by colour, count, spread and seed. */
+  private readonly fleetTints = new Map<string, Float32Array>();
+  /** The colours shifted among, read once. */
+  private readonly palettes = new Map<string, LinearRgb[]>();
 
   constructor() {
     super();
@@ -281,15 +306,16 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   protected override lamps(): LenziSourceLamp[] {
     const tints = this.objectColours();
     const strength = Math.max(0, this.brightness()) * (0.5 + 0.5 * Math.max(0, this.glow()));
+    // the lamps, and the glass that shines
     return this.drawn
       .map((blob, index) => ({ blob, index }))
-      .filter(({ index }) => this.materialOf(index) === 'lamp')
+      .filter(({ index }) => this.materialOf(index) === 'lamp' || (this.materialOf(index) === 'glass' && this.blobSpecs()?.[index]?.emitting === true))
       .map(({ blob, index }) => ({
         left: blob.x - blob.radius,
         right: blob.x + blob.radius,
         top: blob.y - blob.radius,
         bottom: blob.y + blob.radius,
-        color: linearToHex([tints[index * 3]!, tints[index * 3 + 1]!, tints[index * 3 + 2]!]),
+        color: linearToHex(this.blobTint(index, tints)),
         strength: strength * BLOB_LAMP,
         reach: blob.radius * 2.4,
       }));
@@ -324,7 +350,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       draw: () => {
         materials.drawLight();
         const colours = this.objectColours();
-        for (const fleet of this.current()) flockScene.draw(fleet.boids, colours, Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1);
+        for (const fleet of this.current()) flockScene.draw(fleet.boids, this.fleetColours(fleet.spec, colours), Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1);
       },
       shadow: () => materials.shadowTexture(),
       surfaces: (inputs) => materials.drawSurfaces(inputs),
@@ -336,11 +362,13 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   }
 
   protected override grabbable(x: number, y: number): boolean {
-    return this.throwable() && this.throws.blobAt(this.drawn, x, y) >= 0;
+    const index = this.throwable() ? this.throws.blobAt(this.drawn, x, y) : -1;
+    // a blob made fast is never taken ("an option to make a blob unmovable")
+    return index >= 0 && this.blobSpecs()?.[index]?.fixed !== true;
   }
 
   protected override grab(x: number, y: number, time: number): boolean {
-    return this.throwable() && this.throws.grab(this.drawn, x, y, time);
+    return this.grabbable(x, y) && this.throws.grab(this.drawn, x, y, time);
   }
 
   protected override dragTo(x: number, y: number, time: number): void {
@@ -353,8 +381,54 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   /** A blob's material: the list, round again. */
   private materialOf(index: number): LenziBlobMaterial {
+    const spec = this.blobSpecs()?.[index];
+    if (spec) return spec.material;
     const list = this.materials();
     return list.length ? list[index % list.length]! : 'lamp';
+  }
+
+  /** A blob's colour: the one it is shifting through now, its own (a `#rrggbb`), or the accent moved a little. */
+  private blobTint(index: number, tints: Float32Array): LinearRgb {
+    const spec = this.blobSpecs()?.[index];
+    const palette = paletteOf(spec?.colours);
+    if (palette) return this.shifting(palette, index * 0.37);
+    const own = spec?.colour;
+    if (own && /^#[0-9a-f]{6}$/i.test(own)) return hexToLinear(own);
+    return [tints[index * 3] ?? 1, tints[index * 3 + 1] ?? 1, tints[index * 3 + 2] ?? 1];
+  }
+
+  /** Where a colour shifting among a few is now (each object at its own place along the loop). */
+  private shifting(palette: readonly string[], phase: number): LinearRgb {
+    const key = palette.join(',');
+    let linear = this.palettes.get(key);
+    if (!linear) {
+      linear = palette.map(hexToLinear);
+      this.palettes.set(key, linear);
+    }
+    return paletteAt(linear, this.elapsed / (PALETTE_STEP * linear.length) + phase);
+  }
+
+  /** Each boid fleet's colours: shifting among its own, its own colour moved a little boid by boid, or the accent's. */
+  private fleetColours(spec: LenziBoidFlock, shared: Float32Array): Float32Array {
+    const palette = paletteOf(spec.colours);
+    if (palette) {
+      // every boid at its own place along the loop: a new list each frame (the colours move)
+      const count = Math.max(1, Math.floor(spec.count));
+      const colours = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) colours.set(this.shifting(palette, i * 0.618), i * 3);
+      return colours;
+    }
+    if (!spec.colour || !/^#[0-9a-f]{6}$/i.test(spec.colour)) return shared;
+    const count = Math.max(1, Math.floor(spec.count));
+    const key = `${spec.colour}|${count}|${this.spread()}|${this.seed()}`;
+    let colours = this.fleetTints.get(key);
+    if (!colours) {
+      colours = displacedColors(hexToLinear(spec.colour), count, Math.min(1, Math.max(0, this.spread())), this.seed());
+      this.fleetTints.set(key, colours);
+      // only the ones in use are kept
+      if (this.fleetTints.size > 16) this.fleetTints.delete(this.fleetTints.keys().next().value!);
+    }
+    return colours;
   }
 
   /**
@@ -391,10 +465,30 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private blobBoids(fleets: readonly Fleet[]): BlobBoid[] {
     const out: BlobBoid[] = [];
     fleets.forEach((fleet) => {
-      const { boids } = fleet;
-      const layer = this.fleetLayerOf(fleet.spec);
+      const { boids, spec } = fleet;
+      const layer = this.fleetLayerOf(spec);
+      // its own colour: a lamp fleet's moved a little drop by drop (as the accent is), glass and solid as it is
+      const palette = paletteOf(spec.colours);
+      const own = !palette && spec.colour && /^#[0-9a-f]{6}$/i.test(spec.colour) ? hexToLinear(spec.colour) : null;
+      const emit = spec.material === 'glass' && spec.emitting === true;
+      const colours = own && (spec.material === 'lamp' || emit) ? this.fleetColours({ count: boids.count, colour: spec.colour }, NO_COLOURS) : null;
       for (let i = 0; i < boids.count; i++) {
-        out.push({ x: boids.x[i]!, y: boids.y[i]!, radius: this.radiusOf(fleet, i), material: fleet.spec.material, heading: Math.atan2(boids.vy[i]!, boids.vx[i]!), layer });
+        const colour: LinearRgb | undefined = palette
+          ? this.shifting(palette, i * 0.618)
+          : colours
+            ? [colours[i * 3]!, colours[i * 3 + 1]!, colours[i * 3 + 2]!]
+            : (own ?? undefined);
+        out.push({
+          x: boids.x[i]!,
+          y: boids.y[i]!,
+          radius: this.radiusOf(fleet, i),
+          material: spec.material,
+          heading: Math.atan2(boids.vy[i]!, boids.vx[i]!),
+          layer,
+          ...(colour ? { colour } : {}),
+          ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
+          ...(emit ? { emit } : {}),
+        });
       }
     });
     return out;
@@ -449,6 +543,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   /** A blob's layer: its own (`blobLayers`), else its material's. */
   private blobLayerOf(index: number): number {
+    const spec = this.blobSpecs()?.[index];
+    if (spec) return spec.layer ?? this.materialLayer(spec.material);
     const own = this.blobLayers();
     return own?.length ? own[index % own.length]! : this.materialLayer(this.materialOf(index));
   }
@@ -467,18 +563,28 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     const tints = this.objectColours();
     const tint = (index: number): LinearRgb => [tints[index * 3] ?? 1, tints[index * 3 + 1] ?? 1, tints[index * 3 + 2] ?? 1];
     const merge = this.mergePx();
-    const objects: MaterialObject[] = this.drawn.map((blob, index) => ({
-      x: blob.x,
-      y: blob.y,
-      radius: blob.radius,
-      merge,
-      rotation: blob.rotation,
-      from: blob.from,
-      to: blob.to,
-      mix: blob.mix,
-      material: this.materialOf(index),
-      tint: tint(index),
-    }));
+    const specs = this.blobSpecs();
+    const objects: MaterialObject[] = this.drawn.map((blob, index) => {
+      const own = this.blobTint(index, tints);
+      const spec = specs?.[index];
+      return {
+        x: blob.x,
+        y: blob.y,
+        radius: blob.radius,
+        merge,
+        rotation: blob.rotation,
+        from: blob.from,
+        to: blob.to,
+        mix: blob.mix,
+        material: this.materialOf(index),
+        tint: own,
+        layer: this.blobLayerOf(index),
+        // glass and solid: their own colour only when said (else the page's glass, or their tint)
+        ...(spec?.colour || paletteOf(spec?.colours) ? { colour: own } : {}),
+        ...(typeof spec?.tint === 'number' ? { tintAmount: spec.tint } : {}),
+        ...(spec?.emitting ? { emit: true } : {}),
+      };
+    });
     // the blob-boids: drops pointing where they fly (lenzi, 2026-11-14: "i blob boidi fai che siano gocce pure
     // loro"), joining from a little less far than the blobs, so a fleet stays many and not one puddle, though
     // two that touch melt
@@ -498,9 +604,14 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         to: BLOB_BOID_SHAPE,
         mix: 0,
         material: drop.material,
-        tint: bright(tint(colour++), drop.material),
+        tint: bright(drop.colour ?? tint(colour), drop.material),
         drop: true,
+        layer: drop.layer,
+        ...(drop.colour ? { colour: drop.colour } : {}),
+        ...(typeof drop.tintAmount === 'number' ? { tintAmount: drop.tintAmount } : {}),
+        ...(drop.emit ? { emit: true } : {}),
       });
+      colour++;
     }
     return objects;
   }
@@ -513,7 +624,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** The blobs where their own paths put them now. */
   private paths(): BlobState[] {
     const sizes = this.blobSizes();
-    const homes = this.blobHomes();
+    const specs = this.blobSpecs();
     const settings: BlobSettings = {
       count: this.blobs(),
       size: this.blobSize(),
@@ -525,8 +636,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       pull: 0,
       seed: this.seed(),
       ...(sizes?.length ? { sizes } : {}),
-      ...(homes?.length ? { homes } : {}),
-      ...ownShapes(this.blobShapes()),
+      ...(specs ? specSettings(specs) : {}),
     };
     return blobsAt(settings, this.elapsed, this.width, this.height, null);
   }

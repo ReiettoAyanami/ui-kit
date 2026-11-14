@@ -10,7 +10,10 @@ import { MatListModule } from '@angular/material/list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+
+import { LenziColorPicker } from '@lenzi/ui-kit';
 
 import {
   BlobMaterial,
@@ -30,7 +33,7 @@ import {
 } from '@lenzi/ui-kit/backgrounds';
 
 import { HOME_SCENE } from '../../scenes';
-import { SCENE_LAYERS, SCENE_LIMITS, sceneFromCode, sceneToCode } from '../../shared/scene-code';
+import { SCENE_LAYERS, SCENE_LIMITS, SCENE_WEIGHTS, sceneFromCode, sceneToCode } from '../../shared/scene-code';
 
 /**
  * A scene with every object put somewhere: a blob without a place where the background would have it (its
@@ -45,6 +48,32 @@ export function placed(scene: LenziScene): LenziScene {
       typeof fleet.x === 'number' && typeof fleet.y === 'number' ? fleet : { ...fleet, x: Math.round((0.2 + (0.6 * (i + 0.5)) / all.length) * 1000) / 1000, y: 0.5 },
     ),
   };
+}
+
+/** What a blob's (or a blob-boid's) body is: glass, or solid (lenzi, 2026-11-15: "it should be solid/glass and emitting/not emitting"). */
+export type SceneBody = 'solid' | 'glass';
+
+export function bodyOf(material: BlobMaterial): SceneBody {
+  return material === 'glass' ? 'glass' : 'solid';
+}
+
+/** Whether it shines: a lamp (a solid thing that shines), or glass that shines. */
+export function emitsOf(thing: { material?: BlobMaterial; emitting?: boolean }): boolean {
+  return (thing.material ?? 'lamp') === 'lamp' || (thing.material === 'glass' && thing.emitting === true);
+}
+
+/** The material (and the glass's shining) of a body that shines or not. */
+export function lookFor(body: SceneBody, emits: boolean): { material: BlobMaterial; emitting?: true } {
+  if (body === 'glass') return emits ? { material: 'glass', emitting: true } : { material: 'glass' };
+  return { material: emits ? 'lamp' : 'solid' };
+}
+
+/** What a look is called: a glowing solid (a lamp), glowing glass, glass, solid. */
+export function lookName(thing: { material?: BlobMaterial; emitting?: boolean }): string {
+  const material = thing.material ?? 'lamp';
+  if (material === 'lamp') return 'Glowing';
+  if (material === 'glass') return thing.emitting ? 'Glowing glass' : 'Glass';
+  return 'Solid';
 }
 
 /** An object's level when it does not say: its material's (glass above); boids on 0. */
@@ -82,6 +111,12 @@ const LEADER_FIELDS: readonly FleetField[] = [
 ];
 
 const MATERIAL_ICONS: Readonly<Record<BlobMaterial, string>> = { lamp: 'lightbulb', glass: 'blur_on', solid: 'circle' };
+
+/** The colours an object has by default, as the picker shows them: the accent (the theme's primary); plain glass, the page's. */
+const DEFAULT_ACCENT = '#d5baff';
+const DEFAULT_GLASS = '#1f1f22';
+/** The colours offered next when a colour becomes many: the theme's own (its tertiary, secondary, and the good status). */
+const PALETTE_NEXT = ['#7fd4ff', '#ffb0cd', '#6ed889', '#ffd27a'];
 
 /** What each shape is called in the picker. */
 const SHAPE_LABELS: Readonly<Record<BlobShapeName, string>> = {
@@ -142,8 +177,10 @@ export function fleetDefault(fleet: LenziSceneFleet, key: FleetField['key']): nu
 @Component({
   selector: 'app-scene-maker-page',
   imports: [
+    LenziColorPicker,
     LenziLit,
     LenziSceneBackground,
+    NgTemplateOutlet,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -170,6 +207,11 @@ export class SceneMakerPage {
   protected readonly materialNames = MATERIAL_NAMES;
   protected readonly layerOf = layerOf;
   protected readonly shapeChoices = SHAPE_CHOICES;
+  protected readonly bodyOf = bodyOf;
+  protected readonly emitsOf = emitsOf;
+  protected readonly weights = SCENE_WEIGHTS;
+  /** How much of its colour glass takes when it does not say (about the page's glass). */
+  protected readonly defaultTint = 0.5;
   protected readonly materials: readonly BlobMaterial[] = ['lamp', 'glass', 'solid'];
 
   protected readonly layers = Array.from({ length: SCENE_LAYERS[1] - SCENE_LAYERS[0] + 1 }, (_, i) => SCENE_LAYERS[0] + i);
@@ -200,14 +242,14 @@ export class SceneMakerPage {
       { object: { type: 'scene' } as SceneObject, icon: 'landscape', title: scene.name || 'The scene', detail: 'The pointer, throwing' },
       ...scene.blobs.map((blob, index) => ({
         object: { type: 'blob', index } as SceneObject,
-        icon: MATERIAL_ICONS[blob.material],
-        title: `${MATERIAL_NAMES[blob.material]} blob`,
-        detail: `${Math.round(blob.size * 100)}% of the screen`,
+        icon: blob.material === 'glass' && blob.emitting ? 'flare' : MATERIAL_ICONS[blob.material],
+        title: `${lookName(blob)} blob`,
+        detail: `${Math.round(blob.size * 100)}% of the screen${blob.fixed ? ', stays put' : ''}`,
       })),
       ...scene.fleets.map((fleet, index) => ({
         object: { type: 'fleet', index } as SceneObject,
         icon: fleet.kind === 'boid' ? 'navigation' : 'bubble_chart',
-        title: fleet.kind === 'boid' ? 'Boids' : `${MATERIAL_NAMES[fleet.material ?? 'lamp']} blob-boids`,
+        title: fleet.kind === 'boid' ? 'Boids' : `${lookName(fleet)} blob-boids`,
         detail: `Leader of ${fleet.count}`,
       })),
     ];
@@ -384,7 +426,81 @@ export class SceneMakerPage {
     }));
   }
 
-  protected setBlob(change: Partial<{ material: BlobMaterial; size: number; layer: number }>): void {
+  /** A body and its light, for the chosen blob or blob-boid fleet. */
+  protected setLook(body: SceneBody, emits: boolean): void {
+    this.changeChosen((thing) => {
+      const { emitting: _old, ...rest } = thing as { emitting?: boolean };
+      return { ...rest, ...lookFor(body, emits) };
+    });
+  }
+
+  /** The colour shown on the picker: its own, or the one it has by default (the accent; plain glass, the page's). */
+  protected colourOf(thing: { material?: BlobMaterial; emitting?: boolean; colour?: string; kind?: string }): string {
+    if (thing.colour) return thing.colour;
+    return thing.kind !== 'boid' && thing.material === 'glass' && !thing.emitting ? DEFAULT_GLASS : DEFAULT_ACCENT;
+  }
+
+  /** Its own colour, or (null) back to the default. */
+  protected setColour(colour: string | null): void {
+    this.changeChosen((thing) => {
+      const { colour: _old, ...rest } = thing as { colour?: string };
+      return colour ? { ...rest, colour } : rest;
+    });
+  }
+
+  /** Several colours it shifts among ("color: multi"), or one. */
+  protected isMulti(thing: { colours?: string[] }): boolean {
+    return (thing.colours?.length ?? 0) >= 2;
+  }
+
+  /** Many colours (its own first, then another of the theme's) or back to one (the first of them). */
+  protected setMulti(many: boolean): void {
+    this.changeChosen((thing) => {
+      const { colour, colours, ...rest } = thing as { colour?: string; colours?: string[] };
+      if (many) return { ...rest, colours: colours?.length ? colours : [colour ?? this.colourOf(thing), PALETTE_NEXT[0]!] };
+      const first = colours?.[0] ?? colour;
+      return first ? { ...rest, colour: first } : rest;
+    });
+  }
+
+  protected setPaletteColour(index: number, colour: string): void {
+    this.changeChosen((thing) => {
+      const colours = [...((thing as { colours?: string[] }).colours ?? [])];
+      colours[index] = colour;
+      return { ...thing, colours };
+    });
+  }
+
+  protected addPaletteColour(): void {
+    this.changeChosen((thing) => {
+      const colours = (thing as { colours?: string[] }).colours ?? [];
+      if (colours.length >= SCENE_LIMITS.colours) return thing;
+      return { ...thing, colours: [...colours, PALETTE_NEXT[colours.length % PALETTE_NEXT.length]!] };
+    });
+  }
+
+  protected removePaletteColour(index: number): void {
+    this.changeChosen((thing) => {
+      const colours = (thing as { colours?: string[] }).colours ?? [];
+      return colours.length > 2 ? { ...thing, colours: colours.filter((_, i) => i !== index) } : thing;
+    });
+  }
+
+  protected setTint(tint: number): void {
+    if (Number.isFinite(tint)) this.changeChosen((thing) => ({ ...thing, tint }));
+  }
+
+  /** The chosen blob or fleet, changed. */
+  private changeChosen(change: (thing: object) => object): void {
+    const chosen = this.chosen();
+    if (chosen?.type === 'blob') {
+      this.scene.update((scene) => ({ ...scene, blobs: scene.blobs.map((blob, i) => (i === chosen.index ? (change(blob) as typeof blob) : blob)) }));
+    } else if (chosen?.type === 'fleet') {
+      this.scene.update((scene) => ({ ...scene, fleets: scene.fleets.map((fleet, i) => (i === chosen.index ? (change(fleet) as typeof fleet) : fleet)) }));
+    }
+  }
+
+  protected setBlob(change: Partial<{ material: BlobMaterial; size: number; layer: number; fixed: boolean; weight: number }>): void {
     const chosen = this.chosen();
     if (chosen?.type !== 'blob') return;
     this.scene.update((scene) => ({ ...scene, blobs: scene.blobs.map((blob, i) => (i === chosen.index ? { ...blob, ...change } : blob)) }));

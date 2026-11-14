@@ -158,6 +158,20 @@
   margin-top: 20px;
 }
 
+/* A colour (or a few): the swatches in a row, a way back beside them. */
+.colour {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* A shape's outline, drawn in the chip's own colour. */
 .shape {
   fill: currentColor;

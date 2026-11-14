@@ -24,6 +24,18 @@ contenente boidi, blob, boidi-blob").
   and a leader's `x`, `y` (a share of the space; a fleet is born around its leader), their `layer` (an object
   stops only what is on its own; not said: glass on 1, the rest on 0), a blob's `shape` (kept; not said: it
   changes from one into another).
+- **What each thing looks like** (lenzi, 2026-11-15: "it should be solid/glass and emitting/not emitting", "both for
+  boids and blobs", "every blob and boid/blob boid leader should have a configurable color", "glass should have a
+  tint parameter", "opzione color: multi ... colori tra cui shiftare come la home"): a blob or a blob-boid fleet is
+  solid (`material: 'solid'`, opaque in its colour) or glass (`'glass'`), and shines or not (a solid that shines
+  is `'lamp'`; glass that shines, `emitting: true`). Its `colour` (a `#rrggbb`), or `colours` it shifts among,
+  slowly, each one at its own place along the loop; glass's `tint`, how much of its colour it takes. Boids take a
+  colour or colours too.
+- **Levels kept apart**: blobs and blob-boids of one material melt only on the same level; a higher level is drawn
+  over a lower one ("same material blobs on different z index shouldnt fuse").
+- **A blob that stays put** (`fixed`: it does not wander, it cannot be thrown) and **its weight** (`weight`, 0.25 to
+  4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
+  that it spins more/less").
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
   simulation"): no fleets, the blobs still on their places, nothing thrown.
 
@@ -44,9 +56,10 @@ contenente boidi, blob, boidi-blob").
 | input | `editing` | `boolean` | `false` | being made: no fleets, the blobs still on their places |
 | function | `sceneLayout(scene)` | `LenziSceneLayout` | | the scene as the backgrounds take it |
 
-`LenziScene`: `{ name?, blobs: { material, size, shape?, x?, y?, layer? }[], fleets: { kind: 'boid' | 'blob-boid',
-material?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
-wander?, x?, y?, layer? }[], follow?, throwable? }`.
+`LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
+colours?, tint?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
+wander?, x?, y?, layer? }[], follow?, throwable? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
+tint?, shape?, x?, y?, layer?, fixed?, weight? }`.
 
 ## Example
 

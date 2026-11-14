@@ -23,8 +23,7 @@ describe('sceneLayout', () => {
   it('gives the backgrounds the blobs in order and every fleet as its own flock', () => {
     const layout = sceneLayout(HOME);
     expect(layout.flocking).toBe(true);
-    expect(layout.materials).toEqual(['lamp', 'glass', 'lamp']);
-    expect(layout.sizes).toEqual([0.2, 0.2, 0.085]);
+    expect(layout.blobs).toEqual(HOME.blobs);
     expect(layout.boidFlocks).toEqual([{ count: 380, colonies: 4 }]);
     expect(layout.blobFlocks).toEqual([
       { material: 'glass', count: 42, colonies: 3 },
@@ -41,14 +40,14 @@ describe('sceneLayout', () => {
         { kind: 'boid', count: 100, size: 12, maxSpeed: 220, cohesion: 2, sizeVariety: 0.8 },
         { kind: 'boid', count: 50, colonies: 2 },
         { kind: 'blob-boid', count: 0 },
-        { kind: 'blob-boid', material: 'glass', count: 20, wander: 1 },
+        { kind: 'blob-boid', material: 'glass', count: 20, wander: 1, colour: '#88ccff', tint: 0.7 },
       ],
     });
     expect(layout.boidFlocks).toEqual([
       { count: 100, size: 12, maxSpeed: 220, cohesion: 2, sizeVariety: 0.8 },
       { count: 50, colonies: 2 },
     ]);
-    expect(layout.blobFlocks).toEqual([{ material: 'glass', count: 20, wander: 1 }]);
+    expect(layout.blobFlocks).toEqual([{ material: 'glass', count: 20, wander: 1, tint: 0.7, colour: '#88ccff' }]);
     expect(layout.follow).toBe('near');
     expect(layout.throwable).toBe(false);
   });

@@ -1,4 +1,4 @@
-import { DEFAULT_SPREAD, SPREAD_HUE, displacedColor, displacedColors, hexToLinear, linearToHex, linearToOklch, luminance, oklchToLinear, seeded } from './color';
+import { DEFAULT_SPREAD, LinearRgb, SPREAD_HUE, displacedColor, displacedColors, hexToLinear, linearToHex, linearToOklch, luminance, oklchToLinear, paletteAt, seeded } from './color';
 
 describe('the colours of a glowing background', () => {
   const violet = hexToLinear('#d5baff');
@@ -52,5 +52,25 @@ describe('the colours of a glowing background', () => {
     const colors = displacedColors(violet, 3);
     expect(colors).toHaveLength(9);
     expect([...colors.slice(3, 6)]).toEqual([...new Float32Array(displacedColor(violet, 1))]);
+  });
+});
+
+describe('a colour shifting among a few', () => {
+  const red: LinearRgb = [1, 0, 0];
+  const blue: LinearRgb = [0, 0, 1];
+
+  it('holds each colour a while, then eases into the next, and round again', () => {
+    expect(paletteAt([red, blue], 0)).toEqual(red);
+    expect(paletteAt([red, blue], 0.1)).toEqual(red);
+    expect(paletteAt([red, blue], 0.5)).toEqual(blue);
+    expect(paletteAt([red, blue], 1)).toEqual(red);
+    const between = paletteAt([red, blue], 0.35);
+    expect(between[0]).toBeGreaterThan(0);
+    expect(between[2]).toBeGreaterThan(0);
+  });
+
+  it('one colour stays itself; none is white', () => {
+    expect(paletteAt([blue], 0.7)).toEqual(blue);
+    expect(paletteAt([], 0.7)).toEqual([1, 1, 1]);
   });
 });

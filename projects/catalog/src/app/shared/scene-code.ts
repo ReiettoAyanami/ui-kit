@@ -4,7 +4,7 @@
 import { BLOB_SHAPE_NAMES, BlobMaterial, BlobShapeName, BoidsFollow, LenziScene, LenziSceneBlob, LenziSceneFleet } from '@lenzi/ui-kit/backgrounds';
 
 /** How much a scene may hold: what a phone and a page can carry. */
-export const SCENE_LIMITS = { blobs: 16, fleets: 8, perFleet: 1000, name: 60 } as const;
+export const SCENE_LIMITS = { blobs: 16, fleets: 8, perFleet: 1000, name: 60, colours: 6 } as const;
 
 const MATERIALS: readonly BlobMaterial[] = ['lamp', 'glass', 'solid'];
 const FOLLOWS: readonly BoidsFollow[] = ['flee', 'near', 'target', 'none'];
@@ -26,8 +26,21 @@ const clamp = (value: number, [least, most]: readonly [number, number]) => Math.
 const isNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 const record = (value: unknown): Record<string, unknown> | null => (value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null);
 
-/** The levels an object may be on. */
+/** The levels an object may be on, and a blob's weights. */
 export const SCENE_LAYERS = [0, 3] as const;
+export const SCENE_WEIGHTS = [0.25, 4] as const;
+
+/** An object's colour (a `#rrggbb`), glass's tint and whether glass shines, as far as the link says them. */
+function lookOf(raw: Record<string, unknown>, material: unknown): { colour?: string; colours?: string[]; tint?: number; emitting?: boolean } {
+  const look: { colour?: string; colours?: string[]; tint?: number; emitting?: boolean } = {};
+  if (typeof raw['colour'] === 'string' && /^#[0-9a-f]{6}$/i.test(raw['colour'])) look.colour = raw['colour'].toLowerCase();
+  // a few colours to shift among: two to six
+  const colours = Array.isArray(raw['colours']) ? raw['colours'].filter((colour): colour is string => typeof colour === 'string' && /^#[0-9a-f]{6}$/i.test(colour)).slice(0, SCENE_LIMITS.colours) : [];
+  if (colours.length >= 2) look.colours = colours.map((colour) => colour.toLowerCase());
+  if (isNumber(raw['tint'])) look.tint = clamp(raw['tint'], [0, 1]);
+  if (material === 'glass' && raw['emitting'] === true) look.emitting = true;
+  return look;
+}
 
 /** An object's place (both or neither, inside the space) and level, as far as the link says them. */
 function placeOf(raw: Record<string, unknown>): { x?: number; y?: number; layer?: number } {
@@ -53,6 +66,9 @@ export function cleanScene(raw: unknown): LenziScene | null {
       size: clamp(blob['size'] as number, [0.02, 0.5]),
       ...placeOf(blob),
       ...(BLOB_SHAPE_NAMES.includes(blob['shape'] as BlobShapeName) ? { shape: blob['shape'] as BlobShapeName } : {}),
+      ...lookOf(blob, blob['material']),
+      ...(blob['fixed'] === true ? { fixed: true } : {}),
+      ...(isNumber(blob['weight']) ? { weight: clamp(blob['weight'], SCENE_WEIGHTS) } : {}),
     }));
   const fleets: LenziSceneFleet[] = scene['fleets']
     .map(record)
@@ -65,7 +81,7 @@ export function cleanScene(raw: unknown): LenziScene | null {
         const value = fleet[key];
         if (isNumber(value)) clean[key] = key === 'colonies' ? Math.round(clamp(value, bounds)) : clamp(value, bounds);
       }
-      return { ...clean, ...placeOf(fleet) };
+      return { ...clean, ...placeOf(fleet), ...lookOf(fleet, clean.kind === 'blob-boid' ? (clean.material ?? 'lamp') : null) };
     });
   const out: LenziScene = { blobs, fleets };
   if (typeof scene['name'] === 'string' && scene['name'].trim()) out.name = scene['name'].trim().slice(0, SCENE_LIMITS.name);
