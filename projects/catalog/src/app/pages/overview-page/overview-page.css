@@ -37,10 +37,12 @@
 
   /* On a phone the glass pane is the whole screen, over all the background (lenzi, 2026-11-14: "on mobile
      make the glass pane on the back fullscreen covering the full background"): still behind the page's
-     elements (the page's own layer) and the cat. */
+     elements (the page's own layer) and the cat. As tall as the screen without the browser's address bar
+     (100lvh): when the bar hides while scrolling, no strip of background shows under it. */
   .pane {
     position: fixed;
     inset: 0;
+    min-height: 100lvh;
     border: none;
     border-radius: 0;
   }
