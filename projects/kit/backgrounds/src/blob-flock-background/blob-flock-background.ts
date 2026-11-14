@@ -29,6 +29,29 @@ export interface LenziBlobFlock {
   colonies?: number;
   /** A blob-boid's radius, px (each a little different, its leader larger). */
   size?: number;
+  /** Its layer (z-level): it stops, and is stopped by, only what is on the same one. Unless told, its material's. */
+  layer?: number;
+}
+
+/**
+ * Each material's layer (z-level), unless a blob or a fleet has its own (lenzi, 2026-11-14: "the z-index of
+ * the blobs decides which is an obstacle to what ... the glass boidsblobs and blobs on top of them so that
+ * they can go under"): the lamps, the solid things and the boids on one; glass above them, so they fly under it.
+ */
+export const MATERIAL_LAYERS: Readonly<Record<LenziBlobMaterial, number>> = { lamp: 0, glass: 1, solid: 0 };
+
+/** Something on a layer: a blob or a blob-boid (its material), or a boid (no material). */
+export interface LenziLayered {
+  material: LenziBlobMaterial | null;
+  layer: number;
+}
+
+/**
+ * Whether `thing` is an obstacle to `mover`: only on the same layer; there, a blob or a blob-boid stops the
+ * boids, and what is of another material than the mover (the same material melts into it).
+ */
+export function stops(thing: LenziLayered, mover: LenziLayered): boolean {
+  return thing.layer === mover.layer && thing.material !== mover.material;
 }
 
 /** The longest step of the flock, in seconds: a slow frame does not throw the boids around. */
@@ -57,6 +80,8 @@ interface BlobBoid {
   radius: number;
   material: LenziBlobMaterial;
   heading: number;
+  /** Its fleet's layer. */
+  layer: number;
 }
 
 /**
@@ -139,6 +164,14 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   // the fleets of blob-boids
   /** Fleets of boids that are blobs, each of a material; none by default. */
   readonly blobFlocks = input<readonly LenziBlobFlock[]>([]);
+
+  // the layers (z-levels): something stops only what is on its own layer
+  /** Each material's layer; the ones not given are MATERIAL_LAYERS' (lamp 0, glass 1, solid 0). */
+  readonly materialLayers = input<Partial<Record<LenziBlobMaterial, number>>>(MATERIAL_LAYERS);
+  /** Each blob's own layer, in order and round again; null: its material's. */
+  readonly blobLayers = input<readonly number[] | null>(null);
+  /** The boids' layer: the blobs and blob-boids on it are what they fly round. */
+  readonly boidLayer = input(0, { transform: numberAttribute });
 
   private elapsed = 0;
   private drawn: readonly BlobState[] = [];
@@ -281,8 +314,9 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     const out: BlobBoid[] = [];
     fleets.forEach((fleet) => {
       const { boids } = fleet;
+      const layer = this.fleetLayerOf(fleet.spec);
       for (let i = 0; i < boids.count; i++) {
-        out.push({ x: boids.x[i]!, y: boids.y[i]!, radius: this.radiusOf(fleet, i), material: fleet.spec.material, heading: Math.atan2(boids.vy[i]!, boids.vx[i]!) });
+        out.push({ x: boids.x[i]!, y: boids.y[i]!, radius: this.radiusOf(fleet, i), material: fleet.spec.material, heading: Math.atan2(boids.vy[i]!, boids.vx[i]!), layer });
       }
     });
     return out;
@@ -307,20 +341,39 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
    * kept outside by its own length.
    */
   private obstacles(flock: Boids, fleets: readonly Fleet[]): void {
-    const blobs = this.drawn;
-    const circles = this.blobBoids(fleets);
+    const blobs = this.drawn.map((blob, index) => ({ blob, material: this.materialOf(index), layer: this.blobLayerOf(index) }));
+    const drops = this.blobBoids(fleets);
     const merge = this.mergePx();
-    // the boids: everything
+    /** What stops a mover (on its layer, of another material), as one field. */
+    const fieldFor = (mover: LenziLayered): BoidsField | null => {
+      const stopping = blobs.filter((thing) => stops(thing, mover)).map((thing) => thing.blob);
+      const stoppingDrops = drops.filter((drop) => stops(drop, mover));
+      return union(stopping.length ? blobEdge(stopping, merge) : null, roundField(this.dropCircles(stoppingDrops)));
+    };
+    // the boids: every blob and blob-boid on their layer
     const largest = Math.max(this.leaderSize(), 1 + Math.min(1, Math.max(0, this.boidSizeVariety())) * 0.5);
     const pad = Math.max(0.5, this.boidSize() / 2) * largest * BOID_STRETCH[this.shape()] + Math.max(0, this.soft());
-    flock.setField(union(blobs.length ? blobEdge(blobs, merge) : null, roundField(this.dropCircles(circles))), this.avoid(), pad);
-    // a fleet: what is of another material
+    flock.setField(fieldFor({ material: null, layer: this.boidLayer() }), this.avoid(), pad);
+    // a fleet: what is on its layer and of another material
     fleets.forEach((fleet) => {
-      const material = fleet.spec.material;
-      const others = blobs.filter((_, index) => this.materialOf(index) !== material);
-      const field = union(others.length ? blobEdge(others, merge) : null, roundField(this.dropCircles(circles.filter((circle) => circle.material !== material))));
+      const field = fieldFor({ material: fleet.spec.material, layer: this.fleetLayerOf(fleet.spec) });
       fleet.boids.setField(field, this.avoid(), (fleet.spec.size ?? BLOB_BOID_SIZE) * 1.2 + Math.max(0, this.soft()));
     });
+  }
+
+  /** A blob's layer: its own (`blobLayers`), else its material's. */
+  private blobLayerOf(index: number): number {
+    const own = this.blobLayers();
+    return own?.length ? own[index % own.length]! : this.materialLayer(this.materialOf(index));
+  }
+
+  /** A fleet's layer: its own, else its material's. */
+  private fleetLayerOf(spec: LenziBlobFlock): number {
+    return spec.layer ?? this.materialLayer(spec.material);
+  }
+
+  private materialLayer(material: LenziBlobMaterial): number {
+    return this.materialLayers()[material] ?? MATERIAL_LAYERS[material];
   }
 
   /** Every object the material fields draw: the blobs, then the blob-boids, each in its material and colour. */

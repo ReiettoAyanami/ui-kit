@@ -1342,6 +1342,14 @@ ${tag('lenzi-flock-background', [
       { key: 'lampBoids', label: 'Blob-boids, lamp', type: 'number', default: 16, min: 0, max: 120, step: 1, code: { match: /material: 'lamp', count: (\d+)/, otherwise: 0 } },
       { key: 'glassBoids', label: 'Blob-boids, glass', type: 'number', default: 16, min: 0, max: 120, step: 1, code: { match: /material: 'glass', count: (\d+)/, otherwise: 0 } },
       { key: 'solidBoids', label: 'Blob-boids, solid', type: 'number', default: 0, min: 0, max: 120, step: 1, code: { match: /material: 'solid', count: (\d+)/, otherwise: 0 } },
+      {
+        key: 'glassAbove',
+        label: 'Glass is above (the others fly under it)',
+        type: 'boolean',
+        default: true,
+        hint: 'Off: glass is on the others’ layer, an obstacle to them.',
+        code: { absent: /glass: 0/ },
+      },
       { key: 'boids', label: 'Boids', type: 'number', default: 380, min: 0, max: 4000, step: 10 },
       // its own attribute only: the fleets' code has a `colonies` of its own
       { key: 'colonies', label: 'Colonies (flocks of their own)', type: 'number', default: 4, min: 1, max: 12, step: 1, code: { match: /\[colonies\]="(\d+)"/, otherwise: 4 } },
@@ -1395,6 +1403,7 @@ ${tag('lenzi-blob-flock-background', [
   bound('merge', v['merge'], 0.35),
   v['blobMaterials'] === "'lamp'" ? '' : `[materials]="[${v['blobMaterials']}]"`,
   blobFlocksAttribute(v),
+  v['glassAbove'] ? '' : `[materialLayers]="{ lamp: 0, glass: 0, solid: 0 }"`,
   bound('boids', v['boids'], 380),
   bound('colonies', v['colonies'], 4),
   bound('avoid', v['avoid'], 2),

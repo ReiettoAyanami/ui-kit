@@ -1,11 +1,14 @@
 import { Component, computed, input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 
-import { BoidShape, BoidsFollow, DEFAULT_BOIDS, DEFAULT_BLOBS, LenziBlobFlock, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { BoidShape, BoidsFollow, DEFAULT_BOIDS, DEFAULT_BLOBS, LenziBlobFlock, LenziBlobFlockBackground, LenziLit, MATERIAL_LAYERS } from '@lenzi/ui-kit/backgrounds';
 import { LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { Values } from '../../registry';
 import { materialsOf } from '../blob-background-demo/blob-background-demo';
+
+/** Every material on one layer: glass an obstacle like the rest. */
+const LEVEL = { lamp: 0, glass: 0, solid: 0 } as const;
 
 /**
  * Blobs of lamps and glass (and solid) and flocks flying round them behind this frame: the boids, and
@@ -33,6 +36,9 @@ export class BlobFlockBackgroundDemo {
       .map((material) => ({ material, count: this.num(`${material}Boids`, material === 'solid' ? 0 : 16), colonies: 2 }))
       .filter((fleet) => fleet.count > 0),
   );
+
+  /** Glass above the others (they fly under it), or on their layer (an obstacle to them). */
+  protected readonly layers = computed(() => (this.values()['glassAbove'] === false ? LEVEL : MATERIAL_LAYERS));
 
   protected num(key: string, otherwise: number): number {
     const value = Number(this.values()[key] ?? otherwise);

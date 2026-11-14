@@ -39,6 +39,14 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   into the blobs and blob-boids of its own material, and flies round the blobs and blob-boids of another
   ("possono blobbarsi solo assieme ai blob e blob-boid dello stesso materiale ... quelli dell'altro materiale
   sono ostacoli"). The boids fly round every blob and every blob-boid ("per loro tutti i blob sono ostacoli").
+- **Layers** (z-levels; lenzi, 2026-11-14: "the z-index of the blobs decides which is an obstacle to what
+  (they're obstacles only to objects that are on the same z-level)"): something stops only what is on its
+  own layer. By default the lamps, the solid things, the boids and the lamp blob-boids are on layer 0 and
+  stop each other as before; glass (blobs and blob-boids) is on layer 1, above them, so they fly under it,
+  seen through it ("the glass boidsblobs and blobs on top of them so that they can go under").
+  `materialLayers` sets a material's layer (`MATERIAL_LAYERS`: lamp 0, glass 1, solid 0), `blobLayers` a
+  blob's own, a fleet's `layer` its own, `boidLayer` the boids'. The layers say only what stops what: what is
+  drawn over what stays the materials' (light, then glass, then solid).
 - **Small boids are a little slower and follow from a little farther** (`sizeSpeed`, `sizeReach`; "che
   naturalmente i piú grandi stanno in testa"): the large ones, the leaders, end up ahead.
 - **The lamp blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements

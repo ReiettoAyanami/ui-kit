@@ -209,6 +209,9 @@ the rule says what, the variable says how much.
   lights; glass blurs what is behind it and takes the light around it, as `lenziLit` (the same glass %, veil,
   rim); solid is the page's surface, lit on its edge on the side of the light, and casts a hard shadow on
   the glow, as `lenziSolid` (the same `--lenzi-shadow`). **Blobs melt only into blobs of their own material.**
+- **What stops what is on one layer** (lenzi, 2026-11-14: "they're obstacles only to objects that are on the
+  same z-level"): the lamps, the solid things and the boids share one; glass is above it, and the boids fly
+  under the glass.
 - **Flocks keep to their own** (lenzi, 2026-11-14): boids flock only with boids, and fly round every blob;
   blob-boids (boids that are blobs of a material) flock only with their fleet, melt only into their own
   material, and fly round the rest. **Small boids are a little slower and follow from a little farther**, so
