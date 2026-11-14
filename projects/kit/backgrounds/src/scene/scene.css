@@ -1,0 +1,4 @@
+/* Only a wrapper: the background inside places itself (behind the page, or behind its box). */
+:host {
+  display: contents;
+}

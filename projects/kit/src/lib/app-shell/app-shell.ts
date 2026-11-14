@@ -80,6 +80,23 @@ export class LenziAppShell {
    */
   readonly compact = signal(false);
 
+  /**
+   * Where the page lays its search bar out (`LenziShellSearch` says it), px; null: the page has none. Closed, the
+   * bar holds the button and the search bar, and ends where the search bar does (lenzi, 2026-11-14: "if there's
+   * a search bar make it slide there ... and incorporate it into the top bar").
+   */
+  protected readonly search = signal<{ left: number; right: number } | null>(null);
+
+  /** A page's search bar tells where the page lays it out (null when it leaves). For LenziShellSearch. */
+  searchAt(edges: { left: number; right: number } | null): void {
+    this.search.set(edges);
+  }
+
+  /** The top bar's box on the screen now, while it opens and closes too. For LenziShellSearch. */
+  barBox(): DOMRect | null {
+    return this.host.querySelector<HTMLElement>(':scope > .mat-drawer-container > .mat-drawer-content > .lenzi-shell-bar')?.getBoundingClientRect() ?? null;
+  }
+
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
   constructor() {

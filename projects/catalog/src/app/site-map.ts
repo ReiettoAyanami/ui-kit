@@ -26,6 +26,8 @@ export interface SiteEntry {
 export const SITE = [
   { path: '', title: 'ui-kit', always: true },
   { path: 'components', title: 'Components', always: true },
+  // the Scenes tab (2026-11-14): everyone may make a scene in the playground
+  { path: 'scenes', title: 'Scenes', always: true },
   { path: 'rules', title: 'Rules', file: 'RULES.md' },
   { path: 'ai-rules', title: 'AI rules', file: 'AI-RULES.md' },
   { path: 'variables', title: 'Variables', resources: ['kit-src/src/styles/tokens.json'] },

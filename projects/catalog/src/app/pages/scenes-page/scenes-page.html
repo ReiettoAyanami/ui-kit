@@ -1,0 +1,24 @@
+<main class="page">
+  <h1 class="title">Scenes</h1>
+  <p class="lead">
+    A scene is a glowing background as data: its blobs and its fleets of boids and blob-boids, behind a page. Make one in
+    the playground.
+  </p>
+  <a mat-flat-button routerLink="/components/scene">
+    <mat-icon>play_arrow</mat-icon>
+    Open the playground
+  </a>
+
+  @if (server.admin()) {
+    <h2 class="group-title">Kept</h2>
+    <div class="cards">
+      @for (entry of kept; track entry.constant) {
+        <div class="card">
+          <span class="name">{{ entry.scene.name }}</span>
+          <span class="summary">{{ entry.scene.blobs.length }} blobs, {{ fleetsOf(entry.scene.fleets.length) }}</span>
+          <code class="api">{{ entry.constant }}</code>
+        </div>
+      }
+    </div>
+  }
+</main>

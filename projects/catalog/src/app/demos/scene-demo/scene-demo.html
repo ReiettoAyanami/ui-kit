@@ -1,0 +1,8 @@
+<lenzi-scene [scene]="scene()" />
+
+<mat-card appearance="outlined" lenziLit class="card">
+  <mat-card-content>
+    <p class="name">{{ scene().name }}</p>
+    <p class="words">{{ scene().blobs.length }} blobs, {{ scene().fleets.length }} fleets. A scene is data: the page keeps it, the background draws it.</p>
+  </mat-card-content>
+</mat-card>

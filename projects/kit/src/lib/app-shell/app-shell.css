@@ -68,6 +68,8 @@
   margin: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px)) var(--lenzi-float-gap) var(--lenzi-float-gap);
   border-radius: var(--lenzi-bar-radius);
   backdrop-filter: var(--lenzi-glass-filter);
+  /* what is past its right edge does not show: closing, the edge covers the title; opening, it reveals it */
+  overflow: hidden;
   transition:
     width var(--lenzi-standard-duration) var(--lenzi-standard-easing),
     padding var(--lenzi-standard-duration) var(--lenzi-standard-easing);
@@ -87,37 +89,53 @@
   text-overflow: ellipsis;
 }
 
-.lenzi-shell-title,
-.lenzi-shell-bar [lenziShellActions] {
-  transition:
-    opacity var(--lenzi-standard-duration) var(--lenzi-standard-easing),
-    visibility var(--lenzi-standard-duration) allow-discrete;
-}
-
-/* Scrolled past it, the bar shrinks to its menu button (lenzi, 2026-11-14: "quando scendi oltre la sua
-   altezza dovrebbe compattarsi con un animazione verso l'icona di apertura/chiusura, non mostrando il
-   titolo della pagina"): as wide as it is high, the button in its middle; the title and the actions fade
-   and leave the tab order. Same height as before, so nothing under it moves. */
+/* Scrolled past it, the bar closes from the right onto its menu button (lenzi, 2026-11-14: "the top bar should
+   slide in from right to left and close on the icon"): as wide as it is high, the button in its middle. The
+   title and the actions stay where they are and the moving edge covers them ("the text should reveal as the bar
+   closes/open"); closed, the actions leave the tab order. Same height as before, so nothing under it moves. */
 .lenzi-shell-compact .lenzi-shell-bar.mat-toolbar {
   width: var(--lenzi-shell-bar-height);
   padding-inline: 0;
-  overflow: hidden;
 }
 
+/* the button in the middle of its square, the title just past the square (no sliver of it left beside the button) */
 .lenzi-shell-compact .lenzi-shell-menu {
   margin-left: calc((var(--lenzi-shell-bar-height) - var(--mat-icon-button-state-layer-size, 40px)) / 2);
-  margin-right: 0;
+  margin-right: calc((var(--lenzi-shell-bar-height) - var(--mat-icon-button-state-layer-size, 40px)) / 2);
 }
 
-.lenzi-shell-compact .lenzi-shell-title,
+/* the title keeps its room (it does not shrink, nor its "…" move): the edge goes over it */
+.lenzi-shell-compact .lenzi-shell-title {
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
 .lenzi-shell-compact .lenzi-shell-bar [lenziShellActions] {
-  opacity: 0;
   visibility: hidden;
+  transition: visibility 0s linear var(--lenzi-standard-duration);
 }
 
-/* A page's search bar (LenziShellSearch): it sticks at the top, level with the bar ("ma (se c'é) deve
-   affiancare la barra di ricerca"); under the bar while the bar is whole, just past it once it has shrunk,
-   on the bars' glass. --lenzi-shell-search-left is where the page puts it (the directive measures it). */
+/* A page with a search bar (LenziShellSearch) closes the bar onto the button and the search bar (lenzi,
+   2026-11-14: "if there's a search bar make it slide there ... and incorporate it into the top bar", "wait for
+   the top bar to catch to the right of the search bar, then incorporate it, keep it slide until it gets all the
+   way to the right of the icon covering the text"). Closed, the search bar sits just after the button and the
+   bar ends with the same gap on its right as above and under it: the button's square and the search bar's width,
+   or (a search bar the page puts further left than that: a phone) the search bar's right end. The directive
+   moves the search bar on the bar's edge while it closes. */
+.lenzi-shell-compact.lenzi-shell-with-search .lenzi-shell-bar.mat-toolbar {
+  width: max(
+    var(--lenzi-shell-bar-height),
+    calc(
+      min(
+        var(--lenzi-shell-search-right, 0px) - var(--lenzi-float-gap) - env(safe-area-inset-left, 0px),
+        var(--lenzi-shell-search-right, 0px) - var(--lenzi-shell-search-left, 0px) + var(--lenzi-shell-bar-height)
+      ) + (var(--lenzi-shell-bar-height) - var(--lenzi-search-height)) / 2
+    )
+  );
+}
+
+/* The search bar sticks at the top, level with the bar's middle: under the bar while it is whole, over it while it
+   rides on the edge and once it is in. */
 .lenzi-shell-search {
   position: sticky;
   top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px) + (var(--lenzi-shell-bar-height) - var(--lenzi-search-height)) / 2);
@@ -126,27 +144,32 @@
   transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
+.lenzi-shell-search-in-bar,
+.lenzi-shell-compact .lenzi-shell-search {
+  z-index: 6;
+}
+
+/* In the bar it is filled, so it covers the title it slides over ("covering the text"). */
 .lenzi-shell-search .mat-mdc-text-field-wrapper {
   border-radius: calc(var(--lenzi-search-height) / 2);
   transition: background-color var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
-.lenzi-shell-compact .lenzi-shell-search {
-  padding-inline-start: max(0px, calc(env(safe-area-inset-left, 0px) + 2 * var(--lenzi-float-gap) + var(--lenzi-shell-bar-height) - var(--lenzi-shell-search-left, 0px)));
+.lenzi-shell-search-in-bar .mat-mdc-text-field-wrapper,
+.lenzi-shell-compact .lenzi-shell-search .mat-mdc-text-field-wrapper {
+  background-color: var(--mat-sys-surface-container-high);
 }
 
-.lenzi-shell-compact .lenzi-shell-search .mat-mdc-text-field-wrapper {
-  background-color: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-glass-bar), transparent);
-  backdrop-filter: var(--lenzi-glass-filter);
+/* A search bar the page puts left of where the button ends (a phone): its left end moves after the button. */
+.lenzi-shell-compact .lenzi-shell-search {
+  padding-inline-start: max(0px, calc(env(safe-area-inset-left, 0px) + var(--lenzi-float-gap) + var(--lenzi-shell-bar-height) - var(--lenzi-shell-search-left, 0px)));
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lenzi-shell-bar.mat-toolbar,
   .lenzi-shell-menu,
-  .lenzi-shell-title,
   .lenzi-shell-bar [lenziShellActions],
-  .lenzi-shell-search,
-  .lenzi-shell-search .mat-mdc-text-field-wrapper {
+  .lenzi-shell-search {
     transition: none;
   }
 }

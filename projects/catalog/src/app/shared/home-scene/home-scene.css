@@ -1,0 +1,4 @@
+/* Only a wrapper: the scene places itself behind the page. */
+:host {
+  display: contents;
+}

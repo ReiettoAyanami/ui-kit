@@ -26,6 +26,7 @@ export class App {
   private readonly everyPage: LenziNavEntry[] = [
     { label: 'Overview', icon: 'home', link: '/' },
     { label: 'Components', icon: 'widgets', link: '/components' },
+    { label: 'Scenes', icon: 'landscape', link: '/scenes' },
     { label: 'Rules', icon: 'rule', link: '/rules' },
     { label: 'AI rules', icon: 'smart_toy', link: '/ai-rules' },
     { label: 'Variables', icon: 'tune', link: '/variables' },

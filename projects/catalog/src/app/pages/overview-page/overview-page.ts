@@ -4,11 +4,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
 import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
-import { BlobMaterial, LenziBlobBackground, LenziBlobFlock, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
+import { HomeScene } from '../../shared/home-scene/home-scene';
 import { CATEGORIES, DOCS } from '../../registry';
+import { PHONE_QUERY } from '../../scenes';
 import { PublicPages } from '../../shared/public-pages';
 
 /** The cat's width in the corner, px: never smaller, never larger. */
@@ -18,13 +20,10 @@ const MASCOT_MOST = 720;
 const MASCOT_PHONE_LEAST = 140;
 const MASCOT_PHONE_MOST = 220;
 
-/** A phone, as the page's styles say it (max-width: 599px). */
-const PHONE = '(max-width: 599px)';
-
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [CodeEditor, LenziBlobBackground, LenziBlobFlockBackground, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, HomeScene, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })
@@ -34,28 +33,9 @@ export class OverviewPage {
   /**
    * The cat in the corner (lenzi, 2026-11-14: "in the bottom right corner zoomed in a lot ... the cat lower
    * half should be cut by the bottom of the screen for now", then "cat should be bigger, a bit more on top"):
-   * its width, px, 42% of the window's, between 260 and 720; a little over a third of it below the screen.
+   * its width, px, 42% of the window's, between 260 and 720 (on a phone 140 to 220, "on mobile make the cat
+   * smaller"); a little over a third of it below the screen. The background is the home's scene (HomeScene).
    */
-  /**
-   * The background's blobs and fleets (lenzi, 2026-11-14: "una flotta di boidi normali, una flotta di boidi
-   * blob vetro che ricevono luce e una flotta di boidi blob dello stesso materiale di quella corrente ... per
-   * ogni flotta un blob grande, un/due blob piccoli dello stesso materiale").
-   */
-  protected readonly blobMaterials: readonly BlobMaterial[] = ['lamp', 'glass', 'lamp', 'glass', 'lamp', 'glass'];
-  protected readonly blobSizes: readonly number[] = [0.2, 0.2, 0.085, 0.085, 0.065, 0.065];
-  protected readonly fleets: readonly LenziBlobFlock[] = [
-    { material: 'glass', count: 42, colonies: 3 },
-    { material: 'lamp', count: 48, colonies: 3 },
-  ];
-
-  /**
-   * On a phone only the blobs, half of them (lenzi, 2026-11-14: "on mobile ... put only the blobs and less around
-   * (50%)"): a large lamp, a large glass and a small lamp; no boids, no fleets.
-   */
-  protected readonly phoneMaterials: readonly BlobMaterial[] = ['lamp', 'glass', 'lamp'];
-  protected readonly phoneSizes: readonly number[] = [0.2, 0.2, 0.085];
-
-  protected readonly phone = signal(false);
   protected readonly mascot = signal(MASCOT_LEAST);
   protected readonly aspect = CAT_ASPECT;
   /** How much of the cat is below the screen ("a bit more on top"). */
@@ -64,9 +44,8 @@ export class OverviewPage {
     const view = inject(DOCUMENT).defaultView;
     if (!view) return;
     const fit = () => {
-      const phone = view.matchMedia?.(PHONE).matches ?? false;
+      const phone = view.matchMedia?.(PHONE_QUERY).matches ?? false;
       const [least, most] = phone ? [MASCOT_PHONE_LEAST, MASCOT_PHONE_MOST] : [MASCOT_LEAST, MASCOT_MOST];
-      this.phone.set(phone);
       this.mascot.set(Math.round(Math.min(most, Math.max(least, view.innerWidth * 0.42))));
     };
     fit();
@@ -82,6 +61,7 @@ export class OverviewPage {
 
   private readonly everySection = [
     { link: '/components', icon: 'widgets', title: 'Components', text: 'Every piece of the kit: a live demo, its parameters, its rules, its AI notes and its code.' },
+    { link: '/scenes', icon: 'landscape', title: 'Scenes', text: 'Glowing backgrounds as data: blobs, boids and blob-boids. Make one in the playground.' },
     { link: '/rules', icon: 'rule', title: 'Rules', text: 'The look and the behaviour every app follows: Material 3, heavily modified.' },
     { link: '/ai-rules', icon: 'smart_toy', title: 'AI rules', text: 'How Claude works with the kit: read first, compose, never restyle, add to the kit first.' },
     { link: '/variables', icon: 'tune', title: 'Variables', text: 'The global variables of the look: what each one is for, its value and why.' },

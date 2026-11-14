@@ -88,9 +88,10 @@ the rule says what, the variable says how much.
   dialogs, page windows, the drawer, tables.
 - **The top bar and the drawer float** 8 px from the screen's edges, rounded 16 px on every side
   (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le versioni"). **Scrolled
-  past its height it shrinks to its menu button**, without the title, and a page's search bar rides beside
-  it (lenzi, 2026-11-14: "dovrebbe compattarsi con un animazione verso l'icona di apertura/chiusura ... ma
-  (se c'é) deve affiancare la barra di ricerca"; `LenziAppShell`, `lenziShellSearch`).
+  past its height it closes from the right onto its menu button**, the edge covering the title, and a page's
+  search bar slides into it with the edge (lenzi, 2026-11-14: "the top bar should slide in from right to left
+  and close on the icon, if there's a search bar make it slide there ... and incorporate it into the top
+  bar"; `LenziAppShell`, `lenziShellSearch`).
 - **Menus, selects and autocomplete panels are rounded on every side** (12 px), a few px away from
   their field; **the chosen option is a pill** inside them (lenzi, 2026-10-02).
 
@@ -216,6 +217,9 @@ the rule says what, the variable says how much.
   lights; glass blurs what is behind it and takes the light around it, as `lenziLit` (the same glass %, veil,
   rim); solid is the page's surface, lit on its edge on the side of the light, and casts a hard shadow on
   the glow, as `lenziSolid` (the same `--lenzi-shadow`). **Blobs melt only into blobs of their own material.**
+- **A background of blobs and fleets is a scene** (lenzi, 2026-11-14: "una Scena ... é tipo la scena che usiamo
+  nel background della home"): data (`LenziScene`: blobs, fleets, the pointer), drawn by `<lenzi-scene>`. An app
+  keeps its scenes as data, and a phone gets a lighter scene of its own.
 - **What stops what is on one layer** (lenzi, 2026-11-14: "they're obstacles only to objects that are on the
   same z-level"): the lamps, the solid things and the boids share one; glass is above it, and the boids fly
   under the glass.

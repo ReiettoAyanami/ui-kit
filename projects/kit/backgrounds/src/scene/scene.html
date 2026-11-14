@@ -1,0 +1,26 @@
+@let shown = layout();
+@if (shown.flocking) {
+  <lenzi-blob-flock-background
+    [fill]="fill()"
+    [animate]="animate()"
+    [blobs]="shown.materials.length"
+    [materials]="shown.materials"
+    [blobSizes]="shown.sizes"
+    [boids]="shown.boids"
+    [colonies]="shown.colonies"
+    [boidSize]="shown.boidSize"
+    [blobFlocks]="shown.blobFlocks"
+    [follow]="shown.follow"
+    [throwable]="shown.throwable"
+  />
+} @else {
+  <lenzi-blob-background
+    [fill]="fill()"
+    [animate]="animate()"
+    [count]="shown.materials.length"
+    [materials]="shown.materials"
+    [blobSizes]="shown.sizes"
+    [throwable]="shown.throwable"
+    [pull]="0"
+  />
+}

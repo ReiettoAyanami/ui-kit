@@ -1,0 +1,61 @@
+.page {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 8px 16px 64px;
+}
+
+.title {
+  margin: 16px 0 8px;
+  font: var(--mat-sys-headline-medium);
+}
+
+.lead {
+  max-width: 72ch;
+  margin: 0 0 16px;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.group-title {
+  margin: 28px 0 12px;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+}
+
+.cards {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 720px) {
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* A card per scene kept: its name bold, what it holds under it, the constant that keeps it. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.name {
+  font: var(--mat-sys-title-medium);
+}
+
+.summary {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.api {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-tertiary);
+}

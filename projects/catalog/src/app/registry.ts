@@ -1428,6 +1428,53 @@ ${tag('lenzi-blob-flock-background', [
     height: 560,
   },
   {
+    id: 'scene',
+    name: 'Scene',
+    category: 'Backgrounds',
+    summary: 'A glowing background as data: its blobs and its fleets of boids and blob-boids, drawn behind the page.',
+    api: '<lenzi-scene [scene]>, LenziScene',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-14 ("una Scena e questa é tipo la scena che usiamo nel background della home")',
+    files: [...BACKGROUND_FILES('scene'), 'backgrounds/src/blob-flock-background/blob-flock-background.ts', 'backgrounds/src/blob-background/blob-background.ts'],
+    ...docs('backgrounds/src/scene'),
+    demo: () => import('./demos/scene-demo/scene-demo').then((m) => m.SceneDemo),
+    controls: [
+      {
+        key: 'scene',
+        label: 'The scene',
+        type: 'select',
+        default: 'HOME_SCENE',
+        options: [
+          { value: 'HOME_SCENE', label: 'the home: blobs, boids, blob-boids' },
+          { value: 'HOME_PHONE_SCENE', label: 'the home on a phone: half the blobs' },
+        ],
+        code: { match: /\.\.\.(HOME_\w+)/ },
+      },
+      {
+        key: 'follow',
+        label: 'The pointer',
+        type: 'select',
+        default: 'flee',
+        options: [
+          { value: 'flee', label: 'flee: the boids fly away from it' },
+          { value: 'near', label: 'near: around it, loosely' },
+          { value: 'target', label: 'target: onto it' },
+          { value: 'none', label: 'none: not followed' },
+        ],
+        code: { match: /follow: '(\w+)'/ },
+      },
+      { key: 'throwable', label: 'The pointer throws the blobs (drag one)', type: 'boolean', default: true, code: { match: /throwable: true/ } },
+    ],
+    usage: (v) => `import { LenziScene, LenziSceneBackground } from '@lenzi/ui-kit/backgrounds';
+
+// a scene is data: the app keeps it (here the catalog's, in scenes.ts) and the background draws it
+readonly scene: LenziScene = { ...${v['scene']}, follow: '${v['follow']}', throwable: ${v['throwable'] === true} };
+
+<lenzi-scene [scene]="scene" />`,
+    usageLanguage: 'typescript',
+    height: 560,
+  },
+  {
     id: 'lit-surface',
     name: 'Lit surfaces',
     category: 'Light',
