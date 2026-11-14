@@ -1,6 +1,6 @@
-import { DestroyRef, Directive, ElementRef, afterNextRender, inject } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, afterNextRender, inject, input } from '@angular/core';
 
-import { LenziLightField, fitLight } from './light-field';
+import { LenziLightField, LenziOutline, fitLight } from './light-field';
 
 /**
  * A solid element in the light (lenzi, 2026-11-14: "it could be cool to introduce a faint hard shadow ...
@@ -22,6 +22,12 @@ function opaque(color: string): boolean {
   host: { class: 'lenzi-solid' },
 })
 export class LenziSolid {
+  /**
+   * The outline of what it shows, when that is not its box (a drawing: `<lenzi-cat>`): points as fractions
+   * of its box. Its shadow is cast from it. Nothing: its box, with its rounded corners.
+   */
+  readonly solidOutline = input<LenziOutline | null>(null);
+
   constructor() {
     const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const field = inject(LenziLightField);
@@ -33,7 +39,7 @@ export class LenziSolid {
       // see-through by itself (a toggle group, a list, an outlined button) takes the page's surface
       element.classList.toggle('lenzi-solid-fill', !opaque(style.backgroundColor));
       const leave = field.addSurface(element);
-      const stop = field.addCaster(element);
+      const stop = field.addCaster(element, () => this.solidOutline());
       destroyRef.onDestroy(() => {
         leave();
         stop();

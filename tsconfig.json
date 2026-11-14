@@ -21,6 +21,9 @@
       ],
       "@lenzi/ui-kit/backgrounds": [
         "./projects/kit/backgrounds/src/public-api.ts"
+      ],
+      "@lenzi/ui-kit/svgs": [
+        "./projects/kit/svgs/src/public-api.ts"
       ]
     },
     "noImplicitReturns": true,

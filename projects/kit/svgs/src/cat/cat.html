@@ -1,0 +1,36 @@
+<div class="figure" [class.animated]="animated()" [class]="'mood-' + mood()">
+  <!-- the body: a material shaped as the cat -->
+  @switch (material()) {
+    @case ('glass') {
+      <div class="shape" lenziLit [style.mask-image]="mask()"></div>
+    }
+    @case ('lamp') {
+      <div
+        class="shape"
+        [lenziGlow]="true"
+        [glowColor]="glowColor()"
+        [glowStrength]="glowStrength()"
+        [glowReach]="glowReach()"
+        [style.mask-image]="mask()"
+      ></div>
+    }
+    @case ('solid') {
+      <div class="shape filled" lenziSolid [solidOutline]="shape().outline" [style.mask-image]="mask()"></div>
+    }
+    @default {
+      <div class="shape filled" [style.mask-image]="mask()"></div>
+    }
+  }
+
+  <!-- its lines, over it: in the lamp's colour when it is a lamp -->
+  <svg class="ink" [class.lit]="material() === 'lamp'" [style.--lenzi-cat-lamp]="lampColor()" [attr.viewBox]="viewBox" aria-hidden="true">
+    <path fill-rule="evenodd" [attr.d]="shape().ink" />
+    @if (face(); as face) {
+      <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeLeft" />
+      <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeRight" />
+      <path class="mouth" fill-rule="evenodd" [attr.d]="face.mouth" />
+      <path class="whiskers left" fill-rule="evenodd" [attr.d]="face.whiskersLeft" />
+      <path class="whiskers right" fill-rule="evenodd" [attr.d]="face.whiskersRight" />
+    }
+  </svg>
+</div>

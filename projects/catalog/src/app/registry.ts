@@ -54,11 +54,12 @@ export const CATEGORIES = [
   'Services',
   'Backgrounds',
   'Light',
+  'SVGs',
   '3D',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 
-export type Entry = '@lenzi/ui-kit' | '@lenzi/ui-kit/charts' | '@lenzi/ui-kit/three' | '@lenzi/ui-kit/http' | '@lenzi/ui-kit/backgrounds' | 'styles';
+export type Entry = '@lenzi/ui-kit' | '@lenzi/ui-kit/charts' | '@lenzi/ui-kit/three' | '@lenzi/ui-kit/http' | '@lenzi/ui-kit/backgrounds' | '@lenzi/ui-kit/svgs' | 'styles';
 
 export interface KitDoc {
   id: string;
@@ -1370,6 +1371,63 @@ ${tag('lenzi-flock-background', [
     --lenzi-shadow: ${v['shadow']}%;
   }
 </style>`,
+    usageLanguage: 'html',
+    height: 640,
+  },
+  // SVGs -----------------------------------------------------------------------------------------
+  {
+    id: 'cat',
+    name: 'The cat',
+    category: 'SVGs',
+    summary: 'lenzi’s cat, in vectors: five moods, any of the kit’s materials shaped as the cat, and a little life.',
+    api: '<lenzi-cat>',
+    entry: '@lenzi/ui-kit/svgs',
+    origin: 'lenzi’s drawing, gatto_icona (eight PNG layers), traced into vectors 2026-11-14 ("trasformali in svg")',
+    files: [
+      'svgs/src/cat/cat.ts',
+      'svgs/src/cat/cat.html',
+      'svgs/src/cat/cat.css',
+      'svgs/src/cat/cat.spec.ts',
+      'svgs/src/cat/cat-art.ts',
+      'backgrounds/src/glow/solid.ts',
+      'backgrounds/src/glow/light-field.ts',
+    ],
+    ...docs('svgs/src/cat'),
+    demo: () => import('./demos/cat-demo/cat-demo').then((m) => m.CatDemo),
+    controls: [
+      { key: 'size', label: 'Size (px)', type: 'number', default: 120, min: 32, max: 240, step: 4, code: { attr: 'size', otherwise: 96 } },
+      { key: 'animated', label: 'Moving', type: 'boolean', default: true, code: { absent: /\[animated\]="false"/ } },
+      {
+        key: 'behind',
+        label: 'Behind them',
+        type: 'select',
+        default: 'dark',
+        options: [
+          { value: 'dark', label: 'nothing: only the lamps shine' },
+          { value: 'blobs', label: 'blobs' },
+          { value: 'flock', label: 'a flock' },
+          { value: 'picture', label: 'a picture' },
+        ],
+        code: false,
+      },
+      { key: 'strength', label: 'Lamp strength (0 to 2)', type: 'number', default: 1, min: 0, max: 2, step: 0.05, code: { match: /\[glowStrength\]="(-?[\d.]+)"/, otherwise: 1 } },
+      { key: 'reach', label: 'Lamp reach (px)', type: 'number', default: 220, min: 20, max: 600, step: 10, code: { match: /\[glowReach\]="(-?[\d.]+)"/, otherwise: 220 } },
+    ],
+    usage: (v) => `<!-- import { LenziCat } from '@lenzi/ui-kit/svgs'; -->
+
+<!-- the page's surface; a label makes it an image for a screen reader -->
+<lenzi-cat mood="happy" size="${v['size']}" label="A happy cat"${v['animated'] ? '' : ' [animated]="false"'} />
+
+<!-- a lamp: its lines glow, it lights what is around it -->
+<lenzi-cat mood="builder" material="lamp" glowColor="#f4ecff"${v['strength'] === 1 ? '' : ` [glowStrength]="${v['strength']}"`}${v['reach'] === 220 ? '' : ` [glowReach]="${v['reach']}"`} />
+
+<!-- glass: the light and the background show through it -->
+<lenzi-cat mood="sleepy" material="glass" />
+
+<!-- solid: it casts the cat's shadow on a lit floor -->
+<lenzi-cat mood="sad" material="solid" />
+
+<!-- moods: happy, sleepy, sad, back, builder -->`,
     usageLanguage: 'html',
     height: 640,
   },

@@ -1,0 +1,141 @@
+:host {
+  display: inline-block;
+  flex: none;
+  aspect-ratio: var(--lenzi-cat-aspect);
+  vertical-align: middle;
+}
+
+/* The drawing: the body's material under its lines, both the same size. */
+.figure {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.shape,
+.ink {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The material takes the cat's shape: everything it draws (its colour, glass, light) stays inside the outline. */
+.shape {
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  border-radius: 0;
+}
+
+/* The page's surface, a little lighter than the page, so the cat stands on it. */
+.shape.filled {
+  background-color: var(--lenzi-cat-fill, var(--mat-sys-surface-container-high));
+}
+
+/* Its lines are its border: the line of light along a box's border has nothing to follow here. */
+.figure .shape.shape::after {
+  display: none;
+}
+
+.ink {
+  overflow: visible;
+  fill: var(--lenzi-cat-ink, var(--mat-sys-on-surface));
+}
+
+/* A lamp: its lines in its colour, glowing. */
+.ink.lit {
+  fill: color-mix(in srgb, var(--lenzi-cat-lamp) 55%, white);
+  filter: drop-shadow(0 0 3px var(--lenzi-cat-lamp)) drop-shadow(0 0 10px var(--lenzi-cat-lamp));
+}
+
+/* A little life (lenzi: "Se riesci animalo un pochetto"): it breathes, blinks, twitches its whiskers. */
+.animated {
+  transform-origin: 50% 100%;
+  animation: lenzi-cat-breathe 4.2s ease-in-out infinite;
+}
+
+.animated.mood-sleepy {
+  animation-duration: 6.4s;
+}
+
+.animated .eye {
+  transform-box: fill-box;
+  transform-origin: 50% 60%;
+  animation: lenzi-cat-blink 5.2s ease-in-out infinite;
+}
+
+/* closed eyes do not blink */
+.animated.mood-sleepy .eye {
+  animation: none;
+}
+
+.animated .whiskers {
+  transform-box: fill-box;
+  animation: lenzi-cat-whisker 3.6s ease-in-out infinite;
+}
+
+.animated .whiskers.left {
+  transform-origin: 100% 40%;
+}
+
+.animated .whiskers.right {
+  transform-origin: 0% 40%;
+  animation-name: lenzi-cat-whisker-right;
+  animation-delay: 0.15s;
+}
+
+@keyframes lenzi-cat-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.012, 1.024);
+  }
+}
+
+@keyframes lenzi-cat-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes lenzi-cat-whisker {
+  0%,
+  78%,
+  100% {
+    rotate: 0deg;
+  }
+  83% {
+    rotate: -7deg;
+  }
+  89% {
+    rotate: 4deg;
+  }
+}
+
+@keyframes lenzi-cat-whisker-right {
+  0%,
+  78%,
+  100% {
+    rotate: 0deg;
+  }
+  83% {
+    rotate: 7deg;
+  }
+  89% {
+    rotate: -4deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated,
+  .animated * {
+    animation: none !important;
+  }
+}

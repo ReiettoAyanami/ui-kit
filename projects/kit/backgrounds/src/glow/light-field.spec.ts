@@ -171,6 +171,21 @@ describe('LenziLightField', () => {
     expect(shadows(over)).toEqual([]);
   });
 
+  it('casts the shadow of an outline when the solid element shows one (a drawing), not of its box', () => {
+    const floor = placed(0, 0, 1000, 400);
+    field.addSurface(floor);
+    field.addLamp(placed(90, 190, 20, 20), () => lamp({ reach: 600 }));
+    // a triangle pointing at the lamp, in a 100 × 100 box: its tip at the box's left middle
+    field.addCaster(placed(300, 150, 100, 100), () => [[0, 0.5], [1, 0], [1, 1]]);
+    field.update(1);
+    const [[, , , , , , , , , shadows]] = JSON.parse(floor.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
+    const points: [number, number][] = [];
+    for (let i = 0; i < shadows[0].length; i += 2) points.push([shadows[0][i], shadows[0][i + 1]]);
+    // the tip is part of it; the box's corners near the lamp are not
+    expect(points).toContainEqual([300, 200]);
+    expect(points).not.toContainEqual([300, 150]);
+  });
+
   it('says which of two elements is drawn above: what one holds, then z-index, then the later one', () => {
     const floor = document.createElement('div');
     const first = document.createElement('div');

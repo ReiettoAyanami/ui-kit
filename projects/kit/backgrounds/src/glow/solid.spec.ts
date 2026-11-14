@@ -22,7 +22,9 @@ describe('LenziSolid', () => {
     expect(block.classList.contains('lenzi-solid')).toBe(true);
     // not glass
     expect(block.classList.contains('lenzi-lit')).toBe(false);
-    expect(caster).toHaveBeenCalledWith(block);
+    // with its outline, read at every frame: none given, its box
+    expect(caster).toHaveBeenCalledWith(block, expect.any(Function));
+    expect(caster.mock.calls[0]![1]!()).toBeNull();
     expect(surface).toHaveBeenCalledWith(block);
     expect(block.children.length).toBe(1);
     // see-through by itself: it takes the page's surface, so nothing under it shows

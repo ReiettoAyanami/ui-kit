@@ -37,6 +37,11 @@
       "output": "docs/backgrounds"
     },
     {
+      "input": "svgs/src",
+      "glob": "**/*.md",
+      "output": "docs/svgs"
+    },
+    {
       "input": ".",
       "glob": "{RULES,AI-RULES}.md",
       "output": "."

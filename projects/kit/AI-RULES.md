@@ -4,7 +4,7 @@ Instructions for Claude, for any frontend work in lenzi's projects. lenzi does n
 same things twice: these rules exist so that the first version is already right. Read this file, then
 `RULES.md`, then the `README.md` and `AI.md` of every piece you are going to use. They are next to the
 code: `projects/kit/src/lib/<piece>/`, `projects/kit/charts/src/chart/`, `projects/kit/three/src/three-canvas/`,
-`projects/kit/http/src/`, and `projects/kit/src/styles/docs/<topic>/` for the styles. In an app that
+`projects/kit/http/src/`, `projects/kit/backgrounds/src/`, `projects/kit/svgs/src/` (drawings: the cat), and `projects/kit/src/styles/docs/<topic>/` for the styles. In an app that
 installed the kit, the same files are in `node_modules/@lenzi/ui-kit/` (`docs/`, `styles/docs/`).
 
 ## Before writing anything

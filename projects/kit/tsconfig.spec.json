@@ -14,6 +14,7 @@
     "charts/src/**/*.spec.ts",
     "three/src/**/*.spec.ts",
     "http/src/**/*.spec.ts",
-    "backgrounds/src/**/*.spec.ts"
+    "backgrounds/src/**/*.spec.ts",
+    "svgs/src/**/*.spec.ts"
   ]
 }

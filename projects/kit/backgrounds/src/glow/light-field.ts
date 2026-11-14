@@ -26,6 +26,9 @@ export interface LenziSourceLamp {
   reach: number;
 }
 
+/** An outline: points as fractions of an element's box (0, 0 its top left; 1, 1 its bottom right). */
+export type LenziOutline = readonly (readonly [number, number])[];
+
 /** The most lamps that light one surface at once (the nearest). */
 export const MOST_LAMPS = 6;
 
@@ -118,7 +121,7 @@ export class LenziLightField {
   private readonly lamps = new Map<HTMLElement, LampEntry>();
   private readonly sources = new Map<object, readonly LenziSourceLamp[]>();
   private readonly surfaces = new Map<HTMLElement, SurfaceEntry>();
-  private readonly casters = new Set<HTMLElement>();
+  private readonly casters = new Map<HTMLElement, () => LenziOutline | null>();
   /** Each solid element's corner radius, px, read now and then. */
   private readonly radii = new Map<HTMLElement, number>();
   private readonly colours = new Map<string, [number, number, number]>();
@@ -159,9 +162,13 @@ export class LenziLightField {
     };
   }
 
-  /** An element that stops the light (`lenziSolid`): it casts a shadow. Gives back how to take it away. */
-  addCaster(element: HTMLElement): () => void {
-    this.casters.add(element);
+  /**
+   * An element that stops the light (`lenziSolid`): it casts a shadow, of its box with its rounded corners,
+   * or of `outline` (points as fractions of its box, 0..1: a drawing that is not a box, a cat), read at
+   * every frame. Gives back how to take it away.
+   */
+  addCaster(element: HTMLElement, outline?: () => LenziOutline | null): () => void {
+    this.casters.set(element, outline ?? (() => null));
     this.wake();
     return () => {
       this.casters.delete(element);
@@ -205,7 +212,11 @@ export class LenziLightField {
     for (const lamps of this.sources.values()) {
       for (const lamp of lamps) if (lamp.strength > 0 && lamp.reach > 0) shining.push({ element: null, box: lamp, color: lamp.color, strength: Math.min(2, lamp.strength), reach: lamp.reach });
     }
-    const casters = [...this.casters].map((element) => ({ element, box: element.getBoundingClientRect() as Box, radius: this.radius(element) }));
+    const casters = [...this.casters].map(([element, outline]) => {
+      const box = element.getBoundingClientRect() as Box;
+      const points = outline();
+      return { element, box, radius: this.radius(element), outline: points?.length ? onScreen(points, box) : null };
+    });
     const boxes = [...this.surfaces.values()].map((surface) => ({ surface, origin: this.origin(surface), outer: surface.element.getBoundingClientRect() as Box }));
 
     for (const { surface, origin, outer } of boxes) {
@@ -252,7 +263,7 @@ export class LenziLightField {
           // a shadow falls only on what lies under the element (lenzi, 2026-11-14: "The one on the bottom
           // shouldn't be able to cast to the one on top")
           .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box) && above(caster.element, surface.element))
-          .map((caster) => shadowOf(caster.box, from, caster.radius).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
+          .map((caster) => (caster.outline ? shadowOfOutline(caster.outline, from) : shadowOf(caster.box, from, caster.radius)).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
         // the lamp's box in the surface's px: its light fades off its outline, all round it
         const lampBox = [light.box.left - box.left, light.box.top - box.top, light.box.right - box.left, light.box.bottom - box.top].map(Math.round);
         data.push([...lampBox, Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
@@ -426,13 +437,30 @@ export function shadowOf(box: Box, light: { x: number; y: number }, radius = 0):
     arc(box.right - r, box.bottom - r, 0);
     arc(box.left + r, box.bottom - r, Math.PI / 2);
   }
-  const far = corners.map(([x, y]) => {
+  return shadowOfOutline(corners, light);
+}
+
+/**
+ * The shadow of any outline (screen px) from a point of light: the hull of its points and of the same
+ * points carried far away from the light. A concave outline casts the shadow of its hull, which from a
+ * point of light is the same but for its hollows.
+ */
+export function shadowOfOutline(points: readonly (readonly [number, number])[], light: { x: number; y: number }): number[] {
+  const near = points.map(([x, y]) => [x, y] as [number, number]);
+  const far = near.map(([x, y]) => {
     const dx = x - light.x;
     const dy = y - light.y;
     const length = Math.hypot(dx, dy) || 1;
     return [x + (dx / length) * SHADOW_LENGTH, y + (dy / length) * SHADOW_LENGTH] as [number, number];
   });
-  return hull([...corners, ...far]).flat();
+  return hull([...near, ...far]).flat();
+}
+
+/** An outline given as fractions of a box, on the screen. */
+function onScreen(points: LenziOutline, box: Box): [number, number][] {
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  return points.map(([x, y]) => [box.left + x * width, box.top + y * height]);
 }
 
 /** The convex hull of points (Andrew's monotone chain), counter-clockwise on the screen. */
