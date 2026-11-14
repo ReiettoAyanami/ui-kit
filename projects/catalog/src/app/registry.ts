@@ -1322,7 +1322,7 @@ ${tag('lenzi-flock-background', [
     usage: (v) => `<!-- import { LenziGlow, LenziLit } from '@lenzi/ui-kit/backgrounds'; -->
 
 <!-- a lamp: it glows, and lights the lit elements around it (it is lit by the others too) -->
-<button mat-fab lenziGlow glowColor="#ffb74d"${v['strength'] === 1 ? '' : ` [glowStrength]="${v['strength']}"`}${v['reach'] === 220 ? '' : ` [glowReach]="${v['reach']}"`} aria-label="Bulb">
+<button mat-fab lenziGlow glowColor="#f4ecff"${v['strength'] === 1 ? '' : ` [glowStrength]="${v['strength']}"`}${v['reach'] === 220 ? '' : ` [glowReach]="${v['reach']}"`} aria-label="Bulb">
   <mat-icon>lightbulb</mat-icon>
 </button>
 

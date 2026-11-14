@@ -47,7 +47,7 @@ the other elements unlike the backhgorund"; and "ovviamente la luce di tutti i c
 ## Example
 
 ```html
-<button mat-fab lenziGlow glowColor="#ffb74d" aria-label="Bulb"><mat-icon>lightbulb</mat-icon></button>
+<button mat-fab lenziGlow glowColor="#f4ecff" aria-label="Bulb"><mat-icon>lightbulb</mat-icon></button>
 <button mat-stroked-button type="button" [lenziGlow]="playing()">Play</button>
 <mat-card appearance="outlined" lenziLit>…</mat-card>
 ```

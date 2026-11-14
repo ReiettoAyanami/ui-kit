@@ -447,10 +447,14 @@ html {
    behave like the youtube backlight feature where elements get slightly alominated by it", and
    YouTube's buttons "like they're glass ... responsive to flock / blob position and color"). It is
    glass: its own colour (--lenzi-lit-surface, the page's surface unless set), see-through, over the
-   background blurred. And it takes the background's light (LenziAmbientLight puts the part of the
-   light behind the surface in .lenzi-lit-light): a veil over its colour, and a brighter line along
-   its border. Each class twice: above Material's own background of a card or a button. Only where
-   the app asks: without `lenziLit` cards and panels stay solid. */
+   background blurred. And it takes light: the background's (LenziAmbientLight) and that of the glowing
+   elements near it (LenziLightField, lenziGlow). Both lie over everything the surface holds (`::before`,
+   added light: a chosen segment, an icon, a row are lit too; lenzi, 2026-11-14: the selector "shouldn't
+   ignore the light at all") and along its border (`::after`). Nothing is put inside the surface, so its
+   children's :first-child and :last-child rules stay (2026-11-14: a span inside a card took its top
+   padding away). The `::after` takes the place of a card's own (a transparent border for forced
+   colours). Each class twice: above Material's own background of a card or a button. Only where the app
+   asks: without `lenziLit` cards and panels stay solid. */
 :where(.lenzi-lit) {
   position: relative;
 }
@@ -461,40 +465,29 @@ html {
   backdrop-filter: var(--lenzi-glass-filter);
 }
 
-.lenzi-lit-light {
+.lenzi-lit.lenzi-lit::before,
+.lenzi-lit.lenzi-lit::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  display: none;
+  /* over the border too (a surface that cuts what leaves it, .lenzi-lit-clipped: inside it) */
+  inset: calc(var(--lenzi-border) * -1);
+  z-index: 1;
+  display: block;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  border: 0;
   border-radius: inherit;
   pointer-events: none;
+  background: var(--lenzi-lamps-veil, none), var(--lenzi-ambient-veil, none);
+  background-blend-mode: screen;
   mix-blend-mode: var(--lenzi-light-blend, screen);
 }
 
-.lenzi-lit-light.lenzi-lit-on {
-  display: block;
-}
-
-.lenzi-lit-light::before,
-.lenzi-lit-light::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-image: var(--lenzi-light-image);
-  background-size: var(--lenzi-light-size);
-  background-position: var(--lenzi-light-at);
-  background-repeat: no-repeat;
-}
-
-.lenzi-lit-light::before {
-  opacity: var(--lenzi-lit-veil);
-}
-
 /* The line along the border: the light again, kept only where the border is. */
-.lenzi-lit-light::after {
+.lenzi-lit.lenzi-lit::after {
   padding: var(--lenzi-border);
-  opacity: var(--lenzi-lit-rim);
+  background: var(--lenzi-lamps-rim, none), var(--lenzi-ambient-rim, none);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -505,48 +498,9 @@ html {
   mask-composite: exclude;
 }
 
-/* The light of the glowing elements near a lit surface (LenziLightField puts every lamp's light, a
-   gradient from the side that faces it, in --lenzi-lamps): over its colour, and along its border. The
-   lamps' colours add up among themselves (screen), then onto the surface. */
-.lenzi-lit-lamps {
-  position: absolute;
+.lenzi-lit.lenzi-lit-clipped::before,
+.lenzi-lit.lenzi-lit-clipped::after {
   inset: 0;
-  z-index: -1;
-  display: none;
-  border-radius: inherit;
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
-
-.lenzi-lit-lamps.lenzi-lit-lamps-on {
-  display: block;
-}
-
-.lenzi-lit-lamps::before,
-.lenzi-lit-lamps::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-image: var(--lenzi-lamps);
-  background-blend-mode: screen;
-}
-
-.lenzi-lit-lamps::before {
-  opacity: var(--lenzi-glow-veil);
-}
-
-.lenzi-lit-lamps::after {
-  padding: var(--lenzi-border);
-  opacity: var(--lenzi-glow-rim);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
 }
 
 /* A glowing element (lenziGlow): a lamp in its colour. Its own surface takes its colour, its border is
@@ -563,7 +517,8 @@ html {
   --lenzi-glow-share: clamp(0%, calc(var(--lenzi-glow-strength) * 100%), 100%);
   border-color: var(--lenzi-glow-color);
   outline-color: var(--lenzi-glow-color);
-  background-color: color-mix(in srgb, var(--lenzi-glow-color) clamp(0%, calc(var(--lenzi-glow-strength) * 30%), 45%), var(--lenzi-lit-surface, var(--mat-sys-surface)));
+  /* its own light lies over what it holds too (LenziLightField): its colour is a little of it */
+  background-color: color-mix(in srgb, var(--lenzi-glow-color) clamp(0%, calc(var(--lenzi-glow-strength) * 20%), 32%), var(--lenzi-lit-surface, var(--mat-sys-surface)));
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, white calc(var(--lenzi-glow-share) * 0.35), transparent),
     inset 0 0 calc(var(--lenzi-glow-reach) * 0.1) color-mix(in srgb, var(--lenzi-glow-color) calc(var(--lenzi-glow-share) * 0.7), transparent),
@@ -579,13 +534,16 @@ html {
   }
 }
 
-/* Reduce transparency: solid again (--lenzi-lit-glass is 100% then), and no light on it. */
-:root.reduce-transparency .lenzi-lit-light {
-  display: none;
+/* Reduce transparency: solid again (--lenzi-lit-glass is 100% then), and the background's light is not
+   on it (what shows through glass); the lamps' light stays, it is not a transparency. */
+:root.reduce-transparency .lenzi-lit {
+  --lenzi-ambient-veil: none !important;
+  --lenzi-ambient-rim: none !important;
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .lenzi-lit-light {
-    display: none;
+  .lenzi-lit {
+    --lenzi-ambient-veil: none !important;
+    --lenzi-ambient-rim: none !important;
   }
 }

@@ -22,14 +22,17 @@ interface Item {
   color: string;
 }
 
-/** What the playground starts with: some lamps on, in different colours, some surfaces only lit. */
+/**
+ * What the playground starts with: some lamps on, some surfaces only lit; violets and whites only
+ * (lenzi, 2026-11-14: "put from default only purplish/whiteish lights").
+ */
 const START: readonly Item[] = [
-  { kind: 'bulb', name: 'Bulb', on: true, color: '#ffb74d' },
+  { kind: 'bulb', name: 'Bulb', on: true, color: '#f4ecff' },
   { kind: 'button', name: 'Button', on: true, color: 'var(--mat-sys-primary)' },
-  { kind: 'card', name: 'Card', on: false, color: 'var(--mat-sys-tertiary)' },
-  { kind: 'list', name: 'List', on: false, color: '#4dd0e1' },
-  { kind: 'chip', name: 'Chip', on: true, color: '#ff4f8b' },
-  { kind: 'toggles', name: 'Toggles', on: false, color: '#69f0ae' },
+  { kind: 'card', name: 'Card', on: false, color: '#b388ff' },
+  { kind: 'list', name: 'List', on: false, color: '#e6d6ff' },
+  { kind: 'chip', name: 'Chip', on: true, color: '#9c6bff' },
+  { kind: 'toggles', name: 'Toggles', on: false, color: '#d0b8ff' },
 ];
 
 /**
@@ -65,13 +68,15 @@ export class GlowDemo {
 
   protected readonly choices: LenziColorChoice[] = [
     { value: 'var(--mat-sys-primary)', label: 'Violet' },
+    { value: '#9c6bff', label: 'Deep violet' },
+    { value: '#b388ff', label: 'Lavender' },
+    { value: '#d0b8ff', label: 'Lilac' },
+    { value: '#e6d6ff', label: 'Pale lilac' },
+    { value: '#f4ecff', label: 'Violet white' },
+    { value: '#ffffff', label: 'White' },
     { value: 'var(--mat-sys-tertiary)', label: 'Cyan' },
     { value: '#ffb74d', label: 'Amber' },
     { value: '#ff4f8b', label: 'Pink' },
-    { value: '#69f0ae', label: 'Green' },
-    { value: '#ff5252', label: 'Red' },
-    { value: '#448aff', label: 'Blue' },
-    { value: '#ffffff', label: 'White' },
   ];
 
   constructor() {
