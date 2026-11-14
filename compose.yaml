@@ -2,12 +2,14 @@
 # The admin's user and password come from .env (see .env.example); without them it only shows the kit.
 # What the admin saves (the variables, the history) is kept in the volume, across new images.
 # Behind a reverse proxy with https: add TRUST_PROXY=true to .env, so the session's cookie is Secure.
+# APP_PORT in .env says where it listens on the host: 8080 by default; behind nginx on the same machine,
+# 127.0.0.1:<port> (kit.lenzi.dev: 127.0.0.1:8081), so only nginx reaches it.
 services:
   catalog:
     build: .
     image: ui-kit-catalog
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     env_file:
       - path: .env
         required: false
