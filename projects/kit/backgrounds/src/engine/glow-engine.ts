@@ -44,6 +44,9 @@ export interface GlowSurfaceInputs {
   ambientSize: [number, number];
   /** How much of that light is the glow on the screen (the composite's own gain). */
   lightGain: number;
+  /** How bright the objects themselves are drawn (the composite's `core`), and on what: a lamp shown over a surface. */
+  core?: number;
+  base?: LinearRgb;
 }
 
 /**
@@ -418,7 +421,7 @@ export class GlowEngine {
       this.into(this.surfaced);
       // what reaches a place from all around: a wide halving, but not the widest (a few pixels, it shows its steps)
       const ambient = this.bloom[Math.min(AMBIENT_LEVEL, this.bloom.length - 1)] ?? current;
-      if (layers.surfaces({ picture: this.final.texture, blurred: blurred.texture, light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height], lightGain: strength })) picture = this.surfaced;
+      if (layers.surfaces({ picture: this.final.texture, blurred: blurred.texture, light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height], lightGain: strength, core: frame.core, base: frame.base })) picture = this.surfaced;
     }
 
     // 4. the blur of the finished picture

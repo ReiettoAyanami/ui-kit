@@ -210,48 +210,56 @@ void main() {
   }
 }`;
 
-const LAMPS = `#version 300 es
-precision highp float;
-in vec2 uv;
-uniform sampler2D weights;
-uniform sampler2D colours;
-uniform float level;
-uniform float soft;   // device px over the edge
-out vec4 color;
-void main() {
-  vec4 w = texture(weights, uv);
+// a lamp's light at a place of one level's fields (the fields are layers of one texture each, a layer a level)
+const LAMP_LIGHT = `
+vec4 lampLight(highp sampler2DArray weights, highp sampler2DArray colours, float layer, float level, float soft) {
+  vec4 w = texture(weights, vec3(uv, layer));
   // where the lamps' field is 1 is their edge; below 0 inside
   float edge = -log(max(w.z, 1e-6));
   float aa = max(fwidth(edge), 1e-4) * soft;
   float fill = w.z > 1e-5 ? smoothstep(aa, -aa, edge) : 0.0;
-  vec4 c = texture(colours, uv);
+  vec4 c = texture(colours, vec3(uv, layer));
   float shares = max(w.w, 1e-5);
   // a little more light towards the middle of a lamp
-  color = vec4(c.rgb / shares * fill * level * (0.8 + 0.2 * c.a / shares), fill);
+  return vec4(c.rgb / shares * fill * level * (0.8 + 0.2 * c.a / shares), fill);
+}`;
+
+const LAMPS = `#version 300 es
+precision highp float;
+precision highp sampler2DArray;
+in vec2 uv;
+uniform sampler2DArray weights;
+uniform sampler2DArray colours;
+uniform float layer;
+uniform float level;
+uniform float soft;   // device px over the edge
+out vec4 color;
+${LAMP_LIGHT}
+void main() {
+  color = lampLight(weights, colours, layer, level, soft);
 }`;
 
 const SURFACES = `#version 300 es
 precision highp float;
+precision highp sampler2DArray;
 in vec2 uv;
 uniform sampler2D picture;
 uniform sampler2D blurred;
 uniform sampler2D light;
 uniform sampler2D ambient;
 uniform vec2 ambientTexel;
-// each level's fields (up to ${MAX_MATERIAL_LAYERS}), the lowest first: the weights, glass's colour and amount, solid's colour
+// each level's fields, a layer each, the lowest first: the weights, the lamps' colours, glass's colour and amount,
+// solid's colour
 uniform int layers;
-uniform sampler2D weights0;
-uniform sampler2D weights1;
-uniform sampler2D weights2;
-uniform sampler2D weights3;
-uniform sampler2D glass0;
-uniform sampler2D glass1;
-uniform sampler2D glass2;
-uniform sampler2D glass3;
-uniform sampler2D solid0;
-uniform sampler2D solid1;
-uniform sampler2D solid2;
-uniform sampler2D solid3;
+uniform sampler2DArray weights;
+uniform sampler2DArray lampColours;
+uniform sampler2DArray glassTints;
+uniform sampler2DArray solidTints;
+// a lamp as the picture shows it (the composite's): its light, how bright, how soft its edge
+uniform float lampLevel;
+uniform float lampSoft;
+uniform float core;
+uniform vec3 base;
 uniform float lightGain;
 uniform vec2 lightStep;   // how far apart the light is sampled for its direction, uv
 uniform float veil;
@@ -281,9 +289,20 @@ vec3 wide(vec2 at) {
 }
 float luminance(vec2 at) { return dot(texture(ambient, at).rgb, vec3(0.2126, 0.7152, 0.0722)); }
 
-// one level's glass and solid things over the picture so far
-vec3 level(vec3 c, sampler2D weights, sampler2D glassTints, sampler2D solidTints, vec3 around, vec3 here, vec2 lightWay) {
-  vec4 w = texture(weights, uv);
+${LAMP_LIGHT}
+
+// a lamp as the picture shows it (the composite's way, on the base): drawn over what a lower level covered, it is
+// itself there, not its light added onto a solid thing's colour
+vec3 lampLook(vec4 lamp) {
+  vec3 l = lamp.rgb * core;
+  float most = max(l.r, max(l.g, l.b));
+  vec3 own = l / max(most, 1e-4);
+  return base + (1.0 - base) * own * (1.0 - exp(-most));
+}
+
+// one level's glass and solid things over the picture so far; how much of the place they cover, added up
+vec3 level(vec3 c, inout float cover, float layer, vec3 around, vec3 here, vec2 lightWay) {
+  vec4 w = texture(weights, vec3(uv, layer));
   float glassEdge = -log(max(w.r, 1e-6));
   float solidEdge = -log(max(w.g, 1e-6));
   // how far inside each edge, device px (from the field's slope on the screen)
@@ -299,7 +318,7 @@ vec3 level(vec3 c, sampler2D weights, sampler2D glassTints, sampler2D solidTints
     float band = clamp(borderPx - glassIn + 0.5, 0.0, 1.0);
     // its colour and how much of it (lenzi, 2026-11-14: "glass should have a tint parameter"): where two meet, as
     // much of each as there is of it
-    vec4 t = texture(glassTints, uv);
+    vec4 t = texture(glassTints, vec3(uv, layer));
     float amount = clamp(t.a / max(w.r, 1e-6), 0.0, 1.0);
     vec3 tint = t.rgb / max(t.a, 1e-6);
     // glass: what is behind it, blurred, under its own colour; the light on its face; its edge lit on the
@@ -314,7 +333,7 @@ vec3 level(vec3 c, sampler2D weights, sampler2D glassTints, sampler2D solidTints
     vec2 out_ = length(solidSlope) > 1e-6 ? normalize(solidSlope) : vec2(0.0);
     float facing = max(0.0, dot(out_, lightWay));
     float band = clamp(borderPx - solidIn + 0.5, 0.0, 1.0);
-    vec4 t = texture(solidTints, uv);
+    vec4 t = texture(solidTints, vec3(uv, layer));
     // solid: its own colour, the light on it as it is here (more on the side towards a light, by itself);
     // the side that faces the light only on its edge (inside, the field is flat and says no side)
     vec3 s = t.rgb / max(t.a, 1e-6) + shine(around) * veil * 0.6;
@@ -322,6 +341,7 @@ vec3 level(vec3 c, sampler2D weights, sampler2D glassTints, sampler2D solidTints
     s += shine(here * (0.35 + 0.65 * facing)) * rim * band;
     c = mix(c, s, solidFill);
   }
+  cover = 1.0 - (1.0 - cover) * (1.0 - max(glassFill, solidFill));
   return c;
 }
 
@@ -335,11 +355,17 @@ void main() {
   vec2 towards = vec2(luminance(uv + vec2(lightStep.x, 0.0)) - luminance(uv - vec2(lightStep.x, 0.0)),
                       luminance(uv + vec2(0.0, lightStep.y)) - luminance(uv - vec2(0.0, lightStep.y)));
   vec2 lightWay = length(towards) > 1e-6 ? normalize(towards) : vec2(0.0);
-  // the levels, the lowest first: a higher one over it, never melted into it
-  c = level(c, weights0, glass0, solid0, around, here, lightWay);
-  if (layers > 1) c = level(c, weights1, glass1, solid1, around, here, lightWay);
-  if (layers > 2) c = level(c, weights2, glass2, solid2, around, here, lightWay);
-  if (layers > 3) c = level(c, weights3, glass3, solid3, around, here, lightWay);
+  // the levels, the lowest first, each over the ones under it, never melted into them (lenzi, 2026-11-15: "the order
+  // in which they render ... should also be depended on the z index"): its lamps over what a lower level covered
+  // (where nothing covered them they are in the picture already), then its glass and solid things
+  float cover = 0.0;
+  for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
+    if (i >= layers) break;
+    float layer = float(i);
+    vec4 lamp = lampLight(weights, lampColours, layer, lampLevel, lampSoft);
+    c = mix(c, lampLook(lamp), cover * lamp.a);
+    c = level(c, cover, layer, around, here, lightWay);
+  }
   color = vec4(encode(c), 1.0);
 }`;
 
@@ -347,10 +373,7 @@ void main() {
 // is walked through the solid field, and a lamp whose way crosses it lights that place no more
 const SHADOW = `#version 300 es
 precision highp float;
-uniform sampler2D field0;              // each level's fields: green is the solid one
-uniform sampler2D field1;
-uniform sampler2D field2;
-uniform sampler2D field3;
+uniform highp sampler2DArray field;    // each level's fields, a layer each: green is the solid one
 uniform int layers;
 uniform int lampCount;
 uniform vec4 lamps[${MAX_LAMPS}];      // x, y, radius, strength (CSS px)
@@ -361,10 +384,11 @@ out vec4 color;
 vec2 at(vec2 css) { return vec2(css.x / space.x, 1.0 - css.y / space.y); }
 // the solid field at a place: the most of any level's (every solid thing casts its shadow)
 float solidAt(vec2 uv) {
-  float s = texture(field0, uv).g;
-  if (layers > 1) s = max(s, texture(field1, uv).g);
-  if (layers > 2) s = max(s, texture(field2, uv).g);
-  if (layers > 3) s = max(s, texture(field3, uv).g);
+  float s = 0.0;
+  for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
+    if (i >= layers) break;
+    s = max(s, texture(field, vec3(uv, float(i))).g);
+  }
   return s;
 }
 void main() {
@@ -407,7 +431,8 @@ export class MaterialScene {
   /** The objects by level, the lowest first: each level its own fields (they never melt into another's). */
   private levels: MaterialObject[][] = [[]];
   private look: MaterialLook | null = null;
-  private fieldTargets: GlowTarget[] = [];
+  /** Each level's fields, a layer of one texture each: the weights, the lamps' colours, glass's, solid's. */
+  private fields: LayeredFields | null = null;
   private shadowTarget: GlowTarget | null = null;
   private has = { lamp: false, glass: false, solid: false };
   private shadowed = false;
@@ -456,8 +481,10 @@ export class MaterialScene {
     this.fit();
     gl.useProgram(this.field);
     gl.uniform2f(engine.uniform(this.field, 'space'), engine.cssWidth, engine.cssHeight);
+    const fields = this.fields!;
     this.levels.forEach((objects, slot) => {
-      engine.into(this.fieldTargets[slot]!);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fields.framebuffers[slot]!);
+      gl.viewport(0, 0, fields.width, fields.height);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       const count = objects.length;
@@ -505,11 +532,13 @@ export class MaterialScene {
     gl.useProgram(this.lamps);
     gl.uniform1f(engine.uniform(this.lamps, 'level'), look.level);
     gl.uniform1f(engine.uniform(this.lamps, 'soft'), Math.max(0.75, look.soft * engine.scale));
+    const fields = this.fields;
+    if (!fields) return;
+    this.useLayers(this.lamps, 'weights', fields.weights, 0);
+    this.useLayers(this.lamps, 'colours', fields.colours, 1);
     this.levels.forEach((objects, slot) => {
-      const target = this.fieldTargets[slot];
-      if (!target || !objects.some(shines)) return;
-      engine.useTexture(this.lamps, 'weights', target.textures[0]!, 0);
-      engine.useTexture(this.lamps, 'colours', target.textures[1]!, 1);
+      if (!objects.some(shines)) return;
+      gl.uniform1f(engine.uniform(this.lamps, 'layer'), slot);
       engine.fullscreen();
     });
   }
@@ -522,7 +551,8 @@ export class MaterialScene {
   /** The glass and the solid things over the finished picture; false when there are none. */
   drawSurfaces(inputs: GlowSurfaceInputs): boolean {
     const look = this.look;
-    if ((!this.has.glass && !this.has.solid) || !look || this.fieldTargets.length === 0) return false;
+    const fields = this.fields;
+    if ((!this.has.glass && !this.has.solid) || !look || !fields) return false;
     const engine = this.engine;
     const gl = engine.gl;
     const program = this.surfaces;
@@ -531,14 +561,16 @@ export class MaterialScene {
     engine.useTexture(program, 'blurred', inputs.blurred, 1);
     engine.useTexture(program, 'light', inputs.light, 2);
     engine.useTexture(program, 'ambient', inputs.ambient, 3);
-    // each level's fields (the levels not there: the first's, never read)
-    for (let slot = 0; slot < MAX_MATERIAL_LAYERS; slot++) {
-      const target = this.fieldTargets[Math.min(slot, this.levels.length - 1)]!;
-      engine.useTexture(program, `weights${slot}`, target.textures[0]!, 4 + slot * 3);
-      engine.useTexture(program, `glass${slot}`, target.textures[2]!, 5 + slot * 3);
-      engine.useTexture(program, `solid${slot}`, target.textures[3]!, 6 + slot * 3);
-    }
+    // each level's fields, and how a lamp of a higher level shows over a lower one
+    this.useLayers(program, 'weights', fields.weights, 4);
+    this.useLayers(program, 'lampColours', fields.colours, 5);
+    this.useLayers(program, 'glassTints', fields.glass, 6);
+    this.useLayers(program, 'solidTints', fields.solid, 7);
     gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
+    gl.uniform1f(engine.uniform(program, 'lampLevel'), look.level);
+    gl.uniform1f(engine.uniform(program, 'lampSoft'), Math.max(0.75, look.soft * engine.scale));
+    gl.uniform1f(engine.uniform(program, 'core'), inputs.core ?? 1);
+    gl.uniform3f(engine.uniform(program, 'base'), ...(inputs.base ?? [0.0144, 0.0144, 0.0159]));
     gl.uniform2f(engine.uniform(program, 'ambientTexel'), 1 / inputs.ambientSize[0], 1 / inputs.ambientSize[1]);
     gl.uniform1f(engine.uniform(program, 'lightGain'), inputs.lightGain);
     // the light's direction is read 80 px apart: the side a light is on, not its grain
@@ -553,9 +585,8 @@ export class MaterialScene {
 
   dispose(): void {
     const gl = this.engine.gl;
-    for (const target of this.fieldTargets) this.engine.freeTarget(target);
+    this.freeFields();
     this.engine.freeTarget(this.shadowTarget);
-    this.fieldTargets = [];
     this.shadowTarget = null;
     gl.deleteBuffer(this.buffer);
     gl.deleteVertexArray(this.vertexArray);
@@ -566,15 +597,11 @@ export class MaterialScene {
     const engine = this.engine;
     const width = Math.max(2, engine.pixelWidth >> 1);
     const height = Math.max(2, engine.pixelHeight >> 1);
-    // the fields of a level: the weights, the lamps' colours, glass's colour and amount, solid's colour
-    for (let slot = 0; slot < this.levels.length; slot++) {
-      const target = this.fieldTargets[slot];
-      if (target && target.width === width && target.height === height) continue;
-      engine.freeTarget(target ?? null);
-      this.fieldTargets[slot] = engine.makeTarget(width, height, true, 4);
+    // the fields: the weights, the lamps' colours, glass's colour and amount, solid's colour; a layer a level
+    if (!this.fields || this.fields.width !== width || this.fields.height !== height) {
+      this.freeFields();
+      this.fields = this.makeFields(width, height);
     }
-    // a level fewer: its fields go
-    for (const spare of this.fieldTargets.splice(this.levels.length)) engine.freeTarget(spare);
     const shadowWidth = Math.max(2, engine.pixelWidth >> 2);
     const shadowHeight = Math.max(2, engine.pixelHeight >> 2);
     if (!this.shadowTarget || this.shadowTarget.width !== shadowWidth || this.shadowTarget.height !== shadowHeight) {
@@ -594,15 +621,13 @@ export class MaterialScene {
       .filter(shines)
       .sort((a, b) => b.radius - a.radius)
       .slice(0, MAX_LAMPS);
-    if (lamps.length === 0 || this.fieldTargets.length === 0) return false;
+    if (lamps.length === 0 || !this.fields) return false;
     const lampData = new Float32Array(MAX_LAMPS * 4);
     lamps.forEach((lamp, i) => lampData.set([lamp.x, lamp.y, Math.max(1, lamp.radius), 1], i * 4));
     engine.into(target);
     gl.disable(gl.BLEND);
     gl.useProgram(this.shadow);
-    for (let slot = 0; slot < MAX_MATERIAL_LAYERS; slot++) {
-      engine.useTexture(this.shadow, `field${slot}`, this.fieldTargets[Math.min(slot, this.fieldTargets.length - 1)]!.textures[0]!, slot);
-    }
+    this.useLayers(this.shadow, 'field', this.fields.weights, 0);
     gl.uniform1i(engine.uniform(this.shadow, 'layers'), this.levels.length);
     gl.uniform1i(engine.uniform(this.shadow, 'lampCount'), lamps.length);
     gl.uniform4fv(engine.uniform(this.shadow, 'lamps'), lampData);
@@ -612,4 +637,58 @@ export class MaterialScene {
     engine.fullscreen();
     return true;
   }
+
+  /** The fields' textures, a layer a level, and a framebuffer for each level drawing into its layer of all four. */
+  private makeFields(width: number, height: number): LayeredFields {
+    const gl = this.engine.gl;
+    const layered = () => {
+      const texture = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+      gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA16F, width, height, MAX_MATERIAL_LAYERS, 0, gl.RGBA, gl.HALF_FLOAT, null);
+      gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return texture;
+    };
+    const textures = [layered(), layered(), layered(), layered()];
+    const framebuffers = Array.from({ length: MAX_MATERIAL_LAYERS }, (_, layer) => {
+      const framebuffer = gl.createFramebuffer()!;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+      textures.forEach((texture, i) => gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, texture, 0, layer));
+      gl.drawBuffers(textures.map((_, i) => gl.COLOR_ATTACHMENT0 + i));
+      return framebuffer;
+    });
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
+    return { width, height, weights: textures[0]!, colours: textures[1]!, glass: textures[2]!, solid: textures[3]!, framebuffers };
+  }
+
+  private freeFields(): void {
+    const fields = this.fields;
+    if (!fields) return;
+    const gl = this.engine.gl;
+    for (const framebuffer of fields.framebuffers) gl.deleteFramebuffer(framebuffer);
+    for (const texture of [fields.weights, fields.colours, fields.glass, fields.solid]) gl.deleteTexture(texture);
+    this.fields = null;
+  }
+
+  /** A layered texture for a sampler of a program, on a texture unit. */
+  private useLayers(program: WebGLProgram, name: string, texture: WebGLTexture, unit: number): void {
+    const gl = this.engine.gl;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+    gl.uniform1i(this.engine.uniform(program, name), unit);
+  }
+}
+
+/** The fields of every level: four textures of a layer a level, a framebuffer a level. */
+interface LayeredFields {
+  width: number;
+  height: number;
+  weights: WebGLTexture;
+  colours: WebGLTexture;
+  glass: WebGLTexture;
+  solid: WebGLTexture;
+  framebuffers: WebGLFramebuffer[];
 }

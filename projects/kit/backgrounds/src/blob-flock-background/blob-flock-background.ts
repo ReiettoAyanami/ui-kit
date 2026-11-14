@@ -361,6 +361,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     };
   }
 
+  /** The blobs as drawn in the last picture (where, how large, turned, of what shapes), in the space's px. */
+  blobsDrawn(): readonly BlobState[] {
+    return this.drawn;
+  }
+
   protected override grabbable(x: number, y: number): boolean {
     const index = this.throwable() ? this.throws.blobAt(this.drawn, x, y) : -1;
     // a blob made fast is never taken ("an option to make a blob unmovable")
@@ -618,7 +623,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   /** The blobs where they are now: their paths, and where they were thrown. */
   private blobsNow(): BlobState[] {
-    return this.throws.apply(this.paths());
+    // nothing thrown when nothing may be (a scene being made): every blob where its path puts it
+    return this.throwable() ? this.throws.apply(this.paths()) : this.paths();
   }
 
   /** The blobs where their own paths put them now. */

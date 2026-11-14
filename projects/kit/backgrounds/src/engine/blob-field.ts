@@ -90,6 +90,23 @@ export function specSettings(specs: readonly LenziBlobSpec[]): Pick<BlobSettings
   };
 }
 
+/**
+ * A blob's outline as it is drawn now, as an SVG path in the space's px: its shapes half way through their change,
+ * turned, its own size (lenzi, 2026-11-15: a scene maker's highlight "a little off center" round a blob that is not
+ * round: it follows the blob instead).
+ */
+export function blobOutline(blob: BlobState, points = 96): string {
+  const corners: string[] = [];
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    // the shader's way: the shape's own angle is the screen's turned by its rotation
+    const own = angle + blob.rotation;
+    const reach = (shapeRadius(blob.from, own) * (1 - blob.mix) + shapeRadius(blob.to, own) * blob.mix) * blob.radius;
+    corners.push(`${(blob.x + Math.cos(angle) * reach).toFixed(1)} ${(blob.y + Math.sin(angle) * reach).toFixed(1)}`);
+  }
+  return `M${corners.join('L')}Z`;
+}
+
 /** Where a blob is at home when nothing says, as a share of the space: what its number and the seed give. */
 export function blobHome(index: number, seed: number): { x: number; y: number } {
   const random = seeded(Math.imul(index + 1, 0x9e3779b1) ^ Math.imul(seed, 0xc2b2ae35));
