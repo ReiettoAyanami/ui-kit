@@ -34,6 +34,16 @@
     margin: 8px 8px 32px;
     padding: 8px 16px 24px;
   }
+
+  /* On a phone the glass pane is the whole screen, over all the background (lenzi, 2026-11-14: "on mobile
+     make the glass pane on the back fullscreen covering the full background"): still behind the page's
+     elements (the page's own layer) and the cat. */
+  .pane {
+    position: fixed;
+    inset: 0;
+    border: none;
+    border-radius: 0;
+  }
 }
 
 .hero {

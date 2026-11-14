@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
 import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
-import { BlobMaterial, LenziBlobFlock, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { BlobMaterial, LenziBlobBackground, LenziBlobFlock, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
@@ -14,11 +14,17 @@ import { PublicPages } from '../../shared/public-pages';
 /** The cat's width in the corner, px: never smaller, never larger. */
 const MASCOT_LEAST = 260;
 const MASCOT_MOST = 720;
+/** On a phone, smaller (lenzi, 2026-11-14: "on mobile make the cat smaller"): about 40% of the screen's width. */
+const MASCOT_PHONE_LEAST = 140;
+const MASCOT_PHONE_MOST = 220;
+
+/** A phone, as the page's styles say it (max-width: 599px). */
+const PHONE = '(max-width: 599px)';
 
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [CodeEditor, LenziBlobFlockBackground, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, LenziBlobBackground, LenziBlobFlockBackground, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })
@@ -42,6 +48,14 @@ export class OverviewPage {
     { material: 'lamp', count: 48, colonies: 3 },
   ];
 
+  /**
+   * On a phone only the blobs, half of them (lenzi, 2026-11-14: "on mobile ... put only the blobs and less around
+   * (50%)"): a large lamp, a large glass and a small lamp; no boids, no fleets.
+   */
+  protected readonly phoneMaterials: readonly BlobMaterial[] = ['lamp', 'glass', 'lamp'];
+  protected readonly phoneSizes: readonly number[] = [0.2, 0.2, 0.085];
+
+  protected readonly phone = signal(false);
   protected readonly mascot = signal(MASCOT_LEAST);
   protected readonly aspect = CAT_ASPECT;
   /** How much of the cat is below the screen ("a bit more on top"). */
@@ -49,7 +63,12 @@ export class OverviewPage {
   constructor() {
     const view = inject(DOCUMENT).defaultView;
     if (!view) return;
-    const fit = () => this.mascot.set(Math.round(Math.min(MASCOT_MOST, Math.max(MASCOT_LEAST, view.innerWidth * 0.42))));
+    const fit = () => {
+      const phone = view.matchMedia?.(PHONE).matches ?? false;
+      const [least, most] = phone ? [MASCOT_PHONE_LEAST, MASCOT_PHONE_MOST] : [MASCOT_LEAST, MASCOT_MOST];
+      this.phone.set(phone);
+      this.mascot.set(Math.round(Math.min(most, Math.max(least, view.innerWidth * 0.42))));
+    };
     fit();
     view.addEventListener('resize', fit, { passive: true });
     inject(DestroyRef).onDestroy(() => view.removeEventListener('resize', fit));

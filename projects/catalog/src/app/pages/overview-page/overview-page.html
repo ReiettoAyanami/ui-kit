@@ -1,14 +1,25 @@
 <!-- Behind the page (lenzi, 2026-11-14): lamp blobs and glass blobs, one large and two small of each; the
      boids, flying round every blob; a fleet of glass blob-boids that take the light, and one of lamp
-     blob-boids, each melting into its own material. The blobs can be thrown about; all are scared of the pointer. -->
-<lenzi-blob-flock-background
-  throwable
-  follow="flee"
-  [blobs]="blobMaterials.length"
-  [materials]="blobMaterials"
-  [blobSizes]="blobSizes"
-  [blobFlocks]="fleets"
-/>
+     blob-boids, each melting into its own material. The blobs can be thrown about; all are scared of the pointer.
+     On a phone only the blobs, half of them ("on mobile ... put only the blobs and less around (50%)"). -->
+@if (phone()) {
+  <lenzi-blob-background
+    throwable
+    [count]="phoneMaterials.length"
+    [materials]="phoneMaterials"
+    [blobSizes]="phoneSizes"
+    [pull]="0"
+  />
+} @else {
+  <lenzi-blob-flock-background
+    throwable
+    follow="flee"
+    [blobs]="blobMaterials.length"
+    [materials]="blobMaterials"
+    [blobSizes]="blobSizes"
+    [blobFlocks]="fleets"
+  />
+}
 
 <!-- The cat, large, in the bottom right corner, partly below the screen, glowing: awake and happy, watching
      the pointer; petted (the pointer stroking it), it closes its eyes. -->
