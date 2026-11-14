@@ -35,7 +35,16 @@ export interface MaterialObject {
   material: BlobMaterial;
   /** Its colour as a lamp (linear). */
   tint: LinearRgb;
+  /**
+   * A drop instead of its shape (lenzi, 2026-11-14: "i blob boidi fai che siano gocce pure loro"): a round
+   * head `radius` wide ahead, narrowing to a small round tail behind, pointing along `rotation` (radians, the
+   * way it flies). Its middle is `x`, `y`.
+   */
+  drop?: boolean;
 }
+
+/** A drop's head, its tail and their places along it, in its radii (as the boids' drops: `flock-scene.ts`). */
+export const DROP = { head: 0.8, tail: -1.6, tailRadius: 0.35, length: 2.2 } as const;
 
 /** How the materials look. Colours linear. */
 export interface MaterialLook {
@@ -68,7 +77,7 @@ const FLOATS = 28;
 
 const FIELD_VERTEX = `#version 300 es
 layout(location = 0) in vec4 place;   // x, y, radius, merge (CSS px)
-layout(location = 1) in vec4 turn;    // rotation, mix, material (0 lamp, 1 glass, 2 solid)
+layout(location = 1) in vec4 turn;    // rotation, mix, material (0 lamp, 1 glass, 2 solid), drop (1)
 layout(location = 2) in vec4 superA;  // m, n1, n2, reach
 layout(location = 3) in vec4 lobesA;  // lobes, depth, sharp
 layout(location = 4) in vec4 superB;
@@ -85,7 +94,8 @@ flat out vec4 vLobesB;
 flat out vec3 vTint;
 void main() {
   vec2 corner = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1)) * 2.0 - 1.0;
-  offset = corner * (place.z + place.w * ${REACH.toFixed(1)});
+  // a drop is longer than it is wide
+  offset = corner * (place.z * (turn.w > 0.5 ? ${DROP.length.toFixed(2)} : 1.0) + place.w * ${REACH.toFixed(1)});
   vec2 clip = (place.xy + offset) / space * 2.0 - 1.0;
   gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
   vPlace = place;
@@ -121,18 +131,42 @@ float shapeRadius(vec4 s, vec3 l, float angle) {
   return radius;
 }
 
+// a circle of radius r1 at the origin and one of r2 at (0, h), joined by the lines tangent to both (Inigo
+// Quilez's uneven capsule, as the boids' drops): below 0 inside
+float unevenCapsule(vec2 p, float r1, float r2, float h) {
+  p.x = abs(p.x);
+  float b = (r1 - r2) / h;
+  float a = sqrt(1.0 - b * b);
+  float k = dot(p, vec2(-b, a));
+  if (k < 0.0) return length(p) - r1;
+  if (k > a * h) return length(p - vec2(0.0, h)) - r2;
+  return dot(p, vec2(a, b)) - r1;
+}
+
 void main() {
   float far = length(offset);
-  float angle = atan(offset.y, offset.x) + vTurn.x;
-  float radius = mix(shapeRadius(vSuperA, vLobesA.xyz, angle), shapeRadius(vSuperB, vLobesB.xyz, angle), vTurn.y) * vPlace.z;
+  // how far inside its edge, px
+  float edge;
+  if (vTurn.w > 0.5) {
+    // a drop: into its own frame, ahead along x; its head, then its tail behind
+    float c = cos(vTurn.x);
+    float s = sin(vTurn.x);
+    vec2 q = vec2(c * offset.x + s * offset.y, -s * offset.x + c * offset.y);
+    float r = vPlace.z;
+    float head = ${DROP.head.toFixed(2)} * r;
+    edge = -unevenCapsule(vec2(q.y, head - q.x), r, ${DROP.tailRadius.toFixed(2)} * r, head - ${DROP.tail.toFixed(2)} * r);
+  } else {
+    float angle = atan(offset.y, offset.x) + vTurn.x;
+    edge = mix(shapeRadius(vSuperA, vLobesA.xyz, angle), shapeRadius(vSuperB, vLobesB.xyz, angle), vTurn.y) * vPlace.z - far;
+  }
   // its share: e^(how far inside its edge, in merges); 1 on its edge. Kept under e^8: half floats add them up
-  float inside = min((radius - far) / max(vPlace.w, 0.5), 8.0);
+  float inside = min(edge / max(vPlace.w, 0.5), 8.0);
   if (inside < -${REACH.toFixed(1)}) discard;
   float w = exp(inside);
   if (vTurn.z < 0.5) {
     // the colours join more slowly than the edges: two lamps that met are one shape before one colour
     float share = exp(inside / 4.0);
-    float depth = clamp(1.0 - far / vPlace.z, 0.0, 1.0);
+    float depth = clamp(edge / vPlace.z, 0.0, 1.0);
     weights = vec4(0.0, 0.0, w, share);
     colours = vec4(vTint * share, share * depth);
   } else if (vTurn.z < 1.5) {
@@ -356,7 +390,7 @@ export class MaterialScene {
         const b = shapeUniforms(object.to);
         const at = i * FLOATS;
         data.set([object.x, object.y, Math.max(0.5, object.radius), Math.max(0.5, object.merge)], at);
-        data.set([object.rotation, object.mix, BLOB_MATERIALS.indexOf(object.material), 0], at + 4);
+        data.set([object.rotation, object.mix, BLOB_MATERIALS.indexOf(object.material), object.drop ? 1 : 0], at + 4);
         data.set([a[0], a[1], a[2], a[3], a[4], a[5], a[6], 0], at + 8);
         data.set([b[0], b[1], b[2], b[3], b[4], b[5], b[6], 0], at + 16);
         data.set([object.tint[0], object.tint[1], object.tint[2], 0], at + 24);

@@ -1,7 +1,7 @@
 import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
 
 import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobsAt } from '../engine/blob-field';
-import { BlobMaterial, MaterialObject, MaterialScene } from '../engine/blob-materials';
+import { BlobMaterial, DROP, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { BlobThrow } from '../engine/blob-throw';
 import { Boids, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_BOID_SIZES, roundField } from '../engine/boids';
 import { LinearRgb, linearToHex } from '../engine/color';
@@ -42,10 +42,21 @@ const BLOB_LAMP = 0.28;
 const BLOB_BOID_SIZE = 11;
 const BLOB_BOID_SPEED = 0.7;
 const BLOB_BOID_SHAPE = BLOB_SHAPES.circle;
+/** How much brighter a lamp blob-boid is than a lamp blob (a blob is a deep shade, for the words over it). */
+const LAMP_DROP_LIGHT = 2;
 
 interface Fleet {
   spec: LenziBlobFlock;
   boids: Boids;
+}
+
+/** A blob-boid now: a drop, where it is, how large, of what, and the way it flies (radians). */
+interface BlobBoid {
+  x: number;
+  y: number;
+  radius: number;
+  material: LenziBlobMaterial;
+  heading: number;
 }
 
 /**
@@ -265,13 +276,28 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     return Math.max(2, fleet.spec.size ?? BLOB_BOID_SIZE) * (fleet.boids.scales[index] ?? 1);
   }
 
-  /** The blob-boids of the fleets as circles, each with its material. */
-  private blobBoids(fleets: readonly Fleet[]): { x: number; y: number; radius: number; material: LenziBlobMaterial; fleet: number; index: number }[] {
-    const out: { x: number; y: number; radius: number; material: LenziBlobMaterial; fleet: number; index: number }[] = [];
-    fleets.forEach((fleet, f) => {
-      for (let i = 0; i < fleet.boids.count; i++) out.push({ x: fleet.boids.x[i]!, y: fleet.boids.y[i]!, radius: this.radiusOf(fleet, i), material: fleet.spec.material, fleet: f, index: i });
+  /** The blob-boids of the fleets: drops, each with its material and the way it flies (radians). */
+  private blobBoids(fleets: readonly Fleet[]): BlobBoid[] {
+    const out: BlobBoid[] = [];
+    fleets.forEach((fleet) => {
+      const { boids } = fleet;
+      for (let i = 0; i < boids.count; i++) {
+        out.push({ x: boids.x[i]!, y: boids.y[i]!, radius: this.radiusOf(fleet, i), material: fleet.spec.material, heading: Math.atan2(boids.vy[i]!, boids.vx[i]!) });
+      }
     });
     return out;
+  }
+
+  /** A drop as the others fly round it: a circle for its head, a smaller one for its body. */
+  private dropCircles(drops: readonly BlobBoid[]): { x: number; y: number; radius: number }[] {
+    return drops.flatMap((drop) => {
+      const ax = Math.cos(drop.heading);
+      const ay = Math.sin(drop.heading);
+      return [
+        { x: drop.x + ax * DROP.head * drop.radius, y: drop.y + ay * DROP.head * drop.radius, radius: drop.radius },
+        { x: drop.x - ax * drop.radius * 0.7, y: drop.y - ay * drop.radius * 0.7, radius: drop.radius * 0.65 },
+      ];
+    });
   }
 
   /**
@@ -287,12 +313,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     // the boids: everything
     const largest = Math.max(this.leaderSize(), 1 + Math.min(1, Math.max(0, this.boidSizeVariety())) * 0.5);
     const pad = Math.max(0.5, this.boidSize() / 2) * largest * BOID_STRETCH[this.shape()] + Math.max(0, this.soft());
-    flock.setField(union(blobs.length ? blobEdge(blobs, merge) : null, roundField(circles)), this.avoid(), pad);
+    flock.setField(union(blobs.length ? blobEdge(blobs, merge) : null, roundField(this.dropCircles(circles))), this.avoid(), pad);
     // a fleet: what is of another material
     fleets.forEach((fleet) => {
       const material = fleet.spec.material;
       const others = blobs.filter((_, index) => this.materialOf(index) !== material);
-      const field = union(others.length ? blobEdge(others, merge) : null, roundField(circles.filter((circle) => circle.material !== material)));
+      const field = union(others.length ? blobEdge(others, merge) : null, roundField(this.dropCircles(circles.filter((circle) => circle.material !== material))));
       fleet.boids.setField(field, this.avoid(), (fleet.spec.size ?? BLOB_BOID_SIZE) * 1.2 + Math.max(0, this.soft()));
     });
   }
@@ -314,21 +340,27 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       material: this.materialOf(index),
       tint: tint(index),
     }));
-    // the blob-boids: round, and joining from a little less far than the blobs, so a fleet stays many and not
-    // one puddle, though two that touch melt
+    // the blob-boids: drops pointing where they fly (lenzi, 2026-11-14: "i blob boidi fai che siano gocce pure
+    // loro"), joining from a little less far than the blobs, so a fleet stays many and not one puddle, though
+    // two that touch melt
     let colour = MAX_BLOBS;
-    for (const circle of this.blobBoids(this.currentFleets())) {
+    // a lamp drop is small: it shines brighter than a lamp blob (2026-11-14: "manca la flotta di blob boid
+    // luminosi": at a blob's deep shade, small drops did not read as lights)
+    const bright = (rgb: LinearRgb, material: LenziBlobMaterial): LinearRgb =>
+      material === 'lamp' ? [rgb[0] * LAMP_DROP_LIGHT, rgb[1] * LAMP_DROP_LIGHT, rgb[2] * LAMP_DROP_LIGHT] : rgb;
+    for (const drop of this.blobBoids(this.currentFleets())) {
       objects.push({
-        x: circle.x,
-        y: circle.y,
-        radius: circle.radius,
-        merge: Math.min(merge, circle.radius * 0.7),
-        rotation: 0,
+        x: drop.x,
+        y: drop.y,
+        radius: drop.radius,
+        merge: Math.min(merge, drop.radius * 0.6),
+        rotation: drop.heading,
         from: BLOB_BOID_SHAPE,
         to: BLOB_BOID_SHAPE,
         mix: 0,
-        material: circle.material,
-        tint: tint(colour++),
+        material: drop.material,
+        tint: bright(tint(colour++), drop.material),
+        drop: true,
       });
     }
     return objects;
@@ -413,8 +445,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         colonies: Math.max(1, Math.floor(spec.colonies ?? 1)),
         maxSpeed: shared.maxSpeed * BLOB_BOID_SPEED,
         minSpeed: shared.minSpeed * BLOB_BOID_SPEED,
-        separationDistance: Math.max(shared.separationDistance, size * 2.4),
-        perception: Math.max(shared.perception, size * 6),
+        // kept apart by a drop's length and a little more: a fleet of drops, not a puddle
+        separationDistance: Math.max(shared.separationDistance, size * 4.8),
+        separation: Math.max(shared.separation, 2.2),
+        perception: Math.max(shared.perception, size * 8),
       };
       const old = this.fleets[f];
       if (old && old.spec.material === spec.material) {

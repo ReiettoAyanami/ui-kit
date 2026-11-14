@@ -31,8 +31,11 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   into blobs of their own material. `blobSizes` gives each blob its own size ("un blob grande, un/due blob
   piccoli dello stesso materiale").
 - **Fleets of blob-boids** (`blobFlocks`: `{ material, count, colonies?, size? }`; "un tipo di boid che puó
-  essere un blob di qualsiasi materiale"): boids that are blobs (`size` px, 11 by default; each a little
-  different, the leader larger), a little slower than the boids. A fleet flocks only with itself, melts only
+  essere un blob di qualsiasi materiale"): boids that are blobs, drops as the boids are ("i blob boidi fai che
+  siano gocce pure loro": a round head `size` px wide, 11 by default, narrowing to a round tail, pointing
+  where it flies; each a little different, the leader larger), a little slower than the boids and kept apart
+  by their length. A lamp drop shines brighter than a lamp blob (it is small; a blob is a deep shade for the
+  words over it). A fleet flocks only with itself, melts only
   into the blobs and blob-boids of its own material, and flies round the blobs and blob-boids of another
   ("possono blobbarsi solo assieme ai blob e blob-boid dello stesso materiale ... quelli dell'altro materiale
   sono ostacoli"). The boids fly round every blob and every blob-boid ("per loro tutti i blob sono ostacoli").
