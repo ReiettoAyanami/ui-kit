@@ -214,7 +214,8 @@ the rule says what, the variable says how much.
 - **Any colour, and lights add up** (lenzi: "ovviamente la luce di tutti i colori").
 - **Lamps are few**: they say that something is alive. **Only lit surfaces take light**; the rest stays solid.
 - **Solid elements cast a faint hard shadow** (lenzi, 2026-11-14: "a faint hard shadow ... for if a solid
-  component is interacting with light"): `lenziSolid`. Glass lets the light through.
+  component is interacting with light"): `lenziSolid`. Glass lets the light through. A shadow falls only on
+  what lies under the element ("The one on the bottom shouldn't be able to cast to the one on top").
 - **A blob background's blobs are lights** for the glass over them (lenzi, 2026-11-14), gently: the words on
   the glass stay readable.
 - **The light lies over what an element holds**, never under its children only (lenzi, 2026-11-14: the

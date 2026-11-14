@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { LenziLamp, LenziLightField, cssColor, shadowOf } from './light-field';
+import { LenziLamp, LenziLightField, above, cssColor, shadowOf } from './light-field';
 
 /** An element at a fixed place on the screen (jsdom lays nothing out). */
 function placed(left: number, top: number, width: number, height: number): HTMLElement {
@@ -153,6 +153,41 @@ describe('LenziLightField', () => {
       const corner = x < 50 ? [20, 120] : [80, 120];
       expect(Math.hypot(x - corner[0]!, y - corner[1]!)).toBeCloseTo(20, 5);
     }
+  });
+
+  it('casts a shadow only on what lies under the solid element, never on what lies over it', () => {
+    const lampAt = placed(0, 190, 20, 20);
+    field.addLamp(lampAt, () => lamp({ reach: 800 }));
+    // drawn first: under the next ones
+    const under = placed(400, 150, 200, 100);
+    field.addSurface(under);
+    const block = placed(200, 150, 100, 100);
+    field.addCaster(block);
+    // drawn after the block: over it
+    const over = placed(400, 150, 200, 100);
+    field.addSurface(over);
+    field.update(1);
+    const shadows = (element: HTMLElement) => JSON.parse(element.style.getPropertyValue('--lenzi-light-data').slice(1, -1))[0][7];
+    expect(shadows(under)).toHaveLength(1);
+    expect(shadows(over)).toEqual([]);
+  });
+
+  it('says which of two elements is drawn above: what one holds, then z-index, then the later one', () => {
+    const floor = document.createElement('div');
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    const inner = document.createElement('span');
+    first.append(inner);
+    floor.append(first, second);
+    document.body.append(floor);
+    expect(above(first, floor)).toBe(true);
+    expect(above(floor, first)).toBe(false);
+    expect(above(second, first)).toBe(true);
+    expect(above(inner, second)).toBe(false);
+    first.style.position = 'relative';
+    first.style.zIndex = '1';
+    expect(above(inner, second)).toBe(true);
+    expect(above(second, first)).toBe(false);
   });
 
   it('writes a variable name as its var()', () => {

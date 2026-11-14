@@ -230,7 +230,9 @@ export class LenziLightField {
         // a shadow is cast from the lamp's middle
         const from = { x: (light.box.left + light.box.right) / 2, y: (light.box.top + light.box.bottom) / 2 };
         const shadows = casters
-          .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box))
+          // a shadow falls only on what lies under the element (lenzi, 2026-11-14: "The one on the bottom
+          // shouldn't be able to cast to the one on top")
+          .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box) && above(caster.element, surface.element))
           .map((caster) => shadowOf(caster.box, from, caster.radius).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
         data.push([Math.round(x), Math.round(y), Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
       }
@@ -340,6 +342,36 @@ const inside = (point: { x: number; y: number }, box: Box) => point.x > box.left
  */
 function mix(color: string, amount: string, share: number): string {
   return `color-mix(in srgb, ${cssColor(color)} min(100%, calc(var(${amount}) * ${round(share)})), transparent)`;
+}
+
+/**
+ * Whether `a` is drawn above `b`: what an element holds is above it; otherwise, of the two branches of their
+ * nearest common ancestor, the one with the higher z-index, and at the same z-index the later one.
+ */
+export function above(a: Element, b: Element): boolean {
+  if (a === b) return false;
+  if (b.contains(a)) return true;
+  if (a.contains(b)) return false;
+  // the branches of a and b under their nearest common ancestor
+  const branch = (element: Element, under: Element) => {
+    let current = element;
+    while (current.parentElement && current.parentElement !== under) current = current.parentElement;
+    return current;
+  };
+  let common = a.parentElement;
+  while (common && !common.contains(b)) common = common.parentElement;
+  if (!common) return false;
+  const one = branch(a, common);
+  const other = branch(b, common);
+  const z = (element: Element) => {
+    const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+    const value = style && style.position !== 'static' ? parseInt(style.zIndex, 10) : NaN;
+    return Number.isFinite(value) ? value : 0;
+  };
+  const zOne = z(one);
+  const zOther = z(other);
+  if (zOne !== zOther) return zOne > zOther;
+  return (other.compareDocumentPosition(one) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 }
 
 /** How far apart two boxes are, px (0 when they touch or overlap). */

@@ -22,7 +22,9 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
 - **Any colour, and colours add up**: a surface between a red lamp and a blue one is red on one side, blue on
   the other, and magenta where both reach. At most the six nearest lights light a surface.
 - **Solid elements cast a faint, hard shadow**: behind them, away from each lamp, part of that lamp's light
-  (`--lenzi-shadow`) is gone from the surfaces there. Drawn by a paint worklet (`paint(lenzi-light)`) where
+  (`--lenzi-shadow`) is gone from the surfaces there, from its own outline (rounded corners too). **Only on
+  what lies under it** (lenzi, 2026-11-14: "The one on the bottom shouldn't be able to cast to the one on
+  top"): what it holds and what is drawn over it (a higher z-index, or later at the same one) take no shadow. Drawn by a paint worklet (`paint(lenzi-light)`) where
   the browser has one (Chrome, Edge); elsewhere the light is there without shadows.
 - **A floor**: a lit surface that holds the others (`lenziLit` + class `lenzi-lit-under`) takes the light
   under what it holds, so the light and the shadows fall on it.
