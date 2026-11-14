@@ -11,7 +11,8 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
 
 - **Three materials**: a **lamp** (`lenziGlow`: glass that gives light; other lamps light it too), **glass**
   (`lenziLit`: the light lies on it and goes through it), **solid** (`lenziSolid`: its own look, lit on the
-  side facing a lamp, and it stops the light).
+  side facing a lamp, and it stops the light). Solid is opaque: an element see-through by itself (a toggle
+  group, a list, an outlined button) takes the page's surface (`--lenzi-solid-surface` to change it).
 - **A lamp glows** in its colour: its surface takes the colour, its border is the colour, a halo lies around
   it, and its light lies over what it holds (a toggle's chosen segment too). `[lenziGlow]="false"` fades it
   out; then it is glass like the others.

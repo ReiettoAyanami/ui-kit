@@ -474,6 +474,11 @@ html {
   isolation: isolate;
 }
 
+/* solid is opaque: an element see-through by itself takes the page's surface (--lenzi-solid-surface) */
+.lenzi-solid.lenzi-solid-fill {
+  background-color: var(--lenzi-solid-surface, var(--mat-sys-surface));
+}
+
 .lenzi-lit.lenzi-lit::before,
 .lenzi-lit.lenzi-lit::after,
 .lenzi-solid.lenzi-solid::before,

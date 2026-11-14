@@ -9,6 +9,14 @@ import { LenziLightField } from './light-field';
  * lamp, a faint shadow with hard edges falls on the lit surfaces (`lenziLit`, a floor). The shadows are
  * drawn where the browser has paint worklets (Chromium); elsewhere it is only lit.
  */
+/** Whether a computed colour hides what is under it. */
+function opaque(color: string): boolean {
+  const alpha = /rgba?\([^)]*[,/]\s*([\d.]+%?)\s*\)/.exec(color)?.[1];
+  if (color === 'transparent' || color === '') return false;
+  if (alpha === undefined) return true;
+  return (alpha.endsWith('%') ? parseFloat(alpha) / 100 : parseFloat(alpha)) >= 0.99;
+}
+
 @Directive({
   selector: '[lenziSolid]',
   host: { class: 'lenzi-solid' },
@@ -21,6 +29,9 @@ export class LenziSolid {
     afterNextRender(() => {
       const style = getComputedStyle(element);
       element.classList.toggle('lenzi-lit-clipped', style.overflowX !== 'visible' || style.overflowY !== 'visible');
+      // solid is opaque (2026-11-14: a "solid" toggle group showed the list under it): an element that is
+      // see-through by itself (a toggle group, a list, an outlined button) takes the page's surface
+      element.classList.toggle('lenzi-solid-fill', !opaque(style.backgroundColor));
       const leave = field.addSurface(element);
       const stop = field.addCaster(element);
       destroyRef.onDestroy(() => {

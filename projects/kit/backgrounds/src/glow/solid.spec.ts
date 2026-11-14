@@ -25,5 +25,16 @@ describe('LenziSolid', () => {
     expect(caster).toHaveBeenCalledWith(block);
     expect(surface).toHaveBeenCalledWith(block);
     expect(block.children.length).toBe(1);
+    // see-through by itself: it takes the page's surface, so nothing under it shows
+    expect(block.classList.contains('lenzi-solid-fill')).toBe(true);
+  });
+
+  it('keeps a colour of its own when it has one', async () => {
+    @Component({ imports: [LenziSolid], template: `<div lenziSolid style="background-color: rgb(10, 20, 30)"></div>` })
+    class Filled {}
+    const fixture = TestBed.createComponent(Filled);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).querySelector('div')!.classList.contains('lenzi-solid-fill')).toBe(false);
   });
 });
