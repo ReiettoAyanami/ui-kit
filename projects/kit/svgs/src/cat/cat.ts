@@ -39,25 +39,58 @@ const FAR = 1.4;
  * the drawing's units, read from the mouth's outline.
  */
 function openMouth(mouth: string): { d: string; width: number } {
-  const numbers = (mouth.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
-  const points: [number, number][] = [];
-  for (let i = 0; i + 1 < numbers.length; i += 2) points.push([numbers[i]!, numbers[i + 1]!]);
+  const points = outlinePoints(mouth);
   const left = Math.min(...points.map(([x]) => x));
   const right = Math.max(...points.map(([x]) => x));
   const middle = (left + right) / 2;
-  const lowest = (from: number, to: number) => points.filter(([x]) => x >= from && x <= to).reduce((low, p) => (p[1] > low[1] ? p : low));
-  const bowlLeft = lowest(left, middle - (right - left) * 0.1);
-  const bowlRight = lowest(middle + (right - left) * 0.1, right);
-  // the line's middle: half a line up from the outline's bottom
-  const half = MOUTH_LINE / 2;
-  const start = [bowlLeft[0], bowlLeft[1] - half];
-  const end = [bowlRight[0], bowlRight[1] - half];
-  const depth = (end[0]! - start[0]!) * 0.55;
-  const tip = [(start[0]! + end[0]!) / 2, Math.max(start[1]!, end[1]!) + depth];
-  return { d: `M${start[0]!.toFixed(1)} ${start[1]!.toFixed(1)}L${tip[0]!.toFixed(1)} ${tip[1]!.toFixed(1)}L${end[0]!.toFixed(1)} ${end[1]!.toFixed(1)}`, width: MOUTH_LINE };
+  /**
+   * The middle of the ω's line at the bottom of a bowl, and how thick the line is there: under the outline's
+   * lowest point, from its bottom edge up to its top edge.
+   */
+  const bowl = (from: number, to: number) => {
+    const low = points.filter(([x]) => x >= from && x <= to).reduce((a, p) => (p[1] > a[1] ? p : a));
+    const column = points.filter(([x, y]) => Math.abs(x - low[0]) < 4 && y > low[1] - 60).map(([, y]) => y);
+    const top = Math.min(...column);
+    return { x: low[0], y: (low[1] + top) / 2, thick: low[1] - top };
+  };
+  const a = bowl(left, middle - (right - left) * 0.1);
+  const b = bowl(middle + (right - left) * 0.1, right);
+  // a little lighter than the ω (2026-11-14: "linea leggermente meno pesante sulla v"), its ends inside the
+  // ω's line, so it grows out of it with no seam ("si vede che l'hai attaccata dopo")
+  const width = Math.min(a.thick, b.thick) * 0.72;
+  // deep enough that the mouth reads open, not a dot under the ω
+  const depth = (b.x - a.x) * 0.95;
+  const tip = { x: (a.x + b.x) / 2, y: Math.max(a.y, b.y) + depth };
+  return { d: `M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${tip.x.toFixed(1)} ${tip.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`, width };
 }
-/** The width of the drawing's thin lines (the mouth, the whiskers), in its units. */
-const MOUTH_LINE = 24;
+
+/** A path's outline as points: its lines' ends, and its curves sampled (absolute M, L, C, as potrace writes them). */
+function outlinePoints(d: string): [number, number][] {
+  const tokens = d.match(/[MLCZ]|-?\d+(?:\.\d+)?/g) ?? [];
+  const points: [number, number][] = [];
+  let command = '';
+  let at: [number, number] = [0, 0];
+  for (let i = 0; i < tokens.length; ) {
+    if (/[MLCZ]/.test(tokens[i]!)) command = tokens[i++]!;
+    if (command === 'Z') continue;
+    if (command === 'C') {
+      const [x1, y1, x2, y2, x, y] = tokens.slice(i, i + 6).map(Number) as [number, number, number, number, number, number];
+      i += 6;
+      for (let s = 1; s <= 12; s++) {
+        const t = s / 12;
+        const u = 1 - t;
+        points.push([u * u * u * at[0] + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x, u * u * u * at[1] + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y]);
+      }
+      at = [x, y];
+    } else {
+      at = [Number(tokens[i]), Number(tokens[i + 1])];
+      i += 2;
+      points.push(at);
+    }
+  }
+  return points;
+}
+
 const OPEN_MOUTH = openMouth(CAT_EXPRESSIONS.happy.mouth);
 
 /** How long the eyes take to close into a U, or to open, ms. */
@@ -72,13 +105,37 @@ const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 
  */
 export function closingEye(edges: CatEyeEdges, t: number): string {
   const lower = (from: readonly number[]) => from.map((value, i) => value + (edges.innerBottom[i]! - value) * t);
-  const outline = (top: readonly number[], bottom: readonly number[]) => {
+  const point = (line: readonly number[], i: number): [number, number] => [line[i * 2]!, line[i * 2 + 1]!];
+  /**
+   * A round end from one point to another (lenzi, 2026-11-14: "questi devono essere arrotondati": the U's
+   * tips were cut straight across), bulging away from `inside` (a point of the stroke).
+   */
+  const cap = (from: [number, number], to: [number, number], inside: [number, number]) => {
+    const cx = (from[0] + to[0]) / 2;
+    const cy = (from[1] + to[1]) / 2;
+    const r = Math.hypot(to[0] - from[0], to[1] - from[1]) / 2;
+    if (r < 0.5) return '';
+    const start = Math.atan2(from[1] - cy, from[0] - cx);
+    // the half turn that goes round the side away from the stroke
+    const mid = start + Math.PI / 2;
+    const away = (Math.cos(mid) * (inside[0] - cx) + Math.sin(mid) * (inside[1] - cy)) < 0 ? 1 : -1;
+    let d = '';
+    for (let s = 1; s < 8; s++) {
+      const angle = start + away * (s / 8) * Math.PI;
+      d += `L${(cx + Math.cos(angle) * r).toFixed(1)} ${(cy + Math.sin(angle) * r).toFixed(1)}`;
+    }
+    return d;
+  };
+  const outline = (top: readonly number[], bottom: readonly number[], round: boolean) => {
+    const last = top.length / 2 - 1;
     let d = `M${top[0]!.toFixed(1)} ${top[1]!.toFixed(1)}`;
     for (let i = 2; i < top.length; i += 2) d += `L${top[i]!.toFixed(1)} ${top[i + 1]!.toFixed(1)}`;
+    if (round) d += cap(point(top, last), point(bottom, last), point(bottom, last - 2));
     for (let i = bottom.length - 2; i >= 0; i -= 2) d += `L${bottom[i]!.toFixed(1)} ${bottom[i + 1]!.toFixed(1)}`;
+    if (round) d += cap(point(bottom, 0), point(top, 0), point(bottom, 2));
     return `${d}Z`;
   };
-  return outline(lower(edges.outerTop), edges.outerBottom) + outline(lower(edges.innerTop), edges.innerBottom);
+  return outline(lower(edges.outerTop), edges.outerBottom, true) + outline(lower(edges.innerTop), edges.innerBottom, false);
 }
 
 /** The drawing's width, in its own units. */
