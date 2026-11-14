@@ -28,7 +28,8 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
   top"): what it holds and what is drawn over it (a higher z-index, or later at the same one) take no shadow. Drawn by a paint worklet (`paint(lenzi-light)`) where
   the browser has one (Chrome, Edge); elsewhere the light is there without shadows.
 - **A floor**: a lit surface that holds the others (`lenziLit` + class `lenzi-lit-under`) takes the light
-  under what it holds, so the light and the shadows fall on it.
+  under what it holds, so the light and the shadows fall on it. It has no blur and no blend of its own: in
+  Chrome either would keep the glass on it from blurring what is under that glass (2026-11-14).
 - **A blob background's blobs are lights too** (lenzi, 2026-11-14: their light "should act more like this
   on the glass surfaces"): each lights the surfaces near it in its colour, from where it is.
 - **Nothing runs while no light is on**; a frame where nothing moved writes nothing. Nothing is put inside an

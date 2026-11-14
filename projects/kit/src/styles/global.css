@@ -541,6 +541,15 @@ html {
    takes its own; so the shadows of the solid elements fall on it. */
 .lenzi-lit.lenzi-lit-under::before {
   z-index: -1;
+  /* laid over the floor's dark colour, not blended: a blend (or a backdrop-filter) would make the floor
+     the root of its glass's backdrop in Chrome, and the glass on it would no longer blur what is under it
+     (2026-11-14: the list's words, sharp under a glass toggle group) */
+  mix-blend-mode: normal;
+}
+
+/* nothing is under a floor to blur, and its own blur would keep the glass on it from blurring (above) */
+.lenzi-lit.lenzi-lit.lenzi-lit-under {
+  backdrop-filter: none;
 }
 
 /* a floor has no border to light */
