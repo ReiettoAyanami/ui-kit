@@ -145,12 +145,44 @@ const BOID_SIZE_CONTROLS: readonly Control[] = [
   { key: 'boidSizeVariety', label: 'Boids differ in size (0 to 1)', type: 'number', default: 0.4, min: 0, max: 1, step: 0.05 },
   { key: 'leaderSize', label: 'A colony’s leader, times larger', type: 'number', default: 1.9, min: 0.5, max: 4, step: 0.1 },
   { key: 'leaderPull', label: 'How much its colony follows it (0 not)', type: 'number', default: 0.4, min: 0, max: 3, step: 0.1 },
+  { key: 'sizeSpeed', label: 'Small ones slower (0 not, 1 as their size)', type: 'number', default: 0.35, min: 0, max: 1, step: 0.05 },
+  { key: 'sizeReach', label: 'Small ones follow from farther (0 not)', type: 'number', default: 1, min: 0, max: 3, step: 0.1 },
 ];
 const boidSizeAttributes = (v: Values) => [
   bound('boidSizeVariety', v['boidSizeVariety'], 0.4),
   bound('leaderSize', v['leaderSize'], 1.9),
   bound('leaderPull', v['leaderPull'], 0.4),
+  bound('sizeSpeed', v['sizeSpeed'], 0.35),
+  bound('sizeReach', v['sizeReach'], 1),
 ];
+
+/**
+ * What the blobs are made of (lenzi, 2026-11-14: blobs "di vetro o solidi"): each blob's material in order,
+ * round again. The value is the list as the code writes it.
+ */
+const BLOB_MATERIAL_CONTROL: Control = {
+  key: 'blobMaterials',
+  label: 'The blobs are',
+  type: 'select',
+  default: "'lamp'",
+  options: [
+    { value: "'lamp'", label: 'lamps (they glow)' },
+    { value: "'lamp', 'glass'", label: 'lamps and glass' },
+    { value: "'lamp', 'glass', 'solid'", label: 'lamps, glass and solid' },
+    { value: "'glass'", label: 'glass' },
+    { value: "'lamp', 'solid'", label: 'lamps and solid' },
+  ],
+  code: { match: /\[materials\]="\[([^\]]*)\]"/, otherwise: "'lamp'" },
+};
+
+/** The fleets of blob-boids as the code writes them: only the ones with boids. */
+const blobFlocksAttribute = (v: Values) => {
+  const fleets = (['lamp', 'glass', 'solid'] as const)
+    .map((material) => ({ material, count: Number(v[`${material}Boids`] ?? 0) }))
+    .filter((fleet) => fleet.count > 0)
+    .map((fleet) => `{ material: '${fleet.material}', count: ${fleet.count}, colonies: 2 }`);
+  return fleets.length ? `[blobFlocks]="[${fleets.join(', ')}]"` : '';
+};
 
 export const DOCS: readonly KitDoc[] = [
   // Foundations ----------------------------------------------------------------------------------
@@ -1136,7 +1168,7 @@ ${tag('lenzi-background', [
     api: '<lenzi-blob-background>',
     entry: '@lenzi/ui-kit/backgrounds',
     origin: 'new in the kit, 2026-11-13 ("supershapes like the ones that materialui uses ... able to merge together")',
-    files: [...BACKGROUND_FILES('blob-background'), 'backgrounds/src/engine/blob-field.ts', 'backgrounds/src/engine/blob-scene.ts', 'backgrounds/src/engine/shapes.ts', ...GLOW_FILES],
+    files: [...BACKGROUND_FILES('blob-background'), 'backgrounds/src/engine/blob-field.ts', 'backgrounds/src/engine/blob-materials.ts', 'backgrounds/src/engine/shapes.ts', ...GLOW_FILES],
     ...docs('backgrounds/src/blob-background'),
     demo: () => import('./demos/blob-background-demo/blob-background-demo').then((m) => m.BlobBackgroundDemo),
     controls: [
@@ -1157,6 +1189,7 @@ ${tag('lenzi-background', [
       { key: 'merge', label: 'How softly they join (0 to 1)', type: 'number', default: 0.35, min: 0, max: 1, step: 0.05 },
       { key: 'soft', label: 'Soft edge (px)', type: 'number', default: 2, min: 0, max: 80, step: 1 },
       { key: 'pull', label: 'Drawn by the pointer (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.05 },
+      BLOB_MATERIAL_CONTROL,
       { key: 'throwable', label: 'The pointer throws them (drag one)', type: 'boolean', default: false, code: { match: /\bthrowable\b/ } },
       ...GLOW_CONTROLS,
     ],
@@ -1173,6 +1206,7 @@ ${tag('lenzi-blob-background', [
   bound('merge', v['merge'], 0.35),
   bound('soft', v['soft'], 2),
   bound('pull', v['pull'], 0),
+  v['blobMaterials'] === "'lamp'" ? '' : `[materials]="[${v['blobMaterials']}]"`,
   v['throwable'] ? 'throwable' : '',
   ...glowAttributes(v),
 ])}`,
@@ -1304,8 +1338,13 @@ ${tag('lenzi-flock-background', [
       { key: 'morph', label: 'How fast the shapes change', type: 'number', default: 0.5, min: 0, max: 2, step: 0.05 },
       { key: 'spin', label: 'Turns a minute', type: 'number', default: 1.2, min: 0, max: 10, step: 0.1 },
       { key: 'merge', label: 'How softly blobs join (0 to 1)', type: 'number', default: 0.35, min: 0, max: 1, step: 0.05 },
+      { ...BLOB_MATERIAL_CONTROL, default: "'lamp', 'glass'" },
+      { key: 'lampBoids', label: 'Blob-boids, lamp', type: 'number', default: 16, min: 0, max: 120, step: 1, code: { match: /material: 'lamp', count: (\d+)/, otherwise: 0 } },
+      { key: 'glassBoids', label: 'Blob-boids, glass', type: 'number', default: 16, min: 0, max: 120, step: 1, code: { match: /material: 'glass', count: (\d+)/, otherwise: 0 } },
+      { key: 'solidBoids', label: 'Blob-boids, solid', type: 'number', default: 0, min: 0, max: 120, step: 1, code: { match: /material: 'solid', count: (\d+)/, otherwise: 0 } },
       { key: 'boids', label: 'Boids', type: 'number', default: 380, min: 0, max: 4000, step: 10 },
-      { key: 'colonies', label: 'Colonies (flocks of their own)', type: 'number', default: 4, min: 1, max: 12, step: 1 },
+      // its own attribute only: the fleets' code has a `colonies` of its own
+      { key: 'colonies', label: 'Colonies (flocks of their own)', type: 'number', default: 4, min: 1, max: 12, step: 1, code: { match: /\[colonies\]="(\d+)"/, otherwise: 4 } },
       { key: 'avoid', label: 'How hard they fly round the blobs (0 through)', type: 'number', default: 2, min: 0, max: 6, step: 0.1 },
       {
         key: 'follow',
@@ -1354,6 +1393,8 @@ ${tag('lenzi-blob-flock-background', [
   bound('morph', v['morph'], 0.5),
   bound('spin', v['spin'], 1.2),
   bound('merge', v['merge'], 0.35),
+  v['blobMaterials'] === "'lamp'" ? '' : `[materials]="[${v['blobMaterials']}]"`,
+  blobFlocksAttribute(v),
   bound('boids', v['boids'], 380),
   bound('colonies', v['colonies'], 4),
   bound('avoid', v['avoid'], 2),

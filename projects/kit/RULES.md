@@ -204,6 +204,15 @@ the rule says what, the variable says how much.
   them solid and unlit.
 - **Decoration**: hidden from screen readers, never in the way of a click; stopped out of view and with
   reduced motion; a still picture where there is no WebGL2.
+- **Blobs are made of the page's materials** (lenzi, 2026-11-14: "Fai in modo che i blob possano anche essere
+  di vetro o solidi e interagire allo stesso modo delle componenti che abbiamo fatto oggi"): a lamp glows and
+  lights; glass blurs what is behind it and takes the light around it, as `lenziLit` (the same glass %, veil,
+  rim); solid is the page's surface, lit on its edge on the side of the light, and casts a hard shadow on
+  the glow, as `lenziSolid` (the same `--lenzi-shadow`). **Blobs melt only into blobs of their own material.**
+- **Flocks keep to their own** (lenzi, 2026-11-14): boids flock only with boids, and fly round every blob;
+  blob-boids (boids that are blobs of a material) flock only with their fleet, melt only into their own
+  material, and fly round the rest. **Small boids are a little slower and follow from a little farther**, so
+  the large ones, the leaders, fly ahead.
 
 ## Light
 

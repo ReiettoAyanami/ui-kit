@@ -2,19 +2,38 @@ import { DOCUMENT, DestroyRef, Directive, ElementRef, OnChanges, afterNextRender
 
 import { LenziAmbientLight } from '../ambient-light/ambient-light';
 import { DEFAULT_SPREAD, LinearRgb, displacedColors, linearToHex, luminance } from '../engine/color';
-import { GlowEngine, LIGHT_HEIGHT, LIGHT_WIDTH } from '../engine/glow-engine';
+import { GlowEngine, GlowLayers, LIGHT_HEIGHT, LIGHT_WIDTH } from '../engine/glow-engine';
 import { LenziLightField, LenziSourceLamp } from '../glow/light-field';
 
 /** Where a background is: behind the whole page, or behind the box it is in (`.lenzi-backdrop`). */
 export type LenziBackgroundFill = 'page' | 'box';
 
-/** What a glowing background draws with: its light, made by its own scene. */
-export interface LenziGlowScene {
+/**
+ * What a glowing background draws with: its light, made by its own scene, and what the engine's layers may
+ * add (its own targets before the light, a shadow on the glow, surfaces over the picture).
+ */
+export interface LenziGlowScene extends GlowLayers {
   /** Time goes on by `delta` seconds (not called for a still picture). */
   advance(delta: number): void;
-  /** Adds the scene's light to the picture. */
-  draw(): void;
   dispose?(): void;
+}
+
+/**
+ * The page's own glass and solid, for the backgrounds' glass and solid blobs (lenzi, 2026-11-14: "interagire
+ * allo stesso modo delle componenti che abbiamo fatto oggi"): read from the page's variables, linear colours.
+ */
+export interface LenziSurfaceLook {
+  /** The glass's colour (the page's surface, `base`), how much of it (`--lenzi-lit-glass`), its light (`--lenzi-lit-veil`, `--lenzi-lit-rim`). */
+  glass: LinearRgb;
+  glassAmount: number;
+  veil: number;
+  rim: number;
+  /** The line along an edge (`--mat-sys-outline-variant`) and its width (`--lenzi-border`), px. */
+  border: LinearRgb;
+  borderWidth: number;
+  /** A solid thing's colour (`--mat-sys-surface-container-high`), and how much of the light a shadow takes (`--lenzi-shadow`). */
+  solid: LinearRgb;
+  shadow: number;
 }
 
 /** What the page takes itself: pressing on it never grabs the background. */
@@ -90,6 +109,17 @@ export abstract class LenziGlowBackground implements OnChanges {
   private pointerAt: { x: number; y: number } | null = null;
   private accentColour: LinearRgb = [0.66, 0.5, 1];
   private baseColour: LinearRgb = [0.014, 0.014, 0.016];
+  /** The page's glass and solid, read with the colours. */
+  protected surfaceLook: LenziSurfaceLook = {
+    glass: [0.014, 0.014, 0.016],
+    glassAmount: 0.46,
+    veil: 0.34,
+    rim: 0.8,
+    border: [0.08, 0.075, 0.09],
+    borderWidth: 2,
+    solid: [0.04, 0.04, 0.045],
+    shadow: 0.6,
+  };
   private colourKey = '';
   private tints: Float32Array = new Float32Array(0);
   private tintKey = '';
@@ -292,12 +322,39 @@ export abstract class LenziGlowBackground implements OnChanges {
     const base = this.resolve(this.base());
     if (accent) this.accentColour = accent;
     if (base) this.baseColour = base;
+    this.readSurfaceLook();
     const colours = `${key}|${this.accentColour.join(',')}|${this.baseColour.join(',')}`;
     if (colours === this.colourKey) return;
     this.colourKey = colours;
     // for the styles: the colour under the canvas before its first frame, and the still picture
     this.host.style.setProperty('--lenzi-glow-accent', linearToHex(this.accentColour));
     this.host.style.setProperty('--lenzi-glow-base', linearToHex(this.baseColour));
+  }
+
+  /** The page's glass and solid, from its variables (the catalog changes them live). */
+  private readSurfaceLook(): void {
+    const view = this.document.defaultView;
+    if (!view) return;
+    const root = view.getComputedStyle(this.host);
+    const share = (name: string, otherwise: number) => {
+      const value = parseFloat(root.getPropertyValue(name));
+      return Number.isFinite(value) ? Math.min(1, Math.max(0, value / 100)) : otherwise;
+    };
+    const px = (name: string, otherwise: number) => {
+      const value = parseFloat(root.getPropertyValue(name));
+      return Number.isFinite(value) ? value : otherwise;
+    };
+    const look = this.surfaceLook;
+    this.surfaceLook = {
+      glass: this.baseColour,
+      glassAmount: share('--lenzi-lit-glass', look.glassAmount),
+      veil: share('--lenzi-lit-veil', look.veil),
+      rim: share('--lenzi-lit-rim', look.rim),
+      border: this.resolve('--mat-sys-outline-variant') ?? look.border,
+      borderWidth: px('--lenzi-border', look.borderWidth),
+      solid: this.resolve('--mat-sys-surface-container-high') ?? look.solid,
+      shadow: share('--lenzi-shadow', look.shadow),
+    };
   }
 
   /** A CSS variable or colour as linear RGB, resolved by the browser (variables, oklch); null where it cannot. */
@@ -368,8 +425,9 @@ export abstract class LenziGlowBackground implements OnChanges {
         halo: this.halo(),
         blur: Math.max(0, this.blur()),
         trail: this.moving() ? Math.min(0.98, Math.max(0, this.trail())) : 0,
+        shadow: this.surfaceLook.shadow,
       },
-      () => scene.draw(),
+      scene,
     );
   }
 

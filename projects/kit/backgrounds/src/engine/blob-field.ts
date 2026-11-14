@@ -26,6 +26,11 @@ export interface BlobSettings {
   /** How much the pointer draws them, 0 (not at all) to 1. */
   pull: number;
   seed: number;
+  /**
+   * Each blob's size of its own, as `size` is (a share of the smaller side), in order and round again; none:
+   * `size` and `sizeVariety` (lenzi, 2026-11-14: "un blob grande, un/due blob piccoli dello stesso materiale").
+   */
+  sizes?: readonly number[];
 }
 
 export const DEFAULT_BLOBS: BlobSettings = {
@@ -75,7 +80,10 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
     let x = (homeX + loop(reach)) * width;
     let y = (homeY + loop(reach)) * height;
     const breath = 1 + 0.05 * Math.sin(time * (0.3 + 0.3 * random()) + random() * 6.283);
-    const radius = settings.size * side * (1 - settings.sizeVariety * 0.6 * random()) * breath;
+    // the same random numbers drawn either way: a list of sizes moves no blob
+    const varied = settings.size * (1 - settings.sizeVariety * 0.6 * random());
+    const own = settings.sizes?.length ? settings.sizes[i % settings.sizes.length]! : varied;
+    const radius = own * side * breath;
     const direction = random() < 0.5 ? -1 : 1;
     const rotation = random() * 6.283 + direction * time * ((settings.spin * Math.PI * 2) / 60) * (0.5 + random());
 

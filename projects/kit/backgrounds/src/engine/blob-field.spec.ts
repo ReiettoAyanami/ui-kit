@@ -28,6 +28,19 @@ describe('the blobs’ edge, for the flock', () => {
   });
 });
 
+describe('blobs of their own sizes', () => {
+  it('takes each blob’s size from the list, round again, and moves no blob for it', () => {
+    const plain = blobsAt({ ...DEFAULT_BLOBS, count: 4 }, 3, 1000, 800);
+    const sized = blobsAt({ ...DEFAULT_BLOBS, count: 4, sizes: [0.2, 0.05] }, 3, 1000, 800);
+    // the same places
+    expect(sized.map((blob) => [blob.x, blob.y])).toEqual(plain.map((blob) => [blob.x, blob.y]));
+    // a large one, a small one, a large one, a small one (each breathing a little: within 5%)
+    expect(sized[0]!.radius / (0.2 * 800)).toBeCloseTo(1, 1);
+    expect(sized[1]!.radius / (0.05 * 800)).toBeCloseTo(1, 1);
+    expect(sized[2]!.radius).toBeGreaterThan(sized[3]!.radius * 3);
+  });
+});
+
 describe('where the blobs are', () => {
   it('the same moment is always the same picture; another moment, another', () => {
     const now = blobsAt(DEFAULT_BLOBS, 12.5, 1280, 720);

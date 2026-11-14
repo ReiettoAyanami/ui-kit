@@ -63,6 +63,21 @@ export interface BoidsSettings {
    * grande"): the first boid of each colony is its leader; 0, it leads nobody.
    */
   leaderPull?: number;
+  /**
+   * How much the boids differ in size, 0 (all alike) to 1 (half to one and a half times) (lenzi, 2026-11-14:
+   * "i boid dovrebbero essere tutti leggermente di dimensioni diverse"), and how many times larger a colony's
+   * leader is.
+   */
+  sizeVariety?: number;
+  leaderSize?: number;
+  /**
+   * How a boid's size changes how it flies (lenzi, 2026-11-14: "i boidi piú piccoli siano leggermente piú
+   * lenti degli adulti, ma che abbiano un range di seguita un po' piú lungo ... che naturalmente i piú grandi
+   * stanno in testa"): `sizeSpeed` how much slower a smaller one is (0: all as fast; 1: speed as size);
+   * `sizeReach` how much farther a smaller one sees its flock (0: all alike; 1: a fifth smaller, a fifth farther).
+   */
+  sizeSpeed?: number;
+  sizeReach?: number;
 }
 
 export const DEFAULT_BOIDS: BoidsSettings = {
@@ -84,7 +99,20 @@ export const DEFAULT_BOIDS: BoidsSettings = {
   edgeMargin: 80,
   colonies: 1,
   leaderPull: 0,
+  sizeVariety: 0,
+  leaderSize: 1,
+  sizeSpeed: 0,
+  sizeReach: 0,
 };
+
+/**
+ * What the flock backgrounds give their boids: a little different each, the leaders nearly twice as large
+ * and a little followed, the small ones a little slower and following from a little farther.
+ */
+export const DEFAULT_BOID_SIZES = { sizeVariety: 0.4, leaderSize: 1.9, leaderPull: 0.4, sizeSpeed: 0.35, sizeReach: 1 } as const;
+
+/** The fastest a large boid (a leader) flies, times its flock's fastest: ahead, not away. */
+const MOST_SPEED = 1.15;
 
 /** The most boids a flock holds: beyond this a CPU flock is not smooth. */
 export const MAX_BOIDS = 4000;
@@ -123,6 +151,9 @@ export class Boids {
   vy = new Float32Array(0);
   /** Each boid's own number, 0..1, drawn once: what makes it a little different (its size). */
   own = new Float32Array(0);
+  /** Each boid's size, times the flock's: its own number spread by `sizeVariety`; a leader `leaderSize`. */
+  scales = new Float32Array(0);
+  private scaleKey = '';
 
   private settings: BoidsSettings;
   private width: number;
@@ -170,6 +201,19 @@ export class Boids {
   configure(settings: Partial<BoidsSettings>): void {
     this.settings = { ...this.settings, ...settings };
     if (this.settings.count !== this.count) this.populate(this.settings.count);
+    this.sizeUp();
+  }
+
+  /** The sizes again, when what makes them changed (the count, the variety, the leaders). */
+  private sizeUp(): void {
+    const s = this.settings;
+    const key = `${this.count}|${s.sizeVariety ?? 0}|${s.leaderSize ?? 1}|${this.leaders}`;
+    if (key === this.scaleKey) return;
+    this.scaleKey = key;
+    const variety = Math.min(1, Math.max(0, s.sizeVariety ?? 0)) * 0.5;
+    const leader = Math.max(0.1, s.leaderSize ?? 1);
+    this.scales = new Float32Array(this.count);
+    for (let i = 0; i < this.count; i++) this.scales[i] = this.isLeader(i) ? leader : 1 + variety * (this.own[i]! * 2 - 1);
   }
 
   /** The space changed size: the boids keep their place in it, in proportion. */
@@ -251,6 +295,8 @@ export class Boids {
     this.ax = new Float32Array(count);
     this.ay = new Float32Array(count);
     this.arrived = new Uint8Array(count);
+    this.scaleKey = '';
+    this.sizeUp();
   }
 
   /** One step of `dt` seconds: every boid looks around, steers, moves. */
@@ -260,8 +306,17 @@ export class Boids {
     if (n === 0 || dt <= 0) return;
     const { x, y, vx, vy, ax, ay, width, height } = this;
     const wrap = s.edges === 'wrap';
-    const see = Math.max(1, s.perception);
-    const see2 = see * see;
+    const scales = this.scales;
+    // a boid's size sets how fast it flies and how far it sees its flock: the small ones a little slower,
+    // following from a little farther, so the large ones (the leaders) end up ahead
+    const sizeSpeed = Math.max(0, s.sizeSpeed ?? 0);
+    const sizeReach = Math.max(0, s.sizeReach ?? 0);
+    const speedOf = (i: number) => Math.min(MOST_SPEED, Math.max(0.5, 1 + sizeSpeed * (scales[i]! - 1)));
+    const reachOf = (i: number) => 1 + sizeReach * Math.max(0, 1 - scales[i]!);
+    let farthest = 1;
+    for (let i = 0; i < n; i++) farthest = Math.max(farthest, reachOf(i));
+    // the cells are as wide as the farthest sight
+    const see = Math.max(1, s.perception) * farthest;
     const apart = Math.max(0, s.separationDistance);
     const cosHalfView = s.viewAngle >= 360 ? -2 : Math.cos((Math.max(0, s.viewAngle) * Math.PI) / 360);
     const colonies = Math.max(1, Math.floor(s.colonies ?? 1));
@@ -299,6 +354,9 @@ export class Boids {
       const hx = vx[i]!;
       const hy = vy[i]!;
       const speed = Math.hypot(hx, hy) || 1;
+      const own = Math.max(1, s.perception) * reachOf(i);
+      const see2 = own * own;
+      const top = Math.max(1, s.maxSpeed) * speedOf(i);
       let awayX = 0;
       let awayY = 0;
       let headX = 0;
@@ -357,7 +415,7 @@ export class Boids {
       let fx = 0;
       let fy = 0;
       /** The push that turns the boid towards a direction, at a speed, no harder than it can. */
-      const steer = (towardX: number, towardY: number, weight: number, atSpeed = s.maxSpeed, force = s.maxForce) => {
+      const steer = (towardX: number, towardY: number, weight: number, atSpeed = top, force = s.maxForce) => {
         const length = Math.hypot(towardX, towardY);
         if (length < 1e-6 || weight === 0) return;
         let sx = (towardX / length) * atSpeed - hx;
@@ -402,7 +460,7 @@ export class Boids {
         const distance = Math.hypot(ax, ay);
         if (distance >= radius || weight <= 0) return;
         const fear = 1 - distance / radius;
-        steer(distance > 1e-6 ? ax : 1, distance > 1e-6 ? ay : 0, weight * fear * (1 + fear), s.maxSpeed, s.maxForce * 2);
+        steer(distance > 1e-6 ? ax : 1, distance > 1e-6 ? ay : 0, weight * fear * (1 + fear), top, s.maxForce * 2);
       };
       for (const scare of this.scares) flee(scare.x, scare.y, scare.radius, this.scareWeight);
       if (this.target && s.follow === 'flee') {
@@ -415,7 +473,7 @@ export class Boids {
         if (s.follow === 'target') {
           // onto it: slower and slower inside the radius, with more force than the rules have
           arrived = distance < radius;
-          steer(tx, ty, s.followWeight, s.maxSpeed * Math.min(1, distance / radius), s.maxForce * 2);
+          steer(tx, ty, s.followWeight, top * Math.min(1, distance / radius), s.maxForce * 2);
         } else {
           // around it: the pull fades inside the radius, so the flock circles instead of piling up
           steer(tx, ty, s.followWeight * Math.min(1, distance / radius));
@@ -453,10 +511,10 @@ export class Boids {
       this.arrived[i] = arrived ? 1 : 0;
     }
 
-    // 3. the move
-    const fastest = Math.max(1, s.maxSpeed);
-    const slowest = Math.min(fastest, Math.max(0, s.minSpeed));
+    // 3. the move: each as fast as its size lets it
     for (let i = 0; i < n; i++) {
+      const fastest = Math.max(1, s.maxSpeed) * speedOf(i);
+      const slowest = Math.min(fastest, Math.max(0, s.minSpeed) * speedOf(i));
       let nvx = vx[i]! + ax[i]! * dt;
       let nvy = vy[i]! + ay[i]! * dt;
       const speed = Math.hypot(nvx, nvy);

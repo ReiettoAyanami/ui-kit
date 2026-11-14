@@ -24,8 +24,22 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   own things (a link, a button, a field) never takes a blob.
 - **Scared boids**: `follow="flee"` makes the pointer something they run from ("the mouse is a scare away (not
   obstacle)"); `lenziScare` makes any element scary (`scare`: how much). See `scare/README.md`.
-- **The blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements
-  cast shadows from them.
+- **Blobs of a material** (`materials`, each blob's in order, round again; lenzi, 2026-11-14: blobs "di vetro
+  o solidi"): `lamp` (the glowing blobs), `glass` (it blurs what is behind it and takes the light around it,
+  on its face and along its edge, as the page's glass), `solid` (the page's surface, its edge lit on the side
+  of the light, and a hard shadow on the glow behind it, the shadow following its shape). Blobs melt only
+  into blobs of their own material. `blobSizes` gives each blob its own size ("un blob grande, un/due blob
+  piccoli dello stesso materiale").
+- **Fleets of blob-boids** (`blobFlocks`: `{ material, count, colonies?, size? }`; "un tipo di boid che puó
+  essere un blob di qualsiasi materiale"): boids that are blobs (`size` px, 11 by default; each a little
+  different, the leader larger), a little slower than the boids. A fleet flocks only with itself, melts only
+  into the blobs and blob-boids of its own material, and flies round the blobs and blob-boids of another
+  ("possono blobbarsi solo assieme ai blob e blob-boid dello stesso materiale ... quelli dell'altro materiale
+  sono ostacoli"). The boids fly round every blob and every blob-boid ("per loro tutti i blob sono ostacoli").
+- **Small boids are a little slower and follow from a little farther** (`sizeSpeed`, `sizeReach`; "che
+  naturalmente i piú grandi stanno in testa"): the large ones, the leaders, end up ahead.
+- **The lamp blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements
+  cast shadows from them. Glass and solid blobs shed no light.
 - **The boids are something to look at**: a watching cat (`<lenzi-cat expression="watching">`) looks at the
   nearest boid when the pointer is not on the page (`LenziSights`).
 - Everything every glowing background does (the accent and base colours, the glow, the frame loop, reduced
@@ -36,3 +50,4 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
 - One background a page, behind it (`fill="page"`) or behind a box (`fill="box"` in a `.lenzi-backdrop`).
 - The edges wrap: a boid that leaves on one side comes back on the other.
 - Surfaces over it are `lenziLit` or solid; never half-transparent by hand.
+- Glass and solid blobs need half-float targets (nearly every WebGL2); without them the still picture shows.

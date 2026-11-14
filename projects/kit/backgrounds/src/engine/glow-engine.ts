@@ -21,11 +21,48 @@ const BLOOM_LEVELS = 7;
 const GLOW = 2.6;
 const BLUR_LEVELS = 7;
 
-interface Target {
+/** A picture the engine or a scene draws into: a framebuffer with one texture (or more: `textures`). */
+export interface GlowTarget {
   framebuffer: WebGLFramebuffer;
   texture: WebGLTexture;
+  textures: WebGLTexture[];
   width: number;
   height: number;
+}
+type Target = GlowTarget;
+
+/** What a scene's surfaces are drawn from: the finished picture, the same blurred, and the light alone. */
+export interface GlowSurfaceInputs {
+  /** The finished picture (sRGB), as large as the canvas. */
+  picture: WebGLTexture;
+  /** The same, blurred about as much as the page's glass blurs (half its size). */
+  blurred: WebGLTexture;
+  /** The light (linear, unbounded): the glow of everything that shines, spread as the glow spreads. */
+  light: WebGLTexture;
+  /** The same light spread wide (one of the glow's halvings): what reaches a place from all around; its size, px. */
+  ambient: WebGLTexture;
+  ambientSize: [number, number];
+  /** How much of that light is the glow on the screen (the composite's own gain). */
+  lightGain: number;
+}
+
+/**
+ * What a background draws, frame by frame: its light, and around it what it may also want (lenzi,
+ * 2026-11-14: blobs "di vetro o solidi", that "interagire allo stesso modo delle componenti che abbiamo
+ * fatto oggi": glass takes the light, solid stops it).
+ */
+export interface GlowLayers {
+  /** Before the light: the scene's own targets (fields, shadows), drawn with `into`. */
+  prepare?(): void;
+  /** The scene's light, added (blending on, ONE ONE) into the scene target. */
+  draw(): void;
+  /** Where the light is stopped: a texture whose red is the share of the glow stopped there (0..1), or null. */
+  shadow?(): WebGLTexture | null;
+  /**
+   * Surfaces over the finished picture: one fullscreen pass that writes every pixel (the picture where there
+   * is no surface). The engine binds the target first. False: nothing drawn, the picture stays.
+   */
+  surfaces?(inputs: GlowSurfaceInputs): boolean;
 }
 
 /** What one frame looks like. */
@@ -43,7 +80,14 @@ export interface GlowFrame {
   blur: number;
   /** How much of the last frame stays (0: none), for trails. */
   trail: number;
+  /** How much of the glow a shadow takes away, 0..1 (the page's `--lenzi-shadow`). */
+  shadow?: number;
 }
+
+/** How wide the glass's blur is, CSS px: about the page's glass (`--lenzi-glass-filter`). */
+const GLASS_BLUR = 24;
+/** The glow's halving that is the light reaching a surface from all around (1/16 of the canvas). */
+const AMBIENT_LEVEL = 3;
 
 export const FULLSCREEN_VERTEX = `#version 300 es
 out vec2 uv;
@@ -98,6 +142,8 @@ precision highp float;
 in vec2 uv;
 uniform sampler2D scene;
 uniform sampler2D bloom;
+uniform sampler2D shadow;
+uniform float shadowAmount;
 uniform vec3 base;
 uniform float core;
 uniform float glow;
@@ -114,7 +160,9 @@ void main() {
   vec4 object = texture(scene, uv);
   // the glow is around the objects, not over them (their alpha says where they are): an object is as
   // bright as "core" says, whatever its size, and a large one is not washed out by its own glow
-  vec3 l = max(object.rgb, 0.0) * core + max(texture(bloom, uv).rgb, 0.0) * glow * (1.0 - outside * clamp(object.a, 0.0, 1.0));
+  // behind a solid thing, away from a light, part of that light's glow is missing (its shadow)
+  float shaded = 1.0 - shadowAmount * clamp(texture(shadow, uv).r, 0.0, 1.0);
+  vec3 l = max(object.rgb, 0.0) * core + max(texture(bloom, uv).rgb, 0.0) * glow * shaded * (1.0 - outside * clamp(object.a, 0.0, 1.0));
   float most = max(l.r, max(l.g, l.b));
   vec3 own = l / max(most, 1e-4);
   // dark: light added onto the base. More light is more of the object's own colour, never white: the
@@ -137,6 +185,10 @@ export class GlowEngine {
   private scene: [Target | null, Target | null] = [null, null];
   private bloom: Target[] = [];
   private final: Target | null = null;
+  /** The picture with the scene's surfaces over it. */
+  private surfaced: Target | null = null;
+  /** No shadow: one black pixel. */
+  private readonly noShadow: WebGLTexture;
   private blurs: Target[] = [];
   private lightTarget: Target | null = null;
   private readonly lightPixels = new Uint8Array(LIGHT_WIDTH * LIGHT_HEIGHT * 4);
@@ -175,6 +227,67 @@ export class GlowEngine {
     this.down = this.program(DOWN);
     this.up = this.program(UP);
     this.composite = this.program(COMPOSITE);
+    this.noShadow = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, this.noShadow);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+  }
+
+  /** Whether the targets hold light beyond 1 (half floats): what fields of blobs need. */
+  get hasFloat(): boolean {
+    return this.float;
+  }
+
+  /** The canvas's size, device px. */
+  get pixelWidth(): number {
+    return this.canvas.width;
+  }
+
+  get pixelHeight(): number {
+    return this.canvas.height;
+  }
+
+  /**
+   * A target of the scene's own, `attachments` textures drawn at once (a fragment shader with as many
+   * outputs). Float: half floats (only where `hasFloat`). The scene frees it with `freeTarget`.
+   */
+  makeTarget(width: number, height: number, float: boolean, attachments = 1): GlowTarget {
+    const gl = this.gl;
+    const textures: WebGLTexture[] = [];
+    const framebuffer = gl.createFramebuffer()!;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    for (let index = 0; index < attachments; index++) {
+      const texture = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, float ? gl.RGBA16F : gl.RGBA8, width, height, 0, gl.RGBA, float ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + index, gl.TEXTURE_2D, texture, 0);
+      textures.push(texture);
+    }
+    if (attachments > 1) gl.drawBuffers(textures.map((_, index) => gl.COLOR_ATTACHMENT0 + index));
+    return { framebuffer, texture: textures[0]!, textures, width, height };
+  }
+
+  freeTarget(target: GlowTarget | null): void {
+    if (!target) return;
+    this.gl.deleteFramebuffer(target.framebuffer);
+    for (const texture of target.textures) this.gl.deleteTexture(texture);
+  }
+
+  /** Draws from now on into a target, all of it. */
+  into(target: GlowTarget): void {
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, target.framebuffer);
+    this.gl.viewport(0, 0, target.width, target.height);
+  }
+
+  /** A texture for a sampler of a program, on a texture unit. */
+  useTexture(program: WebGLProgram, name: string, texture: WebGLTexture, unit: number): void {
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(this.uniform(program, name), unit);
   }
 
   /** A program of the scene or of the engine; a shader that does not compile says why. */
@@ -229,6 +342,7 @@ export class GlowEngine {
       this.bloom.push(this.target(w, h, this.float));
     }
     this.final = this.target(width, height, false);
+    this.surfaced = this.target(width, height, false);
     for (let level = 1; level <= BLUR_LEVELS; level++) {
       const w = width >> level;
       const h = height >> level;
@@ -239,13 +353,21 @@ export class GlowEngine {
   }
 
   /**
-   * One frame. `draw` adds the scene's light (blending is on, added: more light where things overlap)
-   * into a target as large as the canvas, cleared to black or holding what is left of the last frame.
+   * One frame. The scene's `draw` adds its light (blending is on, added: more light where things overlap)
+   * into a target as large as the canvas, cleared to black or holding what is left of the last frame; its
+   * `prepare`, `shadow` and `surfaces`, if it has them, come before, into and after the picture.
    */
-  render(frame: GlowFrame, draw: () => void): void {
+  render(frame: GlowFrame, layers: GlowLayers): void {
     const gl = this.gl;
     const [previous, current] = this.scene;
-    if (this.disposed || !previous || !current || !this.final || !this.lightTarget) return;
+    if (this.disposed || !previous || !current || !this.final || !this.surfaced || !this.lightTarget) return;
+
+    // 0. the scene's own targets
+    if (layers.prepare) {
+      gl.disable(gl.BLEND);
+      layers.prepare();
+      gl.disable(gl.BLEND);
+    }
 
     // 1. the scene's light
     this.into(current);
@@ -255,7 +377,7 @@ export class GlowEngine {
     if (frame.trail > 0) this.blit(this.copy, previous, frame.trail);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE);
-    draw();
+    layers.draw();
     gl.disable(gl.BLEND);
     this.scene = [current, previous];
 
@@ -283,12 +405,24 @@ export class GlowEngine {
     const bloom = this.bloom[0] ?? current;
     const deepest = this.bloom[this.bloom.length - 1] ?? current;
 
-    // 3. on the base colour
+    // 3. on the base colour, the glow darkened where something solid stops the light
     this.into(this.final);
-    this.compose(current, bloom, frame, frame.core, strength, 1, 1);
+    const shadow = layers.shadow?.() ?? null;
+    this.compose(current, bloom, frame, frame.core, strength, 1, 1, shadow, shadow ? (frame.shadow ?? 0.6) : 0);
+
+    // 3½. the scene's surfaces over the picture (glass, solid): from the picture, the picture blurred as glass
+    // blurs, and the light alone
+    let picture = this.final;
+    if (layers.surfaces) {
+      const blurred = this.blurred(this.final, GLASS_BLUR * this.scale);
+      this.into(this.surfaced);
+      // what reaches a place from all around: a wide halving, but not the widest (a few pixels, it shows its steps)
+      const ambient = this.bloom[Math.min(AMBIENT_LEVEL, this.bloom.length - 1)] ?? current;
+      if (layers.surfaces({ picture: this.final.texture, blurred: blurred.texture, light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height], lightGain: strength })) picture = this.surfaced;
+    }
 
     // 4. the blur of the finished picture
-    const shown = this.blurred(this.final, frame.blur * this.scale);
+    const shown = this.blurred(picture, frame.blur * this.scale);
 
     // 5. the screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -297,7 +431,7 @@ export class GlowEngine {
 
     // 6. the light of the whole picture, very small: what the page's lit surfaces take
     this.into(this.lightTarget);
-    this.compose(deepest, deepest, frame, frame.core, frame.glow * 1.2, 0, 0);
+    this.compose(deepest, deepest, frame, frame.core, frame.glow * 1.2, 0, 0, null, 0);
   }
 
   /** The finished light, very small: LIGHT_WIDTH × LIGHT_HEIGHT pixels (r, g, b, a), the top row first. */
@@ -317,15 +451,11 @@ export class GlowEngine {
     if (this.disposed) return;
     this.disposed = true;
     this.freeTargets();
+    this.gl.deleteTexture(this.noShadow);
     for (const program of this.programs.keys()) this.gl.deleteProgram(program);
     this.gl.deleteVertexArray(this.vertexArray);
     // the browser keeps few WebGL contexts: this one is given back now, not when the canvas is collected
     this.gl.getExtension('WEBGL_lose_context')?.loseContext();
-  }
-
-  private into(target: Target): void {
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, target.framebuffer);
-    this.gl.viewport(0, 0, target.width, target.height);
   }
 
   private bind(program: WebGLProgram, name: string, target: Target, unit: number): void {
@@ -354,12 +484,14 @@ export class GlowEngine {
   }
 
   /** `outside` 1: the glow only around the objects (the picture); 0: everywhere (the light map, where there are no edges). */
-  private compose(scene: Target, bloom: Target, frame: GlowFrame, core: number, glow: number, dither: number, outside: number): void {
+  private compose(scene: Target, bloom: Target, frame: GlowFrame, core: number, glow: number, dither: number, outside: number, shadow: WebGLTexture | null, shadowAmount: number): void {
     const gl = this.gl;
     const program = this.composite;
     gl.useProgram(program);
     this.bind(program, 'scene', scene, 0);
     this.bind(program, 'bloom', bloom, 1);
+    this.useTexture(program, 'shadow', shadow ?? this.noShadow, 2);
+    gl.uniform1f(this.uniform(program, 'shadowAmount'), Math.min(1, Math.max(0, shadowAmount)));
     gl.uniform3f(this.uniform(program, 'base'), frame.base[0], frame.base[1], frame.base[2]);
     gl.uniform1f(this.uniform(program, 'core'), core);
     gl.uniform1f(this.uniform(program, 'glow'), glow);
@@ -401,19 +533,15 @@ export class GlowEngine {
     const framebuffer = gl.createFramebuffer()!;
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-    return { framebuffer, texture, width, height };
+    return { framebuffer, texture, textures: [texture], width, height };
   }
 
   private freeTargets(): void {
-    const gl = this.gl;
-    for (const target of [...this.scene, ...this.bloom, this.final, ...this.blurs, this.lightTarget]) {
-      if (!target) continue;
-      gl.deleteFramebuffer(target.framebuffer);
-      gl.deleteTexture(target.texture);
-    }
+    for (const target of [...this.scene, ...this.bloom, this.final, this.surfaced, ...this.blurs, this.lightTarget]) this.freeTarget(target);
     this.scene = [null, null];
     this.bloom = [];
     this.final = null;
+    this.surfaced = null;
     this.blurs = [];
     this.lightTarget = null;
   }

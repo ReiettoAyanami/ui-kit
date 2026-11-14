@@ -4,7 +4,7 @@ import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from '../e
 import { BlobThrow } from '../engine/blob-throw';
 import { linearToHex } from '../engine/color';
 import { LenziSourceLamp } from '../glow/light-field';
-import { BlobScene } from '../engine/blob-scene';
+import { BlobMaterial, MaterialScene } from '../engine/blob-materials';
 import { GlowEngine } from '../engine/glow-engine';
 import { knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
@@ -61,6 +61,15 @@ export class LenziBlobBackground extends LenziGlowBackground {
    * throwing them around"): it flies on, slows down, bounces off the edges and drifts back to its path.
    */
   readonly throwable = input(false, { transform: booleanAttribute });
+  /**
+   * Each blob's material, in order and round again (lenzi, 2026-11-14: blobs "di vetro o solidi"): a lamp
+   * (it glows and lights what is around it), glass (it blurs what is behind it and takes the light), solid
+   * (it is lit on the side of the light and casts a hard shadow on the glow). Blobs melt only into blobs of
+   * their own material.
+   */
+  readonly materials = input<readonly BlobMaterial[]>(['lamp']);
+  /** Each blob's own size (a share of the smaller side), in order and round again; null: `size` and `sizeVariety`. */
+  readonly blobSizes = input<readonly number[] | null>(null);
 
   private elapsed = 0;
   private readonly throws = new BlobThrow();
@@ -75,32 +84,62 @@ export class LenziBlobBackground extends LenziGlowBackground {
   protected override lamps(): LenziSourceLamp[] {
     const tints = this.colours(MAX_BLOBS);
     const strength = Math.max(0, this.brightness()) * (0.5 + 0.5 * Math.max(0, this.glow()));
-    return this.drawn.map((blob, index) => ({
-      left: blob.x - blob.radius,
-      right: blob.x + blob.radius,
-      top: blob.y - blob.radius,
-      bottom: blob.y + blob.radius,
-      color: linearToHex([tints[index * 3]!, tints[index * 3 + 1]!, tints[index * 3 + 2]!]),
-      strength: strength * BLOB_LAMP,
-      reach: blob.radius * 2.4,
-    }));
+    // only the lamps: glass and solid blobs shed no light
+    return this.drawn
+      .map((blob, index) => ({ blob, index }))
+      .filter(({ index }) => this.materialOf(index) === 'lamp')
+      .map(({ blob, index }) => ({
+        left: blob.x - blob.radius,
+        right: blob.x + blob.radius,
+        top: blob.y - blob.radius,
+        bottom: blob.y + blob.radius,
+        color: linearToHex([tints[index * 3]!, tints[index * 3 + 1]!, tints[index * 3 + 2]!]),
+        strength: strength * BLOB_LAMP,
+        reach: blob.radius * 2.4,
+      }));
   }
 
   protected override createScene(engine: GlowEngine): LenziGlowScene {
-    const scene = new BlobScene(engine);
+    const materials = new MaterialScene(engine);
     return {
       advance: (delta) => {
         this.elapsed += delta;
         this.throws.step(delta, this.paths(), this.width, this.height);
       },
-      draw: () => {
+      prepare: () => {
         const blobs = this.throws.apply(this.paths());
         this.drawn = blobs;
         // the join is as wide as the blobs are large: the same picture on a phone and on a wide screen
-        const radius = this.size() * Math.min(this.width, this.height);
-        scene.draw(blobs, this.colours(MAX_BLOBS), Math.max(0, this.merge()) * radius * 0.5, Math.max(0, this.soft()), BLOB_LIGHT);
+        const merge = Math.max(0, this.merge()) * this.size() * Math.min(this.width, this.height) * 0.5;
+        const tints = this.colours(MAX_BLOBS);
+        materials.set(
+          blobs.map((blob, index) => ({
+            x: blob.x,
+            y: blob.y,
+            radius: blob.radius,
+            merge,
+            rotation: blob.rotation,
+            from: blob.from,
+            to: blob.to,
+            mix: blob.mix,
+            material: this.materialOf(index),
+            tint: [tints[index * 3] ?? 1, tints[index * 3 + 1] ?? 1, tints[index * 3 + 2] ?? 1],
+          })),
+          { level: BLOB_LIGHT, soft: Math.max(0, this.soft()), ...this.surfaceLook },
+        );
+        materials.prepare();
       },
+      draw: () => materials.drawLight(),
+      shadow: () => materials.shadowTexture(),
+      surfaces: (inputs) => materials.drawSurfaces(inputs),
+      dispose: () => materials.dispose(),
     };
+  }
+
+  /** A blob's material: the list, round again. */
+  private materialOf(index: number): BlobMaterial {
+    const list = this.materials();
+    return list.length ? list[index % list.length]! : 'lamp';
   }
 
   protected override grabbable(x: number, y: number): boolean {
@@ -131,6 +170,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
       shapes: knownShapes(this.shapes()),
       pull: this.pull(),
       seed: this.seed(),
+      ...(this.blobSizes()?.length ? { sizes: this.blobSizes()! } : {}),
     };
     return blobsAt(settings, this.elapsed, this.width, this.height, this.pointerInside());
   }

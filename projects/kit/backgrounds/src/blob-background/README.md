@@ -20,6 +20,10 @@ change from one into another and melt into each other where they meet, glowing o
   a surface near a blob takes its light from the side that faces it, in its colour, gently; solid elements
   (`lenziSolid`) cast shadows from it.
 - **Decoration**: hidden from screen readers, never takes a click; the pointer is read from the window.
+- **Materials** (`materials`; lenzi, 2026-11-14: blobs "di vetro o solidi"): a lamp (glows, lights the page's
+  lit surfaces), glass (blurs what is behind it, takes the light around it, as the page's glass), solid (the
+  page's surface, its edge lit on the side of the light, a hard shadow on the glow behind it, following its
+  shape). Blobs melt only into blobs of their own material.
 - **Thrown** (`throwable`, off; lenzi, 2026-11-14: "kinda like throwing them around"): the pointer takes a
   blob (a hand shows over one) and throws it; it flies on, slows down, bounces off the edges and drifts back
   to its path. Pressing on the page's own things (a link, a button, a field) never takes a blob.
@@ -47,6 +51,8 @@ change from one into another and melt into each other where they meet, glowing o
 | input | `soft` | `number` px | `2` |
 | input | `pull` | `number` 0..1 (the pointer draws them) | `0` |
 | input | `throwable` | `boolean` (the pointer throws them) | `false` |
+| input | `materials` | `('lamp' \| 'glass' \| 'solid')[]`, each blob's, round again | `['lamp']` |
+| input | `blobSizes` | `number[] \| null`, each blob's size (a share of the smaller side), round again | `null` |
 | input | `fill`, `accent`, `base`, `spread`, `seed`, `brightness`, `glow`, `halo`, `blur`, `speed`, `animate`, `pointer`, `resolution`, `lights` | every glowing background's | see Flock background |
 
 ## Example

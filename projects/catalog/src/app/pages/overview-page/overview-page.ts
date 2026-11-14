@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
 import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
-import { LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { BlobMaterial, LenziBlobFlock, LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
@@ -30,6 +30,18 @@ export class OverviewPage {
    * half should be cut by the bottom of the screen for now", then "cat should be bigger, a bit more on top"):
    * its width, px, 42% of the window's, between 260 and 720; a little over a third of it below the screen.
    */
+  /**
+   * The background's blobs and fleets (lenzi, 2026-11-14: "una flotta di boidi normali, una flotta di boidi
+   * blob vetro che ricevono luce e una flotta di boidi blob dello stesso materiale di quella corrente ... per
+   * ogni flotta un blob grande, un/due blob piccoli dello stesso materiale").
+   */
+  protected readonly blobMaterials: readonly BlobMaterial[] = ['lamp', 'glass', 'lamp', 'glass', 'lamp', 'glass'];
+  protected readonly blobSizes: readonly number[] = [0.2, 0.2, 0.085, 0.085, 0.065, 0.065];
+  protected readonly fleets: readonly LenziBlobFlock[] = [
+    { material: 'glass', count: 16, colonies: 2 },
+    { material: 'lamp', count: 16, colonies: 2 },
+  ];
+
   protected readonly mascot = signal(MASCOT_LEAST);
   protected readonly aspect = CAT_ASPECT;
   /** How much of the cat is below the screen ("a bit more on top"). */

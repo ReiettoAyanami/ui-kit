@@ -23,4 +23,5 @@ export * from './engine/shapes';
 export * from './engine/boids';
 export * from './engine/blob-field';
 export * from './engine/blob-throw';
-export { BOID_STRETCH, DEFAULT_BOID_SIZES, DEFAULT_LEADER_PULL, boidScales, type BoidShape, type BoidSizes } from './engine/flock-scene';
+export { BOID_STRETCH, type BoidShape } from './engine/flock-scene';
+export { BLOB_MATERIALS, type BlobMaterial } from './engine/blob-materials';

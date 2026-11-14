@@ -18,6 +18,10 @@ apart, head the same way and stay together, around the pointer or onto it.
   diverse, il 'leader' dovrebbe essere piú grande"): every boid a little larger or smaller than `boidSize`
   (`boidSizeVariety`, 0.4: from 0.8 to 1.2 times); the first boid of each colony is its leader,
   `leaderSize` (1.9) times larger, and its colony follows it a little (`leaderPull`, 0.4; 0 not).
+- **Small ones slower, following from farther** (lenzi, 2026-11-14: "i boidi piú piccoli siano leggermente piú
+  lenti degli adulti, ma che abbiano un range di seguita un po' piú lungo ... che naturalmente i piú grandi
+  stanno in testa"): `sizeSpeed` (0.35: a boid 0.8 times the size flies 0.93 times as fast; a leader at most
+  1.15 times) and `sizeReach` (1: a fifth smaller sees its flock a fifth farther).
 - **Edges**: `wrap` (back in from the other side) or `avoid` (turns away from `edgeMargin`).
 - **Drawn with WebGL2, no library**: one instanced call, a dart pointing where it flies or a dot, added light
   (a crowd is brighter), optional `trails`.

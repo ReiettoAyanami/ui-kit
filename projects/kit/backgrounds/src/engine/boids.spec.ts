@@ -1,5 +1,4 @@
 import { Boids, BoidsSettings, MAX_BOIDS } from './boids';
-import { boidScales } from './flock-scene';
 
 /** A flock with every rule off, so a test turns on the one it is about. */
 const QUIET: Partial<BoidsSettings> = { separation: 0, alignment: 0, cohesion: 0, follow: 'none', wander: 0, minSpeed: 0, viewAngle: 360 };
@@ -112,14 +111,42 @@ describe('a flock of boids', () => {
   });
 
   it('every boid its own size, a little different; the leaders larger', () => {
-    const flock = new Boids({ count: 200, colonies: 4 }, 800, 600);
-    const scales = boidScales(flock, flock.count, { variety: 0.4, leader: 1.9 });
+    const flock = new Boids({ count: 200, colonies: 4, sizeVariety: 0.4, leaderSize: 1.9 }, 800, 600);
+    const scales = flock.scales;
     expect([...scales.subarray(0, 4)]).toEqual([1.9, 1.9, 1.9, 1.9].map(Math.fround));
     const others = [...scales.subarray(4)];
     expect(Math.min(...others)).toBeGreaterThanOrEqual(0.8 - 1e-6);
     expect(Math.max(...others)).toBeLessThanOrEqual(1.2 + 1e-6);
     expect(Math.max(...others) - Math.min(...others)).toBeGreaterThan(0.2);
-    expect([...boidScales(flock, flock.count, { variety: 0, leader: 1 })].every((scale) => scale === 1)).toBe(true);
+    flock.configure({ sizeVariety: 0, leaderSize: 1 });
+    expect([...flock.scales].every((scale) => scale === 1)).toBe(true);
+  });
+
+  it('the small ones fly a little slower than the large ones, so the large ones end up ahead', () => {
+    // two boids alone, flying the same way at full speed: a small one and a large one
+    const flock = new Boids({ ...QUIET, count: 3, minSpeed: 150, maxSpeed: 150, sizeVariety: 1, leaderSize: 1.6, sizeSpeed: 0.5 }, 100000, 1000);
+    // boid 0 is the leader (large); the others as their own numbers say: make boid 1 the smallest
+    flock.own[1] = 0;
+    flock.configure({ sizeVariety: 0.99 });
+    place(flock, [[100, 500, 150, 0], [100, 500, 150, 0], [100, 900, 150, 0]]);
+    run(flock, 2);
+    expect(flock.scales[0]!).toBeGreaterThan(flock.scales[1]!);
+    expect(flock.x[0]!).toBeGreaterThan(flock.x[1]! + 50);
+  });
+
+  it('the small ones follow their flock from a little farther', () => {
+    // a small boid and a flock-mate at 80 px: past the sight of the others (70), within the small one's
+    const make = (small: boolean) => {
+      const flock = new Boids({ ...QUIET, count: 2, cohesion: 2, perception: 70, sizeVariety: 1, sizeReach: small ? 1 : 0 }, 4000, 4000);
+      flock.own[1] = 0;
+      flock.configure({ sizeVariety: 0.99 });
+      place(flock, [[2000, 2000, 0, 0], [2000, 2080, 0, 0]]);
+      run(flock, 0.5);
+      return flock.y[1]!;
+    };
+    // with reach, the small one (boid 1) is drawn towards the other; without it, it does not see it
+    expect(make(true)).toBeLessThan(2075);
+    expect(make(false)).toBeCloseTo(2080, 0);
   });
 
   it('says which boid is nearest a point', () => {
