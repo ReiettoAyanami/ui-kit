@@ -7,7 +7,7 @@ import { Boids, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_B
 import { LinearRgb, linearToHex } from '../engine/color';
 import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
-import { BLOB_SHAPES, knownShapes } from '../engine/shapes';
+import { BLOB_SHAPES, knownShapes, ownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziSourceLamp } from '../glow/light-field';
 import { LenziScares } from '../scare/scares';
@@ -21,7 +21,7 @@ export type LenziBlobMaterial = BlobMaterial;
  * materiale"): they flock only with each other, melt only into the blobs and blob-boids of their own
  * material, and fly round everything of another material.
  */
-export interface LenziBlobFlock {
+export interface LenziBlobFlock extends LenziFleetWays {
   material: LenziBlobMaterial;
   /** How many. */
   count: number;
@@ -31,6 +31,58 @@ export interface LenziBlobFlock {
   size?: number;
   /** Its layer (z-level): it stops, and is stopped by, only what is on the same one. Unless told, its material's. */
   layer?: number;
+  /** Where its leader is put, as a share of the space (0 to 1 each way): the fleet is born around it. */
+  x?: number;
+  y?: number;
+}
+
+/**
+ * How a fleet flies: its leader's ways, which every one of it takes (lenzi, 2026-11-14: "si decide un capo e ogni
+ * capo avrá una flotta di n boidi. questa flotta avrá tutte le proprietá del leader, tranne la grandezza che va
+ * configurata a parte e anche il displacement della stessa"). What a fleet does not say, the background's inputs
+ * say (for blob-boids, a little slower and closer than boids).
+ */
+export interface LenziFleetWays {
+  /** Fastest and slowest, px/s. */
+  maxSpeed?: number;
+  minSpeed?: number;
+  /** The three rules' weights: keep apart, head the same way, stay together. */
+  separation?: number;
+  alignment?: number;
+  cohesion?: number;
+  /** Turns of its own. */
+  wander?: number;
+  /** How different their sizes are, 0 to 1 (its "displacement"). */
+  sizeVariety?: number;
+}
+
+/** A fleet of boids, its leader's ways and its own count, colonies and size. */
+export interface LenziBoidFlock extends LenziFleetWays {
+  count: number;
+  /** Colonies of its own (each with its leader); 1: one flock. */
+  colonies?: number;
+  /** A boid's width, px (the `boidSize` input when not said). */
+  size?: number;
+  /** Its layer (z-level): the blobs and blob-boids on it are what it flies round (the `boidLayer` input when not said). */
+  layer?: number;
+  /** Where its leader is put, as a share of the space (0 to 1 each way): the fleet is born around it. */
+  x?: number;
+  y?: number;
+}
+
+/** A fleet's leader's place in a space, px; null: the fleet has none (born anywhere). */
+function originOf(fleet: { x?: number; y?: number }, width: number, height: number): { x: number; y: number } | null {
+  return typeof fleet.x === 'number' && typeof fleet.y === 'number' ? { x: fleet.x * width, y: fleet.y * height } : null;
+}
+
+/** The ways a fleet says, and only those (the rest stays the background's). */
+function waysOf(fleet: LenziFleetWays): Partial<BoidsSettings> {
+  const ways: Partial<BoidsSettings> = {};
+  for (const key of ['maxSpeed', 'minSpeed', 'separation', 'alignment', 'cohesion', 'wander', 'sizeVariety'] as const) {
+    const value = fleet[key];
+    if (typeof value === 'number' && Number.isFinite(value)) ways[key] = value;
+  }
+  return ways;
 }
 
 /**
@@ -73,6 +125,12 @@ interface Fleet {
   boids: Boids;
 }
 
+/** A fleet of boids and its flock. */
+interface BoidFleet {
+  spec: LenziBoidFlock;
+  boids: Boids;
+}
+
 /** A blob-boid now: a drop, where it is, how large, of what, and the way it flies (radians). */
 interface BlobBoid {
   x: number;
@@ -108,6 +166,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly sizeVariety = input(DEFAULT_BLOBS.sizeVariety, { transform: numberAttribute });
   /** Each blob's own size (a share of the smaller side), in order and round again; null: `blobSize` and `sizeVariety`. */
   readonly blobSizes = input<readonly number[] | null>(null);
+  /** Each blob's own place (a share of the space, 0 to 1 each way), in order; a blob without one has its seeded place. */
+  readonly blobHomes = input<readonly ({ x: number; y: number } | null)[] | null>(null);
+  /** Each blob's own shape (BLOB_SHAPES' names), in order: it keeps it; a blob without one changes among `shapes`. */
+  readonly blobShapes = input<readonly (string | null)[] | null>(null);
   /** Each blob's material, in order and round again: a lamp, glass or solid. */
   readonly materials = input<readonly LenziBlobMaterial[]>(['lamp']);
   /** How far a blob wanders from its place, 0 to 1. */
@@ -164,6 +226,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   // the fleets of blob-boids
   /** Fleets of boids that are blobs, each of a material; none by default. */
   readonly blobFlocks = input<readonly LenziBlobFlock[]>([]);
+  /**
+   * The boids as fleets, each its own flock with its leader's ways and its own count, colonies and size (a
+   * scene's fleets); null: one flock of `boids` in `colonies`, as the inputs say.
+   */
+  readonly boidFlocks = input<readonly LenziBoidFlock[] | null>(null);
 
   // the layers (z-levels): something stops only what is on its own layer
   /** Each material's layer; the ones not given are MATERIAL_LAYERS' (lamp 0, glass 1, solid 0). */
@@ -177,9 +244,9 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private drawn: readonly BlobState[] = [];
   private readonly throws = new BlobThrow();
   private readonly scares = inject(LenziScares);
-  private flock: Boids | null = null;
+  private flocks: BoidFleet[] = [];
   private fleets: Fleet[] = [];
-  private flockSeed = 1;
+  private flockSeed = Number.NaN;
 
   constructor() {
     super();
@@ -188,7 +255,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       const origin = this.origin();
       let best: { x: number; y: number } | null = null;
       let least = Infinity;
-      for (const flock of [this.flock, ...this.fleets.map((fleet) => fleet.boids)]) {
+      for (const flock of [...this.flocks.map((fleet) => fleet.boids), ...this.fleets.map((fleet) => fleet.boids)]) {
         const boid = flock?.nearest(point.x - origin.x, point.y - origin.y);
         if (!boid) continue;
         const distance = Math.hypot(boid.x + origin.x - point.x, boid.y + origin.y - point.y);
@@ -207,8 +274,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   }
 
   protected override resized(width: number, height: number): void {
-    this.flock?.resize(width, height);
-    for (const fleet of this.fleets) fleet.boids.resize(width, height);
+    for (const fleet of [...this.flocks, ...this.fleets]) fleet.boids.resize(width, height);
   }
 
   /** The lamp blobs light the page's lit surfaces, as the blob background's do; glass and solid ones do not. */
@@ -236,15 +302,15 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       advance: (delta) => {
         this.elapsed += delta;
         this.throws.step(delta, this.paths(), this.width, this.height);
-        const flock = this.current();
+        const flocks = this.current();
         const fleets = this.currentFleets();
         // the blobs where they are now, as drawn: what the flocks fly round (or melt into)
         this.drawn = this.blobsNow();
-        this.obstacles(flock, fleets);
+        this.obstacles(flocks, fleets);
         const origin = this.origin();
         const scares = this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius }));
         const target = this.follow() === 'none' ? null : this.pointerInside();
-        for (const boids of [flock, ...fleets.map((fleet) => fleet.boids)]) {
+        for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
           boids.setTarget(target);
           boids.setScares(scares, this.scare());
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
@@ -257,7 +323,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       },
       draw: () => {
         materials.drawLight();
-        flockScene.draw(this.current(), this.objectColours(), Math.max(0.5, this.boidSize() / 2), this.shape(), 1);
+        const colours = this.objectColours();
+        for (const fleet of this.current()) flockScene.draw(fleet.boids, colours, Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1);
       },
       shadow: () => materials.shadowTexture(),
       surfaces: (inputs) => materials.drawSurfaces(inputs),
@@ -296,7 +363,18 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
    */
   private objectColours(): Float32Array {
     const fleets = this.blobFlocks().reduce((sum, fleet) => sum + Math.max(0, Math.floor(fleet.count)), 0);
-    return this.colours(Math.min(4000 + MAX_BLOBS, Math.max(MAX_BLOBS + fleets, Math.floor(this.boids()))));
+    const largestFlock = Math.max(0, ...this.boidSpecs().map((spec) => Math.floor(spec.count)));
+    return this.colours(Math.min(4000 + MAX_BLOBS, Math.max(MAX_BLOBS + fleets, largestFlock)));
+  }
+
+  /** The boids' fleets: the scene's, or one flock as the inputs say. */
+  private boidSpecs(): readonly LenziBoidFlock[] {
+    return this.boidFlocks() ?? [{ count: this.boids(), colonies: this.colonies() }];
+  }
+
+  /** A boid's width in a fleet, px. */
+  private sizeOf(spec: LenziBoidFlock): number {
+    return spec.size ?? this.boidSize();
   }
 
   /** How softly the blobs join, px: as wide as they are large, the same on a phone and on a wide screen. */
@@ -340,7 +418,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
    * "sono ostacoli"): the boids, every blob and every blob-boid; a fleet, what is not of its material. Each
    * kept outside by its own length.
    */
-  private obstacles(flock: Boids, fleets: readonly Fleet[]): void {
+  private obstacles(flocks: readonly BoidFleet[], fleets: readonly Fleet[]): void {
     const blobs = this.drawn.map((blob, index) => ({ blob, material: this.materialOf(index), layer: this.blobLayerOf(index) }));
     const drops = this.blobBoids(fleets);
     const merge = this.mergePx();
@@ -350,10 +428,18 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       const stoppingDrops = drops.filter((drop) => stops(drop, mover));
       return union(stopping.length ? blobEdge(stopping, merge) : null, roundField(this.dropCircles(stoppingDrops)));
     };
-    // the boids: every blob and blob-boid on their layer
-    const largest = Math.max(this.leaderSize(), 1 + Math.min(1, Math.max(0, this.boidSizeVariety())) * 0.5);
-    const pad = Math.max(0.5, this.boidSize() / 2) * largest * BOID_STRETCH[this.shape()] + Math.max(0, this.soft());
-    flock.setField(fieldFor({ material: null, layer: this.boidLayer() }), this.avoid(), pad);
+    // the boids: every blob and blob-boid on their layer (a fleet's own, or the boids'), each fleet kept out by its
+    // own largest boid's length
+    const boidFields = new Map<number, BoidsField | null>();
+    for (const fleet of flocks) {
+      const layer = fleet.spec.layer ?? this.boidLayer();
+      if (!boidFields.has(layer)) boidFields.set(layer, fieldFor({ material: null, layer }));
+      const boidField = boidFields.get(layer)!;
+      const variety = fleet.spec.sizeVariety ?? this.boidSizeVariety();
+      const largest = Math.max(this.leaderSize(), 1 + Math.min(1, Math.max(0, variety)) * 0.5);
+      const pad = Math.max(0.5, this.sizeOf(fleet.spec) / 2) * largest * BOID_STRETCH[this.shape()] + Math.max(0, this.soft());
+      fleet.boids.setField(boidField, this.avoid(), pad);
+    }
     // a fleet: what is on its layer and of another material
     fleets.forEach((fleet) => {
       const field = fieldFor({ material: fleet.spec.material, layer: this.fleetLayerOf(fleet.spec) });
@@ -427,6 +513,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** The blobs where their own paths put them now. */
   private paths(): BlobState[] {
     const sizes = this.blobSizes();
+    const homes = this.blobHomes();
     const settings: BlobSettings = {
       count: this.blobs(),
       size: this.blobSize(),
@@ -438,6 +525,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       pull: 0,
       seed: this.seed(),
       ...(sizes?.length ? { sizes } : {}),
+      ...(homes?.length ? { homes } : {}),
+      ...ownShapes(this.blobShapes()),
     };
     return blobsAt(settings, this.elapsed, this.width, this.height, null);
   }
@@ -467,20 +556,47 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     };
   }
 
-  /** The flock with the settings of now; a new one for another seed. */
-  private current(): Boids {
-    const settings = this.flockSettings();
-    if (!this.flock || this.flockSeed !== this.seed()) {
+  /**
+   * The boids' fleets with the settings of now, each its own flock (its leader's ways over the inputs): a fleet
+   * kept keeps its boids; a new one is born already flying; another seed starts them all again.
+   */
+  private current(): BoidFleet[] {
+    if (this.flockSeed !== this.seed()) {
       this.flockSeed = this.seed();
-      this.flock = new Boids(settings, this.width, this.height, this.flockSeed);
+      this.flocks = [];
       this.fleets = [];
-      this.drawn = this.blobsNow();
-      this.obstacles(this.flock, this.currentFleets());
-      for (let time = 0; time < HEAD_START; time += LONGEST_STEP) this.flock.step(LONGEST_STEP);
-    } else {
-      this.flock.configure(settings);
     }
-    return this.flock;
+    const shared = this.flockSettings();
+    const born: Boids[] = [];
+    const next = this.boidSpecs().map((spec, f) => {
+      const settings: BoidsSettings = {
+        ...shared,
+        ...waysOf(spec),
+        count: Math.max(0, Math.floor(spec.count)),
+        colonies: Math.max(1, Math.floor(spec.colonies ?? 1)),
+        origin: originOf(spec, this.width, this.height),
+      };
+      const old = this.flocks[f];
+      if (old) {
+        old.boids.configure(settings);
+        return { spec, boids: old.boids };
+      }
+      // the first fleet keeps the seed the single flock had: the same boids as before scenes
+      const boids = new Boids(settings, this.width, this.height, f === 0 ? this.seed() : this.seed() * 17 + f);
+      born.push(boids);
+      return { spec, boids };
+    });
+    this.flocks = next;
+    if (born.length) {
+      this.drawn = this.blobsNow();
+      this.obstacles(next, this.currentFleets());
+      // born already flying, unless born around a leader put somewhere: then it starts from there
+      for (const boids of born) {
+        if (next.find((fleet) => fleet.boids === boids && originOf(fleet.spec, 1, 1))) continue;
+        for (let time = 0; time < HEAD_START; time += LONGEST_STEP) boids.step(LONGEST_STEP);
+      }
+    }
+    return next;
   }
 
   /**
@@ -496,8 +612,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         ...shared,
         count: Math.max(0, Math.floor(spec.count)),
         colonies: Math.max(1, Math.floor(spec.colonies ?? 1)),
-        maxSpeed: shared.maxSpeed * BLOB_BOID_SPEED,
-        minSpeed: shared.minSpeed * BLOB_BOID_SPEED,
+        maxSpeed: spec.maxSpeed ?? shared.maxSpeed * BLOB_BOID_SPEED,
+        minSpeed: spec.minSpeed ?? shared.minSpeed * BLOB_BOID_SPEED,
+        separation: spec.separation ?? shared.separation,
+        wander: spec.wander ?? shared.wander,
+        sizeVariety: spec.sizeVariety ?? shared.sizeVariety,
         // kept apart by about a drop's length: a fleet of drops, not a puddle; but a flock, not a line
         // (2026-11-14: "the blob boids tend to go in a line": strong keeping apart, a strong pull to the leader
         // and a view that missed what is behind strung them out, each following the one ahead): they see all
@@ -505,10 +624,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         separationDistance: Math.max(shared.separationDistance, size * 3.4),
         perception: Math.max(shared.perception, size * 12),
         viewAngle: 360,
-        cohesion: Math.max(shared.cohesion, 1.6),
-        alignment: Math.min(shared.alignment, 0.8),
+        cohesion: spec.cohesion ?? Math.max(shared.cohesion, 1.6),
+        alignment: spec.alignment ?? Math.min(shared.alignment, 0.8),
         leaderPull: Math.min(shared.leaderPull ?? 0, 0.15),
         sizeSpeed: Math.min(shared.sizeSpeed ?? 0, 0.15),
+        origin: originOf(spec, this.width, this.height),
       };
       const old = this.fleets[f];
       if (old && old.spec.material === spec.material) {
@@ -516,7 +636,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         return { spec, boids: old.boids };
       }
       const boids = new Boids(settings, this.width, this.height, this.seed() * 31 + f + 1);
-      for (let time = 0; time < HEAD_START; time += LONGEST_STEP) boids.step(LONGEST_STEP);
+      // born already flying, unless born around a leader put somewhere
+      if (!settings.origin) for (let time = 0; time < HEAD_START; time += LONGEST_STEP) boids.step(LONGEST_STEP);
       return { spec, boids };
     });
     this.fleets = next;

@@ -39,6 +39,17 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   into the blobs and blob-boids of its own material, and flies round the blobs and blob-boids of another
   ("possono blobbarsi solo assieme ai blob e blob-boid dello stesso materiale ... quelli dell'altro materiale
   sono ostacoli"). The boids fly round every blob and every blob-boid ("per loro tutti i blob sono ostacoli").
+- **Fleets with a leader's ways** (`boidFlocks`, and the same numbers on a `blobFlocks` fleet; lenzi, 2026-11-14:
+  "ogni capo avrá una flotta di n boidi. questa flotta avrá tutte le proprietá del leader, tranne la grandezza
+  ... e anche il displacement"): given `boidFlocks`, the boids are those fleets, each its own flock with its
+  own count, colonies, size, `sizeVariety` and its leader's speeds, rules and wandering; what a fleet does not
+  say is the inputs'. Without it, one flock of `boids` in `colonies`, as before. A scene (`LenziScene`) gives them.
+  A fleet with `x`, `y` (a share of the space) is born around its leader there, not already flying; a boid
+  fleet's `layer` is its own level (`boidLayer` when not said).
+- **Blobs put somewhere, of a shape of their own** (`blobHomes`, `blobShapes`, in order; lenzi, 2026-11-14:
+  "make every object selectable and moveable", "make user choose shape of blob"): a blob with a place wanders
+  from there (by `travel`), one with a shape keeps it; the others have their seeded place and change shapes, as
+  before.
 - **Layers** (z-levels; lenzi, 2026-11-14: "the z-index of the blobs decides which is an obstacle to what
   (they're obstacles only to objects that are on the same z-level)"): something stops only what is on its
   own layer. By default the lamps, the solid things, the boids and the lamp blob-boids are on layer 0 and

@@ -31,6 +31,23 @@ export interface BlobSettings {
    * `size` and `sizeVariety` (lenzi, 2026-11-14: "un blob grande, un/due blob piccoli dello stesso materiale").
    */
   sizes?: readonly number[];
+  /**
+   * Each blob's place of its own, as a share of the space (0 to 1 on each side), in order; a blob without one
+   * (or past the list) has its seeded place. It wanders from there by `travel` (lenzi, 2026-11-14: a scene's
+   * objects "moveable ... when paused").
+   */
+  homes?: readonly ({ x: number; y: number } | null | undefined)[];
+  /**
+   * Each blob's shape of its own, in order: it keeps it (it does not change into the others); a blob without
+   * one changes among `shapes` (lenzi, 2026-11-14: "make user choose shape of blob").
+   */
+  ownShapes?: readonly (BlobShapeName | null | undefined)[];
+}
+
+/** Where a blob is at home when nothing says, as a share of the space: what its number and the seed give. */
+export function blobHome(index: number, seed: number): { x: number; y: number } {
+  const random = seeded(Math.imul(index + 1, 0x9e3779b1) ^ Math.imul(seed, 0xc2b2ae35));
+  return { x: 0.15 + 0.7 * random(), y: 0.15 + 0.7 * random() };
 }
 
 export const DEFAULT_BLOBS: BlobSettings = {
@@ -68,8 +85,12 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
   for (let i = 0; i < count; i++) {
     // everything a blob is comes from its number and the seed
     const random = seeded(Math.imul(i + 1, 0x9e3779b1) ^ Math.imul(settings.seed, 0xc2b2ae35));
-    const homeX = 0.15 + 0.7 * random();
-    const homeY = 0.15 + 0.7 * random();
+    // its own place, or the seeded one (drawn either way: the numbers after it stay the same)
+    const seededX = 0.15 + 0.7 * random();
+    const seededY = 0.15 + 0.7 * random();
+    const place = settings.homes?.[i];
+    const homeX = place ? place.x : seededX;
+    const homeY = place ? place.y : seededY;
     const reach = settings.travel * 0.4;
     // two slow loops on each axis, never in step: a path that does not repeat for a long time
     const loop = (amplitude: number) => {
@@ -110,6 +131,12 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
       const near = 1 / (1 + Math.hypot(dx, dy) / (side * 0.6));
       x += dx * settings.pull * 0.6 * near;
       y += dy * settings.pull * 0.6 * near;
+    }
+    // a shape of its own: kept (the numbers above were drawn all the same, so the other blobs do not change)
+    const kept = settings.ownShapes?.[i];
+    if (kept && kept in BLOB_SHAPES) {
+      blobs.push({ x, y, radius, rotation, from: BLOB_SHAPES[kept], to: BLOB_SHAPES[kept], mix: 0 });
+      continue;
     }
     blobs.push({ x, y, radius, rotation, from: BLOB_SHAPES[shapes[from]!], to: BLOB_SHAPES[shapes[to]!], mix });
   }

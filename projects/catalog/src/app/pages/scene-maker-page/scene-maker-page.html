@@ -1,0 +1,219 @@
+<!-- The scene being made, behind the page: flying when it plays; paused, being made (no fleets, all still). -->
+<lenzi-scene [scene]="scene()" [editing]="!playing()" />
+
+<!-- Paused: every object where it is put, to choose and to move; the chosen one and the moving one lit. -->
+@if (!playing()) {
+  <div #stage class="stage" (pointermove)="drag($event)" (pointerup)="letGo()" (pointercancel)="letGo()">
+    @for (blob of scene().blobs; track $index) {
+      @let object = { type: 'blob', index: $index };
+      <button
+        type="button"
+        class="mark blob"
+        [class.chosen]="isChosen($any(object))"
+        [class.moving]="isMoving($any(object))"
+        [style.left.%]="(blob.x ?? 0.5) * 100"
+        [style.top.%]="(blob.y ?? 0.5) * 100"
+        [style.width.px]="blobWidth(blob.size)"
+        [style.height.px]="blobWidth(blob.size)"
+        [attr.aria-label]="materialNames[blob.material] + ' blob: arrows move it'"
+        (pointerdown)="grab($event, $any(object))"
+        (keydown)="nudge($event, $any(object))"
+        (click)="chosen.set($any(object))"
+      ></button>
+    }
+    @for (fleet of scene().fleets; track $index) {
+      @let object = { type: 'fleet', index: $index };
+      <button
+        type="button"
+        class="mark leader"
+        [class.chosen]="isChosen($any(object))"
+        [class.moving]="isMoving($any(object))"
+        [style.left.%]="(fleet.x ?? 0.5) * 100"
+        [style.top.%]="(fleet.y ?? 0.5) * 100"
+        [attr.aria-label]="'Leader of ' + fleet.count + ': arrows move it'"
+        (pointerdown)="grab($event, $any(object))"
+        (keydown)="nudge($event, $any(object))"
+        (click)="chosen.set($any(object))"
+      >
+        <mat-icon>{{ fleet.kind === 'boid' ? 'navigation' : 'bubble_chart' }}</mat-icon>
+      </button>
+    }
+  </div>
+}
+
+<main class="maker">
+  <!-- The scene's objects, one under the other, each with its icon. -->
+  <mat-card appearance="outlined" lenziLit class="panel objects">
+    <mat-card-content>
+      <h1 class="title">Scene maker</h1>
+      <div class="buttons">
+        <button mat-flat-button type="button" (click)="playing.set(!playing())">
+          <mat-icon>{{ playing() ? 'pause' : 'play_arrow' }}</mat-icon>
+          {{ playing() ? 'Pause' : 'Play' }}
+        </button>
+        <button mat-button type="button" [disabled]="!code()" (click)="copy('link')">
+          <mat-icon>link</mat-icon>
+          Copy the link
+        </button>
+        <button mat-button type="button" [disabled]="!code()" (click)="copy('iframe')">
+          <mat-icon>code</mat-icon>
+          Copy the iframe
+        </button>
+      </div>
+
+      <mat-action-list aria-label="The scene's objects">
+        @for (item of objects(); track $index) {
+          <button mat-list-item type="button" [activated]="isChosen(item.object)" [attr.aria-pressed]="isChosen(item.object)" (click)="choose(item.object)">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.title }}</span>
+            <span matListItemLine>{{ item.detail }}</span>
+          </button>
+        }
+      </mat-action-list>
+
+      <div class="buttons">
+        <button mat-stroked-button type="button" [disabled]="scene().blobs.length >= limits.blobs" (click)="addBlob()">
+          <mat-icon>add</mat-icon>
+          Add a blob
+        </button>
+        <button mat-stroked-button type="button" [disabled]="scene().fleets.length >= limits.fleets" (click)="addFleet()">
+          <mat-icon>add</mat-icon>
+          Add a fleet
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- The chosen object's window: all its properties. -->
+  @if (chosen(); as object) {
+    <mat-card appearance="outlined" lenziLit class="panel window" role="region" [attr.aria-label]="'Properties'">
+      <mat-card-content>
+        <div class="window-head">
+          <h2 class="window-title">
+            @switch (object.type) {
+              @case ('scene') {
+                The scene
+              }
+              @case ('blob') {
+                {{ materialNames[chosenBlob()?.material ?? 'lamp'] }} blob
+              }
+              @case ('fleet') {
+                The leader and its fleet
+              }
+            }
+          </h2>
+          <button mat-icon-button type="button" aria-label="Close" (click)="chosen.set(null)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        @switch (object.type) {
+          @case ('scene') {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="name">
+              <mat-label>Name</mat-label>
+              <input matInput [value]="scene().name ?? ''" [attr.maxlength]="limits.name" (input)="setName($any($event.target).value)" />
+            </mat-form-field>
+            <p class="label">The pointer</p>
+            <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The pointer" [value]="scene().follow ?? 'near'" (change)="setFollow($event.value)">
+              <mat-button-toggle value="flee">Flee</mat-button-toggle>
+              <mat-button-toggle value="near">Near</mat-button-toggle>
+              <mat-button-toggle value="target">Target</mat-button-toggle>
+              <mat-button-toggle value="none">None</mat-button-toggle>
+            </mat-button-toggle-group>
+            <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
+          }
+          @case ('blob') {
+            @if (chosenBlob(); as blob) {
+              <p class="label">Made of</p>
+              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Made of" [value]="blob.material" (change)="setBlob({ material: $event.value })">
+                @for (material of materials; track material) {
+                  <mat-button-toggle [value]="material">{{ materialNames[material] }}</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+              <p class="label">Shape</p>
+              <mat-chip-listbox class="shapes" aria-label="Shape" hideSingleSelectionIndicator [value]="blob.shape ?? ''" (change)="setShape($event.value ?? '')">
+                @for (shape of shapeChoices; track shape.value) {
+                  <mat-chip-option [value]="shape.value">
+                    @if (shape.outline) {
+                      <svg matChipAvatar class="shape" viewBox="-1.1 -1.1 2.2 2.2" aria-hidden="true"><path [attr.d]="shape.outline" /></svg>
+                    } @else {
+                      <mat-icon matChipAvatar>autorenew</mat-icon>
+                    }
+                    {{ shape.label }}
+                  </mat-chip-option>
+                }
+              </mat-chip-listbox>
+              <p class="label">Size (share of the screen)</p>
+              <div class="number">
+                <mat-slider min="0.02" max="0.5" step="0.005">
+                  <input matSliderThumb [value]="blob.size" aria-label="Size" (valueChange)="setBlob({ size: $event })" />
+                </mat-slider>
+                <span class="value">{{ (blob.size * 100).toFixed(1) }}%</span>
+              </div>
+              <p class="label">Level (it stops only what is on its own)</p>
+              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Level" [value]="layerOf(blob, 'blob')" (change)="setLayer($event.value)">
+                @for (layer of layers; track layer) {
+                  <mat-button-toggle [value]="layer">{{ layer }}</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+              <button mat-stroked-button type="button" class="remove" (click)="remove()">
+                <mat-icon>delete</mat-icon>
+                Remove the blob
+              </button>
+            }
+          }
+          @case ('fleet') {
+            @if (chosenFleet(); as fleet) {
+              <p class="label">The leader is</p>
+              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The leader is" [value]="fleet.kind" (change)="setKind($event.value)">
+                <mat-button-toggle value="boid">A boid</mat-button-toggle>
+                <mat-button-toggle value="blob-boid">A blob-boid</mat-button-toggle>
+              </mat-button-toggle-group>
+              @if (fleet.kind === 'blob-boid') {
+                <p class="label">Made of</p>
+                <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Made of" [value]="fleet.material ?? 'lamp'" (change)="setFleet({ material: $event.value })">
+                  @for (material of materials; track material) {
+                    <mat-button-toggle [value]="material">{{ materialNames[material] }}</mat-button-toggle>
+                  }
+                </mat-button-toggle-group>
+              }
+              <p class="label">Level (it flies round only what is on its own)</p>
+              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Level" [value]="layerOf(fleet, fleet.kind)" (change)="setLayer($event.value)">
+                @for (layer of layers; track layer) {
+                  <mat-button-toggle [value]="layer">{{ layer }}</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+
+              <h3 class="group">Its fleet</h3>
+              @for (field of fleetFields; track field.key) {
+                <p class="label">{{ field.label }}</p>
+                <div class="number">
+                  <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
+                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (valueChange)="setFleetNumber(field.key, $event)" />
+                  </mat-slider>
+                  <span class="value">{{ shown(fleetValue(fleet, field.key)) }}</span>
+                </div>
+              }
+
+              <h3 class="group">The leader's ways (the whole fleet takes them)</h3>
+              @for (field of leaderFields; track field.key) {
+                <p class="label">{{ field.label }}</p>
+                <div class="number">
+                  <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
+                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (valueChange)="setFleetNumber(field.key, $event)" />
+                  </mat-slider>
+                  <span class="value">{{ shown(fleetValue(fleet, field.key)) }}</span>
+                </div>
+              }
+
+              <button mat-stroked-button type="button" class="remove" (click)="remove()">
+                <mat-icon>delete</mat-icon>
+                Remove the fleet
+              </button>
+            }
+          }
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</main>

@@ -15,9 +15,9 @@ async function shown(admin: boolean) {
 }
 
 describe('ScenesPage', () => {
-  it('sends a visitor to the playground, and only there', async () => {
+  it('sends a visitor to the scene maker, and only there', async () => {
     const page = await shown(false);
-    expect(page.querySelector('a[href="/components/scene"]')).not.toBeNull();
+    expect(page.querySelector('a[href="/scenes/maker"]')).not.toBeNull();
     expect(page.querySelector('.card')).toBeNull();
   });
 

@@ -24,6 +24,11 @@ export interface BoidsScare {
 export interface BoidsSettings {
   /** How many boids. */
   count: number;
+  /**
+   * Where the boids are born, px: around their leader, who is born on it (a scene's fleet starts where its leader
+   * was put); none: anywhere in the space.
+   */
+  origin?: { x: number; y: number } | null;
   /** The fastest and the slowest a boid flies, px/s. A boid never stops, unless it has arrived on its target. */
   maxSpeed: number;
   minSpeed: number;
@@ -282,10 +287,21 @@ export class Boids {
     this.vy = grow(this.vy);
     this.own = grow(this.own);
     const speed = (this.settings.minSpeed + this.settings.maxSpeed) / 2;
+    const origin = this.settings.origin;
+    // born around their origin, in a round crowd as large as their number needs; the first (a leader) on it
+    const crowd = Math.max(16, Math.sqrt(count) * 9);
     for (let i = kept; i < count; i++) {
       const heading = this.random() * Math.PI * 2;
-      this.x[i] = this.random() * this.width;
-      this.y[i] = this.random() * this.height;
+      if (origin) {
+        const away = i === 0 ? 0 : Math.sqrt(this.random()) * crowd;
+        const towards = this.random() * Math.PI * 2;
+        this.x[i] = origin.x + Math.cos(towards) * away;
+        this.y[i] = origin.y + Math.sin(towards) * away;
+      } else {
+        // the numbers drawn as before origins: a flock without one is the same flock
+        this.x[i] = this.random() * this.width;
+        this.y[i] = this.random() * this.height;
+      }
       this.vx[i] = Math.cos(heading) * speed;
       this.vy[i] = Math.sin(heading) * speed;
       this.own[i] = this.random();

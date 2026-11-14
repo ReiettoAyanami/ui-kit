@@ -1,0 +1,9 @@
+@let shown = scene();
+@if (shown) {
+  <lenzi-scene [scene]="shown" [animate]="!still" />
+} @else if (shown === false) {
+  <main class="missing">
+    <lenzi-status-message text="This link holds no scene" />
+    <a mat-flat-button routerLink="/scenes/maker">Make a scene</a>
+  </main>
+}

@@ -1,26 +1,32 @@
 @let shown = layout();
+@let making = editing();
 @if (shown.flocking) {
   <lenzi-blob-flock-background
     [fill]="fill()"
-    [animate]="animate()"
+    [animate]="animate() && !making"
     [blobs]="shown.materials.length"
     [materials]="shown.materials"
     [blobSizes]="shown.sizes"
-    [boids]="shown.boids"
-    [colonies]="shown.colonies"
-    [boidSize]="shown.boidSize"
-    [blobFlocks]="shown.blobFlocks"
+    [blobHomes]="shown.homes"
+    [blobShapes]="shown.shapes"
+    [blobLayers]="shown.layers"
+    [travel]="travel()"
+    [boidFlocks]="making ? noFleets : shown.boidFlocks"
+    [blobFlocks]="making ? noFleets : shown.blobFlocks"
     [follow]="shown.follow"
-    [throwable]="shown.throwable"
+    [throwable]="shown.throwable && !making"
   />
 } @else {
   <lenzi-blob-background
     [fill]="fill()"
-    [animate]="animate()"
+    [animate]="animate() && !making"
     [count]="shown.materials.length"
     [materials]="shown.materials"
     [blobSizes]="shown.sizes"
-    [throwable]="shown.throwable"
+    [blobHomes]="shown.homes"
+    [blobShapes]="shown.shapes"
+    [travel]="travel()"
+    [throwable]="shown.throwable && !making"
     [pull]="0"
   />
 }

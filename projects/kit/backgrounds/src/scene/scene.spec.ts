@@ -20,14 +20,12 @@ const HOME: LenziScene = {
 };
 
 describe('sceneLayout', () => {
-  it('gives the backgrounds the blobs in order, the boid fleets as one flock and each blob-boid fleet as its own', () => {
+  it('gives the backgrounds the blobs in order and every fleet as its own flock', () => {
     const layout = sceneLayout(HOME);
     expect(layout.flocking).toBe(true);
     expect(layout.materials).toEqual(['lamp', 'glass', 'lamp']);
     expect(layout.sizes).toEqual([0.2, 0.2, 0.085]);
-    expect(layout.boids).toBe(380);
-    expect(layout.colonies).toBe(4);
-    expect(layout.boidSize).toBe(9);
+    expect(layout.boidFlocks).toEqual([{ count: 380, colonies: 4 }]);
     expect(layout.blobFlocks).toEqual([
       { material: 'glass', count: 42, colonies: 3 },
       { material: 'lamp', count: 48, colonies: 3 },
@@ -36,19 +34,21 @@ describe('sceneLayout', () => {
     expect(layout.throwable).toBe(true);
   });
 
-  it('two boid fleets fly as colonies of one flock; a fleet without boids is left out', () => {
+  it("each fleet keeps its leader's ways, its size and its sizes' variety; a fleet without boids is left out", () => {
     const layout = sceneLayout({
       blobs: [],
       fleets: [
-        { kind: 'boid', count: 100, size: 12 },
+        { kind: 'boid', count: 100, size: 12, maxSpeed: 220, cohesion: 2, sizeVariety: 0.8 },
         { kind: 'boid', count: 50, colonies: 2 },
         { kind: 'blob-boid', count: 0 },
+        { kind: 'blob-boid', material: 'glass', count: 20, wander: 1 },
       ],
     });
-    expect(layout.boids).toBe(150);
-    expect(layout.colonies).toBe(3);
-    expect(layout.boidSize).toBe(12);
-    expect(layout.blobFlocks).toEqual([]);
+    expect(layout.boidFlocks).toEqual([
+      { count: 100, size: 12, maxSpeed: 220, cohesion: 2, sizeVariety: 0.8 },
+      { count: 50, colonies: 2 },
+    ]);
+    expect(layout.blobFlocks).toEqual([{ material: 'glass', count: 20, wander: 1 }]);
     expect(layout.follow).toBe('near');
     expect(layout.throwable).toBe(false);
   });

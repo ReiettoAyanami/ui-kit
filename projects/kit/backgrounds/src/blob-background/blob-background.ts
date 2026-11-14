@@ -6,7 +6,7 @@ import { linearToHex } from '../engine/color';
 import { LenziSourceLamp } from '../glow/light-field';
 import { BlobMaterial, MaterialScene } from '../engine/blob-materials';
 import { GlowEngine } from '../engine/glow-engine';
-import { knownShapes } from '../engine/shapes';
+import { knownShapes, ownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 
 /**
@@ -70,6 +70,10 @@ export class LenziBlobBackground extends LenziGlowBackground {
   readonly materials = input<readonly BlobMaterial[]>(['lamp']);
   /** Each blob's own size (a share of the smaller side), in order and round again; null: `size` and `sizeVariety`. */
   readonly blobSizes = input<readonly number[] | null>(null);
+  /** Each blob's own place (a share of the space, 0 to 1 each way), in order; a blob without one has its seeded place. */
+  readonly blobHomes = input<readonly ({ x: number; y: number } | null)[] | null>(null);
+  /** Each blob's own shape (BLOB_SHAPES' names), in order: it keeps it; a blob without one changes among `shapes`. */
+  readonly blobShapes = input<readonly (string | null)[] | null>(null);
 
   private elapsed = 0;
   private readonly throws = new BlobThrow();
@@ -171,6 +175,8 @@ export class LenziBlobBackground extends LenziGlowBackground {
       pull: this.pull(),
       seed: this.seed(),
       ...(this.blobSizes()?.length ? { sizes: this.blobSizes()! } : {}),
+      ...(this.blobHomes()?.length ? { homes: this.blobHomes()! } : {}),
+      ...ownShapes(this.blobShapes()),
     };
     return blobsAt(settings, this.elapsed, this.width, this.height, this.pointerInside());
   }

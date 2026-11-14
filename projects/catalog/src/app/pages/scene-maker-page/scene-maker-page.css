@@ -1,0 +1,183 @@
+/* Paused: the objects on the space the scene fills (the background's own box: fixed, as tall as the tallest
+   window), each where it is put; only the marks take the pointer. */
+.stage {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 100vh;
+  height: 100lvh;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.mark {
+  position: absolute;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  translate: -50% -50%;
+  border: var(--lenzi-border) dashed var(--mat-sys-outline);
+  border-radius: 50%;
+  corner-shape: round;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  transition:
+    border-color 150ms linear,
+    box-shadow 150ms linear;
+}
+
+.mark:hover {
+  border-style: solid;
+  border-color: var(--mat-sys-on-surface-variant);
+}
+
+/* The chosen object, and the one being moved, lit (lenzi: "add an highlight when doing so"). */
+.mark.chosen,
+.mark:focus-visible {
+  border-style: solid;
+  border-color: var(--mat-sys-primary);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mat-sys-primary) 28%, transparent),
+    0 0 24px color-mix(in srgb, var(--mat-sys-primary) 55%, transparent);
+  outline: none;
+}
+
+.mark.moving {
+  cursor: grabbing;
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--mat-sys-primary) 36%, transparent),
+    0 0 36px color-mix(in srgb, var(--mat-sys-primary) 70%, transparent);
+}
+
+/* A fleet's leader: the boids exist only once it flies; paused, it is its mark. */
+.leader {
+  width: 44px;
+  height: 44px;
+  border-style: solid;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-high) 82%, transparent);
+  backdrop-filter: var(--lenzi-glass-filter);
+}
+
+/* The objects on the left, the chosen one's window beside them; the scene behind everything. */
+.maker {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 0 var(--lenzi-float-gap) 24px;
+}
+
+.panel {
+  pointer-events: auto;
+  box-sizing: border-box;
+  max-height: calc(100dvh - 2 * var(--lenzi-float-gap) - var(--lenzi-shell-bar-height, 64px) - 24px);
+  overflow-y: auto;
+}
+
+.objects {
+  flex: none;
+  width: 300px;
+}
+
+.window {
+  flex: none;
+  width: 340px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font: var(--mat-sys-title-large);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.window-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.window-title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.group {
+  margin: 20px 0 0;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-primary);
+}
+
+.label {
+  margin: 14px 0 6px;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.name {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.toggle {
+  display: block;
+  margin-top: 16px;
+}
+
+.number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.number mat-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.value {
+  min-width: 48px;
+  text-align: end;
+  font: var(--mat-sys-body-medium);
+}
+
+.remove {
+  margin-top: 20px;
+}
+
+/* A shape's outline, drawn in the chip's own colour. */
+.shape {
+  fill: currentColor;
+}
+
+/* A phone: the objects, then the window, one under the other, as wide as the screen. */
+@media (max-width: 719px) {
+  .maker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .objects,
+  .window {
+    width: auto;
+    max-height: none;
+  }
+
+  /* the chosen object's window first, the list under it */
+  .window {
+    order: -1;
+  }
+}

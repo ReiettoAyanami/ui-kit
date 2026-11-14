@@ -70,6 +70,27 @@ export function shapeRadius(shape: BlobShape, angle: number): number {
 }
 
 /** The names that are shapes, in the order given; the default ones when none is. */
+/**
+ * A shape's outline as an SVG path in a box from -1 to 1 (its widest reach on the edge): what a picker shows
+ * (lenzi, 2026-11-14: "make user choose shape of blob").
+ */
+export function shapeOutline(name: BlobShapeName, points = 72): string {
+  const shape = BLOB_SHAPES[name];
+  const corners: string[] = [];
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    const radius = shapeRadius(shape, angle);
+    corners.push(`${(Math.cos(angle) * radius).toFixed(3)} ${(Math.sin(angle) * radius).toFixed(3)}`);
+  }
+  return `M${corners.join('L')}Z`;
+}
+
+/** The blobs' own shapes as the blob field takes them (`ownShapes`): the known names, nothing for the rest. */
+export function ownShapes(names: readonly (string | null)[] | null | undefined): { ownShapes?: (BlobShapeName | null)[] } {
+  if (!names?.length) return {};
+  return { ownShapes: names.map((name) => (name && name in BLOB_SHAPES ? (name as BlobShapeName) : null)) };
+}
+
 export function knownShapes(names: readonly string[] | null | undefined): BlobShapeName[] {
   const known = (names ?? []).filter((name): name is BlobShapeName => name in BLOB_SHAPES);
   return known.length ? known : DEFAULT_BLOB_SHAPES;

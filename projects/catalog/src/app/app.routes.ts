@@ -21,6 +21,9 @@ const PAGES: Record<SitePath, Pick<Route, 'loadComponent' | 'data'>> = {
   '': { loadComponent: () => import('./pages/overview-page/overview-page').then((m) => m.OverviewPage) },
   components: { loadComponent: () => import('./pages/components-page/components-page').then((m) => m.ComponentsPage) },
   scenes: { loadComponent: () => import('./pages/scenes-page/scenes-page').then((m) => m.ScenesPage) },
+  'scenes/maker': { loadComponent: () => import('./pages/scene-maker-page/scene-maker-page').then((m) => m.SceneMakerPage) },
+  // a scene alone, from its link: no bar, no drawer (a tab, an iframe)
+  scene: { loadComponent: () => import('./pages/scene-view-page/scene-view-page').then((m) => m.SceneViewPage), data: { bare: true } },
   rules: { loadComponent: markdownPage, data: { kind: 'rules' } },
   'ai-rules': { loadComponent: markdownPage, data: { kind: 'ai' } },
   variables: { loadComponent: () => import('./pages/variables-page/variables-page').then((m) => m.VariablesPage) },

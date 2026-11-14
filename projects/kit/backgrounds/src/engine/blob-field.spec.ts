@@ -1,4 +1,4 @@
-import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobsAt } from './blob-field';
+import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobHome, blobsAt } from './blob-field';
 import { BLOB_SHAPES } from './shapes';
 
 describe('the blobs’ edge, for the flock', () => {
@@ -87,5 +87,25 @@ describe('where the blobs are', () => {
     free.forEach((blob, i) => {
       expect(Math.hypot(drawn[i]!.x - 900, drawn[i]!.y - 100)).toBeLessThan(Math.hypot(blob.x - 900, blob.y - 100));
     });
+  });
+});
+
+describe('a blob put somewhere, of a shape of its own (a scene)', () => {
+  const still = { ...DEFAULT_BLOBS, count: 3, travel: 0, morph: 1 };
+
+  it('sits on its own place; the others keep theirs, and their shapes', () => {
+    const plain = blobsAt(still, 7, 1000, 800);
+    const put = blobsAt({ ...still, homes: [null, { x: 0.25, y: 0.75 }] }, 7, 1000, 800);
+    expect([put[1]!.x, put[1]!.y]).toEqual([250, 600]);
+    for (const i of [0, 2]) expect(put[i]).toEqual(plain[i]);
+    expect(blobHome(0, still.seed)).toEqual({ x: plain[0]!.x / 1000, y: plain[0]!.y / 800 });
+  });
+
+  it('keeps its own shape, never changing; the others change as before', () => {
+    const plain = blobsAt(still, 7, 1000, 800);
+    const kept = blobsAt({ ...still, ownShapes: ['burst', null] }, 7, 1000, 800);
+    expect([kept[0]!.from, kept[0]!.to, kept[0]!.mix]).toEqual([BLOB_SHAPES.burst, BLOB_SHAPES.burst, 0]);
+    expect(kept[1]).toEqual(plain[1]);
+    expect(kept[2]).toEqual(plain[2]);
   });
 });

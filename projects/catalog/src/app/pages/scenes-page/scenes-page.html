@@ -1,12 +1,12 @@
 <main class="page">
   <h1 class="title">Scenes</h1>
   <p class="lead">
-    A scene is a glowing background as data: its blobs and its fleets of boids and blob-boids, behind a page. Make one in
-    the playground.
+    A scene is a glowing background as data: its blobs and the fleets of boids and blob-boids that follow their leaders,
+    behind a page. Make one in the scene maker and share it with a link, or as an iframe.
   </p>
-  <a mat-flat-button routerLink="/components/scene">
-    <mat-icon>play_arrow</mat-icon>
-    Open the playground
+  <a mat-flat-button routerLink="/scenes/maker">
+    <mat-icon>brush</mat-icon>
+    Make a scene
   </a>
 
   @if (server.admin()) {
