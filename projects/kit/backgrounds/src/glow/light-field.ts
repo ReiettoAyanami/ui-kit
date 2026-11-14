@@ -38,7 +38,10 @@ const OWN_LIGHT = 0.3;
 /** How far a shadow goes, px: past the edge of any screen. */
 const SHADOW_LENGTH = 4000;
 
-/** How often the lamps' colours are read again (the theme may change), ms. */
+/** How many pieces a rounded corner of a shadow is made of. */
+const ARC_STEPS = 6;
+
+/** How often the lamps' colours and the solid elements' corners are read again (the theme may change), ms. */
 const COLOURS_EVERY = 500;
 
 interface LampEntry {
@@ -52,6 +55,8 @@ interface SurfaceEntry {
   element: HTMLElement;
   /** What was last written on it, so a frame where nothing moved writes nothing. */
   written: string;
+  /** Where its light layer starts, from its box's top left, px; read now and then (null: read it). */
+  origin: { x: number; y: number } | null;
 }
 
 /** A light this frame, wherever it comes from. */
@@ -98,6 +103,8 @@ export class LenziLightField {
   private readonly sources = new Map<object, readonly LenziSourceLamp[]>();
   private readonly surfaces = new Map<HTMLElement, SurfaceEntry>();
   private readonly casters = new Set<HTMLElement>();
+  /** Each solid element's corner radius, px, read now and then. */
+  private readonly radii = new Map<HTMLElement, number>();
   private readonly colours = new Map<string, [number, number, number]>();
   private coloursRead = 0;
   private probe: HTMLElement | null = null;
@@ -127,7 +134,7 @@ export class LenziLightField {
 
   /** A surface that takes the light (`lenziLit`, `lenziSolid`). Gives back how to take it away. */
   addSurface(element: HTMLElement): () => void {
-    this.surfaces.set(element, { element, written: '' });
+    this.surfaces.set(element, { element, written: '', origin: null });
     this.wake();
     return () => {
       const surface = this.surfaces.get(element);
@@ -163,6 +170,8 @@ export class LenziLightField {
     if (now - this.coloursRead > COLOURS_EVERY) {
       this.coloursRead = now;
       this.colours.clear();
+      this.radii.clear();
+      for (const surface of this.surfaces.values()) surface.origin = null;
     }
 
     // first every measure, then every write: the page is laid out once a frame
@@ -180,10 +189,13 @@ export class LenziLightField {
     for (const lamps of this.sources.values()) {
       for (const lamp of lamps) if (lamp.strength > 0 && lamp.reach > 0) shining.push({ element: null, box: lamp, color: lamp.color, strength: Math.min(2, lamp.strength), reach: lamp.reach });
     }
-    const casters = [...this.casters].map((element) => ({ element, box: element.getBoundingClientRect() as Box }));
-    const boxes = [...this.surfaces.values()].map((surface) => ({ surface, box: surface.element.getBoundingClientRect() as Box }));
+    const casters = [...this.casters].map((element) => ({ element, box: element.getBoundingClientRect() as Box, radius: this.radius(element) }));
+    const boxes = [...this.surfaces.values()].map((surface) => ({ surface, origin: this.origin(surface), outer: surface.element.getBoundingClientRect() as Box }));
 
-    for (const { surface, box } of boxes) {
+    for (const { surface, origin, outer } of boxes) {
+      // the light is drawn from where the surface's light layer starts (its border box, or inside its
+      // border where it cuts what leaves it)
+      const box: Box = { left: outer.left + origin.x, top: outer.top + origin.y, right: outer.right - origin.x, bottom: outer.bottom - origin.y };
       const reaching = shining
         .filter((light) => light.element !== surface.element)
         .map((light) => ({ light, distance: gap(box, light.box) }))
@@ -219,7 +231,7 @@ export class LenziLightField {
         const from = { x: (light.box.left + light.box.right) / 2, y: (light.box.top + light.box.bottom) / 2 };
         const shadows = casters
           .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box))
-          .map((caster) => shadowOf(caster.box, from).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
+          .map((caster) => shadowOf(caster.box, from, caster.radius).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
         data.push([Math.round(x), Math.round(y), Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
       }
       if (own) data.push([0, 0, -1, ...this.rgb(own.color), round(own.strength * OWN_LIGHT)]);
@@ -256,6 +268,32 @@ export class LenziLightField {
     } else {
       for (const name of ['--lenzi-lamps-veil', '--lenzi-lamps-rim', '--lenzi-light-data']) style.removeProperty(name);
     }
+  }
+
+  /**
+   * Where a surface's light layer starts, from its box's top left: over its border (it covers it exactly:
+   * `--lenzi-light-inset` is its own border, not the kit's, so a floor with none is not off by 2 px), or
+   * inside the border where the surface cuts what leaves it. Read now and then.
+   */
+  private origin(surface: SurfaceEntry): { x: number; y: number } {
+    if (surface.origin) return surface.origin;
+    const style = this.document.defaultView?.getComputedStyle(surface.element);
+    if (!style) return (surface.origin = { x: 0, y: 0 });
+    const clipped = style.overflowX !== 'visible' || style.overflowY !== 'visible';
+    const sides = [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth].map((width) => parseFloat(width) || 0);
+    const inset = clipped ? '0px' : sides.map((width) => `${-width}px`).join(' ');
+    if (surface.element.style.getPropertyValue('--lenzi-light-inset') !== inset) surface.element.style.setProperty('--lenzi-light-inset', inset);
+    return (surface.origin = clipped ? { x: sides[3]!, y: sides[0]! } : { x: 0, y: 0 });
+  }
+
+  /** A solid element's corner radius, px (its top left one: the kit rounds every corner alike). */
+  private radius(element: HTMLElement): number {
+    let radius = this.radii.get(element);
+    if (radius === undefined) {
+      radius = parseFloat(this.document.defaultView?.getComputedStyle(element).borderTopLeftRadius ?? '') || 0;
+      this.radii.set(element, radius);
+    }
+    return radius;
   }
 
   /** A CSS colour as r, g, b (0..255), as the browser resolves it (variables too); read again now and then. */
@@ -316,13 +354,25 @@ function gap(a: Box, b: Box): number {
  * as a polygon (x, y, x, y, …; screen px), counter-clockwise: the hull of its corners and of the corners
  * carried far away from the light.
  */
-export function shadowOf(box: Box, light: { x: number; y: number }): number[] {
-  const corners = [
-    [box.left, box.top],
-    [box.right, box.top],
-    [box.right, box.bottom],
-    [box.left, box.bottom],
-  ] as [number, number][];
+export function shadowOf(box: Box, light: { x: number; y: number }, radius = 0): number[] {
+  // the element's own outline: its corners rounded as its border-radius (2026-11-14: a square shadow
+  // stuck out of a rounded card's corners)
+  const r = Math.max(0, Math.min(radius, (box.right - box.left) / 2, (box.bottom - box.top) / 2));
+  const corners: [number, number][] = [];
+  const arc = (cx: number, cy: number, from: number) => {
+    for (let step = 0; step <= ARC_STEPS; step++) {
+      const angle = from + (step / ARC_STEPS) * (Math.PI / 2);
+      corners.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+    }
+  };
+  if (r === 0) {
+    corners.push([box.left, box.top], [box.right, box.top], [box.right, box.bottom], [box.left, box.bottom]);
+  } else {
+    arc(box.left + r, box.top + r, Math.PI);
+    arc(box.right - r, box.top + r, -Math.PI / 2);
+    arc(box.right - r, box.bottom - r, 0);
+    arc(box.left + r, box.bottom - r, Math.PI / 2);
+  }
   const far = corners.map(([x, y]) => {
     const dx = x - light.x;
     const dy = y - light.y;

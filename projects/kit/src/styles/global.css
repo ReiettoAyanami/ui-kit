@@ -480,8 +480,9 @@ html {
 .lenzi-solid.lenzi-solid::after {
   content: '';
   position: absolute;
-  /* over the border too (a surface that cuts what leaves it, .lenzi-lit-clipped: inside it) */
-  inset: calc(var(--lenzi-border) * -1);
+  /* over the border too, exactly (LenziLightField writes the surface's own border in
+     --lenzi-light-inset); a surface that cuts what leaves it: inside it (.lenzi-lit-clipped) */
+  inset: var(--lenzi-light-inset, calc(var(--lenzi-border) * -1));
   z-index: 1;
   display: block;
   box-sizing: border-box;

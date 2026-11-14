@@ -141,6 +141,20 @@ describe('LenziLightField', () => {
     for (let i = 0; i < shadow.length; i += 2) expect(shadow[i]).toBeGreaterThanOrEqual(10);
   });
 
+  it('a rounded element casts a rounded shadow: nothing of it sticks out of its corners', () => {
+    // a light straight above a 100 × 100 box rounded 20 px
+    const shadow = shadowOf({ left: 0, top: 100, right: 100, bottom: 200 }, { x: 50, y: -200 }, 20);
+    const points: [number, number][] = [];
+    for (let i = 0; i < shadow.length; i += 2) points.push([shadow[i]!, shadow[i + 1]!]);
+    // the square corner facing the light is not part of it
+    expect(points.some(([x, y]) => x === 0 && y === 100)).toBe(false);
+    // every point near the top corners is on the rounded outline (or beyond, away from the light)
+    for (const [x, y] of points.filter(([, y]) => y < 120)) {
+      const corner = x < 50 ? [20, 120] : [80, 120];
+      expect(Math.hypot(x - corner[0]!, y - corner[1]!)).toBeCloseTo(20, 5);
+    }
+  });
+
   it('writes a variable name as its var()', () => {
     expect(cssColor(' --mat-sys-primary ')).toBe('var(--mat-sys-primary)');
     expect(cssColor('#fff')).toBe('#fff');
