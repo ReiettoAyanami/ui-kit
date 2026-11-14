@@ -112,10 +112,11 @@ describe('LenziCat', () => {
       const numbers = d.split('Z')[outline]!.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
       return numbers.filter((_, i) => i % 2 === 1);
     };
-    // open, the outer outline reaches the eye's top; shut, it goes no higher than the inner bottom edge
+    // open, the outer outline reaches the eye's top; shut, it goes no higher than the inner bottom edge, but
+    // for the round caps on its tips (half a line: under 20 units)
     const innerBottomTop = Math.min(...edges.innerBottom.filter((_, i) => i % 2 === 1));
     expect(Math.min(...ys(open, 0))).toBeLessThan(innerBottomTop - 50);
-    expect(Math.min(...ys(shut, 0))).toBeGreaterThanOrEqual(innerBottomTop - 0.1);
+    expect(Math.min(...ys(shut, 0))).toBeGreaterThan(innerBottomTop - 20);
   });
 
   it('petted, its eyes close into a U and open back into the drawing', async () => {
