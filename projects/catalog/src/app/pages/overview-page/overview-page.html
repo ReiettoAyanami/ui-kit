@@ -2,12 +2,12 @@
      and the boids are scared of the pointer. -->
 <lenzi-blob-flock-background throwable follow="flee" />
 
-<!-- The cat, large, in the bottom right corner, partly below the screen, glowing: asleep, and awake and
-     happy, watching the pointer, while the pointer is over it. -->
+<!-- The cat, large, in the bottom right corner, partly below the screen, glowing: awake and happy, watching
+     the pointer; petted (the pointer stroking it), it closes its eyes. -->
 <lenzi-cat
-  #mascotCat
   class="mascot"
-  [expression]="awake() ? 'watching' : 'sleepy'"
+  expression="watching"
+  pettable
   material="lamp"
   glowColor="--mat-sys-primary"
   [drift]="40"

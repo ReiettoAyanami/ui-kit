@@ -1556,6 +1556,7 @@ ${tag('lenzi-blob-flock-background', [
       },
       { key: 'size', label: 'Size (px)', type: 'number', default: 160, min: 32, max: 320, step: 4, code: { attr: 'size', otherwise: 96 } },
       { key: 'animated', label: 'Moving', type: 'boolean', default: true, code: { absent: /\[animated\]="false"/ } },
+      { key: 'pettable', label: 'Pettable (stroke it: it closes its eyes)', type: 'boolean', default: true, code: { match: /\bpettable\b/ } },
       {
         key: 'behind',
         label: 'Behind them',
@@ -1585,6 +1586,7 @@ ${tag('lenzi-cat', [
   bound('glowReach', v['reach'], 220),
   `size="${v['size']}"`,
   v['animated'] ? '' : '[animated]="false"',
+  v['pettable'] ? 'pettable' : '',
   'label="lenzi’s cat"',
 ])}
 

@@ -127,6 +127,8 @@ export class LenziLightField {
   private readonly colours = new Map<string, [number, number, number]>();
   private coloursRead = 0;
   private probe: HTMLElement | null = null;
+  /** A canvas of one pixel that turns any colour into sRGB (undefined: not made yet; null: none here). */
+  private pixel: CanvasRenderingContext2D | null | undefined = undefined;
   private frame: number | null = null;
   private last = 0;
 
@@ -346,11 +348,39 @@ export class LenziLightField {
       }
       this.probe.style.color = '';
       this.probe.style.color = cssColor(color);
-      const match = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(view.getComputedStyle(this.probe).color);
+      const computed = view.getComputedStyle(this.probe).color;
+      const match = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(computed);
       if (match) rgb = [Math.round(+match[1]!), Math.round(+match[2]!), Math.round(+match[3]!)];
+      else {
+        // another space (oklch, color(), a relative colour: a lamp whose hue drifts; 2026-11-14, "the light
+        // emitted by the cat is always white"): a canvas turns it into sRGB
+        const painted = this.paint(computed);
+        if (painted) rgb = painted;
+      }
     }
     this.colours.set(color, rgb);
     return rgb;
+  }
+
+  /** A CSS colour in any space as sRGB 0..255, painted on a canvas of one pixel; null where there is no canvas. */
+  private paint(css: string): [number, number, number] | null {
+    if (this.pixel === undefined) {
+      try {
+        const canvas = this.document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        this.pixel = canvas.getContext('2d', { willReadFrequently: true });
+      } catch {
+        this.pixel = null;
+      }
+    }
+    const context = this.pixel;
+    if (!context) return null;
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = '#fff';
+    context.fillStyle = css;
+    context.fillRect(0, 0, 1, 1);
+    const [r = 255, g = 255, b = 255] = context.getImageData(0, 0, 1, 1).data;
+    return [r, g, b];
   }
 
   /** The paint worklet, where the browser has them; then the styles use it (`:root.lenzi-paint-light`). */

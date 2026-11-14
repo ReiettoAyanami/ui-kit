@@ -80,6 +80,26 @@ describe('LenziCat', () => {
     expect(ink.style.getPropertyValue('--lenzi-cat-lamp')).toBe('#b388ff');
   });
 
+  it('pettable, closes its eyes while the pointer strokes it, and opens them a moment after', async () => {
+    await set({ expression: 'watching', pettable: true });
+    host().getBoundingClientRect = () => new DOMRect(100, 100, 200, 280);
+    const figure = host().querySelector('.figure')!;
+    expect(host().querySelectorAll('.shut')).toHaveLength(2);
+    // a stroke over it
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, clientY: 200 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 190, clientY: 210 }));
+    fixture.detectChanges();
+    expect(figure.classList).toContain('petted');
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    fixture.detectChanges();
+    expect(figure.classList).not.toContain('petted');
+    // moving elsewhere does not pet it
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 900, clientY: 900 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 950, clientY: 900 }));
+    fixture.detectChanges();
+    expect(figure.classList).not.toContain('petted');
+  });
+
   it('is decoration unless it is given a label', async () => {
     expect(host().getAttribute('aria-hidden')).toBe('true');
     await set({ label: 'A happy cat', size: 120 });

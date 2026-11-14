@@ -84,6 +84,40 @@
   animation-delay: 0.15s;
 }
 
+/* Petted (lenzi: "when you pet him, animate his eyes closing"): the open eyes squeeze shut, and the closed,
+   content ones grow in their place; the other way when the petting stops. `scale`, not `transform`: the
+   blink animates `transform`, and the two add up. */
+.eye,
+.shut {
+  transform-box: fill-box;
+  transition:
+    scale 160ms ease-in,
+    opacity 120ms linear;
+}
+
+.eye {
+  transform-origin: 50% 60%;
+}
+
+.shut {
+  transform-origin: 50% 30%;
+  scale: 1 0.3;
+  opacity: 0;
+}
+
+.petted .eye {
+  scale: 1 0.05;
+  opacity: 0;
+}
+
+.petted .shut {
+  scale: 1 1;
+  opacity: 1;
+  transition:
+    scale 200ms 110ms ease-out,
+    opacity 100ms 110ms linear;
+}
+
 @keyframes lenzi-cat-breathe {
   0%,
   100% {

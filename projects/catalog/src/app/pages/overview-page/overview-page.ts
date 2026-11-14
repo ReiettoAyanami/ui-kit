@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
@@ -34,31 +34,13 @@ export class OverviewPage {
   protected readonly aspect = CAT_ASPECT;
   /** How much of the cat is below the screen ("a bit more on top"). */
   protected readonly BELOW = 0.38;
-  /** The pointer is over the cat: it wakes up ("close his eyes (but stay happy when the mouse hovers)"). */
-  protected readonly awake = signal(false);
-  private readonly cat = viewChild('mascotCat', { read: ElementRef<HTMLElement> });
-
   constructor() {
     const view = inject(DOCUMENT).defaultView;
     if (!view) return;
     const fit = () => this.mascot.set(Math.round(Math.min(MASCOT_MOST, Math.max(MASCOT_LEAST, view.innerWidth * 0.42))));
     fit();
-    // the cat takes no pointer (the page under it stays usable): the window says where the pointer is
-    const look = (event: PointerEvent) => {
-      const box = this.cat()?.nativeElement.getBoundingClientRect();
-      this.awake.set(!!box && event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom);
-    };
-    const gone = (event: PointerEvent) => {
-      if (event.relatedTarget === null) this.awake.set(false);
-    };
     view.addEventListener('resize', fit, { passive: true });
-    view.addEventListener('pointermove', look, { passive: true });
-    view.document.addEventListener('pointerout', gone, { passive: true });
-    inject(DestroyRef).onDestroy(() => {
-      view.removeEventListener('resize', fit);
-      view.removeEventListener('pointermove', look);
-      view.document.removeEventListener('pointerout', gone);
-    });
+    inject(DestroyRef).onDestroy(() => view.removeEventListener('resize', fit));
   }
 
   /** What whoever is looking may see (the admin chooses what the public sees). */

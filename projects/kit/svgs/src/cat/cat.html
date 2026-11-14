@@ -1,4 +1,4 @@
-<div class="figure" [class.animated]="animated()" [class]="'expression-' + expression()">
+<div class="figure" [class.animated]="animated()" [class.petted]="petted()" [class]="'expression-' + expression()">
   <!-- the body: a material shaped as the cat -->
   @switch (material()) {
     @case ('glass') {
@@ -35,6 +35,13 @@
         <g #eyeRight class="gaze">
           <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeRight" />
         </g>
+        @if (pettable() && expression() !== 'sleepy') {
+          <!-- petted, its eyes close, content (the sleepy face's closed eyes) -->
+          <g class="closed">
+            <path class="shut" fill-rule="evenodd" [attr.d]="closedEyes.eyeLeft" />
+            <path class="shut" fill-rule="evenodd" [attr.d]="closedEyes.eyeRight" />
+          </g>
+        }
         <path class="mouth" fill-rule="evenodd" [attr.d]="face.mouth" />
         <path class="whiskers left" fill-rule="evenodd" [attr.d]="face.whiskersLeft" />
         <path class="whiskers right" fill-rule="evenodd" [attr.d]="face.whiskersRight" />

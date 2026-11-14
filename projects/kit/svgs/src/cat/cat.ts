@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, input, numberAttribute, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, booleanAttribute, computed, effect, inject, input, numberAttribute, signal, viewChild } from '@angular/core';
 
 import { LenziGlow, LenziLit, LenziPoint, LenziSights, LenziSolid } from '@lenzi/ui-kit/backgrounds';
 
@@ -33,6 +33,8 @@ const EYE_TRAVEL = { x: 34, y: 26 };
 const FACE_TRAVEL = { x: 12, y: 9 };
 /** How far away, as widths of the cat, something is for the pupils to go all the way to that side. */
 const FAR = 1.4;
+/** How long its eyes stay closed after the last stroke, ms. */
+const PET_LINGER = 700;
 /** The drawing's width, in its own units. */
 const DRAWING_WIDTH = Number(CAT_VIEW_BOX.split(' ')[2]);
 
@@ -90,6 +92,17 @@ export class LenziCat {
    */
   readonly drift = input(0, { transform: numberAttribute });
 
+  /**
+   * It can be petted (lenzi, 2026-11-14: "i want it to be awake and happy, when you pet him, animate his eyes
+   * closing"): while the pointer strokes it (moves over it), its eyes close, content; they open again a
+   * moment after. It takes no click for it: the window says where the pointer is.
+   */
+  readonly pettable = input(false, { transform: booleanAttribute });
+
+  /** Being petted now. */
+  protected readonly petted = signal(false);
+  protected readonly closedEyes = CAT_EXPRESSIONS.sleepy;
+
   /** Where the drift is now, -1..1. */
   private readonly swing = signal(0);
 
@@ -122,8 +135,23 @@ export class LenziCat {
     const place = (element: SVGGElement | undefined, x: number, y: number) =>
       x === 0 && y === 0 ? element?.removeAttribute('transform') : element?.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
 
+    // petting: the pointer moving over it; the eyes open again a moment after the last stroke
+    let stroked = 0;
+    let petTimer: ReturnType<typeof setTimeout> | null = null;
+    const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const onPointer = (event: PointerEvent) => {
+      const moved = pointer ? Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) : 0;
       pointer = { x: event.clientX, y: event.clientY };
+      if (!this.pettable() || moved < 1) return;
+      const box = host.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) return;
+      stroked = event.timeStamp;
+      this.petted.set(true);
+      if (petTimer !== null) clearTimeout(petTimer);
+      petTimer = setTimeout(() => {
+        petTimer = null;
+        if (event.timeStamp === stroked) this.petted.set(false);
+      }, PET_LINGER);
     };
     const onPointerGone = (event: PointerEvent) => {
       if (event.type === 'pointerout' ? event.relatedTarget === null : event.pointerType !== 'mouse') pointer = null;
@@ -209,6 +237,7 @@ export class LenziCat {
       }
     });
     inject(DestroyRef).onDestroy(() => {
+      if (petTimer !== null) clearTimeout(petTimer);
       if (frame !== null) view?.cancelAnimationFrame(frame);
       view?.removeEventListener('pointermove', onPointer);
       view?.removeEventListener('pointerdown', onPointer);

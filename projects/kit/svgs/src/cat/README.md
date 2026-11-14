@@ -9,6 +9,10 @@ traced into vectors, in the theme's colours.
 - **An expression over a back** (lenzi, 2026-11-14: "make me choose what expression and what back to use"):
   `expression` is `happy`, `sleepy`, `sad`, `watching` or `none` (seen from behind); `back` is `plain` or
   `hard-hat` (something being built). Any expression goes over either back.
+- **Petted** (`pettable`; lenzi, 2026-11-14: "i want it to be awake and happy, when you pet him, animate his
+  eyes closing"): while the pointer moves over it, its open eyes squeeze shut and closed, content ones grow
+  in their place; a moment after the last stroke they open again. It takes no click: the page under it stays
+  usable.
 - **Watching** (lenzi, 2026-11-14: "make it so that it follows the mouse cursor with the eyes a bit"): the
   happy face's open eyes turn towards the pointer, the rest of the face leaning a little the same way. No
   pupils (2026-11-14: "nu pupils wth"): the eyes are lenzi's, empty ovals. When the pointer is not on
@@ -47,6 +51,7 @@ traced into vectors, in the theme's colours.
 | `glowColor` | a CSS colour or a variable's name | `'--mat-sys-primary'` |
 | `glowStrength` | 0 to 2 | `1` |
 | `glowReach` | px | `220` |
+| `pettable` | boolean: stroked by the pointer, it closes its eyes, content | `false` |
 | `drift` | degrees of hue a lamp's colour swings each way, slowly (0: it stays) | `0` |
 
 Variables: `--lenzi-cat-fill` (the plain and solid body), `--lenzi-cat-ink` (its lines).
