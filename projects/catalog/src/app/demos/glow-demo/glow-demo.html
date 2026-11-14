@@ -1,0 +1,77 @@
+<div class="field">
+  @for (item of items(); track item.kind; let index = $index) {
+    <div class="item" cdkDrag cdkDragBoundary=".field" (cdkDragEnded)="dropped()">
+      <div class="bar">
+        <mat-icon class="handle" aria-hidden="true">drag_indicator</mat-icon>
+        <lenzi-color-picker
+          [label]="item.name + ' light colour'"
+          [size]="24"
+          [value]="item.color"
+          [choices]="choices"
+          (valueChange)="paint(index, $event)"
+          (picked)="paint(index, $event)"
+        />
+        <button
+          mat-icon-button
+          type="button"
+          class="switch"
+          [attr.aria-label]="(item.on ? 'Switch off the ' : 'Switch on the ') + item.name.toLowerCase()"
+          [matTooltip]="item.on ? 'Switch off' : 'Switch on'"
+          [attr.aria-pressed]="item.on"
+          (click)="switch(index)"
+        >
+          <mat-icon>{{ item.on ? 'lightbulb' : 'lightbulb_outline' }}</mat-icon>
+        </button>
+      </div>
+
+      @switch (item.kind) {
+        @case ('bulb') {
+          <button
+            mat-fab
+            type="button"
+            aria-label="Bulb"
+            [lenziGlow]="item.on && all()"
+            [glowColor]="item.color"
+            [glowStrength]="strength()"
+            [glowReach]="reach()"
+            (click)="tapped(index)"
+          >
+            <mat-icon>lightbulb</mat-icon>
+          </button>
+        }
+        @case ('button') {
+          <button mat-stroked-button type="button" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+            <mat-icon>play_arrow</mat-icon>Play
+          </button>
+        }
+        @case ('card') {
+          <mat-card appearance="outlined" class="card" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+            <mat-card-content>
+              <p class="name">Now playing</p>
+              <p class="words">A card, lit by the lamps around it.</p>
+            </mat-card-content>
+          </mat-card>
+        }
+        @case ('list') {
+          <mat-list class="list" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+            <mat-list-item><mat-icon matListItemIcon>inbox</mat-icon><span matListItemTitle>Inbox</span></mat-list-item>
+            <mat-list-item><mat-icon matListItemIcon>star</mat-icon><span matListItemTitle>Starred</span></mat-list-item>
+            <mat-list-item><mat-icon matListItemIcon>send</mat-icon><span matListItemTitle>Sent</span></mat-list-item>
+          </mat-list>
+        }
+        @case ('chip') {
+          <mat-chip-set aria-label="Mood">
+            <mat-chip [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">Focus</mat-chip>
+          </mat-chip-set>
+        }
+        @case ('toggles') {
+          <mat-button-toggle-group value="week" aria-label="Interval" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+            <mat-button-toggle value="day">Day</mat-button-toggle>
+            <mat-button-toggle value="week">Week</mat-button-toggle>
+            <mat-button-toggle value="month">Month</mat-button-toggle>
+          </mat-button-toggle-group>
+        }
+      }
+    </div>
+  }
+</div>

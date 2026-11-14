@@ -205,6 +205,17 @@ the rule says what, the variable says how much.
 - **Decoration**: hidden from screen readers, never in the way of a click; stopped out of view and with
   reduced motion; a still picture where there is no WebGL2.
 
+## Light
+
+- **A glowing element is a lamp on the page's plane** (lenzi, 2026-11-14: "a lit surface and projects light
+  directly onto the others component ... this elements must act on the same plain as the other elements
+  unlike the backhgorund"): `lenziGlow` on any element (a button, a list, a card, a chip). It glows in its
+  colour and lights the lit surfaces (`lenziLit`) near it from the side that faces it.
+- **Any colour, and lights add up** (lenzi: "ovviamente la luce di tutti i colori").
+- **Lamps are few**: they say that something is alive. **Only lit surfaces take light**; the rest stays solid.
+- **How much light lies on a surface is global** (`--lenzi-glow-veil`, `--lenzi-glow-rim`); a lamp has its
+  own colour, strength and reach.
+
 ## 3D
 
 - **Only through `LenziThreeCanvas`**, in the theme's colours, on a lazy route.

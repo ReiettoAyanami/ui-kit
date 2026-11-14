@@ -12,6 +12,8 @@ and color").
 - **The light**: a glowing background gives `LenziAmbientLight` a tiny picture of its light (32 × 18) about
   twelve times a second; every lit surface shows the part behind it as a veil (`--lenzi-lit-veil`) and along
   its border (`--lenzi-lit-rim`). It follows scrolling and resizing.
+- **The lamps' light too**: a glowing element near it (`lenziGlow`, see Glowing elements) lights it from the
+  side that faces it, in its colour (`--lenzi-glow-veil`, `--lenzi-glow-rim`).
 - **Nothing is read from the GPU** while no surface is lit.
 - **Reduce transparency** (the kit's `LenziAppearance`, or the system's) makes lit surfaces solid and unlit.
 

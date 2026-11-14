@@ -1,0 +1,71 @@
+/* A dark page with no light of its own: only the lamps shine. */
+:host {
+  display: block;
+  min-height: 100dvh;
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 40px 48px;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.item.cdk-drag-dragging {
+  z-index: 1;
+}
+
+/* What moves it and what it is, faint: it is not part of the light. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mat-sys-on-surface-variant);
+  opacity: 0.7;
+}
+
+.item:hover .bar,
+.item:focus-within .bar {
+  opacity: 1;
+}
+
+.item {
+  cursor: grab;
+}
+
+.item.cdk-drag-dragging {
+  cursor: grabbing;
+}
+
+.card {
+  width: min(78vw, 260px);
+}
+
+.list {
+  width: min(78vw, 220px);
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-card-radius);
+}
+
+.name {
+  margin: 0 0 4px;
+  font: var(--mat-sys-title-medium);
+}
+
+.words {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

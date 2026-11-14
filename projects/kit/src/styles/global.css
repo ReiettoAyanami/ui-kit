@@ -505,6 +505,80 @@ html {
   mask-composite: exclude;
 }
 
+/* The light of the glowing elements near a lit surface (LenziLightField puts every lamp's light, a
+   gradient from the side that faces it, in --lenzi-lamps): over its colour, and along its border. The
+   lamps' colours add up among themselves (screen), then onto the surface. */
+.lenzi-lit-lamps {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.lenzi-lit-lamps.lenzi-lit-lamps-on {
+  display: block;
+}
+
+.lenzi-lit-lamps::before,
+.lenzi-lit-lamps::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--lenzi-lamps);
+  background-blend-mode: screen;
+}
+
+.lenzi-lit-lamps::before {
+  opacity: var(--lenzi-glow-veil);
+}
+
+.lenzi-lit-lamps::after {
+  padding: var(--lenzi-border);
+  opacity: var(--lenzi-glow-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* A glowing element (lenziGlow): a lamp in its colour. Its own surface takes its colour, its border is
+   its colour, and a halo of its light lies around it; switching it on or off fades. Each class three
+   times: above a lit surface's glass and Material's own background of a button or a card. */
+.lenzi-glow {
+  transition:
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out;
+}
+
+.lenzi-lit.lenzi-glow.lenzi-glow-on {
+  --lenzi-glow-share: clamp(0%, calc(var(--lenzi-glow-strength) * 100%), 100%);
+  border-color: var(--lenzi-glow-color);
+  outline-color: var(--lenzi-glow-color);
+  background-color: color-mix(in srgb, var(--lenzi-glow-color) clamp(0%, calc(var(--lenzi-glow-strength) * 30%), 45%), var(--lenzi-lit-surface, var(--mat-sys-surface)));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, white calc(var(--lenzi-glow-share) * 0.35), transparent),
+    inset 0 0 calc(var(--lenzi-glow-reach) * 0.1) color-mix(in srgb, var(--lenzi-glow-color) calc(var(--lenzi-glow-share) * 0.7), transparent),
+    0 0 calc(var(--lenzi-glow-reach) * 0.03) color-mix(in srgb, var(--lenzi-glow-color) var(--lenzi-glow-share), transparent),
+    0 0 calc(var(--lenzi-glow-reach) * 0.12) color-mix(in srgb, var(--lenzi-glow-color) calc(var(--lenzi-glow-share) * 0.6), transparent),
+    0 0 calc(var(--lenzi-glow-reach) * 0.35) color-mix(in srgb, var(--lenzi-glow-color) calc(var(--lenzi-glow-share) * 0.3), transparent),
+    0 0 calc(var(--lenzi-glow-reach) * 0.8) color-mix(in srgb, var(--lenzi-glow-color) calc(var(--lenzi-glow-share) * 0.12), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lenzi-glow {
+    transition: none;
+  }
+}
+
 /* Reduce transparency: solid again (--lenzi-lit-glass is 100% then), and no light on it. */
 :root.reduce-transparency .lenzi-lit-light {
   display: none;

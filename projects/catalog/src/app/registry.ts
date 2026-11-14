@@ -53,6 +53,7 @@ export const CATEGORIES = [
   'Dialogs',
   'Services',
   'Backgrounds',
+  'Light',
   '3D',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -1254,7 +1255,7 @@ ${tag('lenzi-flock-background', [
   {
     id: 'lit-surface',
     name: 'Lit surfaces',
-    category: 'Backgrounds',
+    category: 'Light',
     summary: 'A card, a bar or a button over a background turns into glass and takes the background’s light.',
     api: '[lenziLit], LenziAmbientLight',
     entry: '@lenzi/ui-kit/backgrounds',
@@ -1299,6 +1300,47 @@ ${tag('lenzi-flock-background', [
 <!-- Reduce transparency makes them solid and unlit: LenziAppearance.setReduceTransparency(${v['reduce']}) -->`,
     usageLanguage: 'html',
     height: 480,
+  },
+  {
+    id: 'glow',
+    name: 'Glowing elements',
+    category: 'Light',
+    summary: 'Any element turned into a lamp: it glows in any colour and lights the lit elements around it, on the same plane.',
+    api: '[lenziGlow], LenziLightField',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-14 ("a lit surface and projects light directly onto the others component")',
+    files: ['backgrounds/src/glow/glow.ts', 'backgrounds/src/glow/light-field.ts', 'backgrounds/src/glow/glow.spec.ts', 'backgrounds/src/glow/light-field.spec.ts', 'backgrounds/src/ambient-light/lit.ts', 'src/styles/global.css'],
+    ...docs('backgrounds/src/glow'),
+    demo: () => import('./demos/glow-demo/glow-demo').then((m) => m.GlowDemo),
+    controls: [
+      { key: 'lights', label: 'Every light on', type: 'boolean', default: true, code: false },
+      { key: 'strength', label: 'Strength (0 to 2)', type: 'number', default: 1, min: 0, max: 2, step: 0.05, code: { match: /\[glowStrength\]="(-?[\d.]+)"/, otherwise: 1 } },
+      { key: 'reach', label: 'Reach (px)', type: 'number', default: 220, min: 20, max: 600, step: 10, code: { match: /\[glowReach\]="(-?[\d.]+)"/, otherwise: 220 } },
+      { key: 'veil', label: 'Lamp light on a surface (%)', type: 'number', default: 70, min: 0, max: 100, step: 1, code: { match: /--lenzi-glow-veil:\s*(-?[\d.]+)%/ } },
+      { key: 'rim', label: 'Lamp light on a border (%)', type: 'number', default: 100, min: 0, max: 100, step: 1, code: { match: /--lenzi-glow-rim:\s*(-?[\d.]+)%/ } },
+    ],
+    usage: (v) => `<!-- import { LenziGlow, LenziLit } from '@lenzi/ui-kit/backgrounds'; -->
+
+<!-- a lamp: it glows, and lights the lit elements around it (it is lit by the others too) -->
+<button mat-fab lenziGlow glowColor="#ffb74d"${v['strength'] === 1 ? '' : ` [glowStrength]="${v['strength']}"`}${v['reach'] === 220 ? '' : ` [glowReach]="${v['reach']}"`} aria-label="Bulb">
+  <mat-icon>lightbulb</mat-icon>
+</button>
+
+<!-- switched off, it is a lit surface like the others -->
+<button mat-stroked-button [lenziGlow]="playing()" type="button">Play</button>
+
+<!-- only lit -->
+<mat-card appearance="outlined" lenziLit>…</mat-card>
+
+<!-- How much light lies on the lit elements, for every lamp: global variables -->
+<style>
+  :root {
+    --lenzi-glow-veil: ${v['veil']}%;
+    --lenzi-glow-rim: ${v['rim']}%;
+  }
+</style>`,
+    usageLanguage: 'html',
+    height: 640,
   },
   // 3D -------------------------------------------------------------------------------------------
   {

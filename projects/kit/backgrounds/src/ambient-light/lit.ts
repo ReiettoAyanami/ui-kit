@@ -1,5 +1,6 @@
 import { DestroyRef, Directive, ElementRef, afterNextRender, inject } from '@angular/core';
 
+import { LenziLightField } from '../glow/light-field';
 import { LenziAmbientLight } from './ambient-light';
 
 /**
@@ -18,10 +19,16 @@ export class LenziLit {
   constructor() {
     const surface = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const light = inject(LenziAmbientLight);
+    const field = inject(LenziLightField);
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
+      // the background's light, and the light of the glowing elements around it (lenziGlow)
       const detach = light.attach(surface);
-      destroyRef.onDestroy(detach);
+      const leave = field.addSurface(surface);
+      destroyRef.onDestroy(() => {
+        detach();
+        leave();
+      });
     });
   }
 }

@@ -11,6 +11,8 @@
   --lenzi-lit-glass: 46%;
   --lenzi-lit-veil: 34%;
   --lenzi-lit-rim: 80%;
+  --lenzi-glow-veil: 70%;
+  --lenzi-glow-rim: 100%;
 
   /* Borders */
   --lenzi-border: 2px;
