@@ -2,8 +2,11 @@
    slot. Every selector starts with a lenzi-shell class. From substance-tracker's app.css. */
 
 /* The document scrolls: the container grows with its page (no inner scrolling), so a page window
-   can still stop the document scrolling underneath it. */
-.lenzi-shell {
+   can still stop the document scrolling underneath it. Two classes: Material's drawer styles come
+   after these (its component is made after the shell), and with one class its overflow (hidden on the
+   container, auto on the content) won; the top bar then stuck to a box that never scrolls, and left
+   with the page (lenzi, 2026-11-14: "quando scrolli la barra sopra non sparisca ma stia su"). */
+.lenzi-shell.mat-drawer-container {
   min-height: 100dvh;
   overflow: visible;
 }
@@ -22,7 +25,7 @@
    insets. 0 on a website. Material's overflow: auto would make the content scroll by itself; here
    the document scrolls, and flow-root keeps the bar's margin inside the content (when it collapsed
    out, the drawer's scrim left an unblurred strip at the top: lenzi, 2026-10-03). */
-.lenzi-shell-content {
+.lenzi-shell-content.mat-drawer-content {
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
   overflow: visible;
