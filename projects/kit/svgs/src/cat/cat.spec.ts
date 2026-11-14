@@ -80,7 +80,7 @@ describe('LenziCat', () => {
     expect(ink.style.getPropertyValue('--lenzi-cat-lamp')).toBe('#b388ff');
   });
 
-  it('pettable, closes its eyes while the pointer strokes it, and opens them a moment after', async () => {
+  it('pettable, closes its eyes at a stroke, keeps them closed while the pointer is on it, opens them when it leaves', async () => {
     await set({ expression: 'watching', pettable: true });
     host().getBoundingClientRect = () => new DOMRect(100, 100, 200, 280);
     const figure = host().querySelector('.figure')!;
@@ -90,14 +90,11 @@ describe('LenziCat', () => {
     window.dispatchEvent(new PointerEvent('pointermove', { clientX: 190, clientY: 210 }));
     fixture.detectChanges();
     expect(figure.classList).toContain('petted');
-    // the hand rests on it: they open a moment later
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    fixture.detectChanges();
-    expect(figure.classList).not.toContain('petted');
-    // stroked again, then the hand leaves: they open at once
-    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 160, clientY: 220 }));
+    // the hand rests on it: they stay closed
+    await new Promise((resolve) => setTimeout(resolve, 900));
     fixture.detectChanges();
     expect(figure.classList).toContain('petted');
+    // the hand leaves: they open at once
     window.dispatchEvent(new PointerEvent('pointermove', { clientX: 600, clientY: 220 }));
     fixture.detectChanges();
     expect(figure.classList).not.toContain('petted');

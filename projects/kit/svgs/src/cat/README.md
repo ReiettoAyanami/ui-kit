@@ -10,9 +10,9 @@ traced into vectors, in the theme's colours.
   `expression` is `happy`, `sleepy`, `sad`, `watching` or `none` (seen from behind); `back` is `plain` or
   `hard-hat` (something being built). Any expression goes over either back.
 - **Petted** (`pettable`; lenzi, 2026-11-14: "i want it to be awake and happy, when you pet him, animate his
-  eyes closing"): while the pointer moves over it, its open eyes squeeze shut and closed, content ones grow
-  in their place; a moment after the last stroke they open again. It takes no click: the page under it stays
-  usable.
+  eyes closing"): a stroke of the pointer over it closes its eyes as a slow blink (the open eyes squash to a
+  line, the closed, content ones take their place); they stay closed as long as the pointer is on it, and
+  open the same way, backwards, when it leaves. It takes no click: the page under it stays usable.
 - **Watching** (lenzi, 2026-11-14: "make it so that it follows the mouse cursor with the eyes a bit"): the
   happy face's open eyes turn towards the pointer, the rest of the face leaning a little the same way. No
   pupils (2026-11-14: "nu pupils wth"): the eyes are lenzi's, empty ovals. When the pointer is not on

@@ -33,8 +33,6 @@ const EYE_TRAVEL = { x: 34, y: 26 };
 const FACE_TRAVEL = { x: 12, y: 9 };
 /** How far away, as widths of the cat, something is for the pupils to go all the way to that side. */
 const FAR = 1.4;
-/** How long its eyes stay closed after the last stroke while the hand rests on it, ms (out of it: at once). */
-const PET_LINGER = 500;
 /** The drawing's width, in its own units. */
 const DRAWING_WIDTH = Number(CAT_VIEW_BOX.split(' ')[2]);
 
@@ -94,8 +92,9 @@ export class LenziCat {
 
   /**
    * It can be petted (lenzi, 2026-11-14: "i want it to be awake and happy, when you pet him, animate his eyes
-   * closing"): while the pointer strokes it (moves over it), its eyes close, content; they open again a
-   * moment after. It takes no click for it: the window says where the pointer is.
+   * closing"): a stroke of the pointer over it closes its eyes, content, as a slow blink; they stay closed
+   * as long as the pointer is on it, and open the same way when it leaves. It takes no click for it: the
+   * window says where the pointer is.
    */
   readonly pettable = input(false, { transform: booleanAttribute });
 
@@ -135,13 +134,11 @@ export class LenziCat {
     const place = (element: SVGGElement | undefined, x: number, y: number) =>
       x === 0 && y === 0 ? element?.removeAttribute('transform') : element?.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
 
-    // petting: the pointer moving over it; the eyes open again a moment after the last stroke
-    let stroked = 0;
-    let petTimer: ReturnType<typeof setTimeout> | null = null;
+    // petting: a stroke over it closes its eyes, and they stay closed as long as the hand is on it; the hand
+    // leaving opens them, the same animation the other way (lenzi, 2026-11-14: "Dovresti tenere lo stato di
+    // chiuso degli occhi finché ... e poi fare ripartire l'animazione in stato di apertura")
     const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const stopPetting = () => {
-      if (petTimer !== null) clearTimeout(petTimer);
-      petTimer = null;
       if (this.petted()) this.petted.set(false);
     };
     const onPointer = (event: PointerEvent) => {
@@ -149,19 +146,11 @@ export class LenziCat {
       pointer = { x: event.clientX, y: event.clientY };
       if (!this.pettable()) return;
       const box = host.getBoundingClientRect();
-      // the hand left it: its eyes open at once (2026-11-14: "when the mouse is out he takes ages to open the eyes again")
       if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) {
         stopPetting();
         return;
       }
-      if (moved < 1) return;
-      stroked = event.timeStamp;
-      this.petted.set(true);
-      if (petTimer !== null) clearTimeout(petTimer);
-      petTimer = setTimeout(() => {
-        petTimer = null;
-        if (event.timeStamp === stroked) this.petted.set(false);
-      }, PET_LINGER);
+      if (moved >= 1 && !this.petted()) this.petted.set(true);
     };
     const onPointerGone = (event: PointerEvent) => {
       if (event.type === 'pointerout' ? event.relatedTarget === null : event.pointerType !== 'mouse') {
@@ -250,7 +239,6 @@ export class LenziCat {
       }
     });
     inject(DestroyRef).onDestroy(() => {
-      if (petTimer !== null) clearTimeout(petTimer);
       if (frame !== null) view?.cancelAnimationFrame(frame);
       view?.removeEventListener('pointermove', onPointer);
       view?.removeEventListener('pointerdown', onPointer);
