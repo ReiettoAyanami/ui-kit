@@ -10,7 +10,10 @@ apart, head the same way and stay together, around the pointer or onto it.
 - **Boids** (Reynolds): separation, alignment, cohesion, each with its weight; a field of view; the fastest,
   the slowest and how hard a boid turns; a little wander of its own. A spatial grid keeps thousands cheap.
 - **The pointer**: `follow="near"` flies around it, loosely; `follow="target"` flies onto it and slows to a
-  stop; `none` ignores it. `followWeight` and `followRadius` say how much and from how far.
+  stop; `follow="flee"` is scared of it and flies away (2026-11-14); `none` ignores it. `followWeight` and
+  `followRadius` say how much and from how far.
+- **Scared of elements**: `lenziScare` on any element of the page; `scare` is how much (see `scare/README.md`).
+- **Colonies** (`colonies`, 1): flocks of their own, each heading its own way, all keeping apart.
 - **Edges**: `wrap` (back in from the other side) or `avoid` (turns away from `edgeMargin`).
 - **Drawn with WebGL2, no library**: one instanced call, a dart pointing where it flies or a dot, added light
   (a crowd is brighter), optional `trails`.

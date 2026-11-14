@@ -1,16 +1,18 @@
-<!-- Behind the page: blobs and a flock flying round them (lenzi, 2026-11-14). -->
-<lenzi-blob-flock-background />
+<!-- Behind the page: blobs and a flock flying round them (lenzi, 2026-11-14); the blobs can be thrown about,
+     and the boids are scared of the pointer. -->
+<lenzi-blob-flock-background throwable follow="flee" />
 
-<!-- The cat, large, in the bottom right corner, its lower half below the screen: it watches the pointer,
-     or the nearest boid when the pointer is not there. -->
+<!-- The cat, large, in the bottom right corner, partly below the screen, glowing: asleep, and awake and
+     happy, watching the pointer, while the pointer is over it. -->
 <lenzi-cat
+  #mascotCat
   class="mascot"
-  expression="watching"
+  [expression]="awake() ? 'watching' : 'sleepy'"
   material="lamp"
   glowColor="--mat-sys-primary"
   [drift]="40"
   [size]="mascot()"
-  [style.bottom.px]="-mascot() / aspect / 2"
+  [style.bottom.px]="-mascot() / aspect * BELOW"
 />
 
 <main class="page">

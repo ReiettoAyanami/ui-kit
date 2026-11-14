@@ -81,6 +81,25 @@ describe('a flock of boids', () => {
     expect(one.vy[0]!).toBeGreaterThan(10);
   });
 
+  it('flees the pointer when it is scared of it, and only near it', () => {
+    const flock = new Boids({ ...QUIET, count: 2, follow: 'flee', followRadius: 150, followWeight: 1, maxSpeed: 150 }, 2000, 2000);
+    place(flock, [[1000, 1000, 0, 0], [1500, 1000, 0, 0]]);
+    flock.setTarget({ x: 950, y: 1000 });
+    run(flock, 0.5);
+    // the near one flew away from it, to the right; the far one did not move
+    expect(flock.x[0]!).toBeGreaterThan(1030);
+    expect(flock.x[1]!).toBeCloseTo(1500, 0);
+  });
+
+  it('flees what scares it (an element of the page)', () => {
+    const flock = new Boids({ ...QUIET, count: 1 }, 2000, 2000);
+    place(flock, [[1000, 1000, 0, 0]]);
+    flock.setScares([{ x: 1000, y: 1050, radius: 200 }]);
+    run(flock, 0.5);
+    expect(flock.y[0]!).toBeLessThan(970);
+    flock.setScares([], 0);
+  });
+
   it('says which boid is nearest a point', () => {
     const flock = new Boids({ ...QUIET, count: 3 }, 800, 600);
     place(flock, [[100, 100, 0, 0], [500, 300, 0, 0], [700, 500, 0, 0]]);

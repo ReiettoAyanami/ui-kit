@@ -1,6 +1,7 @@
-import { Component, input, numberAttribute } from '@angular/core';
+import { Component, booleanAttribute, input, numberAttribute } from '@angular/core';
 
 import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from '../engine/blob-field';
+import { BlobThrow } from '../engine/blob-throw';
 import { linearToHex } from '../engine/color';
 import { LenziSourceLamp } from '../glow/light-field';
 import { BlobScene } from '../engine/blob-scene';
@@ -55,8 +56,14 @@ export class LenziBlobBackground extends LenziGlowBackground {
   readonly soft = input(2, { transform: numberAttribute });
   /** How much the pointer draws them, 0 (not at all) to 1. */
   readonly pull = input(DEFAULT_BLOBS.pull, { transform: numberAttribute });
+  /**
+   * The pointer can take a blob and throw it (lenzi, 2026-11-14: "drag the blobs around ... kinda like
+   * throwing them around"): it flies on, slows down, bounces off the edges and drifts back to its path.
+   */
+  readonly throwable = input(false, { transform: booleanAttribute });
 
   private elapsed = 0;
+  private readonly throws = new BlobThrow();
   /** The blobs of the last picture, for the light they shed on the page. */
   private drawn: readonly BlobState[] = [];
 
@@ -84,25 +91,47 @@ export class LenziBlobBackground extends LenziGlowBackground {
     return {
       advance: (delta) => {
         this.elapsed += delta;
+        this.throws.step(delta, this.paths(), this.width, this.height);
       },
       draw: () => {
-        const settings: BlobSettings = {
-          count: this.count(),
-          size: this.size(),
-          sizeVariety: this.sizeVariety(),
-          travel: this.travel(),
-          morph: this.morph(),
-          spin: this.spin(),
-          shapes: knownShapes(this.shapes()),
-          pull: this.pull(),
-          seed: this.seed(),
-        };
-        const blobs = blobsAt(settings, this.elapsed, this.width, this.height, this.pointerInside());
+        const blobs = this.throws.apply(this.paths());
         this.drawn = blobs;
         // the join is as wide as the blobs are large: the same picture on a phone and on a wide screen
-        const radius = settings.size * Math.min(this.width, this.height);
+        const radius = this.size() * Math.min(this.width, this.height);
         scene.draw(blobs, this.colours(MAX_BLOBS), Math.max(0, this.merge()) * radius * 0.5, Math.max(0, this.soft()), BLOB_LIGHT);
       },
     };
+  }
+
+  protected override grabbable(x: number, y: number): boolean {
+    return this.throwable() && this.throws.blobAt(this.drawn, x, y) >= 0;
+  }
+
+  protected override grab(x: number, y: number, time: number): boolean {
+    return this.throwable() && this.throws.grab(this.drawn, x, y, time);
+  }
+
+  protected override dragTo(x: number, y: number, time: number): void {
+    this.throws.drag(x, y, time);
+  }
+
+  protected override letGo(time: number): void {
+    this.throws.release(time);
+  }
+
+  /** The blobs where their own paths put them now. */
+  private paths(): BlobState[] {
+    const settings: BlobSettings = {
+      count: this.count(),
+      size: this.size(),
+      sizeVariety: this.sizeVariety(),
+      travel: this.travel(),
+      morph: this.morph(),
+      spin: this.spin(),
+      shapes: knownShapes(this.shapes()),
+      pull: this.pull(),
+      seed: this.seed(),
+    };
+    return blobsAt(settings, this.elapsed, this.width, this.height, this.pointerInside());
   }
 }

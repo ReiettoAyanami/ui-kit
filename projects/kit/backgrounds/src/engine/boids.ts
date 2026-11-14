@@ -7,8 +7,19 @@
 
 import { seeded } from './color';
 
-/** How the flock follows the target: not at all; around it, loosely; onto it, slowing to a stop. */
-export type BoidsFollow = 'none' | 'near' | 'target';
+/**
+ * How the flock takes the target (the pointer): not at all; around it, loosely; onto it, slowing to a stop;
+ * or it is scared of it and flies away (lenzi, 2026-11-14: "make it so that the mouse is a scare away (not
+ * obstacle) for the boids").
+ */
+export type BoidsFollow = 'none' | 'near' | 'target' | 'flee';
+
+/** Something the boids are scared of: near it (inside `radius`, CSS px) they fly away from it, faster the nearer. */
+export interface BoidsScare {
+  x: number;
+  y: number;
+  radius: number;
+}
 
 export interface BoidsSettings {
   /** How many boids. */
@@ -31,7 +42,10 @@ export interface BoidsSettings {
   follow: BoidsFollow;
   /** The weight of the target. */
   followWeight: number;
-  /** "near": inside this distance from the target, px, the pull fades (they mill around it). "target": inside it they slow down to stop on it. */
+  /**
+   * "near": inside this distance from the target, px, the pull fades (they mill around it). "target": inside
+   * it they slow down to stop on it. "flee": inside it they fly away from it.
+   */
   followRadius: number;
   /** How much each boid turns by itself, at random: 0 none. */
   wander: number;
@@ -107,6 +121,8 @@ export class Boids {
   private height: number;
   private target: { x: number; y: number } | null = null;
   private field: BoidsField | null = null;
+  private scares: readonly BoidsScare[] = [];
+  private scareWeight = 3;
   private avoid = 2;
   /** How far outside an obstacle's edge a boid stays: its own length, so none of it is drawn over the obstacle. */
   private pad = 0;
@@ -153,6 +169,12 @@ export class Boids {
   /** Where the flock goes (the pointer), or nowhere. */
   setTarget(target: { x: number; y: number } | null): void {
     this.target = target;
+  }
+
+  /** What the boids are scared of now (they may move), and how much (0: not at all). */
+  setScares(scares: readonly BoidsScare[], weight = 3): void {
+    this.scares = scares;
+    this.scareWeight = Math.max(0, weight);
   }
 
   /** Round obstacles the boids fly around now (they may move), and how hard they turn away (0: they fly through). */
@@ -337,7 +359,19 @@ export class Boids {
       }
 
       let arrived = false;
-      if (this.target && s.follow !== 'none') {
+      // what scares it: away, at full speed and with more force than the rules have, the harder the nearer
+      const flee = (sx: number, sy: number, radius: number, weight: number) => {
+        const ax = px - sx;
+        const ay = py - sy;
+        const distance = Math.hypot(ax, ay);
+        if (distance >= radius || weight <= 0) return;
+        const fear = 1 - distance / radius;
+        steer(distance > 1e-6 ? ax : 1, distance > 1e-6 ? ay : 0, weight * fear * (1 + fear), s.maxSpeed, s.maxForce * 2);
+      };
+      for (const scare of this.scares) flee(scare.x, scare.y, scare.radius, this.scareWeight);
+      if (this.target && s.follow === 'flee') {
+        flee(this.target.x, this.target.y, Math.max(1, s.followRadius), s.followWeight * 3);
+      } else if (this.target && s.follow !== 'none') {
         const tx = this.target.x - px;
         const ty = this.target.y - py;
         const distance = Math.hypot(tx, ty);

@@ -1,7 +1,9 @@
-import { Component, DestroyRef, inject, input, numberAttribute } from '@angular/core';
+import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
 
 import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobsAt } from '../engine/blob-field';
 import { BlobScene } from '../engine/blob-scene';
+import { BlobThrow } from '../engine/blob-throw';
+import { LenziScares } from '../scare/scares';
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boids';
 import { linearToHex } from '../engine/color';
 import { FlockScene } from '../engine/flock-scene';
@@ -62,21 +64,27 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly separation = input(DEFAULT_BOIDS.separation, { transform: numberAttribute });
   readonly alignment = input(DEFAULT_BOIDS.alignment, { transform: numberAttribute });
   readonly cohesion = input(DEFAULT_BOIDS.cohesion, { transform: numberAttribute });
-  /** How it follows the pointer: not at all; around it, loosely; onto it. */
+  /** How it takes the pointer: not at all; around it, loosely; onto it; or scared, away from it. */
   readonly follow = input<BoidsFollow>(DEFAULT_BOIDS.follow);
   readonly followWeight = input(DEFAULT_BOIDS.followWeight, { transform: numberAttribute });
   readonly followRadius = input(DEFAULT_BOIDS.followRadius, { transform: numberAttribute });
   readonly wander = input(DEFAULT_BOIDS.wander, { transform: numberAttribute });
   /** How hard the boids turn away from the blobs: 0 they fly through them. */
   readonly avoid = input(2, { transform: numberAttribute });
-  /** A boid's width, px, and its shape. */
-  readonly boidSize = input(7, { transform: numberAttribute });
+  /** How much the boids are scared of the page's `lenziScare` elements: 0 not at all. */
+  readonly scare = input(3, { transform: numberAttribute });
+  /** A boid's width, px (2026-11-14: "make them a bit bigger"), and its shape. */
+  readonly boidSize = input(9, { transform: numberAttribute });
   readonly shape = input<'dot' | 'dart'>('dart');
   /** How long a boid's light stays behind it, 0 to 1 (the blobs leave a trail too). */
   readonly trails = input(0, { transform: numberAttribute });
+  /** The pointer can take a blob and throw it; the boids fly round it wherever it goes. */
+  readonly throwable = input(false, { transform: booleanAttribute });
 
   private elapsed = 0;
   private drawn: readonly BlobState[] = [];
+  private readonly throws = new BlobThrow();
+  private readonly scares = inject(LenziScares);
   private flock: Boids | null = null;
   private flockSeed = 1;
 
@@ -120,11 +128,18 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     return {
       advance: (delta) => {
         this.elapsed += delta;
+        this.throws.step(delta, this.paths(), this.width, this.height);
         const flock = this.current();
         // the blobs where they are now, as drawn (their shapes, melted where they meet), are what the boids fly round
         this.drawn = this.blobsNow();
         this.obstacles(flock, this.drawn);
         flock.setTarget(this.follow() === 'none' ? null : this.pointerInside());
+        // the page's lenziScare elements, in the space
+        const origin = this.origin();
+        flock.setScares(
+          this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius })),
+          this.scare(),
+        );
         for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) flock.step(Math.min(left, LONGEST_STEP));
       },
       draw: () => {
@@ -136,6 +151,22 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       },
       dispose: () => flockScene.dispose(),
     };
+  }
+
+  protected override grabbable(x: number, y: number): boolean {
+    return this.throwable() && this.throws.blobAt(this.drawn, x, y) >= 0;
+  }
+
+  protected override grab(x: number, y: number, time: number): boolean {
+    return this.throwable() && this.throws.grab(this.drawn, x, y, time);
+  }
+
+  protected override dragTo(x: number, y: number, time: number): void {
+    this.throws.drag(x, y, time);
+  }
+
+  protected override letGo(time: number): void {
+    this.throws.release(time);
   }
 
   /** One colour for each object: the blobs take the first ones (one array, so it is sent to the GPU once). */
@@ -157,7 +188,13 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     flock.setField(blobs.length ? blobEdge(blobs, this.mergePx()) : null, this.avoid(), pad);
   }
 
+  /** The blobs where they are now: their paths, and where they were thrown. */
   private blobsNow(): BlobState[] {
+    return this.throws.apply(this.paths());
+  }
+
+  /** The blobs where their own paths put them now. */
+  private paths(): BlobState[] {
     const settings: BlobSettings = {
       count: this.blobs(),
       size: this.blobSize(),

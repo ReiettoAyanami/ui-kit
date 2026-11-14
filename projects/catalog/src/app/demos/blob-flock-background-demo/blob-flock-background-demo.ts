@@ -33,6 +33,6 @@ export class BlobFlockBackgroundDemo {
 
   protected follow(): BoidsFollow {
     const follow = this.text('follow', 'near');
-    return follow === 'none' || follow === 'target' ? follow : 'near';
+    return follow === 'none' || follow === 'target' || follow === 'flee' ? follow : 'near';
   }
 }

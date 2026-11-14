@@ -20,6 +20,9 @@ change from one into another and melt into each other where they meet, glowing o
   a surface near a blob takes its light from the side that faces it, in its colour, gently; solid elements
   (`lenziSolid`) cast shadows from it.
 - **Decoration**: hidden from screen readers, never takes a click; the pointer is read from the window.
+- **Thrown** (`throwable`, off; lenzi, 2026-11-14: "kinda like throwing them around"): the pointer takes a
+  blob (a hand shows over one) and throws it; it flies on, slows down, bounces off the edges and drifts back
+  to its path. Pressing on the page's own things (a link, a button, a field) never takes a blob.
 
 ## Rules
 
@@ -43,6 +46,7 @@ change from one into another and melt into each other where they meet, glowing o
 | input | `merge` | `number` 0..1 | `0.35` |
 | input | `soft` | `number` px | `2` |
 | input | `pull` | `number` 0..1 (the pointer draws them) | `0` |
+| input | `throwable` | `boolean` (the pointer throws them) | `false` |
 | input | `fill`, `accent`, `base`, `spread`, `seed`, `brightness`, `glow`, `halo`, `blur`, `speed`, `animate`, `pointer`, `resolution`, `lights` | every glowing background's | see Flock background |
 
 ## Example

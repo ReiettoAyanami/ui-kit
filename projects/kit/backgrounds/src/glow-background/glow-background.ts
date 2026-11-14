@@ -17,6 +17,9 @@ export interface LenziGlowScene {
   dispose?(): void;
 }
 
+/** What the page takes itself: pressing on it never grabs the background. */
+const PAGE_TAKES = 'a, button, input, select, textarea, label, summary, [role="button"], [role="link"], [role="tab"], [contenteditable=""], [contenteditable="true"], .mat-mdc-form-field, .cdk-drag';
+
 /** How often the light goes to the page's lit surfaces, in ms. */
 const LIGHT_EVERY = 80;
 /** How often the theme's colours are read again while it moves, in ms (the catalog changes them live). */
@@ -142,14 +145,49 @@ export abstract class LenziGlowBackground implements OnChanges {
       this.document.addEventListener('visibilitychange', onVisibility);
 
       // the background is behind the page and takes no pointer: the window says where it is
+      const root = this.document.documentElement;
+      let dragging = false;
+      let cursor = false;
+      const now = () => view.performance.now() / 1000;
+      const local = (event: PointerEvent) => {
+        const origin = this.origin();
+        return { x: event.clientX - origin.x, y: event.clientY - origin.y };
+      };
+      // what the page itself takes (a link, a button, a field) is never a grab of the background
+      const free = (event: PointerEvent) => !(event.target instanceof Element && event.target.closest(PAGE_TAKES));
+      const setCursor = (value: string | null) => {
+        if (value) root.style.cursor = value;
+        else if (cursor) root.style.removeProperty('cursor');
+        cursor = value !== null;
+      };
       const onPointer = (event: PointerEvent) => {
         this.pointerAt = { x: event.clientX, y: event.clientY };
+        const at = local(event);
+        if (dragging) this.dragTo(at.x, at.y, now());
+        else if (event.pointerType === 'mouse') setCursor(free(event) && this.grabbable(at.x, at.y) ? 'grab' : null);
+      };
+      const onDown = (event: PointerEvent) => {
+        onPointer(event);
+        if (dragging || event.button !== 0 || !free(event)) return;
+        const at = local(event);
+        if (!this.grab(at.x, at.y, now())) return;
+        dragging = true;
+        event.preventDefault();
+        root.style.userSelect = 'none';
+        this.document.getSelection()?.removeAllRanges();
+        setCursor('grabbing');
       };
       const onPointerGone = (event: PointerEvent) => {
+        if (dragging && event.type !== 'pointerout') {
+          dragging = false;
+          this.letGo(now());
+          root.style.removeProperty('user-select');
+          setCursor(null);
+        }
         if (event.type === 'pointerout' ? event.relatedTarget === null : event.pointerType !== 'mouse') this.pointerAt = null;
       };
       view.addEventListener('pointermove', onPointer, { passive: true });
-      view.addEventListener('pointerdown', onPointer, { passive: true });
+      view.addEventListener('pointerdown', onDown);
       view.addEventListener('pointerup', onPointerGone, { passive: true });
       view.addEventListener('pointercancel', onPointerGone, { passive: true });
       this.document.addEventListener('pointerout', onPointerGone, { passive: true });
@@ -165,7 +203,9 @@ export abstract class LenziGlowBackground implements OnChanges {
         motion?.removeEventListener?.('change', onMotion);
         this.document.removeEventListener('visibilitychange', onVisibility);
         view.removeEventListener('pointermove', onPointer);
-        view.removeEventListener('pointerdown', onPointer);
+        view.removeEventListener('pointerdown', onDown);
+        if (dragging) root.style.removeProperty('user-select');
+        setCursor(null);
         view.removeEventListener('pointerup', onPointerGone);
         view.removeEventListener('pointercancel', onPointerGone);
         this.document.removeEventListener('pointerout', onPointerGone);
@@ -199,6 +239,25 @@ export abstract class LenziGlowBackground implements OnChanges {
   protected get height(): number {
     return this.engine?.cssHeight ?? 1;
   }
+
+  /**
+   * Whether something of the background can be taken at a point of the space (a blob that can be thrown):
+   * the pointer shows a hand over it. Nothing, unless a background has such things.
+   */
+  protected grabbable(_x: number, _y: number): boolean {
+    return false;
+  }
+
+  /** The pointer pressed at a point of the space, on nothing of the page's: takes what is there; false when nothing. */
+  protected grab(_x: number, _y: number, _time: number): boolean {
+    return false;
+  }
+
+  /** The pointer moved, holding what it took (time in seconds). */
+  protected dragTo(_x: number, _y: number, _time: number): void {}
+
+  /** The pointer let go of what it held. */
+  protected letGo(_time: number): void {}
 
   /** Where the space is on the screen (its top left, CSS px from the window's). */
   protected origin(): { x: number; y: number } {

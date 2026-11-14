@@ -4,6 +4,7 @@ import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boid
 import { FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
+import { LenziScares } from '../scare/scares';
 import { LenziSights } from '../sights/sights';
 
 /** The longest step of the flock, in seconds: a slow frame does not throw the boids around. */
@@ -61,8 +62,12 @@ export class LenziFlockBackground extends LenziGlowBackground {
   /** How long a boid's light stays behind it, 0 (no trail) to 1. */
   readonly trails = input(0, { transform: numberAttribute });
 
+  /** How much the boids are scared of the page's `lenziScare` elements: 0 not at all. */
+  readonly scare = input(3, { transform: numberAttribute });
+
   private flock: Boids | null = null;
   private flockSeed = 1;
+  private readonly scares = inject(LenziScares);
 
   constructor() {
     super();
@@ -90,6 +95,12 @@ export class LenziFlockBackground extends LenziGlowBackground {
       advance: (delta) => {
         const flock = this.current();
         flock.setTarget(this.follow() === 'none' ? null : this.pointerInside());
+        // the page's lenziScare elements, in the space
+        const origin = this.origin();
+        flock.setScares(
+          this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius })),
+          this.scare(),
+        );
         // two steps for a slow frame, so the flock flies as far as the time that went by
         for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) flock.step(Math.min(left, LONGEST_STEP));
       },
