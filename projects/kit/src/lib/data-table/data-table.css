@@ -63,6 +63,8 @@ td {
   width: var(--lenzi-dot-size);
   height: var(--lenzi-dot-size);
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
 }
 
 .row {

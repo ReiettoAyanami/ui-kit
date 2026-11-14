@@ -7,6 +7,14 @@ const percent = { name: '--lenzi-glass', type: 'percent', min: 0, max: 100 };
 const length = { name: '--lenzi-border', type: 'length', min: 1, max: 4 };
 const color = { name: '--lenzi-status-good', type: 'color' };
 const easing = { name: '--lenzi-rise-easing', type: 'easing' };
+const choice = { name: '--lenzi-corner-shape', type: 'choice', options: [{ value: 'round' }, { value: 'squircle' }] };
+
+test('a choice takes only one of its own words', () => {
+  assert.equal(invalidReason(choice, 'round'), null);
+  assert.equal(invalidReason(choice, 'squircle'), null);
+  assert.equal(invalidReason(choice, 'bevel'), 'not one of round, squircle');
+  assert.notEqual(invalidReason(choice, 'round; } body { display: none'), null);
+});
 
 test('values of the right shape and range pass', () => {
   assert.equal(invalidReason(percent, '56%'), null);

@@ -6,8 +6,10 @@ import { Observable, catchError, map } from 'rxjs';
 export interface TokenDef {
   name: string;
   label: string;
-  type: 'percent' | 'length' | 'time' | 'number' | 'color' | 'easing';
+  type: 'percent' | 'length' | 'time' | 'number' | 'color' | 'easing' | 'choice';
   value: string;
+  /** A choice's words, each with what it is called. */
+  options?: { value: string; label: string }[];
   min?: number;
   max?: number;
   step?: number;

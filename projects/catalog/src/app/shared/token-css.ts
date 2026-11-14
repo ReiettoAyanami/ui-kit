@@ -5,7 +5,7 @@ import { TokenDef, TokenGroup } from './tokens-api';
 
 const NUMBER = String.raw`-?\d+(?:\.\d+)?`;
 
-const FORMATS: Record<TokenDef['type'], { pattern: RegExp; ranged: boolean }> = {
+const FORMATS: Record<Exclude<TokenDef['type'], 'choice'>, { pattern: RegExp; ranged: boolean }> = {
   percent: { pattern: new RegExp(`^(${NUMBER})%$`), ranged: true },
   length: { pattern: new RegExp(`^(${NUMBER})px$`), ranged: true },
   time: { pattern: new RegExp(`^(${NUMBER})ms$`), ranged: true },
@@ -20,7 +20,12 @@ const FORMATS: Record<TokenDef['type'], { pattern: RegExp; ranged: boolean }> = 
 };
 
 /** Why a value cannot be one of this variable's, or null when it can (the server's rule). */
-export function invalidReason(token: Pick<TokenDef, 'type' | 'min' | 'max'>, value: string): string | null {
+export function invalidReason(token: Pick<TokenDef, 'type' | 'min' | 'max' | 'options'>, value: string): string | null {
+  // a choice: one of its own words
+  if (token.type === 'choice') {
+    const words = (token.options ?? []).map((option) => option.value);
+    return words.includes(value.trim()) ? null : `not one of ${words.join(', ')}`;
+  }
   const format = FORMATS[token.type];
   const match = format.pattern.exec(value.trim());
   if (!match) return `not a ${token.type} value`;

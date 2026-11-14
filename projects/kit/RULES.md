@@ -80,6 +80,10 @@ the rule says what, the variable says how much.
 - **Every rounded border is 2 px** (`--lenzi-border`), Material's and ours (lenzi, 2026-10-02: "i bordi
   agli angoli non hanno lo stesso spessore dei lati DA NESSUNA PARTE"): at 100% scale a 1 px border is
   smeared at half strength along a corner. A focused field 3 px. **Straight dividers stay 1 px.**
+- **Every corner takes one shape** (`--lenzi-corner-shape`, round or squircle; lenzi, 2026-11-14: "a toggle
+  for squircle/normal rounded squares ... a global variable and should act everywhere"): Material's and
+  ours, from the global styles. Never set `corner-shape` in a piece, except to keep a circle a circle: next
+  to a `border-radius: 50%` write `corner-shape: round`, or give the element the class `lenzi-round`.
 - **Every surface that rises above the page has a border** in `outline-variant`: cards, panels,
   dialogs, page windows, the drawer, tables.
 - **The top bar and the drawer float** 8 px from the screen's edges, rounded 16 px on every side

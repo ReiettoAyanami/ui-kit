@@ -104,6 +104,8 @@
   height: 18px;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
 }
 
 /* One variable of a save that changed several. */

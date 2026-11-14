@@ -36,6 +36,11 @@ const FORMATS = {
  */
 export function invalidReason(token, value) {
   if (typeof value !== 'string') return 'not a string';
+  // a choice: one of its own words, and nothing else (2026-11-14: round or squircle corners)
+  if (token.type === 'choice') {
+    const words = (token.options ?? []).map((option) => option.value);
+    return words.includes(value.trim()) ? null : `not one of ${words.join(', ')}`;
+  }
   const format = FORMATS[token.type];
   if (!format) return `unknown type ${token.type}`;
   const match = format.pattern.exec(value.trim());

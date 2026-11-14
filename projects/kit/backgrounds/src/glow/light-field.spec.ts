@@ -154,6 +154,22 @@ describe('LenziLightField', () => {
     }
   });
 
+  it('a squircle element casts a squircle shadow: its corners on the superellipse, fuller than a circle', () => {
+    const shadow = shadowOf({ left: 0, top: 100, right: 100, bottom: 200 }, { x: 50, y: -200 }, 20, true);
+    const points: [number, number][] = [];
+    for (let i = 0; i < shadow.length; i += 2) points.push([shadow[i]!, shadow[i + 1]!]);
+    const near = points.filter(([, y]) => y < 120);
+    expect(near.length).toBeGreaterThan(0);
+    for (const [x, y] of near) {
+      const corner = x < 50 ? [20, 120] : [80, 120];
+      const dx = Math.abs(x - corner[0]!) / 20;
+      const dy = Math.abs(y - corner[1]!) / 20;
+      expect(dx ** 4 + dy ** 4).toBeCloseTo(1, 5);
+    }
+    // the corner's middle reaches farther out than a circle's (x⁴ + y⁴ = 1 at 45°: 0.84 of r on each side)
+    expect(near.some(([x, y]) => Math.hypot(x - 20, y - 120) > 20.5)).toBe(true);
+  });
+
   it('casts a shadow only on what lies under the solid element, never on what lies over it', () => {
     const lampAt = placed(0, 190, 20, 20);
     field.addLamp(lampAt, () => lamp({ reach: 800 }));

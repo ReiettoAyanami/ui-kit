@@ -124,6 +124,8 @@ export class LenziLightField {
   private readonly casters = new Map<HTMLElement, () => LenziOutline | null>();
   /** Each solid element's corner radius, px, read now and then. */
   private readonly radii = new Map<HTMLElement, number>();
+  /** Whether each solid element's corners are squircles, read with its radius. */
+  private readonly squircles = new Map<HTMLElement, boolean>();
   private readonly colours = new Map<string, [number, number, number]>();
   private coloursRead = 0;
   private probe: HTMLElement | null = null;
@@ -196,6 +198,7 @@ export class LenziLightField {
       this.coloursRead = now;
       this.colours.clear();
       this.radii.clear();
+      this.squircles.clear();
       for (const surface of this.surfaces.values()) surface.origin = null;
     }
 
@@ -217,7 +220,7 @@ export class LenziLightField {
     const casters = [...this.casters].map(([element, outline]) => {
       const box = element.getBoundingClientRect() as Box;
       const points = outline();
-      return { element, box, radius: this.radius(element), outline: points?.length ? onScreen(points, box) : null };
+      return { element, box, radius: this.radius(element), squircle: this.squircle(element), outline: points?.length ? onScreen(points, box) : null };
     });
     const boxes = [...this.surfaces.values()].map((surface) => ({ surface, origin: this.origin(surface), outer: surface.element.getBoundingClientRect() as Box }));
 
@@ -265,7 +268,7 @@ export class LenziLightField {
           // a shadow falls only on what lies under the element (lenzi, 2026-11-14: "The one on the bottom
           // shouldn't be able to cast to the one on top")
           .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box) && above(caster.element, surface.element))
-          .flatMap((caster) => (caster.outline ? shadowsOfOutline(caster.outline, from) : [shadowOf(caster.box, from, caster.radius)]))
+          .flatMap((caster) => (caster.outline ? shadowsOfOutline(caster.outline, from) : [shadowOf(caster.box, from, caster.radius, caster.squircle)]))
           .map((polygon) => polygon.map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
         // the lamp's box in the surface's px: its light fades off its outline, all round it
         const lampBox = [light.box.left - box.left, light.box.top - box.top, light.box.right - box.left, light.box.bottom - box.top].map(Math.round);
@@ -332,6 +335,18 @@ export class LenziLightField {
       this.radii.set(element, radius);
     }
     return radius;
+  }
+
+  /** Whether a solid element's corners are squircles (`--lenzi-corner-shape`), read with its radius. */
+  private squircle(element: HTMLElement): boolean {
+    let squircle = this.squircles.get(element);
+    if (squircle === undefined) {
+      const style = this.document.defaultView?.getComputedStyle(element);
+      const shape = style?.getPropertyValue('corner-top-left-shape') || style?.getPropertyValue('corner-shape') || '';
+      squircle = /squircle|superellipse\(\s*2\s*\)/.test(shape);
+      this.squircles.set(element, squircle);
+    }
+    return squircle;
   }
 
   /** A CSS colour as r, g, b (0..255), as the browser resolves it (variables too); read again now and then. */
@@ -449,15 +464,17 @@ function gap(a: Box, b: Box): number {
  * as a polygon (x, y, x, y, …; screen px), counter-clockwise: the hull of its corners and of the corners
  * carried far away from the light.
  */
-export function shadowOf(box: Box, light: { x: number; y: number }, radius = 0): number[] {
+export function shadowOf(box: Box, light: { x: number; y: number }, radius = 0, squircle = false): number[] {
   // the element's own outline: its corners rounded as its border-radius (2026-11-14: a square shadow
-  // stuck out of a rounded card's corners)
+  // stuck out of a rounded card's corners), as a circle's arc or as a squircle's (CSS corner-shape: the
+  // superellipse x⁴ + y⁴ = r⁴ round the same centre)
   const r = Math.max(0, Math.min(radius, (box.right - box.left) / 2, (box.bottom - box.top) / 2));
   const corners: [number, number][] = [];
+  const bend = (value: number) => (squircle ? Math.sign(value) * Math.sqrt(Math.abs(value)) : value);
   const arc = (cx: number, cy: number, from: number) => {
     for (let step = 0; step <= ARC_STEPS; step++) {
       const angle = from + (step / ARC_STEPS) * (Math.PI / 2);
-      corners.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+      corners.push([cx + bend(Math.cos(angle)) * r, cy + bend(Math.sin(angle)) * r]);
     }
   };
   if (r === 0) {

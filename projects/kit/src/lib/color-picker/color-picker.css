@@ -11,6 +11,8 @@
   padding: 0;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
   cursor: pointer;
   transition: border-color 120ms linear;
 }
@@ -94,6 +96,8 @@
   margin: -9px 0 0 -9px;
   border: 2px solid #fff;
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
   box-shadow:
     0 0 0 1px rgb(0 0 0 / 45%),
     0 1px 3px rgb(0 0 0 / 45%);
@@ -132,6 +136,8 @@
   padding: 0;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
   cursor: pointer;
 }
 

@@ -58,6 +58,12 @@
               </mat-slider>
               <span class="value">{{ value(token) }}</span>
             </div>
+          } @else if (token.type === 'choice') {
+            <mat-button-toggle-group class="choice" [value]="value(token)" [attr.aria-label]="token.label" [disabled]="!canEdit()" (change)="set(token, $event.value)">
+              @for (option of token.options ?? []; track option.value) {
+                <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
+              }
+            </mat-button-toggle-group>
           } @else if (token.type === 'color') {
             <div class="color">
               <lenzi-color-picker [value]="value(token)" [label]="token.label" [size]="36" [disabled]="!canEdit()" (valueChange)="set(token, $event)" />

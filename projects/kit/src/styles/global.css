@@ -10,6 +10,41 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Corners (lenzi, 2026-11-14: "a toggle for squircle/normal rounded squares ... a global variable and should
+   act everywhere"): every rounded corner, Material's and the kit's, takes the shape of --lenzi-corner-shape,
+   round or squircle (a superellipse). Zero specificity, so a piece that says otherwise wins. What is a circle
+   stays one (a squircle would make it a rounded square): Material's icon buttons, radios, switch handles,
+   slider thumbs, badges, avatars and ripples here; the kit's dots and swatches in their own styles. Browsers
+   without corner-shape (only Chromium has it) keep round corners. */
+:where(*, *::before, *::after) {
+  corner-shape: var(--lenzi-corner-shape, round);
+}
+
+:where(
+    .mat-mdc-icon-button,
+    .mat-mdc-icon-button *,
+    .mat-mdc-icon-button::before,
+    .mat-mdc-icon-button::after,
+    .mdc-radio,
+    .mdc-radio *,
+    .mdc-switch__handle,
+    .mdc-switch__handle *,
+    .mdc-switch__ripple,
+    .mdc-slider__thumb,
+    .mdc-slider__thumb *,
+    .mdc-checkbox__ripple,
+    .mat-mdc-checkbox-ripple,
+    .mat-badge-content,
+    .mat-mdc-card-avatar,
+    .mat-mdc-chip-avatar,
+    .mat-ripple-element,
+    .lenzi-round,
+    .lenzi-round::before,
+    .lenzi-round::after
+  ) {
+  corner-shape: round;
+}
+
 /* ---------------------------------------------------------------------------------------------
    Glass (lenzi, 2026-10-01: "un po' di trasparenza nelle finestre", like Android 17's app menu and
    notification shade). Not a Material 3 rule for apps: the kit's own style, on Material's own

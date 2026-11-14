@@ -25,6 +25,8 @@
   height: 6px;
   margin-left: 6px;
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
   vertical-align: middle;
   background: var(--mat-sys-primary);
 }

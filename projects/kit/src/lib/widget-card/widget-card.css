@@ -28,6 +28,8 @@ mat-card-header {
   height: 40px;
   font-size: 22px;
   border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
   color: var(--mat-sys-primary);
   background-color: var(--mat-sys-surface-container-high);
 }

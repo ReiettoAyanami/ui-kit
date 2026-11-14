@@ -127,6 +127,11 @@
   max-width: 320px;
 }
 
+/* A choice: its words side by side, as wide as they are. */
+.choice {
+  width: fit-content;
+}
+
 .token-description {
   margin: 0;
   font: var(--mat-sys-body-medium);
