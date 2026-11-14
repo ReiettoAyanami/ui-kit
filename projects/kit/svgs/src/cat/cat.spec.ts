@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LenziSights } from '@lenzi/ui-kit/backgrounds';
 
-import { LenziCat } from './cat';
-import { CAT_BACKS, CAT_EXPRESSIONS } from './cat-art';
+import { LenziCat, closingEye } from './cat';
+import { CAT_BACKS, CAT_EXPRESSIONS, CAT_EYE_EDGES } from './cat-art';
 
 describe('LenziCat', () => {
   let fixture: ComponentFixture<LenziCat>;
@@ -102,6 +102,35 @@ describe('LenziCat', () => {
     window.dispatchEvent(new PointerEvent('pointermove', { clientX: 950, clientY: 900 }));
     fixture.detectChanges();
     expect(figure.classList).not.toContain('petted');
+  });
+
+  it('closes an open eye into a U: the top comes down onto the lower stroke, the hole closes', () => {
+    const edges = CAT_EYE_EDGES.happy.left;
+    const open = closingEye(edges, 0);
+    const shut = closingEye(edges, 1);
+    const ys = (d: string, outline: number) => {
+      const numbers = d.split('Z')[outline]!.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
+      return numbers.filter((_, i) => i % 2 === 1);
+    };
+    // open, the outer outline reaches the eye's top; shut, it goes no higher than the inner bottom edge
+    const innerBottomTop = Math.min(...edges.innerBottom.filter((_, i) => i % 2 === 1));
+    expect(Math.min(...ys(open, 0))).toBeLessThan(innerBottomTop - 50);
+    expect(Math.min(...ys(shut, 0))).toBeGreaterThanOrEqual(innerBottomTop - 0.1);
+  });
+
+  it('petted, its eyes close into a U and open back into the drawing', async () => {
+    await set({ expression: 'watching', pettable: true });
+    host().getBoundingClientRect = () => new DOMRect(100, 100, 200, 280);
+    const lid = host().querySelector<SVGPathElement>('.eye')!;
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, clientY: 200 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 190, clientY: 210 }));
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(lid.getAttribute('d')).toBe(closingEye(CAT_EYE_EDGES.happy.left, 1));
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 900, clientY: 210 }));
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(lid.getAttribute('d')).toBe(CAT_EXPRESSIONS.happy.eyeLeft);
   });
 
   it('is decoration unless it is given a label', async () => {

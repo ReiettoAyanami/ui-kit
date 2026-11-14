@@ -2,7 +2,7 @@ import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, booleanAt
 
 import { LenziGlow, LenziLit, LenziPoint, LenziSights, LenziSolid } from '@lenzi/ui-kit/backgrounds';
 
-import { CAT_ASPECT, CAT_BACKS, CAT_EXPRESSIONS, CAT_VIEW_BOX, CatShape } from './cat-art';
+import { CAT_ASPECT, CAT_BACKS, CAT_EXPRESSIONS, CAT_EYE_EDGES, CAT_VIEW_BOX, CatEyeEdges, CatShape } from './cat-art';
 
 /**
  * Its face: three expressions; watching (open eyes whose pupils follow the pointer, or what moves on the
@@ -33,6 +33,54 @@ const EYE_TRAVEL = { x: 34, y: 26 };
 const FACE_TRAVEL = { x: 12, y: 9 };
 /** How far away, as widths of the cat, something is for the pupils to go all the way to that side. */
 const FAR = 1.4;
+/**
+ * The happy mouth (an ω, "il 3") opened (lenzi, 2026-11-14: "fagli aprire la bocca aggiungendo una v tra il
+ * 3"): a V hanging from the bottom of its two bowls, drawn as a line as wide as the drawing's. Its points, in
+ * the drawing's units, read from the mouth's outline.
+ */
+function openMouth(mouth: string): { d: string; width: number } {
+  const numbers = (mouth.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+  const points: [number, number][] = [];
+  for (let i = 0; i + 1 < numbers.length; i += 2) points.push([numbers[i]!, numbers[i + 1]!]);
+  const left = Math.min(...points.map(([x]) => x));
+  const right = Math.max(...points.map(([x]) => x));
+  const middle = (left + right) / 2;
+  const lowest = (from: number, to: number) => points.filter(([x]) => x >= from && x <= to).reduce((low, p) => (p[1] > low[1] ? p : low));
+  const bowlLeft = lowest(left, middle - (right - left) * 0.1);
+  const bowlRight = lowest(middle + (right - left) * 0.1, right);
+  // the line's middle: half a line up from the outline's bottom
+  const half = MOUTH_LINE / 2;
+  const start = [bowlLeft[0], bowlLeft[1] - half];
+  const end = [bowlRight[0], bowlRight[1] - half];
+  const depth = (end[0]! - start[0]!) * 0.55;
+  const tip = [(start[0]! + end[0]!) / 2, Math.max(start[1]!, end[1]!) + depth];
+  return { d: `M${start[0]!.toFixed(1)} ${start[1]!.toFixed(1)}L${tip[0]!.toFixed(1)} ${tip[1]!.toFixed(1)}L${end[0]!.toFixed(1)} ${end[1]!.toFixed(1)}`, width: MOUTH_LINE };
+}
+/** The width of the drawing's thin lines (the mouth, the whiskers), in its units. */
+const MOUTH_LINE = 24;
+const OPEN_MOUTH = openMouth(CAT_EXPRESSIONS.happy.mouth);
+
+/** How long the eyes take to close into a U, or to open, ms. */
+const LID_TIME = 420;
+
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+
+/**
+ * An open eye closing (lenzi, 2026-11-14: "fai chiudere gli occhi in una specie di U"), `t` 0 (open) to 1
+ * (shut): its top edges come down onto the inner bottom edge, so the hole closes and the ring's lower stroke
+ * is left, a U. Two outlines, filled even-odd.
+ */
+export function closingEye(edges: CatEyeEdges, t: number): string {
+  const lower = (from: readonly number[]) => from.map((value, i) => value + (edges.innerBottom[i]! - value) * t);
+  const outline = (top: readonly number[], bottom: readonly number[]) => {
+    let d = `M${top[0]!.toFixed(1)} ${top[1]!.toFixed(1)}`;
+    for (let i = 2; i < top.length; i += 2) d += `L${top[i]!.toFixed(1)} ${top[i + 1]!.toFixed(1)}`;
+    for (let i = bottom.length - 2; i >= 0; i -= 2) d += `L${bottom[i]!.toFixed(1)} ${bottom[i + 1]!.toFixed(1)}`;
+    return `${d}Z`;
+  };
+  return outline(lower(edges.outerTop), edges.outerBottom) + outline(lower(edges.innerTop), edges.innerBottom);
+}
+
 /** The drawing's width, in its own units. */
 const DRAWING_WIDTH = Number(CAT_VIEW_BOX.split(' ')[2]);
 
@@ -120,6 +168,15 @@ export class LenziCat {
   private readonly faceGroup = viewChild<ElementRef<SVGGElement>>('faceGroup');
   private readonly eyeLeft = viewChild<ElementRef<SVGGElement>>('eyeLeft');
   private readonly eyeRight = viewChild<ElementRef<SVGGElement>>('eyeRight');
+  private readonly lidLeft = viewChild<ElementRef<SVGPathElement>>('lidLeft');
+  private readonly lidRight = viewChild<ElementRef<SVGPathElement>>('lidRight');
+  /** The happy mouth opened, petted: only on the happy faces. */
+  protected readonly openMouth = computed(() => (this.pettable() && (this.expression() === 'happy' || this.expression() === 'watching') ? OPEN_MOUTH : null));
+  /** The open eyes' edges, for closing them into a U; null for a face without open eyes. */
+  private readonly lids = computed(() => {
+    const expression = this.expression();
+    return expression === 'happy' || expression === 'watching' ? CAT_EYE_EDGES.happy : expression === 'sad' ? CAT_EYE_EDGES.sad : null;
+  });
 
   constructor() {
     const document = inject(DOCUMENT);
@@ -151,6 +208,44 @@ export class LenziCat {
       }
       if (moved >= 1 && !this.petted()) this.petted.set(true);
     };
+    // the eyes closing into a U and opening again: how closed they are now, 0..1, towards petted or not
+    let closed = 0;
+    let lidFrame: number | null = null;
+    let lidLast = 0;
+    const drawLids = () => {
+      const lids = this.lids();
+      const face = this.face();
+      for (const [side, element] of [
+        ['left', this.lidLeft()?.nativeElement],
+        ['right', this.lidRight()?.nativeElement],
+      ] as const) {
+        if (!element || !face) continue;
+        // open or shut all the way: the drawing as it is
+        if (!lids || closed <= 0) element.setAttribute('d', side === 'left' ? face.eyeLeft : face.eyeRight);
+        else element.setAttribute('d', closingEye(lids[side], easeInOut(closed)));
+      }
+    };
+    const lidTick = (now: number) => {
+      lidFrame = null;
+      const target = this.petted() && this.lids() ? 1 : 0;
+      const still = view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      const step = still ? 1 : Math.max(0, now - lidLast) / LID_TIME;
+      lidLast = now;
+      closed = target > closed ? Math.min(target, closed + step) : Math.max(target, closed - step);
+      drawLids();
+      if (closed !== target && view) lidFrame = view.requestAnimationFrame(lidTick);
+    };
+    effect(() => {
+      this.petted();
+      this.lids();
+      if (lidFrame !== null || !view?.requestAnimationFrame) return;
+      lidLast = view.performance.now();
+      lidFrame = view.requestAnimationFrame(lidTick);
+    });
+    inject(DestroyRef).onDestroy(() => {
+      if (lidFrame !== null) view?.cancelAnimationFrame(lidFrame);
+    });
+
     const onPointerGone = (event: PointerEvent) => {
       if (event.type === 'pointerout' ? event.relatedTarget === null : event.pointerType !== 'mouse') {
         pointer = null;

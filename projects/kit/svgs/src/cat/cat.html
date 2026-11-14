@@ -30,12 +30,16 @@
       <g #faceGroup class="face">
         <!-- watching, the eyes themselves turn towards what it looks at (no pupils: lenzi's drawing has none) -->
         <g #eyeLeft class="gaze">
-          <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeLeft" />
+          <path #lidLeft class="eye" fill-rule="evenodd" [attr.d]="face.eyeLeft" />
         </g>
         <g #eyeRight class="gaze">
-          <path class="eye" fill-rule="evenodd" [attr.d]="face.eyeRight" />
+          <path #lidRight class="eye" fill-rule="evenodd" [attr.d]="face.eyeRight" />
         </g>
         <path class="mouth" fill-rule="evenodd" [attr.d]="face.mouth" />
+        @if (openMouth(); as open) {
+          <!-- petted, it opens its mouth: a V under the ω -->
+          <path class="open-mouth" [attr.d]="open.d" [attr.stroke-width]="open.width" />
+        }
         <path class="whiskers left" fill-rule="evenodd" [attr.d]="face.whiskersLeft" />
         <path class="whiskers right" fill-rule="evenodd" [attr.d]="face.whiskersRight" />
       </g>
