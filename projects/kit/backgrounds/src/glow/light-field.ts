@@ -1,6 +1,6 @@
 import { DOCUMENT, Injectable, inject } from '@angular/core';
 
-import { LIGHT_WORKLET } from './light-worklet';
+import { LIGHT_STOPS, LIGHT_WORKLET } from './light-worklet';
 
 /** What a lamp shines with, read at every frame (an input that changes is seen at once). */
 export interface LenziLamp {
@@ -102,8 +102,8 @@ export const cssColor = (color: string): string => (color.trim().startsWith('--'
  * "a faint hard shadow ... for if a solid component is interacting with light").
  *
  * Every frame while a light is on, it measures where the lamps, the surfaces (`lenziLit`, `lenziSolid`)
- * and the solid elements are, and gives each surface the light of the lamps that reach it: from the side
- * that faces each lamp, in the lamp's colour, brighter the nearer it is; the lights add up; where a solid
+ * and the solid elements are, and gives each surface the light of the lamps that reach it: centred on each
+ * lamp, fading with the distance from its outline, in its colour; the lights add up; where a solid
  * element stands between a lamp and a surface, a hard shadow takes part of that lamp's light away. The
  * surface shows it over everything it holds (its `::before`, and its border in `::after`): drawn by a
  * paint worklet (`paint(lenzi-light)`, from `--lenzi-light-data`) where the browser has one, by CSS
@@ -224,14 +224,20 @@ export class LenziLightField {
         this.write(surface, '', '', '');
         continue;
       }
-      const centre = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 };
       const data: unknown[] = [];
       const gradients = (amount: string) => {
         const list = reaching.map((light) => {
-          const x = clamp(centre.x, light.box.left, light.box.right) - box.left;
-          const y = clamp(centre.y, light.box.top, light.box.bottom) - box.top;
+          // centred on the lamp (2026-11-14: "they're generally uncentered"): an ellipse round its box, full
+          // over it, fading `reach` px off it (the worklet fades off its outline exactly)
+          const half = { x: (light.box.right - light.box.left) / 2, y: (light.box.bottom - light.box.top) / 2 };
+          const x = light.box.left + half.x - box.left;
+          const y = light.box.top + half.y - box.top;
+          const radius = { x: half.x + light.reach, y: half.y + light.reach };
+          const inner = (half.x / radius.x + half.y / radius.y) / 2;
+          const stop = (share: number) => `${Math.round((inner + (1 - inner) * share) * 1000) / 10}%`;
           const at = (share: number) => mix(light.color, amount, light.strength * share);
-          return `radial-gradient(circle ${Math.round(light.reach)}px at ${Math.round(x)}px ${Math.round(y)}px, ${at(1)}, ${at(0.82)} 15%, ${at(0.5)} 38%, ${at(0.2)} 68%, transparent)`;
+          const fade = LIGHT_STOPS.map(([where, share]) => (share === 0 ? 'transparent' : `${at(share)} ${stop(where)}`));
+          return `radial-gradient(ellipse ${Math.round(radius.x)}px ${Math.round(radius.y)}px at ${Math.round(x)}px ${Math.round(y)}px, ${fade.join(', ')})`;
         });
         if (own) {
           const tint = mix(own.color, amount, own.strength * OWN_LIGHT);
@@ -240,9 +246,6 @@ export class LenziLightField {
         return list.join(', ');
       };
       for (const light of reaching) {
-        // the light comes from the lamp's side that faces this surface
-        const x = clamp(centre.x, light.box.left, light.box.right) - box.left;
-        const y = clamp(centre.y, light.box.top, light.box.bottom) - box.top;
         // a shadow is cast from the lamp's middle
         const from = { x: (light.box.left + light.box.right) / 2, y: (light.box.top + light.box.bottom) / 2 };
         const shadows = casters
@@ -250,9 +253,11 @@ export class LenziLightField {
           // shouldn't be able to cast to the one on top")
           .filter((caster) => caster.element !== surface.element && caster.element !== light.element && !inside(from, caster.box) && above(caster.element, surface.element))
           .map((caster) => shadowOf(caster.box, from, caster.radius).map((value, index) => Math.round(value - (index % 2 === 0 ? box.left : box.top))));
-        data.push([Math.round(x), Math.round(y), Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
+        // the lamp's box in the surface's px: its light fades off its outline, all round it
+        const lampBox = [light.box.left - box.left, light.box.top - box.top, light.box.right - box.left, light.box.bottom - box.top].map(Math.round);
+        data.push([...lampBox, Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
       }
-      if (own) data.push([0, 0, -1, ...this.rgb(own.color), round(own.strength * OWN_LIGHT)]);
+      if (own) data.push([0, 0, 0, 0, -1, ...this.rgb(own.color), round(own.strength * OWN_LIGHT)]);
       this.write(surface, gradients('--lenzi-glow-veil'), gradients('--lenzi-glow-rim'), `'${JSON.stringify(data)}'`);
     }
 
@@ -349,7 +354,6 @@ export class LenziLightField {
   }
 }
 
-const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 const round = (value: number) => Math.round(value * 1000) / 1000;
 const inside = (point: { x: number; y: number }, box: Box) => point.x > box.left && point.x < box.right && point.y > box.top && point.y < box.bottom;
 

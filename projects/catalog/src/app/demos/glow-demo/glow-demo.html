@@ -1,5 +1,17 @@
+@switch (behind()) {
+  @case ('blobs') {
+    <lenzi-blob-background />
+  }
+  @case ('flock') {
+    <lenzi-flock-background [count]="500" [trails]="0.5" />
+  }
+  @case ('picture') {
+    <lenzi-background image="demo/hills.svg" />
+  }
+}
+
 <!-- The floor: lit by the lamps, under what it holds, so the solid elements' shadows fall on it. -->
-<div class="field lenzi-lit-under" lenziLit>
+<div class="field lenzi-lit-under" lenziLit [class.over-background]="behind() !== 'dark'">
   @for (item of items(); track item.kind; let index = $index) {
     <div class="item" cdkDrag cdkDragBoundary=".field" (cdkDragEnded)="dropped()">
       <div class="bar">

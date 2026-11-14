@@ -210,7 +210,8 @@ the rule says what, the variable says how much.
 - **A glowing element is a lamp on the page's plane** (lenzi, 2026-11-14: "a lit surface and projects light
   directly onto the others component ... this elements must act on the same plain as the other elements
   unlike the backhgorund"): `lenziGlow` on any element (a button, a list, a card, a chip). It glows in its
-  colour and lights the lit surfaces (`lenziLit`) near it from the side that faces it.
+  colour and lights the lit surfaces (`lenziLit`) near it, centred on itself (lenzi, 2026-11-14: "they're
+  generally uncentered"): the light fades with the distance from its outline.
 - **Any colour, and lights add up** (lenzi: "ovviamente la luce di tutti i colori").
 - **Lamps are few**: they say that something is alive. **Only lit surfaces take light**; the rest stays solid.
 - **Solid elements cast a faint hard shadow** (lenzi, 2026-11-14: "a faint hard shadow ... for if a solid

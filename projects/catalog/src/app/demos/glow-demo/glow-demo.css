@@ -18,6 +18,11 @@
   padding: 24px 16px;
 }
 
+/* Over a background the page has no colour of its own, and the floor is glass over it. */
+:host:has(.over-background) {
+  background-color: transparent;
+}
+
 .item {
   display: flex;
   flex-direction: column;

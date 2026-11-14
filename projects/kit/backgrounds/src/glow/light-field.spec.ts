@@ -21,17 +21,16 @@ describe('LenziLightField', () => {
     document.body.innerHTML = '';
   });
 
-  it('lights a surface near a lamp from the side that faces it, in the lamp’s colour, without putting anything inside it', () => {
+  it('lights a surface near a lamp with a light centred on the lamp, in the lamp’s colour, without putting anything inside it', () => {
     const surface = placed(300, 0, 100, 100);
     field.addSurface(surface);
     field.addLamp(placed(150, 40, 50, 20), () => lamp());
     field.update(1);
     const image = veil(surface);
-    // from the lamp's right edge (x 200, 100 px left of the surface), at the height of the surface's middle
-    expect(image).toContain('at -100px 50px');
-    expect(image).toContain('circle 200px');
-    // as much as the global variable says
-    expect(image).toContain('color-mix(in srgb, #ff0000 min(100%, calc(var(--lenzi-glow-veil) * 1)), transparent)');
+    // from the lamp's middle (x 175, 125 px left of the surface; y 50), round its box: its half size plus its reach
+    expect(image).toContain('ellipse 225px 210px at -125px 50px');
+    // as much as the global variable says, below full: it lies over the whole lamp
+    expect(image).toContain('color-mix(in srgb, #ff0000 min(100%, calc(var(--lenzi-glow-veil) * 0.6)), transparent)');
     expect(surface.style.getPropertyValue('--lenzi-lamps-rim')).toContain('var(--lenzi-glow-rim)');
     expect(surface.children.length).toBe(0);
   });
@@ -48,7 +47,7 @@ describe('LenziLightField', () => {
     expect(image.indexOf('#ff0000')).toBeGreaterThan(-1);
     expect(image.indexOf('#0000ff')).toBeGreaterThan(image.indexOf('#ff0000'));
     const own = veil(red);
-    expect(own).toContain('radial-gradient(circle 200px');
+    expect(own).toContain('radial-gradient(ellipse');
     expect(own).toContain('#0000ff');
     // its own light: even, not from a side
     expect(own).toMatch(/linear-gradient\(color-mix\(in srgb, #ff0000 /);
@@ -91,9 +90,9 @@ describe('LenziLightField', () => {
     field.update(1);
     const raw = floor.style.getPropertyValue('--lenzi-light-data');
     expect(raw.startsWith("'") && raw.endsWith("'")).toBe(true);
-    const [[x, y, reach, r, g, b, strength, shadows]] = JSON.parse(raw.slice(1, -1));
-    // the lamp is inside the floor: its light comes from the point nearest the floor's middle
-    expect([x, y, reach, strength]).toEqual([110, 200, 600, 1]);
+    const [[left, top, right, bottom, reach, r, g, b, strength, shadows]] = JSON.parse(raw.slice(1, -1));
+    // the lamp's whole box, in the floor's px: its light fades off its outline, centred on it
+    expect([left, top, right, bottom, reach, strength]).toEqual([90, 190, 110, 210, 600, 1]);
     expect([r, g, b]).toHaveLength(3);
     expect(shadows).toHaveLength(1);
     const xs = (shadows[0] as number[]).filter((_, index) => index % 2 === 0);
@@ -112,9 +111,9 @@ describe('LenziLightField', () => {
     const floor = placed(0, 0, 1000, 400);
     field.addSurface(floor);
     field.update(1);
-    const [[, , , , , , , onFloor]] = JSON.parse(floor.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
+    const [[, , , , , , , , , onFloor]] = JSON.parse(floor.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
     expect(onFloor).toEqual([]);
-    const [[, , , , , , , onBlock]] = JSON.parse(block.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
+    const [[, , , , , , , , , onBlock]] = JSON.parse(block.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
     expect(onBlock).toEqual([]);
   });
 
@@ -167,7 +166,7 @@ describe('LenziLightField', () => {
     const over = placed(400, 150, 200, 100);
     field.addSurface(over);
     field.update(1);
-    const shadows = (element: HTMLElement) => JSON.parse(element.style.getPropertyValue('--lenzi-light-data').slice(1, -1))[0][7];
+    const shadows = (element: HTMLElement) => JSON.parse(element.style.getPropertyValue('--lenzi-light-data').slice(1, -1))[0][9];
     expect(shadows(under)).toHaveLength(1);
     expect(shadows(over)).toEqual([]);
   });

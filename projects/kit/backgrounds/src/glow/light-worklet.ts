@@ -10,9 +10,22 @@
 export const LIGHT_PAINT = 'lenzi-light';
 
 /**
+ * How a lamp's light fades: [where, 0 at the lamp's outline to 1 at its reach; how much of it]. Over the
+ * lamp itself it is the first. The worklet and the CSS gradients (no worklet) use the same.
+ */
+export const LIGHT_STOPS: readonly (readonly [number, number])[] = [
+  [0, 0.6],
+  [0.15, 0.48],
+  [0.38, 0.3],
+  [0.68, 0.12],
+  [1, 0],
+];
+
+/**
  * `--lenzi-light-data` is a CSS string holding JSON: a list of lights, each
- * `[x, y, reach, r, g, b, strength, shadows]` (a lamp: a light from the point x, y that fades out at
- * `reach` px; `shadows` a list of polygons, flat lists of x, y) or `[0, 0, -1, r, g, b, strength]` (an even
+ * `[left, top, right, bottom, reach, r, g, b, strength, shadows]` (a lamp: its box, in the surface's px; its
+ * light fades out `reach` px off its outline; `shadows` a list of polygons, flat lists of x, y) or
+ * `[0, 0, 0, 0, -1, r, g, b, strength]` (an even
  * light over the whole surface: a lamp's own). `--lenzi-light-part` says which amount to use: `veil`
  * (`--lenzi-glow-veil`) or `rim` (`--lenzi-glow-rim`); `--lenzi-shadow` how much light a shadow takes away.
  */
@@ -41,23 +54,47 @@ registerPaint('${LIGHT_PAINT}', class {
     const { width, height } = size;
     // lights add up
     ctx.globalCompositeOperation = 'lighter';
-    for (const [x, y, reach, r, g, b, strength, shadows] of lights) {
+    for (const [left, top, right, bottom, reach, r, g, b, strength, shadows] of lights) {
       const alpha = (share) => 'rgba(' + r + ',' + g + ',' + b + ',' + Math.min(1, amount * strength * share) + ')';
       if (reach < 0) {
         ctx.fillStyle = alpha(1);
         ctx.fillRect(0, 0, width, height);
         continue;
       }
-      // near the lamp the light is strong, then fades slowly: a light, not a disc
-      const light = ctx.createRadialGradient(x, y, 0, x, y, reach);
-      light.addColorStop(0, alpha(1));
-      light.addColorStop(0.15, alpha(0.82));
-      light.addColorStop(0.38, alpha(0.5));
-      light.addColorStop(0.68, alpha(0.2));
-      light.addColorStop(1, alpha(0));
-      ctx.fillStyle = light;
+      // near the lamp the light is strong, then fades slowly: a light, not a disc. It lies over the whole
+      // lamp and all round it, so it starts below full: two lamps side by side do not wash each other out
+      const stops = (gradient) => {
+        gradient.addColorStop(0, alpha(${LIGHT_STOPS[0]![1]}));
+        ${LIGHT_STOPS.slice(1)
+          .map(([at, share]) => `gradient.addColorStop(${at}, alpha(${share}));`)
+          .join('\n        ')}
+        return gradient;
+      };
+      // the light fades with the distance from the lamp's outline, all around it, so it is centred on the
+      // lamp whatever its shape (lenzi, 2026-11-14: "they're generally uncentered"): full over the lamp,
+      // a linear fade off each side, a round one off each corner (nine pieces that do not overlap)
+      const light = () => {
+        ctx.fillStyle = alpha(${LIGHT_STOPS[0]![1]});
+        ctx.fillRect(left, top, right - left, bottom - top);
+        const side = (x0, y0, x1, y1, x, y, w, h) => {
+          ctx.fillStyle = stops(ctx.createLinearGradient(x0, y0, x1, y1));
+          ctx.fillRect(x, y, w, h);
+        };
+        side(0, top, 0, top - reach, left, top - reach, right - left, reach);
+        side(0, bottom, 0, bottom + reach, left, bottom, right - left, reach);
+        side(left, 0, left - reach, 0, left - reach, top, reach, bottom - top);
+        side(right, 0, right + reach, 0, right, top, reach, bottom - top);
+        const corner = (x, y, cx, cy) => {
+          ctx.fillStyle = stops(ctx.createRadialGradient(cx, cy, 0, cx, cy, reach));
+          ctx.fillRect(x, y, reach, reach);
+        };
+        corner(left - reach, top - reach, left, top);
+        corner(right, top - reach, right, top);
+        corner(left - reach, bottom, left, bottom);
+        corner(right, bottom, right, bottom);
+      };
       if (!shadows || shadows.length === 0) {
-        ctx.fillRect(0, 0, width, height);
+        light();
         continue;
       }
       const trace = (points) => {
@@ -73,7 +110,7 @@ registerPaint('${LIGHT_PAINT}', class {
         trace(points);
         ctx.clip('evenodd');
       }
-      ctx.fillRect(0, 0, width, height);
+      light();
       ctx.restore();
       // inside them, what the shadow leaves of it: hard edges, and faint
       if (shadow < 1) {
@@ -82,7 +119,7 @@ registerPaint('${LIGHT_PAINT}', class {
         for (const points of shadows) trace(points);
         ctx.clip('nonzero');
         ctx.globalAlpha = 1 - shadow;
-        ctx.fillRect(0, 0, width, height);
+        light();
         ctx.restore();
       }
     }

@@ -1324,6 +1324,19 @@ ${tag('lenzi-flock-background', [
     demo: () => import('./demos/glow-demo/glow-demo').then((m) => m.GlowDemo),
     controls: [
       { key: 'lights', label: 'Every light on', type: 'boolean', default: true, code: false },
+      {
+        key: 'behind',
+        label: 'Behind them',
+        type: 'select',
+        default: 'dark',
+        options: [
+          { value: 'dark', label: 'nothing: only the lamps shine' },
+          { value: 'blobs', label: 'blobs' },
+          { value: 'flock', label: 'a flock' },
+          { value: 'picture', label: 'a picture' },
+        ],
+        code: false,
+      },
       { key: 'strength', label: 'Strength (0 to 2)', type: 'number', default: 1, min: 0, max: 2, step: 0.05, code: { match: /\[glowStrength\]="(-?[\d.]+)"/, otherwise: 1 } },
       { key: 'reach', label: 'Reach (px)', type: 'number', default: 220, min: 20, max: 600, step: 10, code: { match: /\[glowReach\]="(-?[\d.]+)"/, otherwise: 220 } },
       { key: 'veil', label: 'Lamp light on a surface (%)', type: 'number', default: 70, min: 0, max: 100, step: 1, code: { match: /--lenzi-glow-veil:\s*(-?[\d.]+)%/ } },

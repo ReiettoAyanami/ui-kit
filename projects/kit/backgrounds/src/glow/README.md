@@ -17,7 +17,8 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
   it, and its light lies over what it holds (a toggle's chosen segment too). `[lenziGlow]="false"` fades it
   out; then it is glass like the others.
 - **It lights the surfaces around it, on the same plane**: each surface it reaches (`glowReach`) takes its
-  light from the side that faces it, brighter the nearer it is, over everything it holds
+  light centred on the lamp, fading with the distance from the lamp's outline (all round it, whatever its
+  shape), over everything it holds
   (`--lenzi-glow-veil`) and along its border (`--lenzi-glow-rim`). The light follows the elements wherever
   they move (scroll, layout, dragging).
 - **Any colour, and colours add up**: a surface between a red lamp and a blue one is red on one side, blue on

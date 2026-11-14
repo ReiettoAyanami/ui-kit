@@ -10,7 +10,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LenziColorChoice, LenziColorPicker } from '@lenzi/ui-kit';
-import { LenziGlow, LenziLit, LenziSolid } from '@lenzi/ui-kit/backgrounds';
+import { LenziBackground, LenziBlobBackground, LenziFlockBackground, LenziGlow, LenziLit, LenziSolid } from '@lenzi/ui-kit/backgrounds';
 
 import { Values } from '../../registry';
 
@@ -52,6 +52,9 @@ const START: readonly Item[] = [
   selector: 'app-glow-demo',
   imports: [
     CdkDrag,
+    LenziBackground,
+    LenziBlobBackground,
+    LenziFlockBackground,
     LenziColorPicker,
     LenziGlow,
     LenziLit,
@@ -73,6 +76,8 @@ export class GlowDemo {
 
   protected readonly items = signal<Item[]>(START.map((item) => ({ ...item })));
   protected readonly all = computed(() => this.values()['lights'] !== false);
+  /** What lies under the floor (lenzi, 2026-11-14: "put a background chooser under it so it shows better"). */
+  protected readonly behind = computed(() => String(this.values()['behind'] ?? 'dark'));
   protected readonly strength = computed(() => this.num('strength', 1));
   protected readonly reach = computed(() => this.num('reach', 220));
 
