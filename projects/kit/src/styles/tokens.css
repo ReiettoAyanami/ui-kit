@@ -20,7 +20,7 @@
   --lenzi-border-focus: 3px;
 
   /* Shape */
-  --lenzi-corner-shape: squircle;
+  --lenzi-corner-shape: round;
   --lenzi-float-gap: 8px;
   --lenzi-bar-radius: 16px;
   --lenzi-panel-radius: 12px;

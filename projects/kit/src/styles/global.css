@@ -17,7 +17,7 @@ html {
    slider thumbs, badges, avatars and ripples here; the kit's dots and swatches in their own styles. Browsers
    without corner-shape (only Chromium has it) keep round corners. */
 :where(*, *::before, *::after) {
-  corner-shape: var(--lenzi-corner-shape, squircle);
+  corner-shape: var(--lenzi-corner-shape, round);
 }
 
 :where(
