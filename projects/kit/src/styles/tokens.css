@@ -37,6 +37,7 @@
   --lenzi-scrim-duration: 400ms;
   --lenzi-standard-duration: 300ms;
   --lenzi-standard-easing: cubic-bezier(0.2, 0, 0, 1);
+  --lenzi-accelerate-easing: cubic-bezier(0.3, 0, 0.8, 0.15);
 
   /* Sizes */
   --lenzi-toggle-height: 32px;

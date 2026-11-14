@@ -70,16 +70,17 @@
   backdrop-filter: var(--lenzi-glass-filter);
   /* what is past its right edge does not show: closing, the edge covers the title; opening, it reveals it */
   overflow: hidden;
+  /* opening (back to this): slow at first, so a search bar is seen riding back out on the edge */
   transition:
-    width var(--lenzi-standard-duration) var(--lenzi-standard-easing),
-    padding var(--lenzi-standard-duration) var(--lenzi-standard-easing);
+    width var(--lenzi-standard-duration) var(--lenzi-accelerate-easing),
+    padding var(--lenzi-standard-duration) var(--lenzi-accelerate-easing);
 }
 
 /* The menu button at the bar's edge, the title after it, taking the room up to the actions. */
 .lenzi-shell-menu {
   margin-left: -8px;
   margin-right: 8px;
-  transition: margin var(--lenzi-standard-duration) var(--lenzi-standard-easing);
+  transition: margin var(--lenzi-standard-duration) var(--lenzi-accelerate-easing);
 }
 
 .lenzi-shell-title {
@@ -96,12 +97,17 @@
 .lenzi-shell-compact .lenzi-shell-bar.mat-toolbar {
   width: var(--lenzi-shell-bar-height);
   padding-inline: 0;
+  /* closing: fast at first, so the edge reaches a search bar soon and carries it slowly in */
+  transition:
+    width var(--lenzi-standard-duration) var(--lenzi-standard-easing),
+    padding var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
 /* the button in the middle of its square, the title just past the square (no sliver of it left beside the button) */
 .lenzi-shell-compact .lenzi-shell-menu {
   margin-left: calc((var(--lenzi-shell-bar-height) - var(--mat-icon-button-state-layer-size, 40px)) / 2);
   margin-right: calc((var(--lenzi-shell-bar-height) - var(--mat-icon-button-state-layer-size, 40px)) / 2);
+  transition: margin var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
 /* the title keeps its room (it does not shrink, nor its "…" move): the edge goes over it */
@@ -141,7 +147,7 @@
   top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px) + (var(--lenzi-shell-bar-height) - var(--lenzi-search-height)) / 2);
   z-index: 4;
   box-sizing: border-box;
-  transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-standard-easing);
+  transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-accelerate-easing);
 }
 
 .lenzi-shell-search-in-bar,
@@ -163,6 +169,7 @@
 /* A search bar the page puts left of where the button ends (a phone): its left end moves after the button. */
 .lenzi-shell-compact .lenzi-shell-search {
   padding-inline-start: max(0px, calc(env(safe-area-inset-left, 0px) + var(--lenzi-float-gap) + var(--lenzi-shell-bar-height) - var(--lenzi-shell-search-left, 0px)));
+  transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-standard-easing);
 }
 
 @media (prefers-reduced-motion: reduce) {
