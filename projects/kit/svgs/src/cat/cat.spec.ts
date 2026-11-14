@@ -90,7 +90,15 @@ describe('LenziCat', () => {
     window.dispatchEvent(new PointerEvent('pointermove', { clientX: 190, clientY: 210 }));
     fixture.detectChanges();
     expect(figure.classList).toContain('petted');
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // the hand rests on it: they open a moment later
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    fixture.detectChanges();
+    expect(figure.classList).not.toContain('petted');
+    // stroked again, then the hand leaves: they open at once
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 160, clientY: 220 }));
+    fixture.detectChanges();
+    expect(figure.classList).toContain('petted');
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 600, clientY: 220 }));
     fixture.detectChanges();
     expect(figure.classList).not.toContain('petted');
     // moving elsewhere does not pet it

@@ -33,8 +33,8 @@ const EYE_TRAVEL = { x: 34, y: 26 };
 const FACE_TRAVEL = { x: 12, y: 9 };
 /** How far away, as widths of the cat, something is for the pupils to go all the way to that side. */
 const FAR = 1.4;
-/** How long its eyes stay closed after the last stroke, ms. */
-const PET_LINGER = 700;
+/** How long its eyes stay closed after the last stroke while the hand rests on it, ms (out of it: at once). */
+const PET_LINGER = 500;
 /** The drawing's width, in its own units. */
 const DRAWING_WIDTH = Number(CAT_VIEW_BOX.split(' ')[2]);
 
@@ -139,12 +139,22 @@ export class LenziCat {
     let stroked = 0;
     let petTimer: ReturnType<typeof setTimeout> | null = null;
     const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+    const stopPetting = () => {
+      if (petTimer !== null) clearTimeout(petTimer);
+      petTimer = null;
+      if (this.petted()) this.petted.set(false);
+    };
     const onPointer = (event: PointerEvent) => {
       const moved = pointer ? Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) : 0;
       pointer = { x: event.clientX, y: event.clientY };
-      if (!this.pettable() || moved < 1) return;
+      if (!this.pettable()) return;
       const box = host.getBoundingClientRect();
-      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) return;
+      // the hand left it: its eyes open at once (2026-11-14: "when the mouse is out he takes ages to open the eyes again")
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) {
+        stopPetting();
+        return;
+      }
+      if (moved < 1) return;
       stroked = event.timeStamp;
       this.petted.set(true);
       if (petTimer !== null) clearTimeout(petTimer);
@@ -154,7 +164,10 @@ export class LenziCat {
       }, PET_LINGER);
     };
     const onPointerGone = (event: PointerEvent) => {
-      if (event.type === 'pointerout' ? event.relatedTarget === null : event.pointerType !== 'mouse') pointer = null;
+      if (event.type === 'pointerout' ? event.relatedTarget === null : event.pointerType !== 'mouse') {
+        pointer = null;
+        stopPetting();
+      }
     };
 
     const tick = (now: number) => {
