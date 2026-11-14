@@ -4,7 +4,7 @@
 // just a moment. Pure numbers; the blob scene draws them. A plain module (no schematic makes one).
 
 import { seeded } from './color';
-import { BLOB_SHAPES, BlobShape, BlobShapeName, superReach } from './shapes';
+import { BLOB_SHAPES, BlobShape, BlobShapeName, shapeRadius, superReach } from './shapes';
 
 /** The most blobs a background holds (the shader's arrays). */
 export const MAX_BLOBS = 16;
@@ -106,6 +106,31 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
     blobs.push({ x, y, radius, rotation, from: BLOB_SHAPES[shapes[from]!], to: BLOB_SHAPES[shapes[to]!], mix });
   }
   return blobs;
+}
+
+/**
+ * How far a point is from the blobs' edge, CSS px, below 0 inside: the edge the blob scene draws (each
+ * blob's shape in its direction, turned and half way between its two shapes; joined softly by `merge`
+ * px, so where two blobs melt into one the gap between them is inside too). The flock flies round it.
+ */
+export function blobEdge(blobs: readonly BlobState[], merge: number): (x: number, y: number) => number {
+  const k = Math.max(merge, 1);
+  return (x, y) => {
+    let weights = 0;
+    let nearest = Infinity;
+    for (const blob of blobs) {
+      const dx = x - blob.x;
+      const dy = y - blob.y;
+      const far = Math.hypot(dx, dy);
+      nearest = Math.min(nearest, far - blob.radius);
+      // too far to matter (as in the shader)
+      if (far > blob.radius + k * 12) continue;
+      const angle = Math.atan2(dy, dx) + blob.rotation;
+      const radius = (shapeRadius(blob.from, angle) * (1 - blob.mix) + shapeRadius(blob.to, angle) * blob.mix) * blob.radius;
+      weights += Math.exp(Math.min((radius - far) / k, 60));
+    }
+    return weights > 0 ? -k * Math.log(weights) : nearest;
+  };
 }
 
 /** A shape as the shader takes it: (m, n1, n2, its reach) and (lobes, depth, sharp). */

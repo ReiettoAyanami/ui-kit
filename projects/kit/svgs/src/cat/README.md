@@ -47,5 +47,6 @@ traced into vectors, in the theme's colours.
 | `glowColor` | a CSS colour or a variable's name | `'--mat-sys-primary'` |
 | `glowStrength` | 0 to 2 | `1` |
 | `glowReach` | px | `220` |
+| `drift` | degrees of hue a lamp's colour swings each way, slowly (0: it stays) | `0` |
 
 Variables: `--lenzi-cat-fill` (the plain and solid body), `--lenzi-cat-ink` (its lines).

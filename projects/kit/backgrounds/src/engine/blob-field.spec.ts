@@ -1,5 +1,32 @@
-import { DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from './blob-field';
+import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobsAt } from './blob-field';
 import { BLOB_SHAPES } from './shapes';
+
+describe('the blobs’ edge, for the flock', () => {
+  const circle = { rotation: 0, from: BLOB_SHAPES.circle, to: BLOB_SHAPES.circle, mix: 0 };
+
+  it('is the distance from a round blob’s edge, below 0 inside', () => {
+    const edge = blobEdge([{ ...circle, x: 0, y: 0, radius: 100 }], 1);
+    expect(edge(150, 0)).toBeCloseTo(50, 0);
+    expect(edge(0, 50)).toBeCloseTo(-50, 0);
+  });
+
+  it('follows the shape: a clover’s dip is outside where its lobe is inside', () => {
+    const edge = blobEdge([{ ...circle, from: BLOB_SHAPES.clover4, to: BLOB_SHAPES.clover4, x: 0, y: 0, radius: 100 }], 1);
+    // a lobe at angle 0, a dip at 45°: at 90 px out, inside the lobe, outside the dip
+    expect(edge(90, 0)).toBeLessThan(0);
+    expect(edge(90 * Math.SQRT1_2, 90 * Math.SQRT1_2)).toBeGreaterThan(0);
+  });
+
+  it('takes in the gap where two blobs melt into one', () => {
+    const blobs = [
+      { ...circle, x: 0, y: 0, radius: 100 },
+      { ...circle, x: 210, y: 0, radius: 100 },
+    ];
+    // the point between them, 5 px from each: outside both alone, inside once they melt
+    expect(blobEdge(blobs, 1)(105, 0)).toBeGreaterThan(0);
+    expect(blobEdge(blobs, 30)(105, 0)).toBeLessThan(0);
+  });
+});
 
 describe('where the blobs are', () => {
   it('the same moment is always the same picture; another moment, another', () => {

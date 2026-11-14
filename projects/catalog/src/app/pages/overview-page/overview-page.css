@@ -1,8 +1,9 @@
-/* The cat: fixed in the corner, half below the screen, behind the page's words, and never in the way. */
+/* The cat: fixed in the corner, half below the screen, glass in front of the page (behind the glass pane it
+   was lost), and never in the way of a click. */
 .mascot {
   position: fixed;
   right: clamp(8px, 4vw, 64px);
-  z-index: 0;
+  z-index: 2;
   pointer-events: none;
 }
 
@@ -11,8 +12,28 @@
   z-index: 1;
   box-sizing: border-box;
   max-width: 1040px;
-  margin: 0 auto;
-  padding: 8px 16px 64px;
+  margin: 16px auto 48px;
+  padding: 8px 24px 32px;
+}
+
+/* The glass pane: as large as the page, behind its elements, with the border and radius of a panel. */
+.pane {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+}
+
+.page > :not(.pane) {
+  position: relative;
+}
+
+@media (max-width: 599px) {
+  .page {
+    margin: 8px 8px 32px;
+    padding: 8px 16px 24px;
+  }
 }
 
 .hero {
@@ -56,20 +77,16 @@
   padding: 16px;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: var(--lenzi-panel-radius);
-  background: var(--mat-sys-surface-container-low);
   color: inherit;
   text-decoration: none;
-  transition: background-color 150ms linear;
+  transition: border-color 150ms linear;
 }
 
+/* Glass (lenziLit): its own colour is the glass's; pointed at, its border lights up. */
 .section:hover,
 .section:focus-visible {
-  background: var(--mat-sys-surface-container);
-  outline: none;
-}
-
-.section:focus-visible {
   border-color: var(--mat-sys-primary);
+  outline: none;
 }
 
 .icon {

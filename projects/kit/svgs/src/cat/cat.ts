@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, input, numberAttribute, viewChild } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, input, numberAttribute, signal, viewChild } from '@angular/core';
 
 import { LenziGlow, LenziLit, LenziPoint, LenziSights, LenziSolid } from '@lenzi/ui-kit/backgrounds';
 
@@ -84,6 +84,14 @@ export class LenziCat {
   readonly glowColor = input('--mat-sys-primary');
   readonly glowStrength = input(1, { transform: numberAttribute });
   readonly glowReach = input(220, { transform: numberAttribute });
+  /**
+   * A lamp's colour drifts slowly round its own, by this many degrees of hue each way (lenzi, 2026-11-14:
+   * "fallo luminoso che cambia leggermente il colore nel tempo come i blob"); 0: it stays. Not with reduced motion.
+   */
+  readonly drift = input(0, { transform: numberAttribute });
+
+  /** Where the drift is now, -1..1. */
+  private readonly swing = signal(0);
 
   protected readonly viewBox = CAT_VIEW_BOX;
   protected readonly aspect = CAT_ASPECT;
@@ -167,6 +175,26 @@ export class LenziCat {
       view.addEventListener('pointercancel', onPointerGone, { passive: true });
       document.addEventListener('pointerout', onPointerGone, { passive: true });
     });
+    // a lamp whose colour drifts: two slow waves, never quite in step (as the blobs wander)
+    let drifting: ReturnType<typeof setInterval> | null = null;
+    effect(() => {
+      const wanted = this.drift() > 0 && this.material() === 'lamp' && !(view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+      if (wanted && drifting === null && view) {
+        const start = view.performance.now();
+        drifting = setInterval(() => {
+          const t = (view.performance.now() - start) / 1000;
+          this.swing.set(0.7 * Math.sin((t * 2 * Math.PI) / 14) + 0.3 * Math.sin((t * 2 * Math.PI) / 37 + 1.3));
+        }, 100);
+      } else if (!wanted && drifting !== null) {
+        clearInterval(drifting);
+        drifting = null;
+        this.swing.set(0);
+      }
+    });
+    inject(DestroyRef).onDestroy(() => {
+      if (drifting !== null) clearInterval(drifting);
+    });
+
     // the eyes move only while it watches
     effect(() => {
       if (!view?.requestAnimationFrame) return;
@@ -189,9 +217,11 @@ export class LenziCat {
       document.removeEventListener('pointerout', onPointerGone);
     });
   }
-  /** A lamp's colour as CSS (a variable's name as its var()). */
+  /** A lamp's colour as CSS (a variable's name as its var()), its hue turned by the drift of now. */
   protected readonly lampColor = computed(() => {
-    const color = this.glowColor().trim();
-    return color.startsWith('--') ? `var(${color})` : color;
+    const raw = this.glowColor().trim();
+    const color = raw.startsWith('--') ? `var(${raw})` : raw;
+    const turn = Math.round(this.drift() * this.swing() * 10) / 10;
+    return turn === 0 ? color : `oklch(from ${color} l c calc(h + ${turn}))`;
   });
 }

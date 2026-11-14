@@ -1178,6 +1178,7 @@ ${tag('lenzi-blob-background', [
     demo: () => import('./demos/flock-background-demo/flock-background-demo').then((m) => m.FlockBackgroundDemo),
     controls: [
       { key: 'count', label: 'Boids', type: 'number', default: 240, min: 0, max: 4000, step: 10 },
+      { key: 'colonies', label: 'Colonies (flocks of their own)', type: 'number', default: 1, min: 1, max: 12, step: 1 },
       {
         key: 'follow',
         label: 'The pointer',
@@ -1230,6 +1231,7 @@ ${tag('lenzi-blob-background', [
 
 ${tag('lenzi-flock-background', [
   bound('count', v['count'], 240),
+  bound('colonies', v['colonies'], 1),
   plain('follow', v['follow'], 'near'),
   bound('followWeight', v['followWeight'], 0.9),
   bound('followRadius', v['followRadius'], 140),
@@ -1278,7 +1280,8 @@ ${tag('lenzi-flock-background', [
       { key: 'morph', label: 'How fast the shapes change', type: 'number', default: 0.5, min: 0, max: 2, step: 0.05 },
       { key: 'spin', label: 'Turns a minute', type: 'number', default: 1.2, min: 0, max: 10, step: 0.1 },
       { key: 'merge', label: 'How softly blobs join (0 to 1)', type: 'number', default: 0.35, min: 0, max: 1, step: 0.05 },
-      { key: 'boids', label: 'Boids', type: 'number', default: 300, min: 0, max: 4000, step: 10 },
+      { key: 'boids', label: 'Boids', type: 'number', default: 380, min: 0, max: 4000, step: 10 },
+      { key: 'colonies', label: 'Colonies (flocks of their own)', type: 'number', default: 4, min: 1, max: 12, step: 1 },
       { key: 'avoid', label: 'How hard they fly round the blobs (0 through)', type: 'number', default: 2, min: 0, max: 6, step: 0.1 },
       {
         key: 'follow',
@@ -1322,7 +1325,8 @@ ${tag('lenzi-blob-flock-background', [
   bound('morph', v['morph'], 0.5),
   bound('spin', v['spin'], 1.2),
   bound('merge', v['merge'], 0.35),
-  bound('boids', v['boids'], 300),
+  bound('boids', v['boids'], 380),
+  bound('colonies', v['colonies'], 4),
   bound('avoid', v['avoid'], 2),
   plain('follow', v['follow'], 'near'),
   bound('followWeight', v['followWeight'], 0.9),

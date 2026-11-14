@@ -39,6 +39,11 @@ export interface BoidsSettings {
   edges: 'wrap' | 'avoid';
   /** "avoid": how far from an edge, px, it starts turning. */
   edgeMargin: number;
+  /**
+   * How many flocks of their own (lenzi, 2026-11-14: "aumenta le colonie"): a boid heads the same way as,
+   * and stays with, only the boids of its colony; it keeps apart from every boid. 1: one flock.
+   */
+  colonies?: number;
 }
 
 export const DEFAULT_BOIDS: BoidsSettings = {
@@ -58,20 +63,37 @@ export const DEFAULT_BOIDS: BoidsSettings = {
   wander: 0.25,
   edges: 'wrap',
   edgeMargin: 80,
+  colonies: 1,
 };
 
 /** The most boids a flock holds: beyond this a CPU flock is not smooth. */
 export const MAX_BOIDS = 4000;
 
 /**
- * Something the boids fly around (lenzi, 2026-11-14: "a background that is the combination of flocks and
- * blobs the latter being a obstacle for the flocks"): a round shape, CSS px. Near it they turn away and
- * slide along it; one that gets inside (the obstacle moved onto it) is pushed out to its edge.
+ * A round obstacle, CSS px (lenzi, 2026-11-14: "a background that is the combination of flocks and blobs
+ * the latter being a obstacle for the flocks").
  */
 export interface BoidsObstacle {
   x: number;
   y: number;
   radius: number;
+}
+
+/**
+ * What the boids fly around, as a field: how far a point is from the nearest obstacle's edge, CSS px,
+ * below 0 inside one. Any shape: the blobs' own, melted where they meet. Near it they turn away and slide
+ * along it; one that gets inside (the obstacle moved onto it) is pushed out past its edge.
+ */
+export type BoidsField = (x: number, y: number) => number;
+
+/** Round obstacles as a field. */
+export function roundField(obstacles: readonly BoidsObstacle[]): BoidsField | null {
+  if (obstacles.length === 0) return null;
+  return (x, y) => {
+    let least = Infinity;
+    for (const obstacle of obstacles) least = Math.min(least, Math.hypot(x - obstacle.x, y - obstacle.y) - obstacle.radius);
+    return least;
+  };
 }
 
 export class Boids {
@@ -84,8 +106,10 @@ export class Boids {
   private width: number;
   private height: number;
   private target: { x: number; y: number } | null = null;
-  private obstacles: readonly BoidsObstacle[] = [];
+  private field: BoidsField | null = null;
   private avoid = 2;
+  /** How far outside an obstacle's edge a boid stays: its own length, so none of it is drawn over the obstacle. */
+  private pad = 0;
   private readonly random: () => number;
   // the space in cells as wide as a boid sees: only the boids of the cells around are looked at
   private cellOf = new Int32Array(0);
@@ -131,10 +155,19 @@ export class Boids {
     this.target = target;
   }
 
-  /** What the boids fly around now (they may move), and how hard they turn away from it (0: they fly through). */
-  setObstacles(obstacles: readonly BoidsObstacle[], weight = 2): void {
-    this.obstacles = obstacles;
+  /** Round obstacles the boids fly around now (they may move), and how hard they turn away (0: they fly through). */
+  setObstacles(obstacles: readonly BoidsObstacle[], weight = 2, pad = 0): void {
+    this.setField(roundField(obstacles), weight, pad);
+  }
+
+  /**
+   * What the boids fly around now, as a field (any shape); how hard they turn away from it (0: they fly
+   * through); how far outside its edge they stay, px.
+   */
+  setField(field: BoidsField | null, weight = 2, pad = 0): void {
+    this.field = field;
     this.avoid = Math.max(0, weight);
+    this.pad = Math.max(0, pad);
   }
 
   /** The boid nearest a point (CSS px of the space), or null when there is none. */
@@ -189,6 +222,15 @@ export class Boids {
     const see2 = see * see;
     const apart = Math.max(0, s.separationDistance);
     const cosHalfView = s.viewAngle >= 360 ? -2 : Math.cos((Math.max(0, s.viewAngle) * Math.PI) / 360);
+    const colonies = Math.max(1, Math.floor(s.colonies ?? 1));
+    const field = this.avoid > 0 ? this.field : null;
+    /** Which way is out of the obstacles at a point: the field's slope, of length 1. */
+    const outward = (fx: number, fy: number): [number, number] => {
+      const gx = field!(fx + 1, fy) - field!(fx - 1, fy);
+      const gy = field!(fx, fy + 1) - field!(fx, fy - 1);
+      const length = Math.hypot(gx, gy);
+      return length > 1e-6 ? [gx / length, gy / length] : [1, 0];
+    };
 
     // 1. the boids by cell
     const columns = Math.max(1, Math.floor(width / see));
@@ -253,11 +295,14 @@ export class Boids {
             if (d2 > see2 || d2 === 0) continue;
             const d = Math.sqrt(d2);
             if ((hx * dx + hy * dy) / (speed * d) < cosHalfView) continue;
-            seen++;
-            headX += vx[j]!;
-            headY += vy[j]!;
-            centreX += dx;
-            centreY += dy;
+            // another colony: it only keeps apart from it
+            if (colonies <= 1 || i % colonies === j % colonies) {
+              seen++;
+              headX += vx[j]!;
+              headY += vy[j]!;
+              centreX += dx;
+              centreY += dy;
+            }
             if (d < apart) {
               const push = 1 - d / apart;
               awayX -= (dx / d) * push;
@@ -306,18 +351,13 @@ export class Boids {
           steer(tx, ty, s.followWeight * Math.min(1, distance / radius));
         }
       }
-      if (this.avoid > 0) {
-        // the obstacles near it: away from them, and along them the way it is already going, so it flows round
+      if (field) {
+        // an obstacle near it: away from it, and along it the way it is already going, so it flows round
         const margin = Math.max(24, see * 0.8);
-        for (const obstacle of this.obstacles) {
-          const ox = px - obstacle.x;
-          const oy = py - obstacle.y;
-          const d = Math.hypot(ox, oy) || 1e-6;
-          const gap = d - obstacle.radius;
-          if (gap > margin) continue;
+        const gap = field(px, py) - this.pad;
+        if (gap < margin) {
           const near = Math.min(2, 1 - gap / margin);
-          const nx = ox / d;
-          const ny = oy / d;
+          const [nx, ny] = outward(px, py);
           // along it: the side of the tangent its heading is on
           const side = -ny * hx + nx * hy >= 0 ? 1 : -1;
           // mostly along it, out more the closer it is: it flows round instead of turning back
@@ -377,18 +417,16 @@ export class Boids {
           ny = Math.min(height, Math.max(0, ny));
         }
       }
-      // inside an obstacle (it moved onto the boid): out to its edge, no longer flying into it
-      if (this.avoid > 0) {
-        for (const obstacle of this.obstacles) {
-          const ox = nx - obstacle.x;
-          const oy = ny - obstacle.y;
-          const d = Math.hypot(ox, oy);
-          const edge = obstacle.radius * INSIDE;
-          if (d >= edge) continue;
-          const ux = d > 1e-6 ? ox / d : 1;
-          const uy = d > 1e-6 ? oy / d : 0;
-          nx = obstacle.x + ux * edge;
-          ny = obstacle.y + uy * edge;
+      // over an obstacle (it moved onto the boid, or the boid was pushed): out past its edge, by its own
+      // length, no longer flying into it (2026-11-14, "capisci come mai i boidi ogni tanto vanno sopra i
+      // blob": they were let in up to 86% of a round obstacle, and a blob's shape reaches its full radius)
+      if (field) {
+        for (let tries = 0; tries < 3; tries++) {
+          const gap = field(nx, ny) - this.pad;
+          if (gap >= 0) break;
+          const [ux, uy] = outward(nx, ny);
+          nx -= ux * (gap - 0.5);
+          ny -= uy * (gap - 0.5);
           const inward = vx[i]! * ux + vy[i]! * uy;
           if (inward < 0) {
             vx[i] = vx[i]! - inward * ux;
@@ -401,6 +439,3 @@ export class Boids {
     }
   }
 }
-
-/** How far into an obstacle a boid may go before it is pushed out: its shape's dips and lobes are not round. */
-const INSIDE = 0.86;

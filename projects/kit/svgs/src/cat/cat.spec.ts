@@ -70,6 +70,16 @@ describe('LenziCat', () => {
     expect(shape().classList).toContain('lenzi-solid');
   });
 
+  it('as a lamp, its colour drifts slowly round its own when asked', async () => {
+    await set({ material: 'lamp', glowColor: '#b388ff', drift: 40 });
+    await new Promise((resolve) => setTimeout(resolve, 450));
+    fixture.detectChanges();
+    const ink = host().querySelector<SVGElement>('.ink')!;
+    expect(ink.style.getPropertyValue('--lenzi-cat-lamp')).toMatch(/^oklch\(from #b388ff l c calc\(h \+ -?[\d.]+\)\)$/);
+    await set({ drift: 0 });
+    expect(ink.style.getPropertyValue('--lenzi-cat-lamp')).toBe('#b388ff');
+  });
+
   it('is decoration unless it is given a label', async () => {
     expect(host().getAttribute('aria-hidden')).toBe('true');
     await set({ label: 'A happy cat', size: 120 });

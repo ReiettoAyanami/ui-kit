@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
 import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
-import { LenziBlobFlockBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziBlobFlockBackground, LenziLit } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
@@ -18,7 +18,7 @@ const MASCOT_MOST = 560;
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [CodeEditor, LenziBlobFlockBackground, LenziCat, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, LenziBlobFlockBackground, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })

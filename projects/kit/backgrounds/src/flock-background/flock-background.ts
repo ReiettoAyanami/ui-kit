@@ -28,6 +28,8 @@ const HEAD_START = 3;
 export class LenziFlockBackground extends LenziGlowBackground {
   /** How many boids, 4000 at most. */
   readonly count = input(DEFAULT_BOIDS.count, { transform: numberAttribute });
+  /** How many flocks of their own: each heads its own way and keeps apart from the others. */
+  readonly colonies = input(1, { transform: numberAttribute });
   /** The fastest and the slowest a boid flies, px a second. */
   readonly maxSpeed = input(DEFAULT_BOIDS.maxSpeed, { transform: numberAttribute });
   readonly minSpeed = input(DEFAULT_BOIDS.minSpeed, { transform: numberAttribute });
@@ -118,6 +120,7 @@ export class LenziFlockBackground extends LenziGlowBackground {
       wander: this.wander(),
       edges: this.edges(),
       edgeMargin: this.edgeMargin(),
+      colonies: this.colonies(),
     };
     if (!this.flock || this.flockSeed !== this.seed()) {
       this.flockSeed = this.seed();

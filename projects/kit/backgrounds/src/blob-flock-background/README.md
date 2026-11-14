@@ -10,7 +10,11 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
 - **The flock** flies as the flock background's (`boids`, the speeds, the three rules, `follow` the pointer,
   `wander`, `boidSize`, `shape`, `trails`), and **round the blobs**: near one a boid turns away and slides
   along its edge; one that a blob drifts onto is pushed out of it. `avoid` is how hard they turn away
-  (0: they fly through).
+  (0: they fly through). The edge is the one drawn (each blob's shape, melted where two meet), and a boid
+  stays outside it by its own length: none of it is ever drawn over a blob (2026-11-14: they were let in up
+  to 86% of a round outline, and a circle or a squircle reaches its full radius).
+- **Colonies** (`colonies`, 4; lenzi: "aumenta le colonie"): flocks of their own. A boid heads the same way
+  as, and stays with, only its own colony; it keeps apart from every boid. 380 boids by default.
 - **The blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements
   cast shadows from them.
 - **The boids are something to look at**: a watching cat (`<lenzi-cat expression="watching">`) looks at the

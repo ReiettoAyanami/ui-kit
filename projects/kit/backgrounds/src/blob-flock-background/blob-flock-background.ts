@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, input, numberAttribute } from '@angular/core';
 
-import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from '../engine/blob-field';
+import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobsAt } from '../engine/blob-field';
 import { BlobScene } from '../engine/blob-scene';
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS } from '../engine/boids';
 import { linearToHex } from '../engine/color';
@@ -51,8 +51,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly soft = input(2, { transform: numberAttribute });
 
   // the flock
-  /** How many boids, 4000 at most. */
-  readonly boids = input(300, { transform: numberAttribute });
+  /** How many boids, 4000 at most (2026-11-14: "aumenta leggermente i boidi"). */
+  readonly boids = input(380, { transform: numberAttribute });
+  /** How many flocks of their own: each heads its own way and keeps apart from the others ("aumenta le colonie"). */
+  readonly colonies = input(4, { transform: numberAttribute });
   readonly maxSpeed = input(DEFAULT_BOIDS.maxSpeed, { transform: numberAttribute });
   readonly minSpeed = input(DEFAULT_BOIDS.minSpeed, { transform: numberAttribute });
   readonly maxForce = input(DEFAULT_BOIDS.maxForce, { transform: numberAttribute });
@@ -119,20 +121,16 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       advance: (delta) => {
         this.elapsed += delta;
         const flock = this.current();
-        // the blobs where they are now are what the boids fly round
+        // the blobs where they are now, as drawn (their shapes, melted where they meet), are what the boids fly round
         this.drawn = this.blobsNow();
-        flock.setObstacles(
-          this.drawn.map((blob) => ({ x: blob.x, y: blob.y, radius: blob.radius })),
-          this.avoid(),
-        );
+        this.obstacles(flock, this.drawn);
         flock.setTarget(this.follow() === 'none' ? null : this.pointerInside());
         for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) flock.step(Math.min(left, LONGEST_STEP));
       },
       draw: () => {
         this.drawn = this.blobsNow();
         const tints = this.objectColours();
-        const radius = this.blobSize() * Math.min(this.width, this.height);
-        blobScene.draw(this.drawn, tints, Math.max(0, this.merge()) * radius * 0.5, Math.max(0, this.soft()), BLOB_LIGHT);
+        blobScene.draw(this.drawn, tints, this.mergePx(), Math.max(0, this.soft()), BLOB_LIGHT);
         const flock = this.current();
         flockScene.draw(flock, tints, Math.max(0.5, this.boidSize() / 2), this.shape(), 1);
       },
@@ -143,6 +141,20 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** One colour for each object: the blobs take the first ones (one array, so it is sent to the GPU once). */
   private objectColours(): Float32Array {
     return this.colours(Math.max(MAX_BLOBS, Math.min(4000, Math.floor(this.boids()))));
+  }
+
+  /** How softly the blobs join, px: as wide as they are large, the same on a phone and on a wide screen. */
+  private mergePx(): number {
+    return Math.max(0, this.merge()) * this.blobSize() * Math.min(this.width, this.height) * 0.5;
+  }
+
+  /**
+   * The blobs as the flock's obstacles: their edge as drawn, and the boids kept outside it by their own length
+   * plus the edge's softness, so no part of a boid is drawn over a blob.
+   */
+  private obstacles(flock: Boids, blobs: readonly BlobState[]): void {
+    const pad = Math.max(0.5, this.boidSize() / 2) * 2.6 + Math.max(0, this.soft());
+    flock.setField(blobs.length ? blobEdge(blobs, this.mergePx()) : null, this.avoid(), pad);
   }
 
   private blobsNow(): BlobState[] {
@@ -176,14 +188,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       followWeight: this.followWeight(),
       followRadius: this.followRadius(),
       wander: this.wander(),
+      colonies: this.colonies(),
     };
     if (!this.flock || this.flockSeed !== this.seed()) {
       this.flockSeed = this.seed();
       this.flock = new Boids(settings, this.width, this.height, this.flockSeed);
-      this.flock.setObstacles(
-        this.blobsNow().map((blob) => ({ x: blob.x, y: blob.y, radius: blob.radius })),
-        this.avoid(),
-      );
+      this.obstacles(this.flock, this.blobsNow());
       for (let time = 0; time < HEAD_START; time += LONGEST_STEP) this.flock.step(LONGEST_STEP);
     } else {
       this.flock.configure(settings);

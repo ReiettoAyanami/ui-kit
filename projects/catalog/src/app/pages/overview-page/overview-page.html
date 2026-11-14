@@ -3,9 +3,21 @@
 
 <!-- The cat, large, in the bottom right corner, its lower half below the screen: it watches the pointer,
      or the nearest boid when the pointer is not there. -->
-<lenzi-cat class="mascot" expression="watching" [size]="mascot()" [style.bottom.px]="-mascot() / aspect / 2" />
+<lenzi-cat
+  class="mascot"
+  expression="watching"
+  material="lamp"
+  glowColor="--mat-sys-primary"
+  [drift]="40"
+  [size]="mascot()"
+  [style.bottom.px]="-mascot() / aspect / 2"
+/>
 
 <main class="page">
+  <!-- A glass pane behind the page's elements (lenzi, 2026-11-14: "add a glass pane around the elements at
+       the center"): a layer of its own, not their container, so the glass cards over it still blur the
+       background and not the pane (a glass container would be their backdrop root). -->
+  <div class="pane" lenziLit aria-hidden="true"></div>
   <header class="hero">
     <h1 class="title">ui-kit</h1>
     <p class="lead">
@@ -21,7 +33,7 @@
 
   <nav class="sections" aria-label="Sections">
     @for (section of sections(); track section.link) {
-      <a class="section" [routerLink]="section.link">
+      <a class="section" lenziLit [routerLink]="section.link">
         <mat-icon class="icon" aria-hidden="true">{{ section.icon }}</mat-icon>
         <span class="section-text">
           <span class="section-title">{{ section.title }}</span>

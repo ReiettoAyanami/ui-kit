@@ -40,7 +40,7 @@ describe('a flock of boids', () => {
       flock.step(1 / 60);
       closest = Math.min(closest, Math.hypot(flock.x[0]! - 500, flock.y[0]! - 300));
     }
-    expect(closest).toBeGreaterThan(120 * 0.86 - 1);
+    expect(closest).toBeGreaterThanOrEqual(120 - 0.01);
     // and it went round it, not back where it came from
     expect(flock.x[0]).toBeGreaterThan(500);
   });
@@ -50,7 +50,35 @@ describe('a flock of boids', () => {
     place(flock, [[410, 300, 0, 0]]);
     flock.setObstacles([{ x: 400, y: 300, radius: 100 }]);
     flock.step(1 / 60);
-    expect(Math.hypot(flock.x[0]! - 400, flock.y[0]! - 300)).toBeGreaterThanOrEqual(85);
+    expect(Math.hypot(flock.x[0]! - 400, flock.y[0]! - 300)).toBeGreaterThanOrEqual(100);
+  });
+
+  it('stays out of an obstacle of any shape, by its own length: a square field', () => {
+    const flock = new Boids({ ...QUIET, count: 1, minSpeed: 100, maxSpeed: 120 }, 2000, 600);
+    place(flock, [[100, 300, 120, 0]]);
+    // a square 200 px wide around (500, 300): the distance from its edge (Chebyshev, enough for a test)
+    const square = (x: number, y: number) => Math.max(Math.abs(x - 500), Math.abs(y - 300)) - 100;
+    flock.setField(square, 2, 10);
+    let least = Infinity;
+    for (let step = 0; step < 60 * 8; step++) {
+      flock.step(1 / 60);
+      least = Math.min(least, square(flock.x[0]!, flock.y[0]!));
+    }
+    expect(least).toBeGreaterThanOrEqual(10 - 0.01);
+  });
+
+  it('flies with its own colony only: two colonies heading apart do not turn into one flock', () => {
+    const flock = new Boids({ ...QUIET, count: 2, alignment: 3, colonies: 2, perception: 200 }, 2000, 2000);
+    place(flock, [[1000, 1000, 100, 0], [1000, 1010, 0, 100]]);
+    run(flock, 0.5);
+    // still each its own way: east and south
+    expect(Math.abs(flock.vy[0]!)).toBeLessThan(1);
+    expect(Math.abs(flock.vx[1]!)).toBeLessThan(1);
+    // one colony: the one flying east turns south with the other
+    const one = new Boids({ ...QUIET, count: 2, alignment: 3, colonies: 1, perception: 200 }, 2000, 2000);
+    place(one, [[1000, 1000, 100, 0], [1000, 1010, 0, 100]]);
+    run(one, 0.5);
+    expect(one.vy[0]!).toBeGreaterThan(10);
   });
 
   it('says which boid is nearest a point', () => {
