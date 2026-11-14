@@ -1305,11 +1305,21 @@ ${tag('lenzi-flock-background', [
     id: 'glow',
     name: 'Glowing elements',
     category: 'Light',
-    summary: 'Any element turned into a lamp: it glows in any colour and lights the lit elements around it, on the same plane.',
-    api: '[lenziGlow], LenziLightField',
+    summary: 'Any element turned into a lamp: it glows in any colour and lights the elements around it, on the same plane; solid ones cast faint hard shadows.',
+    api: '[lenziGlow], [lenziSolid], LenziLightField',
     entry: '@lenzi/ui-kit/backgrounds',
     origin: 'new in the kit, 2026-11-14 ("a lit surface and projects light directly onto the others component")',
-    files: ['backgrounds/src/glow/glow.ts', 'backgrounds/src/glow/light-field.ts', 'backgrounds/src/glow/glow.spec.ts', 'backgrounds/src/glow/light-field.spec.ts', 'backgrounds/src/ambient-light/lit.ts', 'src/styles/global.css'],
+    files: [
+      'backgrounds/src/glow/glow.ts',
+      'backgrounds/src/glow/solid.ts',
+      'backgrounds/src/glow/light-field.ts',
+      'backgrounds/src/glow/light-worklet.ts',
+      'backgrounds/src/glow/glow.spec.ts',
+      'backgrounds/src/glow/solid.spec.ts',
+      'backgrounds/src/glow/light-field.spec.ts',
+      'backgrounds/src/ambient-light/lit.ts',
+      'src/styles/global.css',
+    ],
     ...docs('backgrounds/src/glow'),
     demo: () => import('./demos/glow-demo/glow-demo').then((m) => m.GlowDemo),
     controls: [
@@ -1318,6 +1328,7 @@ ${tag('lenzi-flock-background', [
       { key: 'reach', label: 'Reach (px)', type: 'number', default: 220, min: 20, max: 600, step: 10, code: { match: /\[glowReach\]="(-?[\d.]+)"/, otherwise: 220 } },
       { key: 'veil', label: 'Lamp light on a surface (%)', type: 'number', default: 70, min: 0, max: 100, step: 1, code: { match: /--lenzi-glow-veil:\s*(-?[\d.]+)%/ } },
       { key: 'rim', label: 'Lamp light on a border (%)', type: 'number', default: 100, min: 0, max: 100, step: 1, code: { match: /--lenzi-glow-rim:\s*(-?[\d.]+)%/ } },
+      { key: 'shadow', label: 'Shadow of a solid element (%)', type: 'number', default: 60, min: 0, max: 100, step: 1, code: { match: /--lenzi-shadow:\s*(-?[\d.]+)%/ } },
     ],
     usage: (v) => `<!-- import { LenziGlow, LenziLit } from '@lenzi/ui-kit/backgrounds'; -->
 
@@ -1329,14 +1340,21 @@ ${tag('lenzi-flock-background', [
 <!-- switched off, it is a lit surface like the others -->
 <button mat-stroked-button [lenziGlow]="playing()" type="button">Play</button>
 
-<!-- only lit -->
+<!-- only lit: glass, the light goes through it -->
 <mat-card appearance="outlined" lenziLit>…</mat-card>
 
-<!-- How much light lies on the lit elements, for every lamp: global variables -->
+<!-- solid: its own look, lit, and it casts a faint hard shadow -->
+<mat-card appearance="outlined" lenziSolid>…</mat-card>
+
+<!-- a floor: lit under what it holds, the shadows fall on it -->
+<main lenziLit class="lenzi-lit-under">…</main>
+
+<!-- How much light lies on the lit elements, and how dark a shadow is: global variables -->
 <style>
   :root {
     --lenzi-glow-veil: ${v['veil']}%;
     --lenzi-glow-rim: ${v['rim']}%;
+    --lenzi-shadow: ${v['shadow']}%;
   }
 </style>`,
     usageLanguage: 'html',

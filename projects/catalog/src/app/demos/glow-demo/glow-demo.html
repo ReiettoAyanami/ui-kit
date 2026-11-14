@@ -1,4 +1,5 @@
-<div class="field">
+<!-- The floor: lit by the lamps, under what it holds, so the solid elements' shadows fall on it. -->
+<div class="field lenzi-lit-under" lenziLit>
   @for (item of items(); track item.kind; let index = $index) {
     <div class="item" cdkDrag cdkDragBoundary=".field" (cdkDragEnded)="dropped()">
       <div class="bar">
@@ -8,20 +9,33 @@
           [size]="24"
           [value]="item.color"
           [choices]="choices"
+          [disabled]="item.solid"
           (valueChange)="paint(index, $event)"
           (picked)="paint(index, $event)"
         />
         <button
           mat-icon-button
           type="button"
-          class="switch"
           [attr.aria-label]="(item.on ? 'Switch off the ' : 'Switch on the ') + item.name.toLowerCase()"
-          [matTooltip]="item.on ? 'Switch off' : 'Switch on'"
+          [matTooltip]="item.solid ? 'A solid element gives no light' : item.on ? 'Switch off' : 'Switch on'"
           [attr.aria-pressed]="item.on"
+          [disabled]="item.solid"
           (click)="switch(index)"
         >
-          <mat-icon>{{ item.on ? 'lightbulb' : 'lightbulb_outline' }}</mat-icon>
+          <mat-icon>{{ item.on && !item.solid ? 'lightbulb' : 'lightbulb_outline' }}</mat-icon>
         </button>
+        @if (item.kind !== 'bulb') {
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="item.solid ? 'Make the ' + item.name.toLowerCase() + ' glass' : 'Make the ' + item.name.toLowerCase() + ' solid'"
+            [matTooltip]="item.solid ? 'Solid: it casts a shadow. Make it glass' : 'Glass: light goes through. Make it solid'"
+            [attr.aria-pressed]="item.solid"
+            (click)="solidify(index)"
+          >
+            <mat-icon>{{ item.solid ? 'square' : 'crop_square' }}</mat-icon>
+          </button>
+        }
       </div>
 
       @switch (item.kind) {
@@ -40,38 +54,87 @@
           </button>
         }
         @case ('button') {
-          <button mat-stroked-button type="button" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
-            <mat-icon>play_arrow</mat-icon>Play
-          </button>
+          @if (item.solid) {
+            <button mat-stroked-button type="button" lenziSolid><mat-icon>play_arrow</mat-icon>Play</button>
+          } @else {
+            <button mat-stroked-button type="button" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+              <mat-icon>play_arrow</mat-icon>Play
+            </button>
+          }
         }
         @case ('card') {
-          <mat-card appearance="outlined" class="card" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
-            <mat-card-content>
-              <p class="name">Now playing</p>
-              <p class="words">A card, lit by the lamps around it.</p>
-            </mat-card-content>
-          </mat-card>
+          @if (item.solid) {
+            <mat-card appearance="outlined" class="card" lenziSolid><ng-container [ngTemplateOutlet]="card" /></mat-card>
+          } @else {
+            <mat-card appearance="outlined" class="card" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+              <ng-container [ngTemplateOutlet]="card" />
+            </mat-card>
+          }
+        }
+        @case ('block') {
+          @if (item.solid) {
+            <mat-card appearance="outlined" class="block" lenziSolid><ng-container [ngTemplateOutlet]="block" /></mat-card>
+          } @else {
+            <mat-card appearance="outlined" class="block" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+              <ng-container [ngTemplateOutlet]="block" />
+            </mat-card>
+          }
         }
         @case ('list') {
-          <mat-list class="list" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
-            <mat-list-item><mat-icon matListItemIcon>inbox</mat-icon><span matListItemTitle>Inbox</span></mat-list-item>
-            <mat-list-item><mat-icon matListItemIcon>star</mat-icon><span matListItemTitle>Starred</span></mat-list-item>
-            <mat-list-item><mat-icon matListItemIcon>send</mat-icon><span matListItemTitle>Sent</span></mat-list-item>
-          </mat-list>
+          @if (item.solid) {
+            <mat-list class="list" lenziSolid><ng-container [ngTemplateOutlet]="list" /></mat-list>
+          } @else {
+            <mat-list class="list" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+              <ng-container [ngTemplateOutlet]="list" />
+            </mat-list>
+          }
         }
         @case ('chip') {
           <mat-chip-set aria-label="Mood">
-            <mat-chip [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">Focus</mat-chip>
+            @if (item.solid) {
+              <mat-chip lenziSolid>Focus</mat-chip>
+            } @else {
+              <mat-chip [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">Focus</mat-chip>
+            }
           </mat-chip-set>
         }
         @case ('toggles') {
-          <mat-button-toggle-group value="week" aria-label="Interval" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
-            <mat-button-toggle value="day">Day</mat-button-toggle>
-            <mat-button-toggle value="week">Week</mat-button-toggle>
-            <mat-button-toggle value="month">Month</mat-button-toggle>
-          </mat-button-toggle-group>
+          @if (item.solid) {
+            <mat-button-toggle-group value="week" aria-label="Interval" lenziSolid>
+              <mat-button-toggle value="day">Day</mat-button-toggle>
+              <mat-button-toggle value="week">Week</mat-button-toggle>
+              <mat-button-toggle value="month">Month</mat-button-toggle>
+            </mat-button-toggle-group>
+          } @else {
+            <mat-button-toggle-group value="week" aria-label="Interval" [lenziGlow]="item.on && all()" [glowColor]="item.color" [glowStrength]="strength()" [glowReach]="reach()">
+              <mat-button-toggle value="day">Day</mat-button-toggle>
+              <mat-button-toggle value="week">Week</mat-button-toggle>
+              <mat-button-toggle value="month">Month</mat-button-toggle>
+            </mat-button-toggle-group>
+          }
         }
       }
     </div>
   }
 </div>
+
+
+<ng-template #card>
+  <mat-card-content>
+    <p class="name">Now playing</p>
+    <p class="words">A card, lit by the lamps around it.</p>
+  </mat-card-content>
+</ng-template>
+
+<ng-template #block>
+  <mat-card-content>
+    <p class="name">Solid</p>
+    <p class="words">It stops the light.</p>
+  </mat-card-content>
+</ng-template>
+
+<ng-template #list>
+  <mat-list-item><mat-icon matListItemIcon>inbox</mat-icon><span matListItemTitle>Inbox</span></mat-list-item>
+  <mat-list-item><mat-icon matListItemIcon>star</mat-icon><span matListItemTitle>Starred</span></mat-list-item>
+  <mat-list-item><mat-icon matListItemIcon>send</mat-icon><span matListItemTitle>Sent</span></mat-list-item>
+</ng-template>

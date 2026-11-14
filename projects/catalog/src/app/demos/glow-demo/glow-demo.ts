@@ -1,4 +1,5 @@
 import { CdkDrag } from '@angular/cdk/drag-drop';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DOCUMENT, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -9,37 +10,43 @@ import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LenziColorChoice, LenziColorPicker } from '@lenzi/ui-kit';
-import { LenziGlow } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlow, LenziLit, LenziSolid } from '@lenzi/ui-kit/backgrounds';
 
 import { Values } from '../../registry';
 
-type Kind = 'bulb' | 'button' | 'card' | 'list' | 'chip' | 'toggles';
+type Kind = 'bulb' | 'button' | 'card' | 'block' | 'list' | 'chip' | 'toggles';
 
 interface Item {
   kind: Kind;
   name: string;
+  /** A lamp, switched on (a glass element only). */
   on: boolean;
   color: string;
+  /** Solid (lenziSolid: it casts shadows) or glass (lenziGlow: lit, and a lamp when on). */
+  solid: boolean;
 }
 
 /**
- * What the playground starts with: some lamps on, some surfaces only lit; violets and whites only
- * (lenzi, 2026-11-14: "put from default only purplish/whiteish lights").
+ * What the playground starts with: some lamps on, some surfaces only lit, one solid block; violets and
+ * whites only (lenzi, 2026-11-14: "put from default only purplish/whiteish lights").
  */
 const START: readonly Item[] = [
-  { kind: 'bulb', name: 'Bulb', on: true, color: '#f4ecff' },
-  { kind: 'button', name: 'Button', on: true, color: 'var(--mat-sys-primary)' },
-  { kind: 'card', name: 'Card', on: false, color: '#b388ff' },
-  { kind: 'list', name: 'List', on: false, color: '#e6d6ff' },
-  { kind: 'chip', name: 'Chip', on: true, color: '#9c6bff' },
-  { kind: 'toggles', name: 'Toggles', on: false, color: '#d0b8ff' },
+  { kind: 'bulb', name: 'Bulb', on: true, color: '#f4ecff', solid: false },
+  { kind: 'button', name: 'Button', on: true, color: 'var(--mat-sys-primary)', solid: false },
+  { kind: 'block', name: 'Block', on: false, color: '#ffffff', solid: true },
+  { kind: 'card', name: 'Card', on: false, color: '#b388ff', solid: false },
+  { kind: 'list', name: 'List', on: false, color: '#e6d6ff', solid: false },
+  { kind: 'chip', name: 'Chip', on: true, color: '#9c6bff', solid: false },
+  { kind: 'toggles', name: 'Toggles', on: false, color: '#d0b8ff', solid: false },
 ];
 
 /**
- * Glowing elements on a dark page, with nothing else giving light (lenzi, 2026-11-14: "Make a playground
+ * Glowing elements on a dark floor, with nothing else giving light (lenzi, 2026-11-14: "Make a playground
  * with a dark background (so there are no other lights coming off off it) and let me move elements
- * around"): the kit's own elements, each a lit surface that can be a lamp, in any colour. Drag them
- * from anywhere; the bar above each has its colour and its light switch.
+ * around"): the kit's own elements, each glass (lit, and a lamp when switched on, in any colour) or solid
+ * (it casts a faint hard shadow: "for if a solid component is interacting with light"). The floor is lit
+ * too, under them, so the shadows fall on it. Drag them from anywhere; the bar above each has its colour,
+ * its light switch and its material.
  */
 @Component({
   selector: 'app-glow-demo',
@@ -47,6 +54,8 @@ const START: readonly Item[] = [
     CdkDrag,
     LenziColorPicker,
     LenziGlow,
+    LenziLit,
+    LenziSolid,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -54,6 +63,7 @@ const START: readonly Item[] = [
     MatIconModule,
     MatListModule,
     MatTooltipModule,
+    NgTemplateOutlet,
   ],
   templateUrl: './glow-demo.html',
   styleUrl: './glow-demo.css',
@@ -79,21 +89,21 @@ export class GlowDemo {
     { value: '#ff4f8b', label: 'Pink' },
   ];
 
+  /** When the last drag ended: the click that ends a drag is not a tap. */
+  private droppedAt = 0;
+
   constructor() {
-    // the two amounts of the lamps' light are global variables: here they follow the parameters
+    // the amounts of the lamps' light and of the shadows are global variables: here they follow the parameters
     const root = inject(DOCUMENT).documentElement;
     effect(() => {
       root.style.setProperty('--lenzi-glow-veil', `${this.num('veil', 70)}%`);
       root.style.setProperty('--lenzi-glow-rim', `${this.num('rim', 100)}%`);
+      root.style.setProperty('--lenzi-shadow', `${this.num('shadow', 60)}%`);
     });
     inject(DestroyRef).onDestroy(() => {
-      root.style.removeProperty('--lenzi-glow-veil');
-      root.style.removeProperty('--lenzi-glow-rim');
+      for (const name of ['--lenzi-glow-veil', '--lenzi-glow-rim', '--lenzi-shadow']) root.style.removeProperty(name);
     });
   }
-
-  /** When the last drag ended: the click that ends a drag is not a tap. */
-  private droppedAt = 0;
 
   protected dropped(): void {
     this.droppedAt = performance.now();
@@ -105,11 +115,19 @@ export class GlowDemo {
   }
 
   protected switch(index: number): void {
-    this.items.update((items) => items.map((item, at) => (at === index ? { ...item, on: !item.on } : item)));
+    this.change(index, (item) => ({ on: !item.on }));
+  }
+
+  protected solidify(index: number): void {
+    this.change(index, (item) => ({ solid: !item.solid }));
   }
 
   protected paint(index: number, color: string): void {
-    this.items.update((items) => items.map((item, at) => (at === index ? { ...item, color } : item)));
+    this.change(index, () => ({ color }));
+  }
+
+  private change(index: number, change: (item: Item) => Partial<Item>): void {
+    this.items.update((items) => items.map((item, at) => (at === index ? { ...item, ...change(item) } : item)));
   }
 
   private num(key: string, otherwise: number): number {

@@ -5,7 +5,9 @@
   background-color: var(--mat-sys-surface-container-lowest);
 }
 
+/* The floor: a lit surface in the page's darkest colour. */
 .field {
+  --lenzi-lit-surface: var(--mat-sys-surface-container-lowest);
   display: flex;
   flex-wrap: wrap;
   align-content: center;
@@ -51,6 +53,10 @@
 
 .card {
   width: min(78vw, 260px);
+}
+
+.block {
+  width: min(60vw, 160px);
 }
 
 .list {

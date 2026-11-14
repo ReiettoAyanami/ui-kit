@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { LenziLamp, LenziLightField, cssColor } from './light-field';
+import { LenziLamp, LenziLightField, cssColor, shadowOf } from './light-field';
 
 /** An element at a fixed place on the screen (jsdom lays nothing out). */
 function placed(left: number, top: number, width: number, height: number): HTMLElement {
@@ -79,6 +79,66 @@ describe('LenziLightField', () => {
     expect(veil(surface)).not.toBe('');
     leave();
     expect(veil(surface)).toBe('');
+  });
+
+  it('gives the paint worklet each light, and the shadow a solid element casts from it onto the surface', () => {
+    // a floor, a lamp at its left, a solid block between them and the right part of the floor
+    const floor = placed(0, 0, 1000, 400);
+    field.addSurface(floor);
+    field.addLamp(placed(90, 190, 20, 20), () => lamp({ reach: 600 }));
+    const block = placed(300, 150, 100, 100);
+    field.addCaster(block);
+    field.update(1);
+    const raw = floor.style.getPropertyValue('--lenzi-light-data');
+    expect(raw.startsWith("'") && raw.endsWith("'")).toBe(true);
+    const [[x, y, reach, r, g, b, strength, shadows]] = JSON.parse(raw.slice(1, -1));
+    // the lamp is inside the floor: its light comes from the point nearest the floor's middle
+    expect([x, y, reach, strength]).toEqual([110, 200, 600, 1]);
+    expect([r, g, b]).toHaveLength(3);
+    expect(shadows).toHaveLength(1);
+    const xs = (shadows[0] as number[]).filter((_, index) => index % 2 === 0);
+    // the shadow starts at the block and goes away from the lamp, to the right
+    expect(Math.min(...xs)).toBe(300);
+    expect(Math.max(...xs)).toBeGreaterThan(3000);
+  });
+
+  it('casts no shadow from the lamp itself, nor onto the solid element, nor from a block the lamp is inside', () => {
+    const block = placed(300, 150, 100, 100);
+    field.addSurface(block);
+    field.addCaster(block);
+    const inner = placed(320, 170, 20, 20);
+    field.addLamp(inner, () => lamp());
+    field.addCaster(inner);
+    const floor = placed(0, 0, 1000, 400);
+    field.addSurface(floor);
+    field.update(1);
+    const [[, , , , , , , onFloor]] = JSON.parse(floor.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
+    expect(onFloor).toEqual([]);
+    const [[, , , , , , , onBlock]] = JSON.parse(block.style.getPropertyValue('--lenzi-light-data').slice(1, -1));
+    expect(onBlock).toEqual([]);
+  });
+
+  it('lights surfaces from sources with no element (a background’s blobs), until they are taken away', () => {
+    const surface = placed(300, 0, 100, 100);
+    field.addSurface(surface);
+    const source = {};
+    field.setSourceLamps(source, [{ left: 150, top: 40, right: 200, bottom: 60, color: '#00ff00', strength: 0.5, reach: 200 }]);
+    field.update(1);
+    expect(veil(surface)).toContain('#00ff00');
+    field.setSourceLamps(source, []);
+    expect(field.update(1)).toBe(false);
+    expect(veil(surface)).toBe('');
+  });
+
+  it('a shadow is the box and what is behind it, away from the light', () => {
+    const shadow = shadowOf({ left: 10, top: 10, right: 20, bottom: 20 }, { x: 0, y: 15 });
+    const points = shadow.length / 2;
+    expect(points).toBeGreaterThanOrEqual(4);
+    // the side that faces the light is part of it
+    expect(shadow.join(',')).toContain('10,10');
+    expect(shadow.join(',')).toContain('10,20');
+    // nothing of it is nearer the light than the box
+    for (let i = 0; i < shadow.length; i += 2) expect(shadow[i]).toBeGreaterThanOrEqual(10);
   });
 
   it('writes a variable name as its var()', () => {

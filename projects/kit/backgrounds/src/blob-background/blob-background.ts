@@ -1,6 +1,8 @@
 import { Component, input, numberAttribute } from '@angular/core';
 
-import { BlobSettings, DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from '../engine/blob-field';
+import { BlobSettings, BlobState, DEFAULT_BLOBS, MAX_BLOBS, blobsAt } from '../engine/blob-field';
+import { linearToHex } from '../engine/color';
+import { LenziSourceLamp } from '../glow/light-field';
 import { BlobScene } from '../engine/blob-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { knownShapes } from '../engine/shapes';
@@ -12,6 +14,11 @@ import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-bac
  * of the accent and its glow does the shining. `brightness` raises it.
  */
 const BLOB_LIGHT = 0.5;
+/**
+ * How bright a blob is as a light on the page's surfaces, at `brightness` and `glow` 1. Blobs are large,
+ * many, and often right behind a surface: more than this and the surface's words fade (measured, 2026-11-14).
+ */
+const BLOB_LAMP = 0.28;
 
 /**
  * A background of glowing blobs (lenzi, 2026-11-13: "supershapes like the ones that materialui uses,
@@ -50,6 +57,27 @@ export class LenziBlobBackground extends LenziGlowBackground {
   readonly pull = input(DEFAULT_BLOBS.pull, { transform: numberAttribute });
 
   private elapsed = 0;
+  /** The blobs of the last picture, for the light they shed on the page. */
+  private drawn: readonly BlobState[] = [];
+
+  /**
+   * Every blob is a light for the page's lit surfaces (lenzi, 2026-11-14: "the light of the blobs should
+   * act more like this on the glass surfaces"): from where it is, in its colour, reaching a little past
+   * its own size; solid elements cast shadows from it.
+   */
+  protected override lamps(): LenziSourceLamp[] {
+    const tints = this.colours(MAX_BLOBS);
+    const strength = Math.max(0, this.brightness()) * (0.5 + 0.5 * Math.max(0, this.glow()));
+    return this.drawn.map((blob, index) => ({
+      left: blob.x - blob.radius,
+      right: blob.x + blob.radius,
+      top: blob.y - blob.radius,
+      bottom: blob.y + blob.radius,
+      color: linearToHex([tints[index * 3]!, tints[index * 3 + 1]!, tints[index * 3 + 2]!]),
+      strength: strength * BLOB_LAMP,
+      reach: blob.radius * 2.4,
+    }));
+  }
 
   protected override createScene(engine: GlowEngine): LenziGlowScene {
     const scene = new BlobScene(engine);
@@ -70,6 +98,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
           seed: this.seed(),
         };
         const blobs = blobsAt(settings, this.elapsed, this.width, this.height, this.pointerInside());
+        this.drawn = blobs;
         // the join is as wide as the blobs are large: the same picture on a phone and on a wide screen
         const radius = settings.size * Math.min(this.width, this.height);
         scene.draw(blobs, this.colours(MAX_BLOBS), Math.max(0, this.merge()) * radius * 0.5, Math.max(0, this.soft()), BLOB_LIGHT);

@@ -465,8 +465,19 @@ html {
   backdrop-filter: var(--lenzi-glass-filter);
 }
 
+/* A solid element in the light (lenziSolid): its own look, lit like a lit surface, and it casts shadows. */
+:where(.lenzi-solid) {
+  position: relative;
+}
+
+.lenzi-solid.lenzi-solid {
+  isolation: isolate;
+}
+
 .lenzi-lit.lenzi-lit::before,
-.lenzi-lit.lenzi-lit::after {
+.lenzi-lit.lenzi-lit::after,
+.lenzi-solid.lenzi-solid::before,
+.lenzi-solid.lenzi-solid::after {
   content: '';
   position: absolute;
   /* over the border too (a surface that cuts what leaves it, .lenzi-lit-clipped: inside it) */
@@ -485,7 +496,8 @@ html {
 }
 
 /* The line along the border: the light again, kept only where the border is. */
-.lenzi-lit.lenzi-lit::after {
+.lenzi-lit.lenzi-lit::after,
+.lenzi-solid.lenzi-solid::after {
   padding: var(--lenzi-border);
   background: var(--lenzi-lamps-rim, none), var(--lenzi-ambient-rim, none);
   -webkit-mask:
@@ -499,8 +511,35 @@ html {
 }
 
 .lenzi-lit.lenzi-lit-clipped::before,
-.lenzi-lit.lenzi-lit-clipped::after {
+.lenzi-lit.lenzi-lit-clipped::after,
+.lenzi-solid.lenzi-lit-clipped::before,
+.lenzi-solid.lenzi-lit-clipped::after {
   inset: 0;
+}
+
+/* Where the browser has paint worklets (LenziLightField loads one): the lamps' light is painted, with
+   the shadows of the solid elements cut out of it, instead of the gradients. */
+:root.lenzi-paint-light .lenzi-lit.lenzi-lit::before,
+:root.lenzi-paint-light .lenzi-solid.lenzi-solid::before {
+  --lenzi-light-part: veil;
+  background: paint(lenzi-light), var(--lenzi-ambient-veil, none);
+}
+
+:root.lenzi-paint-light .lenzi-lit.lenzi-lit::after,
+:root.lenzi-paint-light .lenzi-solid.lenzi-solid::after {
+  --lenzi-light-part: rim;
+  background: paint(lenzi-light), var(--lenzi-ambient-rim, none);
+}
+
+/* A lit surface that holds others (a page, a panel, a floor): its light lies under what it holds, which
+   takes its own; so the shadows of the solid elements fall on it. */
+.lenzi-lit.lenzi-lit-under::before {
+  z-index: -1;
+}
+
+/* a floor has no border to light */
+.lenzi-lit.lenzi-lit-under::after {
+  display: none;
 }
 
 /* A glowing element (lenziGlow): a lamp in its colour. Its own surface takes its colour, its border is

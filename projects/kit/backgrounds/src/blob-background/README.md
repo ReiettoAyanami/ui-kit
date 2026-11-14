@@ -16,7 +16,9 @@ change from one into another and melt into each other where they meet, glowing o
 - **`blur`** over the finished picture, for an artistic background.
 - **Stops** out of view and in a hidden tab; **one still picture** with reduced motion or `animate` false;
   **a still CSS picture** where there is no WebGL2.
-- **Lights the page's `lenziLit` surfaces** (`lights`, on by default).
+- **Every blob is a light** for the page's `lenziLit` surfaces (`lights`, on by default; lenzi, 2026-11-14):
+  a surface near a blob takes its light from the side that faces it, in its colour, gently; solid elements
+  (`lenziSolid`) cast shadows from it.
 - **Decoration**: hidden from screen readers, never takes a click; the pointer is read from the window.
 
 ## Rules

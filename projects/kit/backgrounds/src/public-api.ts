@@ -11,6 +11,7 @@ export * from './ambient-light/ambient-light';
 export * from './ambient-light/lit';
 export * from './glow/glow';
 export * from './glow/light-field';
+export * from './glow/solid';
 
 // The numbers behind them: shapes, colours, the flock (for an app that draws its own).
 export * from './engine/color';

@@ -213,8 +213,14 @@ the rule says what, the variable says how much.
   colour and lights the lit surfaces (`lenziLit`) near it from the side that faces it.
 - **Any colour, and lights add up** (lenzi: "ovviamente la luce di tutti i colori").
 - **Lamps are few**: they say that something is alive. **Only lit surfaces take light**; the rest stays solid.
-- **How much light lies on a surface is global** (`--lenzi-glow-veil`, `--lenzi-glow-rim`); a lamp has its
-  own colour, strength and reach.
+- **Solid elements cast a faint hard shadow** (lenzi, 2026-11-14: "a faint hard shadow ... for if a solid
+  component is interacting with light"): `lenziSolid`. Glass lets the light through.
+- **A blob background's blobs are lights** for the glass over them (lenzi, 2026-11-14), gently: the words on
+  the glass stay readable.
+- **The light lies over what an element holds**, never under its children only (lenzi, 2026-11-14: the
+  selector "shouldn't ignore the light at all").
+- **How much light lies on a surface, and how dark a shadow is, is global** (`--lenzi-glow-veil`,
+  `--lenzi-glow-rim`, `--lenzi-shadow`); a lamp has its own colour, strength and reach.
 
 ## 3D
 

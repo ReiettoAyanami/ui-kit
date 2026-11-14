@@ -3,6 +3,7 @@ import { DOCUMENT, DestroyRef, Directive, ElementRef, OnChanges, afterNextRender
 import { LenziAmbientLight } from '../ambient-light/ambient-light';
 import { DEFAULT_SPREAD, LinearRgb, displacedColors, linearToHex, luminance } from '../engine/color';
 import { GlowEngine, LIGHT_HEIGHT, LIGHT_WIDTH } from '../engine/glow-engine';
+import { LenziLightField, LenziSourceLamp } from '../glow/light-field';
 
 /** Where a background is: behind the whole page, or behind the box it is in (`.lenzi-backdrop`). */
 export type LenziBackgroundFill = 'page' | 'box';
@@ -71,6 +72,7 @@ export abstract class LenziGlowBackground implements OnChanges {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly document = inject(DOCUMENT);
   private readonly ambient = inject(LenziAmbientLight);
+  private readonly field = inject(LenziLightField);
 
   private engine: GlowEngine | null = null;
   private scene: LenziGlowScene | null = null;
@@ -176,7 +178,10 @@ export abstract class LenziGlowBackground implements OnChanges {
         this.probe?.element.remove();
       });
     });
-    destroyRef.onDestroy(() => this.ambient.dim(this));
+    destroyRef.onDestroy(() => {
+      this.ambient.dim(this);
+      this.field.setSourceLamps(this, []);
+    });
   }
 
   /** Any parameter changed: a moving background takes it at its next frame, a still one is drawn again. */
@@ -316,13 +321,33 @@ export abstract class LenziGlowBackground implements OnChanges {
     });
   }
 
+  /**
+   * The background's objects as lights for the page's surfaces (lenzi, 2026-11-14: the blobs' light
+   * "should act more like this on the glass surfaces"), in the space's px; null: the background lights
+   * them with its picture instead (LenziAmbientLight).
+   */
+  protected lamps(): LenziSourceLamp[] | null {
+    return null;
+  }
+
   /** The light of the picture just drawn, for the page's lit surfaces. */
   private shine(now: number, always = false): void {
     const engine = this.engine;
     if (!engine) return;
     if (!this.lights()) {
       if (this.shining) this.ambient.dim(this);
+      this.field.setSourceLamps(this, []);
       this.shining = false;
+      return;
+    }
+    const lamps = this.lamps();
+    if (lamps) {
+      // as lights of their own, every frame: they move
+      const box = this.host.getBoundingClientRect();
+      this.field.setSourceLamps(
+        this,
+        lamps.map((lamp) => ({ ...lamp, left: lamp.left + box.left, right: lamp.right + box.left, top: lamp.top + box.top, bottom: lamp.bottom + box.top })),
+      );
       return;
     }
     if (!this.ambient.wanted || (!always && now - this.lastLight < LIGHT_EVERY)) return;
