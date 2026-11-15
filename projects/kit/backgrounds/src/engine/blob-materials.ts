@@ -211,9 +211,13 @@ void main() {
   float inside = min(edge / max(vPlace.w, 0.5), 8.0);
   if (inside < -${REACH.toFixed(1)}) discard;
   float w = exp(inside);
+  // a colour's share reaches farther than an edge's (a quarter as steep): it fades to nothing before the reach, where
+  // the object is no longer drawn. Cut there at a tenth, it drew a line across a lamp of another colour nearby
+  // (lenzi, 2026-11-15: "solid on solid on the same level", a violet lamp cut in two beside a lavender one)
+  float colourFade = smoothstep(-${REACH.toFixed(1)}, -${(REACH * 0.45).toFixed(2)}, inside);
   if (vTurn.z < 0.5) {
     // the colours join more slowly than the edges: two lamps that met are one shape before one colour
-    float share = exp(inside / 4.0);
+    float share = exp(inside / 4.0) * colourFade;
     float depth = clamp(edge / vPlace.z, 0.0, 1.0);
     weights = vec4(0.0, 0.0, w, share);
     colours = vec4(vTint.rgb * share, share * depth);
@@ -223,7 +227,7 @@ void main() {
     // glass: where two meet, their colours and amounts by how much of each is there; glass that shines is a
     // lamp too, in its colour, under itself
     float shining = vLobesA.w;
-    float share = exp(inside / 4.0) * shining;
+    float share = exp(inside / 4.0) * colourFade * shining;
     weights = vec4(w, 0.0, w * shining, share);
     colours = vec4(vTint.rgb * share, share * clamp(edge / vPlace.z, 0.0, 1.0));
     // its colour, how much that colours what is seen through it (its tint), and how much is seen through it (its
@@ -238,13 +242,33 @@ void main() {
   }
 }`;
 
+// a level's weights here and one device px to each side: a field's slope is read from them, not from a derivative.
+// Where the levels are walked in a loop a derivative is not to be trusted (on some GPUs it is nothing): every solid
+// and glass edge was a staircase, with no border and no lit rim (lenzi, 2026-11-15, "something is buggy")
+const FIELD_NEAR = `
+uniform vec2 pixel;   // one device px, uv
+struct Near { vec4 here; vec4 east; vec4 west; vec4 north; vec4 south; };
+Near nearAt(highp sampler2DArray fields, float layer) {
+  return Near(
+    texture(fields, vec3(uv, layer)),
+    texture(fields, vec3(uv + vec2(pixel.x, 0.0), layer)), texture(fields, vec3(uv - vec2(pixel.x, 0.0), layer)),
+    texture(fields, vec3(uv + vec2(0.0, pixel.y), layer)), texture(fields, vec3(uv - vec2(0.0, pixel.y), layer)));
+}
+// a field as an edge: 0 where it is 1 (its edge), below 0 inside
+float edgeAt(float weight) { return -log(max(weight, 1e-6)); }
+// that edge's slope, per device px
+vec2 slopeOf(float east, float west, float north, float south) {
+  return 0.5 * vec2(edgeAt(east) - edgeAt(west), edgeAt(north) - edgeAt(south));
+}`;
+
 // a lamp's light at a place of one level's fields (the fields are layers of one texture each, a layer a level)
 const LAMP_LIGHT = `
-vec4 lampLight(highp sampler2DArray weights, highp sampler2DArray colours, float layer, float level, float soft) {
-  vec4 w = texture(weights, vec3(uv, layer));
+vec4 lampLight(Near n, highp sampler2DArray colours, float layer, float level, float soft) {
+  vec4 w = n.here;
   // where the lamps' field is 1 is their edge; below 0 inside
-  float edge = -log(max(w.z, 1e-6));
-  float aa = max(fwidth(edge), 1e-4) * soft;
+  float edge = edgeAt(w.z);
+  vec2 slope = slopeOf(n.east.z, n.west.z, n.north.z, n.south.z);
+  float aa = max(abs(slope.x) + abs(slope.y), 1e-4) * soft;
   float fill = w.z > 1e-5 ? smoothstep(aa, -aa, edge) : 0.0;
   vec4 c = texture(colours, vec3(uv, layer));
   float shares = max(w.w, 1e-5);
@@ -262,13 +286,15 @@ uniform float layer;
 uniform float level;
 uniform float soft;   // device px over the edge
 out vec4 color;
+${FIELD_NEAR}
 ${LAMP_LIGHT}
 void main() {
-  color = lampLight(weights, colours, layer, level, soft);
+  color = lampLight(nearAt(weights, layer), colours, layer, level, soft);
 }`;
 
 // what the solid and the glass surfaces share: the light that reaches them, and how a solid thing looks in it
 const SURFACE_LIGHT = `
+${FIELD_NEAR}
 uniform sampler2D light;
 uniform sampler2D ambient;
 uniform vec2 ambientTexel;
@@ -318,9 +344,8 @@ Light lightHere() {
 
 // a field's edge here: how much of the place it fills, how far inside it is (device px), and its slope
 struct Edge { float fill; float inside; vec2 slope; };
-Edge edgeOf(float weight) {
-  float edge = -log(max(weight, 1e-6));
-  vec2 slope = vec2(dFdx(edge), dFdy(edge));
+Edge edgeOf(float weight, vec2 slope) {
+  float edge = edgeAt(weight);
   float inside = -edge / max(length(slope), 1e-5);
   return Edge(weight > 1e-5 ? clamp(inside + 0.5, 0.0, 1.0) : 0.0, inside, slope);
 }
@@ -367,8 +392,9 @@ void main() {
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
     if (i >= layers) break;
     float layer = float(i);
-    vec4 w = texture(weights, vec3(uv, layer));
-    Edge solid = edgeOf(w.g);
+    Near n = nearAt(weights, layer);
+    vec4 w = n.here;
+    Edge solid = edgeOf(w.g, slopeOf(n.east.g, n.west.g, n.north.g, n.south.g));
     vec3 albedo = texture(solidTints, vec3(uv, layer)).rgb / max(w.g, 1e-6);
     if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, l), solid.fill);
   }
@@ -408,10 +434,10 @@ vec3 lampLook(vec4 lamp) {
 
 // one level over the picture so far: its solid things (in the picture already, drawn again over a lower level's
 // glass), then its glass over them; how much of the place they cover, added up
-vec3 level(vec3 c, inout float cover, float layer, Light l) {
-  vec4 w = texture(weights, vec3(uv, layer));
-  Edge glass = edgeOf(w.r);
-  Edge solid = edgeOf(w.g);
+vec3 level(vec3 c, inout float cover, float layer, Near n, Light l) {
+  vec4 w = n.here;
+  Edge glass = edgeOf(w.r, slopeOf(n.east.r, n.west.r, n.north.r, n.south.r));
+  Edge solid = edgeOf(w.g, slopeOf(n.east.g, n.west.g, n.north.g, n.south.g));
   vec4 solidTint = texture(solidTints, vec3(uv, layer));
   if (solid.fill > 0.0) c = mix(c, solidLook(solidTint.rgb / max(w.g, 1e-6), solid, l), solid.fill);
   if (glass.fill > 0.0) {
@@ -452,9 +478,13 @@ void main() {
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
     if (i >= layers) break;
     float layer = float(i);
-    vec4 lamp = lampLight(weights, lampColours, layer, lampLevel, lampSoft);
+    Near n = nearAt(weights, layer);
+    vec4 lamp = lampLight(n, lampColours, layer, lampLevel, lampSoft);
     c = mix(c, lampLook(lamp), cover * lamp.a);
-    c = level(c, cover, layer, l);
+    // a lamp covers what is under it as a solid thing does: a higher level's lamp is drawn over it, not added to it
+    // (lenzi, 2026-11-15: the lamps under a large lamp of a higher level showed through it, lighter)
+    cover = 1.0 - (1.0 - cover) * (1.0 - lamp.a);
+    c = level(c, cover, layer, n, l);
   }
   color = vec4(encode(c), 1.0);
 }`;
@@ -705,6 +735,7 @@ export class MaterialScene {
     gl.useProgram(this.lamps);
     gl.uniform1f(engine.uniform(this.lamps, 'level'), look.level);
     gl.uniform1f(engine.uniform(this.lamps, 'soft'), Math.max(0.75, look.soft * engine.scale));
+    gl.uniform2f(engine.uniform(this.lamps, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
     const fields = this.fields;
     if (!fields) return;
     this.useLayers(this.lamps, 'weights', fields.weights, 0);
@@ -809,13 +840,16 @@ export class MaterialScene {
     gl.uniform1f(engine.uniform(program, 'rim'), look.rim);
     gl.uniform3f(engine.uniform(program, 'border'), ...look.border);
     gl.uniform1f(engine.uniform(program, 'borderPx'), look.borderWidth * engine.scale);
+    gl.uniform2f(engine.uniform(program, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
   }
 
   /** The glass and the solid things over the finished picture; false when there are none. */
   drawSurfaces(inputs: GlowSurfaceInputs): boolean {
     const look = this.look;
     const fields = this.fields;
-    if ((!this.has.glass && !this.has.solid) || !look || !fields) return false;
+    // nothing to draw over the picture: no glass, nothing solid, and no lamp over a lamp of a lower level
+    const stacked = this.levels.filter((objects) => objects.some(shines)).length > 1;
+    if ((!this.has.glass && !this.has.solid && !stacked) || !look || !fields) return false;
     const engine = this.engine;
     const gl = engine.gl;
     const program = this.surfaces;
