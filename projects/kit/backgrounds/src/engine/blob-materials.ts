@@ -99,6 +99,13 @@ const SOLID_FLOOR = 0.06;
 /** Glass's own colour with no light on it: a little more than a solid thing's (light goes into it). */
 const GLASS_FLOOR = 0.14;
 const SOLID_LIGHT = 1.6;
+/** How fast the light reaching a solid face fades from its edges in, per screen width. */
+const SOLID_DEPTH = 9;
+/** A solid face looks for its edge this many ways round, from this far (device px), doubling this many times. */
+const FACE_WAYS = 8;
+const FACE_FIRST = 4;
+const FACE_STEPS = 9;
+
 /** How many places the way to a lamp is looked at, for a shadow. */
 const SHADOW_STEPS = 48;
 /** How much of the widest glow reaches a glass or solid surface from all around, and glass's frost (linear). */
@@ -265,6 +272,7 @@ uniform float veil;
 uniform float rim;
 uniform vec3 border;
 uniform float borderPx;   // device px
+uniform vec2 pixel;       // one device px, uv
 vec3 decode(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
 vec3 encode(vec3 c) {
   c = clamp(c, 0.0, 1.0);
@@ -307,11 +315,51 @@ Edge edgeOf(float weight) {
   return Edge(weight > 1e-5 ? clamp(inside + 0.5, 0.0, 1.0) : 0.0, inside, slope);
 }
 
+// how far a solid thing of this level reaches from here along a way (device px): doubling until out of it, then
+// halving back to its edge, the last bit read off the field (its edge is where the field is 1)
+float edgeAlong(vec2 way, float layer) {
+  float inner = 0.0;
+  float outer = ${FACE_FIRST.toFixed(1)};
+  for (int s = 0; s < ${FACE_STEPS}; s++) {
+    if (texture(weights, vec3(uv + way * outer, layer)).g < 1.0) break;
+    inner = outer;
+    outer *= 2.0;
+  }
+  for (int s = 0; s < 3; s++) {
+    float middle = 0.5 * (inner + outer);
+    if (texture(weights, vec3(uv + way * middle, layer)).g < 1.0) outer = middle;
+    else inner = middle;
+  }
+  float a = -log(max(texture(weights, vec3(uv + way * inner, layer)).g, 1e-6));
+  float b = -log(max(texture(weights, vec3(uv + way * outer, layer)).g, 1e-6));
+  return mix(inner, outer, clamp(a / min(a - b, -1e-6), 0.0, 1.0));
+}
+
+// the light on a solid thing's face: what is beyond its edge, all round it, the less the farther that edge is. A lamp
+// beside it lights it; one under it does not (lenzi, 2026-11-15: a solid over a lamp showed the lamp's shape through
+// itself, "solid non emitting objects (the one on top) lets light get through still")
+vec3 lightOnto(float layer) {
+  vec3 sum = vec3(0.0);
+  for (int d = 0; d < ${FACE_WAYS}; d++) {
+    float a = (float(d) + 0.5) * ${((2 * Math.PI) / FACE_WAYS).toFixed(6)};
+    vec2 way = vec2(cos(a), sin(a)) * pixel;
+    vec2 across = vec2(-way.y * pixel.x / pixel.y, way.x * pixel.y / pixel.x);
+    float far = edgeAlong(way, layer);
+    // read softly, the wider the farther: a sharp shadow out there never draws a line across the face
+    float spread = far * 0.6 + 14.0;
+    vec2 at = uv + way * (far + spread * 0.5);
+    vec3 there = texture(ambient, at).rgb * 2.0 + texture(ambient, at + across * spread).rgb + texture(ambient, at - across * spread).rgb
+      + texture(ambient, at + way * spread).rgb;
+    sum += there / 5.0 * exp(-far * pixel.x * ${SOLID_DEPTH.toFixed(1)});
+  }
+  return sum / ${FACE_WAYS.toFixed(1)} * ${AMBIENT.toFixed(1)} * lightGain;
+}
+
 // a solid thing: a surface the light falls on (lenzi, 2026-11-15: "they should be like a surface getting
 // iluminated not just a thing"), dark where little light reaches it, in the colour of the light that does; its edge lit
-// on the side the light comes from. Opaque, always.
-vec3 solidLook(vec3 albedo, Edge e, Light l) {
-  vec3 received = 1.0 - exp(-l.here * ${SOLID_LIGHT.toFixed(2)});
+// on the side the light comes from. Opaque, always: nothing under it shows on its face.
+vec3 solidLook(vec3 albedo, Edge e, Light l, float layer) {
+  vec3 received = 1.0 - exp(-lightOnto(layer) * ${SOLID_LIGHT.toFixed(2)});
   vec3 s = albedo * (${SOLID_FLOOR.toFixed(3)} + received);
   vec2 out_ = length(e.slope) > 1e-6 ? normalize(e.slope) : vec2(0.0);
   float facing = max(0.0, dot(out_, l.way));
@@ -341,7 +389,7 @@ void main() {
     vec4 w = texture(weights, vec3(uv, layer));
     Edge solid = edgeOf(w.g);
     vec3 albedo = texture(solidTints, vec3(uv, layer)).rgb / max(w.g, 1e-6);
-    if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, l), solid.fill);
+    if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, l, layer), solid.fill);
   }
   color = vec4(encode(c), 1.0);
 }`;
@@ -384,7 +432,7 @@ vec3 level(vec3 c, inout float cover, float layer, Light l) {
   Edge glass = edgeOf(w.r);
   Edge solid = edgeOf(w.g);
   vec4 solidTint = texture(solidTints, vec3(uv, layer));
-  if (solid.fill > 0.0) c = mix(c, solidLook(solidTint.rgb / max(w.g, 1e-6), solid, l), solid.fill);
+  if (solid.fill > 0.0) c = mix(c, solidLook(solidTint.rgb / max(w.g, 1e-6), solid, l, layer), solid.fill);
   if (glass.fill > 0.0) {
     // its colour, how much that colours what is seen through it (lenzi, 2026-11-15: "the tint on the glass ... doesn't
     // mix properly with the things under it"), how much is seen through it ("glass color should also have transparency")
@@ -398,7 +446,7 @@ vec3 level(vec3 c, inout float cover, float layer, Light l) {
     vec3 through = decode(texture(blurred, uv).rgb) * mix(vec3(1.0), colour / max(most, 1e-4), tint);
     // its own body lit as a surface is (frosted glass takes the light round it): dark where it is dark, so it sits in
     // the scene instead of on it
-    vec3 body = colour * (${GLASS_FLOOR.toFixed(3)} + (1.0 - exp(-l.here * ${SOLID_LIGHT.toFixed(2)})));
+    vec3 body = colour * (${GLASS_FLOOR.toFixed(3)} + (1.0 - exp(-l.around * ${SOLID_LIGHT.toFixed(2)})));
     vec3 g = mix(body, through, clarity) + ${FROST.toFixed(3)};
     g += shine(l.around) * veil;
     // its edge: a line, lit on the side that faces the light
@@ -650,6 +698,7 @@ export class MaterialScene {
     gl.uniform1f(engine.uniform(program, 'rim'), look.rim);
     gl.uniform3f(engine.uniform(program, 'border'), ...look.border);
     gl.uniform1f(engine.uniform(program, 'borderPx'), look.borderWidth * engine.scale);
+    gl.uniform2f(engine.uniform(program, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
   }
 
   /** The glass and the solid things over the finished picture; false when there are none. */

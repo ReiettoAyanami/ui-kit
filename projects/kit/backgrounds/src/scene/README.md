@@ -36,8 +36,10 @@ contenente boidi, blob, boidi-blob").
 - **A blob that stays put** (`fixed`: it does not wander, it cannot be thrown) and **its weight** (`weight`, 0.25 to
   4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
   that it spins more/less").
-- **Solid things are lit surfaces**: their colour times the light that reaches them (dark far from light, coloured
-  by it, their edge lit on the light's side), drawn into the picture before glass blurs it, so glass on their level
+- **Solid things are lit surfaces**: their colour times the light that reaches them from beyond their edge, all round,
+  less the farther in (a lamp beside one lights it, a lamp under it does not show through: lenzi, 2026-11-15, "solid
+  non emitting objects (the one on top) lets light get through still"); dark far from light, coloured by it, their
+  edge lit on the light's side. They are drawn into the picture before glass blurs it, so glass on their level
   or above (shining or not) shows them; opaque always, and their shadow takes all the glow behind them. A solid that
   shines (a lamp) is far brighter. Glass has a `tint` (how much its colour filters what is seen through it) and a
   `transparency` (how much shows through against its own body, itself lit). Within a level: lamps, solids, glass.
