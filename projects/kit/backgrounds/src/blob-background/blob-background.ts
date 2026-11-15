@@ -177,6 +177,11 @@ export class LenziBlobBackground extends LenziGlowBackground {
     };
   }
 
+  /** The blobs as drawn in the last picture (where, how large, turned, of what shapes), in the space's px. */
+  blobsDrawn(): readonly BlobState[] {
+    return this.drawn;
+  }
+
   protected override grabbable(x: number, y: number): boolean {
     const index = this.throwable() ? this.throws.blobAt(this.drawn, x, y) : -1;
     // a blob made fast is never taken ("an option to make a blob unmovable")

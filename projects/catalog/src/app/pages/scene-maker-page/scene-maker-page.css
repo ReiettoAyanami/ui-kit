@@ -35,6 +35,52 @@
   border-color: var(--mat-sys-on-surface-variant);
 }
 
+/* A blob's mark only takes the pointer: its outline (below) is what shows. */
+.mark.blob,
+.mark.blob:hover,
+.mark.blob.chosen,
+.mark.blob.moving,
+.mark.blob:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Each blob's own outline, dashed; pointed at, solid; chosen or moving, lit (lenzi: "add an highlight when doing so"). */
+.outlines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.outlines path {
+  fill: none;
+  stroke: var(--mat-sys-outline);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+  transition: stroke 150ms linear;
+}
+
+.outlines path.pointed {
+  stroke: var(--mat-sys-on-surface-variant);
+  stroke-dasharray: none;
+}
+
+.outlines path.chosen,
+.outlines path.moving {
+  stroke: var(--mat-sys-primary);
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mat-sys-primary) 70%, transparent));
+}
+
+.outlines path.moving {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px var(--mat-sys-primary));
+}
+
 /* The chosen object, and the one being moved, lit (lenzi: "add an highlight when doing so"). */
 .mark.chosen,
 .mark:focus-visible {

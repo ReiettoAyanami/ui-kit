@@ -4,6 +4,18 @@
 <!-- Paused: every object where it is put, to choose and to move; the chosen one and the moving one lit. -->
 @if (!playing()) {
   <div #stage class="stage" (pointermove)="drag($event)" (pointerup)="letGo()" (pointercancel)="letGo()">
+    <!-- each blob's own outline: the highlight follows its shape -->
+    <svg class="outlines" aria-hidden="true">
+      @for (outline of outlines(); track $index) {
+        @let object = { type: 'blob', index: $index };
+        <path
+          [attr.d]="outline"
+          [class.chosen]="isChosen($any(object))"
+          [class.moving]="isMoving($any(object))"
+          [class.pointed]="isPointed($any(object))"
+        />
+      }
+    </svg>
     @for (blob of scene().blobs; track $index) {
       @let object = { type: 'blob', index: $index };
       <button
@@ -16,6 +28,10 @@
         [style.width.px]="blobWidth(blob.size)"
         [style.height.px]="blobWidth(blob.size)"
         [attr.aria-label]="materialNames[blob.material] + ' blob: arrows move it'"
+        (pointerenter)="pointed.set($any(object))"
+        (pointerleave)="pointed.set(null)"
+        (focus)="pointed.set($any(object))"
+        (blur)="pointed.set(null)"
         (pointerdown)="grab($event, $any(object))"
         (keydown)="nudge($event, $any(object))"
         (click)="chosen.set($any(object))"
@@ -63,7 +79,15 @@
 
       <mat-action-list aria-label="The scene's objects">
         @for (item of objects(); track $index) {
-          <button mat-list-item type="button" [activated]="isChosen(item.object)" [attr.aria-pressed]="isChosen(item.object)" (click)="choose(item.object)">
+          <button
+            mat-list-item
+            type="button"
+            [activated]="isChosen(item.object)"
+            [attr.aria-pressed]="isChosen(item.object)"
+            [matTooltip]="item.tooltip"
+            matTooltipPosition="right"
+            (click)="choose(item.object)"
+          >
             <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
             <span matListItemTitle>{{ item.title }}</span>
             <span matListItemLine>{{ item.detail }}</span>

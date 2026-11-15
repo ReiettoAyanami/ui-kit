@@ -1,8 +1,8 @@
-import { Component, booleanAttribute, computed, input } from '@angular/core';
+import { Component, booleanAttribute, computed, input, viewChild } from '@angular/core';
 
 import { LenziBlobBackground } from '../blob-background/blob-background';
 import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWays } from '../blob-flock-background/blob-flock-background';
-import { DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
+import { BlobState, DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
 import { BlobMaterial } from '../engine/blob-materials';
 import { BoidsFollow } from '../engine/boids';
 import { LenziBackgroundFill } from '../glow-background/glow-background';
@@ -141,6 +141,14 @@ export class LenziSceneBackground {
   protected readonly layout = computed(() => sceneLayout(this.scene()));
   /** No fleets, while it is being made (one list, so the background is not told something new every time). */
   protected readonly noFleets: readonly never[] = [];
+  private readonly flocking = viewChild(LenziBlobFlockBackground);
+  private readonly blobsOnly = viewChild(LenziBlobBackground);
+
+  /** The blobs as drawn in the last picture (a scene maker outlines them), in the space's px. */
+  blobsDrawn(): readonly BlobState[] {
+    return this.flocking()?.blobsDrawn() ?? this.blobsOnly()?.blobsDrawn() ?? [];
+  }
+
   /** How far the blobs wander: the backgrounds' own, or not at all while it is being made. */
   protected readonly travel = computed(() => (this.editing() ? 0 : DEFAULT_BLOBS.travel));
 }

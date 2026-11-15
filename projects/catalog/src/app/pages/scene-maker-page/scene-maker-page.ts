@@ -10,6 +10,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -30,6 +31,7 @@ import {
   LenziSceneBackground,
   LenziSceneFleet,
   LenziSceneFleetKind,
+  blobOutline,
 } from '@lenzi/ui-kit/backgrounds';
 
 import { HOME_SCENE } from '../../scenes';
@@ -191,6 +193,7 @@ export function fleetDefault(fleet: LenziSceneFleet, key: FleetField['key']): nu
     MatListModule,
     MatSlideToggleModule,
     MatSliderModule,
+    MatTooltipModule,
   ],
   templateUrl: './scene-maker-page.html',
   styleUrl: './scene-maker-page.css',
@@ -232,10 +235,34 @@ export class SceneMakerPage {
   /** The space the scene fills (as the background does), px: where the objects' places are. */
   protected readonly space = signal({ width: 1, height: 1 });
   private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
+  private readonly sceneView = viewChild(LenziSceneBackground);
 
-  /** The objects in the column: the scene itself, its blobs, its fleets' leaders. */
+  /**
+   * Paused, each blob's outline as the scene draws it (its shape, turned, half way through its change): the highlight
+   * follows the blob itself (lenzi, 2026-11-15: the select highlight "a little off center" round a blob not round).
+   */
+  protected readonly outlines = signal<readonly string[]>([]);
+  /** The object the pointer is over, or the keyboard on. */
+  protected readonly pointed = signal<SceneObject | null>(null);
+
+  /**
+   * The objects in the column: the scene itself first, then its blobs and fleets' leaders from the highest level down,
+   * each with its level for its tooltip (lenzi, 2026-11-15: "sort them by z-index also on the left. and display it as a
+   * tooltip when hovering on the list item").
+   */
   protected readonly objects = computed(() => {
     const scene = this.scene();
+    const [first, ...rest] = this.listed(scene);
+    const level = (object: SceneObject) =>
+      object.type === 'blob' ? layerOf(scene.blobs[object.index]!, 'blob') : object.type === 'fleet' ? layerOf(scene.fleets[object.index]!, scene.fleets[object.index]!.kind) : 0;
+    return [
+      { ...first!, tooltip: '' },
+      ...rest.map((item, order) => ({ ...item, order, level: level(item.object) })).sort((a, b) => b.level - a.level || a.order - b.order).map((item) => ({ ...item, tooltip: `Level ${item.level}` })),
+    ];
+  });
+
+  /** The objects as the scene lists them. */
+  private listed(scene: LenziScene) {
     return [
       { object: { type: 'scene' } as SceneObject, icon: 'landscape', title: scene.name || 'The scene', detail: 'The pointer, throwing' },
       ...scene.blobs.map((blob, index) => ({
@@ -251,7 +278,7 @@ export class SceneMakerPage {
         detail: `Leader of ${fleet.count}`,
       })),
     ];
-  });
+  }
 
   protected readonly chosenBlob = computed(() => {
     const chosen = this.chosen();
@@ -268,6 +295,26 @@ export class SceneMakerPage {
     void sceneFromCode(this.route.snapshot.queryParamMap.get('s')).then((scene) => {
       if (scene) this.scene.set(placed(scene));
     });
+    // paused: the blobs' outlines, read from the scene each frame (they change when a blob is moved or changed)
+    const view = this.document.defaultView;
+    let frame = 0;
+    let last = '';
+    const read = () => {
+      const outlines = (this.sceneView()?.blobsDrawn() ?? []).map((blob) => blobOutline(blob, 72));
+      const key = outlines.join('|');
+      if (key !== last) {
+        last = key;
+        this.outlines.set(outlines);
+      }
+      frame = view && !this.playing() ? view.requestAnimationFrame(read) : 0;
+    };
+    effect(() => {
+      if (this.playing() || !view) return;
+      untracked(() => {
+        if (!frame) frame = view.requestAnimationFrame(read);
+      });
+    });
+    inject(DestroyRef).onDestroy(() => frame && view?.cancelAnimationFrame(frame));
     // the space's size, while the objects are shown on it
     effect((onCleanup) => {
       const stage = this.stage()?.nativeElement;
@@ -369,6 +416,12 @@ export class SceneMakerPage {
     const place = this.placeOf(object);
     this.chosen.set(object);
     this.put(object, place.x + move[0], place.y + move[1]);
+  }
+
+  /** Whether the pointer or the keyboard is on this object. */
+  protected isPointed(object: SceneObject): boolean {
+    const pointed = this.pointed();
+    return !!pointed && pointed.type === object.type && ('index' in pointed ? pointed.index : -1) === ('index' in object ? object.index : -1);
   }
 
   protected isMoving(object: SceneObject): boolean {
