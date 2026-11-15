@@ -116,19 +116,33 @@
 
       <mat-action-list aria-label="The scene's objects">
         @for (item of objects(); track $index) {
-          <button
-            mat-list-item
-            type="button"
-            [activated]="isChosen(item.object)"
-            [attr.aria-pressed]="isChosen(item.object)"
-            [matTooltip]="item.tooltip"
-            matTooltipPosition="right"
-            (click)="choose(item.object)"
-          >
-            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-            <span matListItemTitle>{{ item.title }}</span>
-            <span matListItemLine>{{ item.detail }}</span>
-          </button>
+          <!-- a row: the object (a click opens its window), its level, and the button that takes it out of the scene -->
+          <div class="object">
+            <button
+              mat-list-item
+              type="button"
+              [activated]="isChosen(item.object)"
+              [attr.aria-pressed]="isChosen(item.object)"
+              [matTooltip]="item.tooltip"
+              matTooltipPosition="right"
+              (click)="choose(item.object)"
+            >
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <span matListItemTitle>{{ item.title }}</span>
+              <span matListItemLine>{{ item.detail }}</span>
+            </button>
+            @if (item.level !== null) {
+              <span class="level" role="img" [attr.aria-label]="'Level ' + item.level">
+                <mat-icon aria-hidden="true">layers</mat-icon>
+                {{ item.level }}
+              </span>
+            }
+            @if (item.removable) {
+              <button mat-icon-button type="button" class="take-out" [attr.aria-label]="'Remove: ' + item.title" matTooltip="Remove" (click)="remove(item.object)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </div>
         }
       </mat-action-list>
 

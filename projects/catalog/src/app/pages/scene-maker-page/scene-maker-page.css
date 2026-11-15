@@ -179,7 +179,47 @@
 
 .objects {
   flex: none;
-  width: 300px;
+  width: 340px;
+}
+
+/* An object's row: the object itself, then the button that takes it out of the scene. */
+.object {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.object > [mat-list-item] {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Its level (lenzi, 2026-11-15: "display the z index ... on the list items"): the layers' icon and its number. */
+.level {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 36px;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.level mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+/* Quiet until it is pointed at: then in the error colour, as what takes something away is. */
+.take-out {
+  flex: none;
+  --mat-icon-button-icon-color: var(--mat-sys-on-surface-variant);
+}
+
+.take-out:hover,
+.take-out:focus-visible {
+  --mat-icon-button-icon-color: var(--mat-sys-error);
 }
 
 .window {

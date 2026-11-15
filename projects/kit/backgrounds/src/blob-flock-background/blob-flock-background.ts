@@ -366,9 +366,15 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         materials.prepare();
       },
       draw: () => {
-        materials.drawLight();
         const colours = this.objectColours();
-        for (const fleet of this.current()) flockScene.draw(fleet.boids, this.fleetColours(fleet.spec, colours), Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1);
+        // each fleet of boids on its level: over the lamps of that level and of the ones under it, under the lamps
+        // of the ones above (lenzi, 2026-11-15: "under solid blobs you can see the boids still")
+        materials.drawLight(
+          this.current().map((fleet) => ({
+            layer: fleet.spec.layer ?? this.boidLayer(),
+            draw: () => flockScene.draw(fleet.boids, this.fleetColours(fleet.spec, colours), Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1),
+          })),
+        );
       },
       shadow: () => materials.shadowTexture(),
       // a solid blob stops all the light behind it (2026-11-15: "solid objects can still let light through")

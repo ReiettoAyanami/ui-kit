@@ -68,6 +68,16 @@ export interface MaterialObject {
 /** Whether an object sheds light: a lamp, or glass that shines. */
 export const shines = (object: MaterialObject): boolean => object.material === 'lamp' || (object.material === 'glass' && object.emit === true);
 
+/**
+ * Light of the scene that is not a material object's (a fleet of boids), on a level: added over the lamps of its
+ * level and of the levels under it; a lamp of a level above covers it.
+ */
+export interface LevelLight {
+  layer: number;
+  /** Adds it into the scene (blending on, ONE ONE). */
+  draw(): void;
+}
+
 /** The most levels kept apart: a scene's objects on more are drawn with the highest of these. */
 export const MAX_MATERIAL_LAYERS = 4;
 
@@ -163,8 +173,8 @@ flat in vec4 vLobesA;
 flat in vec4 vSuperB;
 flat in vec4 vLobesB;
 flat in vec4 vTint;     // a lamp's colour; glass's colour and how much of it; solid's colour
-layout(location = 0) out vec4 weights;  // glass, solid, lamp, lamp's colour shares
-layout(location = 1) out vec4 colours;  // the lamps' colours by share, and their depth by share
+layout(location = 0) out vec4 weights;  // glass, solid, light (the lamps and the glass that shines), the lamps alone
+layout(location = 1) out vec4 colours;  // the lights' colours by share (a little brighter towards its middle), their shares
 layout(location = 2) out vec4 glassTint;  // glass: its colour by share and amount, and its amount by share
 layout(location = 3) out vec4 solidTint;  // solid: its colour by share, and its share
 
@@ -219,8 +229,9 @@ void main() {
     // the colours join more slowly than the edges: two lamps that met are one shape before one colour
     float share = exp(inside / 4.0) * colourFade;
     float depth = clamp(edge / vPlace.z, 0.0, 1.0);
-    weights = vec4(0.0, 0.0, w, share);
-    colours = vec4(vTint.rgb * share, share * depth);
+    // a lamp is solid: its own field too, what it covers of the levels under it
+    weights = vec4(0.0, 0.0, w, w);
+    colours = vec4(vTint.rgb * share * (0.8 + 0.2 * depth), share);
     glassTint = vec4(0.0);
     solidTint = vec4(0.0);
   } else if (vTurn.z < 1.5) {
@@ -228,8 +239,8 @@ void main() {
     // lamp too, in its colour, under itself
     float shining = vLobesA.w;
     float share = exp(inside / 4.0) * colourFade * shining;
-    weights = vec4(w, 0.0, w * shining, share);
-    colours = vec4(vTint.rgb * share, share * clamp(edge / vPlace.z, 0.0, 1.0));
+    weights = vec4(w, 0.0, w * shining, 0.0);
+    colours = vec4(vTint.rgb * share * (0.8 + 0.2 * clamp(edge / vPlace.z, 0.0, 1.0)), share);
     // its colour, how much that colours what is seen through it (its tint), and how much is seen through it (its
     // clarity, kept in solid's free channel), each by how much of it is there: where two meet, as much of each
     glassTint = vec4(vTint.rgb * w, vTint.a * w);
@@ -259,23 +270,21 @@ float edgeAt(float weight) { return -log(max(weight, 1e-6)); }
 // that edge's slope, per device px
 vec2 slopeOf(float east, float west, float north, float south) {
   return 0.5 * vec2(edgeAt(east) - edgeAt(west), edgeAt(north) - edgeAt(south));
-}`;
-
-// a lamp's light at a place of one level's fields (the fields are layers of one texture each, a layer a level)
-const LAMP_LIGHT = `
-vec4 lampLight(Near n, highp sampler2DArray colours, float layer, float level, float soft) {
-  vec4 w = n.here;
-  // where the lamps' field is 1 is their edge; below 0 inside
-  float edge = edgeAt(w.z);
-  vec2 slope = slopeOf(n.east.z, n.west.z, n.north.z, n.south.z);
+}
+// how much of the place a field fills: where it is 1 is its edge, soft over this many device px
+float fillOf(float weight, vec2 slope, float soft) {
   float aa = max(abs(slope.x) + abs(slope.y), 1e-4) * soft;
-  float fill = w.z > 1e-5 ? smoothstep(aa, -aa, edge) : 0.0;
-  vec4 c = texture(colours, vec3(uv, layer));
-  float shares = max(w.w, 1e-5);
-  // a little more light towards the middle of a lamp
-  return vec4(c.rgb / shares * fill * level * (0.8 + 0.2 * c.a / shares), fill);
+  return weight > 1e-5 ? smoothstep(aa, -aa, edgeAt(weight)) : 0.0;
+}
+// how much of the place a level's lamps cover (the solid things that shine, not the glass that does): what is under
+// them, on the levels below, does not show
+float lampCover(Near n, float soft) {
+  return fillOf(n.here.a, slopeOf(n.east.a, n.west.a, n.north.a, n.south.a), soft);
 }`;
 
+// the light of one level, added into the scene; or (covering) only what its lamps cover, drawn to take away the
+// light under them: a lamp is solid, the boids and the lamps of the levels below do not show through it (lenzi,
+// 2026-11-15: "under solid blobs you can see the boids still")
 const LAMPS = `#version 300 es
 precision highp float;
 precision highp sampler2DArray;
@@ -285,11 +294,18 @@ uniform sampler2DArray colours;
 uniform float layer;
 uniform float level;
 uniform float soft;   // device px over the edge
+uniform float covering;
 out vec4 color;
 ${FIELD_NEAR}
-${LAMP_LIGHT}
 void main() {
-  color = lampLight(nearAt(weights, layer), colours, layer, level, soft);
+  Near n = nearAt(weights, layer);
+  if (covering > 0.5) {
+    color = vec4(0.0, 0.0, 0.0, lampCover(n, soft));
+    return;
+  }
+  float fill = fillOf(n.here.z, slopeOf(n.east.z, n.west.z, n.north.z, n.south.z), soft);
+  vec4 c = texture(colours, vec3(uv, layer));
+  color = vec4(c.rgb / max(c.a, 1e-5) * fill * level, fill);
 }`;
 
 // what the solid and the glass surfaces share: the light that reaches them, and how a solid thing looks in it
@@ -307,6 +323,7 @@ uniform float borderPx;   // device px
 uniform sampler2D shadow; // the share of the lamps' light a solid thing stops, at every place
 uniform float shaded;     // how much of it a shadow takes (0: no shadows)
 uniform sampler2D faceLight; // the light outside the solid things, blurred into them (a: how much is outside)
+uniform float lampSoft;   // how soft a lamp's edge is, device px
 vec3 decode(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
 vec3 encode(vec3 c) {
   c = clamp(c, 0.0, 1.0);
@@ -387,13 +404,17 @@ uniform sampler2DArray solidTints;
 out vec4 color;
 ${SURFACE_LIGHT}
 void main() {
-  vec3 c = decode(texture(picture, uv).rgb);
+  // the picture: where a lamp is, the lamp as it is drawn, with what flies over it
+  vec3 shown = decode(texture(picture, uv).rgb);
+  vec3 c = shown;
   Light l = lightHere();
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
     if (i >= layers) break;
     float layer = float(i);
     Near n = nearAt(weights, layer);
     vec4 w = n.here;
+    // a level's lamps cover the solid things of the levels under it: the picture again there
+    c = mix(c, shown, lampCover(n, lampSoft));
     Edge solid = edgeOf(w.g, slopeOf(n.east.g, n.west.g, n.north.g, n.south.g));
     vec3 albedo = texture(solidTints, vec3(uv, layer)).rgb / max(w.g, 1e-6);
     if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, l), solid.fill);
@@ -407,34 +428,18 @@ precision highp sampler2DArray;
 in vec2 uv;
 uniform sampler2D picture;
 uniform sampler2D blurred;
-// each level's fields, a layer each, the lowest first: the weights, the lamps' colours, glass's colour and tint,
-// solid's colour (and glass's clarity)
+// each level's fields, a layer each, the lowest first: the weights, glass's colour and tint, solid's colour (and
+// glass's clarity)
 uniform int layers;
 uniform sampler2DArray weights;
-uniform sampler2DArray lampColours;
 uniform sampler2DArray glassTints;
 uniform sampler2DArray solidTints;
-// a lamp as the picture shows it (the composite's): its light, how bright, how soft its edge
-uniform float lampLevel;
-uniform float lampSoft;
-uniform float core;
-uniform vec3 base;
 out vec4 color;
 ${SURFACE_LIGHT}
-${LAMP_LIGHT}
-
-// a lamp as the picture shows it (the composite's way, on the base): drawn over what a lower level covered, it is
-// itself there, not its light added onto a solid thing's colour
-vec3 lampLook(vec4 lamp) {
-  vec3 l = lamp.rgb * core;
-  float most = max(l.r, max(l.g, l.b));
-  vec3 own = l / max(most, 1e-4);
-  return base + (1.0 - base) * own * (1.0 - exp(-most));
-}
 
 // one level over the picture so far: its solid things (in the picture already, drawn again over a lower level's
-// glass), then its glass over them; how much of the place they cover, added up
-vec3 level(vec3 c, inout float cover, float layer, Near n, Light l) {
+// glass), then its glass over them
+vec3 level(vec3 c, float layer, Near n, Light l) {
   vec4 w = n.here;
   Edge glass = edgeOf(w.r, slopeOf(n.east.r, n.west.r, n.north.r, n.south.r));
   Edge solid = edgeOf(w.g, slopeOf(n.east.g, n.west.g, n.north.g, n.south.g));
@@ -464,27 +469,25 @@ vec3 level(vec3 c, inout float cover, float layer, Near n, Light l) {
     g += shine(l.here * (0.35 + 0.65 * facing)) * rim * band;
     c = mix(c, g, glass.fill);
   }
-  cover = 1.0 - (1.0 - cover) * (1.0 - max(glass.fill, solid.fill));
   return c;
 }
 
 void main() {
-  vec3 c = decode(texture(picture, uv).rgb);
+  // the picture: where a lamp is, the lamp as it is drawn (the light of the levels under it taken away, the solid
+  // things under it not drawn), with what flies over it
+  vec3 shown = decode(texture(picture, uv).rgb);
+  vec3 c = shown;
   Light l = lightHere();
   // the levels, the lowest first, each over the ones under it, never melted into them (lenzi, 2026-11-15: "the order
-  // in which they render ... should also be depended on the z index"): its lamps over what a lower level covered
-  // (where nothing covered them they are in the picture already), then its solid and glass things
-  float cover = 0.0;
+  // in which they render ... should also be depended on the z index"): its lamps over the glass of the levels under
+  // it (the picture again there: all of it, so no line is left along the glass's edge; "under solid blobs you can see
+  // the boids still (only the outline for the blob boids)"), then its solid and glass things
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
     if (i >= layers) break;
     float layer = float(i);
     Near n = nearAt(weights, layer);
-    vec4 lamp = lampLight(n, lampColours, layer, lampLevel, lampSoft);
-    c = mix(c, lampLook(lamp), cover * lamp.a);
-    // a lamp covers what is under it as a solid thing does: a higher level's lamp is drawn over it, not added to it
-    // (lenzi, 2026-11-15: the lamps under a large lamp of a higher level showed through it, lighter)
-    cover = 1.0 - (1.0 - cover) * (1.0 - lamp.a);
-    c = level(c, cover, layer, n, l);
+    c = mix(c, shown, lampCover(n, lampSoft));
+    c = level(c, layer, n, l);
   }
   color = vec4(encode(c), 1.0);
 }`;
@@ -616,6 +619,8 @@ export class MaterialScene {
   private objects: readonly MaterialObject[] = [];
   /** The objects by level, the lowest first: each level its own fields (they never melt into another's). */
   private levels: MaterialObject[][] = [[]];
+  /** Each of those levels' own number (a scene's `layer`): where the light of other things falls among them. */
+  private layers: number[] = [0];
   private look: MaterialLook | null = null;
   /** Each level's fields, a layer of one texture each: the weights, the lamps' colours, glass's, solid's. */
   private fields: LayeredFields | null = null;
@@ -667,6 +672,7 @@ export class MaterialScene {
     const found = [...new Set(this.objects.map((object) => object.layer ?? 0))].sort((a, b) => a - b);
     const slotOf = new Map(found.map((layer, i) => [layer, Math.min(i, MAX_MATERIAL_LAYERS - 1)]));
     this.levels = Array.from({ length: Math.max(1, Math.min(found.length, MAX_MATERIAL_LAYERS)) }, () => [] as MaterialObject[]);
+    this.layers = found.length > 0 ? found.slice(0, MAX_MATERIAL_LAYERS) : [0];
     for (const object of this.objects) this.levels[slotOf.get(object.layer ?? 0) ?? 0]!.push(object);
   }
 
@@ -726,25 +732,53 @@ export class MaterialScene {
     this.shadowed = this.has.lamp && this.has.solid && this.drawShadow();
   }
 
-  /** The lamps' light, added into the scene: each level's lamps, apart. */
-  drawLight(): void {
-    const look = this.look;
-    if (!this.has.lamp || !look) return;
+  /**
+   * The scene's light, the lowest level first: each level's lamps, then the other light on that level (`others`:
+   * the boids), added. A lamp is solid: before its own light is added, the light of the levels under it is taken
+   * away where it is (lenzi, 2026-11-15: "under solid blobs you can see the boids still"); glass that shines only
+   * adds its light. The light of one level adds up, as ever.
+   */
+  drawLight(others: readonly LevelLight[] = []): void {
     const engine = this.engine;
     const gl = engine.gl;
-    gl.useProgram(this.lamps);
-    gl.uniform1f(engine.uniform(this.lamps, 'level'), look.level);
-    gl.uniform1f(engine.uniform(this.lamps, 'soft'), Math.max(0.75, look.soft * engine.scale));
-    gl.uniform2f(engine.uniform(this.lamps, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
+    const look = this.look;
     const fields = this.fields;
-    if (!fields) return;
-    this.useLayers(this.lamps, 'weights', fields.weights, 0);
-    this.useLayers(this.lamps, 'colours', fields.colours, 1);
-    this.levels.forEach((objects, slot) => {
-      if (!objects.some(shines)) return;
-      gl.uniform1f(engine.uniform(this.lamps, 'layer'), slot);
-      engine.fullscreen();
-    });
+    const waiting = [...others].sort((a, b) => a.layer - b.layer);
+    let next = 0;
+    // whether there is light under the level being drawn
+    let under = false;
+    const addBelow = (layer: number) => {
+      for (; next < waiting.length && waiting[next]!.layer < layer; next++) {
+        gl.blendFunc(gl.ONE, gl.ONE);
+        waiting[next]!.draw();
+        under = true;
+      }
+    };
+    if (this.has.lamp && look && fields) {
+      const program = this.lamps;
+      this.levels.forEach((objects, slot) => {
+        if (!objects.some(shines)) return;
+        addBelow(this.layers[slot] ?? 0);
+        gl.useProgram(program);
+        gl.uniform1f(engine.uniform(program, 'level'), look.level);
+        gl.uniform1f(engine.uniform(program, 'soft'), Math.max(0.75, look.soft * engine.scale));
+        gl.uniform2f(engine.uniform(program, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
+        this.useLayers(program, 'weights', fields.weights, 0);
+        this.useLayers(program, 'colours', fields.colours, 1);
+        gl.uniform1f(engine.uniform(program, 'layer'), slot);
+        if (under && objects.some((object) => object.material === 'lamp')) {
+          gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+          gl.uniform1f(engine.uniform(program, 'covering'), 1);
+          engine.fullscreen();
+        }
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.uniform1f(engine.uniform(program, 'covering'), 0);
+        engine.fullscreen();
+        under = true;
+      });
+    }
+    addBelow(Infinity);
+    gl.blendFunc(gl.ONE, gl.ONE);
   }
 
   /** The share of the glow stopped at every place, or null (nothing solid, or no lamp). */
@@ -841,15 +875,16 @@ export class MaterialScene {
     gl.uniform3f(engine.uniform(program, 'border'), ...look.border);
     gl.uniform1f(engine.uniform(program, 'borderPx'), look.borderWidth * engine.scale);
     gl.uniform2f(engine.uniform(program, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
+    // a lamp's edge, as the light pass draws it: what it covers of the levels under it
+    gl.uniform1f(engine.uniform(program, 'lampSoft'), Math.max(0.75, look.soft * engine.scale));
   }
 
   /** The glass and the solid things over the finished picture; false when there are none. */
   drawSurfaces(inputs: GlowSurfaceInputs): boolean {
     const look = this.look;
     const fields = this.fields;
-    // nothing to draw over the picture: no glass, nothing solid, and no lamp over a lamp of a lower level
-    const stacked = this.levels.filter((objects) => objects.some(shines)).length > 1;
-    if ((!this.has.glass && !this.has.solid && !stacked) || !look || !fields) return false;
+    // nothing to draw over the picture: no glass, nothing solid (a lamp over a lamp is the light pass's)
+    if ((!this.has.glass && !this.has.solid) || !look || !fields) return false;
     const engine = this.engine;
     const gl = engine.gl;
     const program = this.surfaces;
@@ -858,17 +893,12 @@ export class MaterialScene {
     engine.useTexture(program, 'blurred', inputs.blurred, 1);
     engine.useTexture(program, 'light', inputs.light, 2);
     engine.useTexture(program, 'ambient', inputs.ambient, 3);
-    // each level's fields, and how a lamp of a higher level shows over a lower one
+    // each level's fields
     this.useLayers(program, 'weights', fields.weights, 4);
-    this.useLayers(program, 'lampColours', fields.colours, 5);
-    this.useLayers(program, 'glassTints', fields.glass, 6);
-    this.useLayers(program, 'solidTints', fields.solid, 7);
+    this.useLayers(program, 'glassTints', fields.glass, 5);
+    this.useLayers(program, 'solidTints', fields.solid, 6);
     gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
-    gl.uniform1f(engine.uniform(program, 'lampLevel'), look.level);
-    gl.uniform1f(engine.uniform(program, 'lampSoft'), Math.max(0.75, look.soft * engine.scale));
-    gl.uniform1f(engine.uniform(program, 'core'), inputs.core ?? 1);
-    gl.uniform3f(engine.uniform(program, 'base'), ...(inputs.base ?? [0.0144, 0.0144, 0.0159]));
-    this.lightUniforms(program, inputs, look, 8);
+    this.lightUniforms(program, inputs, look, 7);
     engine.fullscreen();
     return true;
   }

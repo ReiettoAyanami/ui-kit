@@ -29,8 +29,52 @@ describe('SceneMakerPage', () => {
     expect(titles[0]).toBe('Home');
     expect(titles.filter((title) => title?.endsWith('blob')).length).toBe(HOME_SCENE.blobs.length);
     expect(titles.filter((title) => title === 'Boids' || title?.endsWith('blob-boids')).length).toBe(HOME_SCENE.fleets.length);
-    expect(page.querySelectorAll('mat-action-list mat-icon').length).toBe(titles.length);
+    expect(page.querySelectorAll('mat-action-list [matListItemIcon]').length).toBe(titles.length);
     expect(page.querySelector('lenzi-scene')).not.toBeNull();
+  });
+
+  it('each row shows its level and a button that takes its object out; the open window stays on its object; Undo puts it back', async () => {
+    const { page, click, maker, fixture } = await open();
+    const rows = () => [...page.querySelectorAll<HTMLElement>('mat-action-list .object')];
+    const row = (title: string) => rows().find((found) => found.querySelector('[matListItemTitle]')?.textContent?.trim() === title)!;
+    // the scene's own row: no level, nothing to take out
+    expect(rows()[0]!.querySelector('.level')).toBeNull();
+    expect(rows()[0]!.querySelector('.take-out')).toBeNull();
+    // glass is a level above the rest
+    expect(row('Glass blob').querySelector('.level')?.textContent).toContain('1');
+    expect(row('Glass blob').querySelector('.level')?.getAttribute('aria-label')).toBe('Level 1');
+    expect(row('Glowing blob').querySelector('.level')?.textContent).toContain('0');
+    expect(page.querySelectorAll('mat-action-list .take-out').length).toBe(HOME_SCENE.blobs.length + HOME_SCENE.fleets.length);
+
+    // the last glass blob's window open; the first glass blob (listed first) taken out by its row's button
+    maker.chosen.set({ type: 'blob', index: 5 });
+    fixture.detectChanges();
+    const first = maker.scene().blobs[1]!;
+    const last = maker.scene().blobs[5]!;
+    row('Glass blob').querySelector<HTMLButtonElement>('.take-out')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().blobs.length).toBe(HOME_SCENE.blobs.length - 1);
+    expect(maker.scene().blobs).not.toContain(first);
+    expect(maker.chosen()).toEqual({ type: 'blob', index: 4 });
+    expect(maker.scene().blobs[4]).toBe(last);
+
+    // Undo, in the snackbar: back where it was, the window still on its blob
+    const undo = [...document.querySelectorAll<HTMLButtonElement>('mat-snack-bar-container button')].find((button) => button.textContent?.includes('Undo'))!;
+    undo.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().blobs[1]).toBe(first);
+    expect(maker.chosen()).toEqual({ type: 'blob', index: 5 });
+
+    // a fleet's row: its own object out
+    await click('Add a fleet');
+    const fleets = maker.scene().fleets.length;
+    rows().at(-1)!.querySelector<HTMLButtonElement>('.take-out')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().fleets.length).toBe(fleets - 1);
+    expect(maker.chosen()).toBeNull();
   });
 
   it("a click on a leader opens its window: a boid or a blob-boid, its fleet's size apart, the leader's ways", async () => {

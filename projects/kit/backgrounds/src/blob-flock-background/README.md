@@ -55,15 +55,18 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   pushed along it (`Boids.setFlow`) and the blobs drift with it (`BlobDrift`). The blob background takes them too.
 - **Levels kept apart**: one field per level (up to four), drawn from the lowest up: blobs of one material on two
   levels do not melt, the higher drawn over the lower. A solid thing without a colour is in its tint, not the
-  page's colour (2026-11-15: "solid shouldn't be trasparent").
+  page's colour (2026-11-15: "solid shouldn't be trasparent"). The light is drawn level by level too: each level's
+  lamps, then its boids; a lamp (solid) first takes away the light of the levels under it where it is, so boids,
+  blob-boids and lamps under it do not show through ("under solid blobs you can see the boids still"), and the
+  solid things and glass under it are not drawn there. Glass that shines only adds its light.
 - **Layers** (z-levels; lenzi, 2026-11-14: "the z-index of the blobs decides which is an obstacle to what
   (they're obstacles only to objects that are on the same z-level)"): something stops only what is on its
   own layer. By default the lamps, the solid things, the boids and the lamp blob-boids are on layer 0 and
   stop each other as before; glass (blobs and blob-boids) is on layer 1, above them, so they fly under it,
   seen through it ("the glass boidsblobs and blobs on top of them so that they can go under").
   `materialLayers` sets a material's layer (`MATERIAL_LAYERS`: lamp 0, glass 1, solid 0), `blobLayers` a
-  blob's own, a fleet's `layer` its own, `boidLayer` the boids'. The layers say only what stops what: what is
-  drawn over what stays the materials' (light, then glass, then solid).
+  blob's own, a fleet's `layer` its own, `boidLayer` the boids'. The layers say what stops what and what is
+  drawn over what (a higher level over a lower one; within a level: lamps, boids, solid things, glass).
 - **Small boids are a little slower and follow from a little farther** (`sizeSpeed`, `sizeReach`; "che
   naturalmente i piú grandi stanno in testa"): the large ones, the leaders, end up ahead.
 - **The lamp blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements

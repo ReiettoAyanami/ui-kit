@@ -263,8 +263,9 @@ export class SceneMakerPage {
 
   /**
    * The objects in the column: the scene itself first, then its blobs and fleets' leaders from the highest level down,
-   * each with its level for its tooltip (lenzi, 2026-11-15: "sort them by z-index also on the left. and display it as a
-   * tooltip when hovering on the list item").
+   * each with its level (lenzi, 2026-11-15: "sort them by z-index also on the left. and display it as a tooltip when
+   * hovering on the list item", then "display the z index and the delete button on the list items on the left"):
+   * shown on its row (none: the scene, a current), and a button there that takes it out (not the scene).
    */
   protected readonly objects = computed(() => {
     const scene = this.scene();
@@ -273,11 +274,11 @@ export class SceneMakerPage {
     const level = (object: SceneObject) =>
       object.type === 'blob' ? layerOf(scene.blobs[object.index]!, 'blob') : object.type === 'fleet' ? layerOf(scene.fleets[object.index]!, scene.fleets[object.index]!.kind) : -1;
     return [
-      { ...first!, tooltip: '' },
+      { ...first!, tooltip: '', level: null as number | null, removable: false },
       ...rest
         .map((item, order) => ({ ...item, order, level: level(item.object) }))
         .sort((a, b) => b.level - a.level || a.order - b.order)
-        .map((item) => ({ ...item, tooltip: item.level < 0 ? 'It carries every level' : `Level ${item.level}` })),
+        .map((item) => ({ ...item, tooltip: item.level < 0 ? 'It carries every level' : `Level ${item.level}`, level: item.level < 0 ? null : item.level, removable: true })),
     ];
   });
 
@@ -567,18 +568,47 @@ export class SceneMakerPage {
     if (chosen?.type === 'fleet') this.setFleet({ layer });
   }
 
-  /** Takes the chosen blob or fleet out of the scene. */
-  protected remove(): void {
-    const chosen = this.chosen();
-    if (!chosen || chosen.type === 'scene' || chosen.type === 'point') return;
-    this.scene.update((scene) =>
-      chosen.type === 'blob'
-        ? { ...scene, blobs: scene.blobs.filter((_, i) => i !== chosen.index) }
-        : chosen.type === 'fleet'
-          ? { ...scene, fleets: scene.fleets.filter((_, i) => i !== chosen.index) }
-          : { ...scene, currents: (scene.currents ?? []).filter((_, i) => i !== chosen.index) },
+  /**
+   * Takes a blob, a fleet or a current out of the scene: the chosen one (its window's button) or the one whose row's
+   * button was pressed (lenzi, 2026-11-15: "the delete button on the list items on the left"). It is one press, so
+   * the snackbar offers to put it back.
+   */
+  protected remove(object: SceneObject | null = this.chosen()): void {
+    if (!object || object.type === 'scene' || object.type === 'point') return;
+    const { type, index } = object;
+    const scene = this.scene();
+    const blob = type === 'blob' ? scene.blobs[index] : undefined;
+    const fleet = type === 'fleet' ? scene.fleets[index] : undefined;
+    const current = type === 'current' ? scene.currents?.[index] : undefined;
+    if (!blob && !fleet && !current) return;
+    const without = <T>(list: readonly T[] | undefined): T[] => (list ?? []).filter((_, i) => i !== index);
+    this.scene.update((now) =>
+      type === 'blob' ? { ...now, blobs: without(now.blobs) } : type === 'fleet' ? { ...now, fleets: without(now.fleets) } : { ...now, currents: without(now.currents) },
     );
-    this.chosen.set(null);
+    // the window stays on the object it showed: closed when that is the one taken out, one place up when it came after
+    this.rechoose(type, (chosen) => (chosen === index ? null : chosen > index ? chosen - 1 : chosen));
+    const withIt = <T>(list: readonly T[] | undefined, thing: T): T[] => {
+      const next = [...(list ?? [])];
+      next.splice(Math.min(index, next.length), 0, thing);
+      return next;
+    };
+    this.snackBar
+      .open(`The ${type} is out of the scene`, 'Undo', { duration: 6000 })
+      .onAction()
+      .subscribe(() => {
+        this.scene.update((now) =>
+          blob ? { ...now, blobs: withIt(now.blobs, blob) } : fleet ? { ...now, fleets: withIt(now.fleets, fleet) } : { ...now, currents: withIt(now.currents, current!) },
+        );
+        this.rechoose(type, (chosen) => (chosen >= index ? chosen + 1 : chosen));
+      });
+  }
+
+  /** The chosen object's place in its list, after the list changed (null: its window closes). */
+  private rechoose(type: 'blob' | 'fleet' | 'current', place: (index: number) => number | null): void {
+    const chosen = this.chosen();
+    if (!chosen || chosen.type !== type) return;
+    const index = place(chosen.index);
+    this.chosen.set(index === null ? null : { type, index });
   }
 
   protected setName(name: string): void {
