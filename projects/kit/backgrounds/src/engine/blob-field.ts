@@ -53,7 +53,8 @@ export interface BlobSettings {
  * One blob as a scene (or an app) says it: what it is made of and how large it is (a share of the smaller side);
  * the rest only when said: its place (a share of the space), its shape (kept), its level (it melts only into its
  * material on its own level), its colour (a `#rrggbb`) and, glass, how much of it it takes, whether it never leaves
- * its place (`fixed`: it does not wander, it cannot be thrown) and its weight (the heavier, the slower it turns).
+ * its place (`fixed`: it does not wander, it cannot be thrown), its weight (the heavier, the slower it turns, the
+ * less it is pushed) and whether the blobs of another material on its level bounce off it (`obstacle`).
  */
 export interface LenziBlobSpec {
   material: BlobMaterial;
@@ -72,6 +73,21 @@ export interface LenziBlobSpec {
   weight?: number;
   /** Glass that shines too, in its colour (a solid thing that shines is a lamp: `material: 'lamp'`). */
   emitting?: boolean;
+  /**
+   * It stops the blobs of another material on its level: they bounce off it, and it off them, instead of passing
+   * over or under (lenzi, 2026-11-15: "a toggle that decides if a blob is an obstacle for the same z-level or not, so
+   * some blobs will be able to collide too", "only for other blobs of different matierials ofc, boids and same
+   * materials have their rules already"). Not said: blobs pass, as before.
+   */
+  obstacle?: boolean;
+}
+
+/**
+ * Whether two blobs bounce off each other: one of them stops the blobs of its level (`obstacle`), they are on one
+ * level (each's is given: its own, or its material's), and of two materials (blobs of one material melt).
+ */
+export function blobsBump(one: LenziBlobSpec | undefined, other: LenziBlobSpec | undefined, oneLayer: number, otherLayer: number): boolean {
+  return !!one && !!other && (one.obstacle === true || other.obstacle === true) && one.material !== other.material && oneLayer === otherLayer;
 }
 
 /** The colours a blob or a fleet shifts among (two or more `#rrggbb`), or null. */

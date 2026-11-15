@@ -749,7 +749,7 @@ export class SceneMakerPage {
     }
   }
 
-  protected setBlob(change: Partial<{ material: BlobMaterial; size: number; layer: number; fixed: boolean; weight: number }>): void {
+  protected setBlob(change: Partial<{ material: BlobMaterial; size: number; layer: number; fixed: boolean; weight: number; obstacle: boolean }>): void {
     const chosen = this.chosen();
     if (chosen?.type !== 'blob') return;
     this.scene.update((scene) => ({ ...scene, blobs: scene.blobs.map((blob, i) => (i === chosen.index ? { ...blob, ...change } : blob)) }));

@@ -1,6 +1,6 @@
 import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
 
-import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobEdge, blobsAt, paletteOf, specSettings } from '../engine/blob-field';
+import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobEdge, blobsAt, blobsBump, paletteOf, specSettings } from '../engine/blob-field';
 import { BlobMaterial, DROP, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { BlobThrow } from '../engine/blob-throw';
 import { BlobDrift, LenziCurrent, currentsFlow } from '../engine/currents';
@@ -346,6 +346,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
         // a blob in the hand is where the hand is: no current carries it
         this.drift.still(this.throws.held);
+        this.bump();
         const flocks = this.current();
         const fleets = this.currentFleets();
         // the blobs where they are now, as drawn: what the flocks fly round (or melt into)
@@ -665,11 +666,31 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   /** The blobs where their paths and throws put them, before the currents carry them. */
   private placed(): BlobState[] {
-    if (this.throwable() && this.animate()) return this.throws.apply(this.paths());
-    // nothing thrown when nothing may be, or in a still picture (a scene being made): every blob where its path puts
-    // it, and it plays on from there
+    if ((this.throwable() || this.bumping()) && this.animate()) return this.throws.apply(this.paths());
+    // nothing thrown or pushed when nothing may be, or in a still picture (a scene being made): every blob where its
+    // path puts it, and it plays on from there
     this.throws.reset();
     return this.paths();
+  }
+
+  /** Whether some blob stops the blobs of its level (`obstacle`): then blobs may be pushed off their paths. */
+  private bumping(): boolean {
+    return this.blobSpecs()?.some((spec) => spec.obstacle === true) === true;
+  }
+
+  /**
+   * Blobs that stop one another bounce apart (lenzi, 2026-11-15: "a toggle that decides if a blob is an obstacle for
+   * the same z-level or not, so some blobs will be able to collide too"): on one level, of two materials, one of them
+   * an obstacle. A blob made fast is not pushed; a heavier or larger one less.
+   */
+  private bump(): void {
+    const specs = this.blobSpecs();
+    if (!specs || !this.bumping()) return;
+    this.throws.collide(
+      this.blobsNow(),
+      (one, other) => blobsBump(specs[one], specs[other], this.blobLayerOf(one), this.blobLayerOf(other)),
+      (index) => (specs[index]?.fixed ? 0 : Math.max(0.25, specs[index]?.weight ?? 1) * Math.max(0.0001, specs[index]?.size ?? 0.1) ** 2),
+    );
   }
 
   /** How much a current carries a blob: a blob that stays put not at all, a heavier one less. */

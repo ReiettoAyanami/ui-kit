@@ -40,6 +40,12 @@ contenente boidi, blob, boidi-blob").
 - **A blob that stays put** (`fixed`: it does not wander, it cannot be thrown) and **its weight** (`weight`, 0.25 to
   4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
   that it spins more/less").
+- **A blob that is an obstacle** (`obstacle`; lenzi, 2026-11-15: "a toggle that decides if a blob is an obstacle for
+  the same z-level or not, so some blobs will be able to collide too", "only for other blobs of different
+  matierials ofc, boids and same materials have their rules already"): the blobs of another material on its level
+  bounce off it, and it off them (the heavier or larger one is pushed less, one that stays put not at all; a
+  thrown one bounces back). Its own material still melts into it; the flocks keep their rules. Not said: blobs
+  pass over or under each other, as before.
 - **Solid things are lit surfaces**: their colour times the light that reaches them from beyond their edge, all round,
   less the farther in (the light outside every solid thing, shadows taken, blurred into them: a lamp beside one lights
   it, a lamp under it does not show through, one in another's shadow is dark; lenzi, 2026-11-15, "solid non emitting
@@ -78,7 +84,7 @@ contenente boidi, blob, boidi-blob").
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
 wander?, x?, y?, layer? }[], follow?, throwable? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
-tint?, shape?, x?, y?, layer?, fixed?, weight? }`.
+tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 
 ## Example
 

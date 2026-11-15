@@ -82,4 +82,87 @@ describe('throwing blobs', () => {
     throws.step(1 / 60, paths, 1000, 1000);
     expect(throws.apply(paths)).toEqual(paths);
   });
+  describe('blobs that bounce off one another', () => {
+    const all = () => true;
+    const even = () => 1;
+    const gap = (throws: BlobThrow, paths: BlobState[]) => {
+      const [one, other] = throws.apply(paths);
+      return Math.hypot(other!.x - one!.x, other!.y - one!.y);
+    };
+
+    it('two that overlap are pushed apart until they touch, each by half when they weigh the same', () => {
+      const throws = new BlobThrow();
+      const paths = [blob(200, 300), blob(260, 300)];
+      throws.collide(paths, all, even);
+      const [one, other] = throws.apply(paths);
+      expect(gap(throws, paths)).toBeCloseTo(100, 5);
+      expect(one!.x).toBeCloseTo(180, 5);
+      expect(other!.x).toBeCloseTo(280, 5);
+      expect([one!.y, other!.y]).toEqual([300, 300]);
+    });
+
+    it('the heavier one is pushed less; one made fast (no mass) not at all; the held one neither', () => {
+      const heavy = new BlobThrow();
+      const paths = [blob(200, 300), blob(260, 300)];
+      heavy.collide(paths, all, (index) => (index === 0 ? 3 : 1));
+      expect(heavy.apply(paths)[0]!.x).toBeCloseTo(190, 5);
+      expect(heavy.apply(paths)[1]!.x).toBeCloseTo(290, 5);
+
+      const fast = new BlobThrow();
+      fast.collide(paths, all, (index) => (index === 0 ? 0 : 1));
+      expect(fast.apply(paths)[0]).toEqual(paths[0]);
+      expect(fast.apply(paths)[1]!.x).toBeCloseTo(300, 5);
+
+      const held = new BlobThrow();
+      held.grab(paths, 200, 300, 0);
+      held.collide(paths, all, even);
+      expect(held.apply(paths)[0]).toEqual(paths[0]);
+      expect(held.apply(paths)[1]!.x).toBeCloseTo(300, 5);
+    });
+
+    it('only the pairs that are said to; apart, nothing moves', () => {
+      const throws = new BlobThrow();
+      const paths = [blob(200, 300), blob(260, 300), blob(600, 300)];
+      throws.collide(paths, () => false, even);
+      expect(throws.apply(paths)).toEqual(paths);
+      throws.collide([blob(200, 300), blob(320, 300)], all, even);
+      expect(throws.apply(paths)).toEqual(paths);
+    });
+
+    it('follows the shapes: a clover turned so its dip faces the other lets it nearer than its lobe would', () => {
+      const clover = (rotation: number): BlobState => ({ x: 200, y: 300, radius: 50, rotation, from: BLOB_SHAPES.clover4, to: BLOB_SHAPES.clover4, mix: 0 });
+      const distance = (rotation: number) => {
+        const throws = new BlobThrow();
+        const paths = [clover(rotation), blob(240, 300)];
+        throws.collide(paths, all, even);
+        return gap(throws, paths);
+      };
+      const turns = Array.from({ length: 16 }, (_, i) => distance((i / 16) * Math.PI));
+      expect(Math.max(...turns)).toBeCloseTo(100, 0);
+      expect(Math.min(...turns)).toBeLessThan(95);
+    });
+
+    it('a thrown blob bounces off one that stays put, and loses some of its speed', () => {
+      const throws = new BlobThrow();
+      const paths = [blob(200, 300), blob(500, 300)];
+      throws.grab(paths, 200, 300, 0);
+      throws.drag(240, 300, 0.05);
+      throws.drag(280, 300, 0.1);
+      throws.release(0.1);
+      let nearest = Infinity;
+      let turnedBack = false;
+      let last = 200;
+      for (let i = 0; i < 240; i++) {
+        throws.step(1 / 120, paths, 4000, 1000);
+        throws.collide(throws.apply(paths), all, (index) => (index === 1 ? 0 : 1));
+        const [one, other] = throws.apply(paths);
+        nearest = Math.min(nearest, other!.x - one!.x);
+        if (one!.x < last - 0.5) turnedBack = true;
+        last = one!.x;
+        expect(other).toEqual(paths[1]);
+      }
+      expect(nearest).toBeGreaterThanOrEqual(100 - 1e-6);
+      expect(turnedBack).toBe(true);
+    });
+  });
 });

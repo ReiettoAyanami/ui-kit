@@ -71,6 +71,7 @@ export function cleanScene(raw: unknown): LenziScene | null {
       ...lookOf(blob, blob['material']),
       ...(blob['fixed'] === true ? { fixed: true } : {}),
       ...(isNumber(blob['weight']) ? { weight: clamp(blob['weight'], SCENE_WEIGHTS) } : {}),
+      ...(blob['obstacle'] === true ? { obstacle: true } : {}),
     }));
   const fleets: LenziSceneFleet[] = scene['fleets']
     .map(record)

@@ -31,14 +31,14 @@ describe('a scene in a link', () => {
     expect(
       cleanScene({
         blobs: [
-          { material: 'glass', size: 0.1, colour: '#AABBCC', tint: 3, emitting: true, fixed: true, weight: 99 },
-          { material: 'solid', size: 0.1, colour: 'red', emitting: true, fixed: 'yes', weight: 'heavy' },
+          { material: 'glass', size: 0.1, colour: '#AABBCC', tint: 3, emitting: true, fixed: true, weight: 99, obstacle: true },
+          { material: 'solid', size: 0.1, colour: 'red', emitting: true, fixed: 'yes', weight: 'heavy', obstacle: 'yes' },
         ],
         fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],
       }),
     ).toEqual({
       blobs: [
-        { material: 'glass', size: 0.1, colour: '#aabbcc', tint: 1, emitting: true, fixed: true, weight: 4 },
+        { material: 'glass', size: 0.1, colour: '#aabbcc', tint: 1, emitting: true, fixed: true, weight: 4, obstacle: true },
         { material: 'solid', size: 0.1 },
       ],
       fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],

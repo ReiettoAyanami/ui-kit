@@ -1,4 +1,4 @@
-import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobHome, blobsAt } from './blob-field';
+import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobHome, blobsAt, blobsBump } from './blob-field';
 import { BLOB_SHAPES } from './shapes';
 
 describe('the blobs’ edge, for the flock', () => {
@@ -107,5 +107,23 @@ describe('a blob put somewhere, of a shape of its own (a scene)', () => {
     expect([kept[0]!.from, kept[0]!.to, kept[0]!.mix]).toEqual([BLOB_SHAPES.burst, BLOB_SHAPES.burst, 0]);
     expect(kept[1]).toEqual(plain[1]);
     expect(kept[2]).toEqual(plain[2]);
+  });
+});
+describe('blobs that bounce off each other', () => {
+  it('one of them an obstacle, on one level, of two materials; one material melts, the flocks have their own rules', () => {
+    const lamp = { material: 'lamp' as const, size: 0.1 };
+    const solid = { material: 'solid' as const, size: 0.1 };
+    const wall = { material: 'solid' as const, size: 0.1, obstacle: true };
+    // nothing said: they pass, as before
+    expect(blobsBump(lamp, solid, 0, 0)).toBe(false);
+    // either one an obstacle
+    expect(blobsBump(lamp, wall, 0, 0)).toBe(true);
+    expect(blobsBump(wall, lamp, 0, 0)).toBe(true);
+    // another level: it passes over or under
+    expect(blobsBump(lamp, wall, 0, 1)).toBe(false);
+    // its own material melts into it
+    expect(blobsBump(solid, wall, 0, 0)).toBe(false);
+    expect(blobsBump({ material: 'glass', size: 0.1, emitting: true }, { material: 'glass', size: 0.1, obstacle: true }, 1, 1)).toBe(false);
+    expect(blobsBump(undefined, wall, 0, 0)).toBe(false);
   });
 });

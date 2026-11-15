@@ -184,12 +184,22 @@ describe('SceneMakerPage', () => {
     expect(maker.scene().blobs[1]!.colours).toBeUndefined();
     expect(maker.scene().blobs[1]!.colour).toBe('#d5baff');
 
-    const stay = page.querySelector<HTMLButtonElement>('.window mat-slide-toggle button')!;
-    stay.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    const flip = async (label: string) => {
+      const toggle = [...page.querySelectorAll<HTMLElement>('.window mat-slide-toggle')].find((found) => found.textContent?.includes(label))!;
+      toggle.querySelector<HTMLButtonElement>('button')!.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+    await flip('It stays put');
     expect(maker.scene().blobs[1]!.fixed).toBe(true);
     expect(page.querySelector('.window')?.textContent).toContain('Weight');
+
+    // an obstacle: the blobs of another material on its level bounce off it
+    expect(maker.scene().blobs[1]!.obstacle).toBeUndefined();
+    await flip('An obstacle');
+    expect(maker.scene().blobs[1]!.obstacle).toBe(true);
+    await flip('An obstacle');
+    expect(maker.scene().blobs[1]!.obstacle).toBe(false);
   });
 
   it('adds a current: listed, drawn with its points while paused, bent, each segment its push, turned round, removed', async () => {

@@ -48,7 +48,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   fleet's `layer` is its own level (`boidLayer` when not said).
 - **Blobs one by one** (`blobSpecs`, `LenziBlobSpec`; a scene's): each its material and size and, when said, its
   place (it wanders from there), shape (kept), level, colour or colours to shift among, glass's tint and shining,
-  whether it stays put (not wandering, not thrown) and its weight (the heavier, the slower it turns). Given, it is
+  whether it stays put (not wandering, not thrown), its weight (the heavier, the slower it turns) and whether it
+  is an obstacle (`obstacle`: the blobs of another material on its level bounce off it, the heavier or larger one
+  pushed less; its own material melts into it, the flocks keep their rules). Given, it is
   the blobs; without it, `blobs`, `materials`, `blobSizes` and `blobLayers` as before. A fleet takes `colour`,
   `colours`, `tint` and `emitting` too.
 - **Currents** (`currents`, `LenziCurrent`: points, each segment's push, a reach): near a segment the boids are

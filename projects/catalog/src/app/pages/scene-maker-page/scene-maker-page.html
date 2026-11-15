@@ -237,10 +237,13 @@
                   <mat-button-toggle [value]="layer">{{ layer }}</mat-button-toggle>
                 }
               </mat-button-toggle-group>
+              <mat-slide-toggle class="toggle" [checked]="blob.obstacle === true" (change)="setBlob({ obstacle: $event.checked })">
+                An obstacle: blobs of another material on its level bounce off it
+              </mat-slide-toggle>
               <mat-slide-toggle class="toggle" [checked]="blob.fixed === true" (change)="setBlob({ fixed: $event.checked })">
                 It stays put (it does not wander, it cannot be thrown)
               </mat-slide-toggle>
-              <p class="label">Weight (the heavier, the slower it turns)</p>
+              <p class="label">Weight (the heavier, the slower it turns and the less it is pushed)</p>
               <div class="number">
                 <mat-slider [min]="weights[0]" [max]="weights[1]" step="0.05">
                   <input matSliderThumb [value]="blob.weight ?? 1" aria-label="Weight" (valueChange)="setBlob({ weight: $event })" />

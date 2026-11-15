@@ -1,6 +1,6 @@
 import { Component, booleanAttribute, input, numberAttribute } from '@angular/core';
 
-import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobsAt, paletteOf, specSettings } from '../engine/blob-field';
+import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobsAt, blobsBump, paletteOf, specSettings } from '../engine/blob-field';
 import { MATERIAL_LAYERS } from '../blob-flock-background/blob-flock-background';
 import { BlobThrow } from '../engine/blob-throw';
 import { BlobDrift, LenziCurrent, currentsFlow } from '../engine/currents';
@@ -122,6 +122,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
         if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
         // a blob in the hand is where the hand is: no current carries it
         this.drift.still(this.throws.held);
+        this.bump();
       },
       prepare: () => {
         const blobs = this.blobsNow();
@@ -249,6 +250,22 @@ export class LenziBlobBackground extends LenziGlowBackground {
   private placed(): BlobState[] {
     if (!this.animate()) this.throws.reset();
     return this.throws.apply(this.paths());
+  }
+
+  /**
+   * Blobs that stop one another bounce apart (lenzi, 2026-11-15: "a toggle that decides if a blob is an obstacle for
+   * the same z-level or not, so some blobs will be able to collide too"): on one level, of two materials, one of them
+   * an obstacle. A blob made fast is not pushed; a heavier or larger one less.
+   */
+  private bump(): void {
+    const specs = this.blobSpecs();
+    if (!specs?.some((spec) => spec.obstacle === true)) return;
+    const layer = (index: number) => specs[index]?.layer ?? MATERIAL_LAYERS[specs[index]?.material ?? 'lamp'];
+    this.throws.collide(
+      this.blobsNow(),
+      (one, other) => blobsBump(specs[one], specs[other], layer(one), layer(other)),
+      (index) => (specs[index]?.fixed ? 0 : Math.max(0.25, specs[index]?.weight ?? 1) * Math.max(0.0001, specs[index]?.size ?? 0.1) ** 2),
+    );
   }
 
   /** The blobs where their own paths put them now. */

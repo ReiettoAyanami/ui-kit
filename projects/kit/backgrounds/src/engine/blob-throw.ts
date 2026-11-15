@@ -5,9 +5,20 @@
 // pointer. A plain module (no schematic makes one).
 
 import { BlobState } from './blob-field';
+import { shapeRadius } from './shapes';
 
 /** How fast a thrown blob slows down: its speed is divided by e every 1 / FRICTION seconds. */
 const FRICTION = 1.1;
+/** Two blobs that meet slower than this (px/s) do not bounce: they rest against each other. */
+const REST = 40;
+/** How many times the pairs are gone through in one step: a blob pushed out of one may be pushed into another. */
+const PASSES = 3;
+
+/** How far a blob reaches from its middle in a direction of the screen (radians), px: its shape now, turned. */
+function reachOf(blob: BlobState, angle: number): number {
+  const own = angle + blob.rotation;
+  return (shapeRadius(blob.from, own) * (1 - blob.mix) + shapeRadius(blob.to, own) * blob.mix) * blob.radius;
+}
 /** How strongly a let-go blob is drawn back to its own path (a spring, per second²). */
 const SPRING = 0.35;
 /** How hard it can be thrown, px/s. */
@@ -137,6 +148,61 @@ export class BlobThrow {
         this.oy[i] = Math.min(height - margin, Math.max(margin, y)) - path.y;
         this.vy[i] = -this.vy[i]! * BOUNCE;
       }
+    }
+  }
+
+  /**
+   * Blobs that bounce off one another (lenzi, 2026-11-15: "a toggle that decides if a blob is an obstacle for the same
+   * z-level or not, so some blobs will be able to collide too"). `blobs` are where they are now, as drawn; `bumps`
+   * says whether two may not overlap; `mass` how hard one is to push (0: it is not pushed, made fast; the held one is
+   * not either). Two that overlap, each as far as its shape reaches towards the other, are pushed apart along the
+   * line between them, the lighter one more; what they were flying at each other with is turned back, some of it
+   * lost (none of it turned back when they meet slowly: they rest against each other).
+   */
+  collide(blobs: readonly BlobState[], bumps: (one: number, other: number) => boolean, mass: (index: number) => number): void {
+    this.ensure(blobs.length);
+    const x = blobs.map((blob) => blob.x);
+    const y = blobs.map((blob) => blob.y);
+    // how easily each is pushed: nothing pushes the held one or one made fast
+    const give = blobs.map((_, i) => (this.hold?.index === i || !(mass(i) > 0) ? 0 : 1 / mass(i)));
+    for (let pass = 0; pass < PASSES; pass++) {
+      let touched = false;
+      for (let a = 0; a < blobs.length; a++) {
+        for (let b = a + 1; b < blobs.length; b++) {
+          const both = give[a]! + give[b]!;
+          if (both <= 0 || !bumps(a, b)) continue;
+          const dx = x[b]! - x[a]!;
+          const dy = y[b]! - y[a]!;
+          const far = Math.hypot(dx, dy);
+          // farther apart than both at their widest
+          if (far >= blobs[a]!.radius + blobs[b]!.radius) continue;
+          const angle = far > 1e-6 ? Math.atan2(dy, dx) : 0;
+          const over = reachOf(blobs[a]!, angle) + reachOf(blobs[b]!, angle + Math.PI) - far;
+          if (over <= 0) continue;
+          touched = true;
+          const nx = Math.cos(angle);
+          const ny = Math.sin(angle);
+          const pushA = (over * give[a]!) / both;
+          const pushB = (over * give[b]!) / both;
+          x[a] = x[a]! - nx * pushA;
+          y[a] = y[a]! - ny * pushA;
+          x[b] = x[b]! + nx * pushB;
+          y[b] = y[b]! + ny * pushB;
+          this.ox[a] = this.ox[a]! - nx * pushA;
+          this.oy[a] = this.oy[a]! - ny * pushA;
+          this.ox[b] = this.ox[b]! + nx * pushB;
+          this.oy[b] = this.oy[b]! + ny * pushB;
+          // the speed they close in with, along the line between them
+          const closing = (this.vx[b]! - this.vx[a]!) * nx + (this.vy[b]! - this.vy[a]!) * ny;
+          if (closing >= 0) continue;
+          const impulse = (-(1 + (-closing > REST ? BOUNCE : 0)) * closing) / both;
+          this.vx[a] = this.vx[a]! - impulse * give[a]! * nx;
+          this.vy[a] = this.vy[a]! - impulse * give[a]! * ny;
+          this.vx[b] = this.vx[b]! + impulse * give[b]! * nx;
+          this.vy[b] = this.vy[b]! + impulse * give[b]! * ny;
+        }
+      }
+      if (!touched) break;
     }
   }
 

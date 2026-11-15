@@ -62,6 +62,8 @@ export function randomScene(random: () => number = Math.random): LenziScene {
       ...glassy(thing),
       ...(chance(0.1) ? { fixed: true } : {}),
       ...(chance(0.25) ? { weight: round(between(0.5, 2.5), 2) } : {}),
+      // now and then one the blobs of another material bounce off
+      ...(chance(0.2) ? { obstacle: true } : {}),
     };
   });
   // something has to shine, or nothing solid is seen: the large one a lamp (with nothing only glass says)
