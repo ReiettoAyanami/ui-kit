@@ -52,6 +52,15 @@ export class BlobDrift {
     this.drifts.length = Math.min(this.drifts.length, blobs.length);
   }
 
+  /**
+   * A blob in the hand (taken by the pointer) is where the hand is: no drift moves it, and it starts from there when
+   * let go (lenzi, 2026-11-15: "quando prendi le cose in simulazione comunque scappano": a taken blob was drawn as far
+   * from the pointer as the current had carried it, and went on being carried). -1: none.
+   */
+  still(index: number): void {
+    if (index >= 0 && this.drifts[index]) this.drifts[index] = { x: 0, y: 0, vx: 0, vy: 0 };
+  }
+
   /** The blobs moved by their drifts, back in on the other side when out (by their own size). */
   apply<T extends { x: number; y: number; radius: number }>(blobs: readonly T[], width: number, height: number): T[] {
     if (this.drifts.length === 0) return [...blobs];

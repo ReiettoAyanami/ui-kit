@@ -74,8 +74,10 @@ describe('throwing blobs', () => {
     throws.drag(400, 300, 0.05);
     throws.step(1 / 60, paths, 1000, 1000);
     expect(throws.apply(paths)[0]!.x).toBeCloseTo(400, 0);
+    expect(throws.held).toBe(0);
     throws.reset();
     expect(throws.holding).toBe(false);
+    expect(throws.held).toBe(-1);
     expect(throws.apply(paths)).toEqual(paths);
     throws.step(1 / 60, paths, 1000, 1000);
     expect(throws.apply(paths)).toEqual(paths);

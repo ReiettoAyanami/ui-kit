@@ -120,6 +120,8 @@ export class LenziBlobBackground extends LenziGlowBackground {
         // the currents carry the blobs (a blob that stays put not at all, a heavy one less)
         const flow = this.flow();
         if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
+        // a blob in the hand is where the hand is: no current carries it
+        this.drift.still(this.throws.held);
       },
       prepare: () => {
         const blobs = this.blobsNow();

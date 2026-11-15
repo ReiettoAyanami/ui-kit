@@ -344,6 +344,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         // the currents: they carry the blobs (a blob that stays put not at all, a heavy one less) and the boids
         const flow = this.flow();
         if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
+        // a blob in the hand is where the hand is: no current carries it
+        this.drift.still(this.throws.held);
         const flocks = this.current();
         const fleets = this.currentFleets();
         // the blobs where they are now, as drawn: what the flocks fly round (or melt into)

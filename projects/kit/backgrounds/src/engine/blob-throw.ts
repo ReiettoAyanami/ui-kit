@@ -38,6 +38,11 @@ export class BlobThrow {
     return this.hold !== null;
   }
 
+  /** The blob held now (its place in the list), or -1. */
+  get held(): number {
+    return this.hold?.index ?? -1;
+  }
+
   /** Every blob back on its own path, none held (nothing may be thrown: a scene being made). */
   reset(): void {
     this.ox = [];

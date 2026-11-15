@@ -1,4 +1,4 @@
-import { DEFAULT_CURRENT, currentsFlow } from './currents';
+import { BlobDrift, DEFAULT_CURRENT, currentsFlow } from './currents';
 
 describe('currents', () => {
   // a space 1000 × 1000: a current left to right along the middle, then down
@@ -28,5 +28,36 @@ describe('currents', () => {
     expect(currentsFlow([], 100, 100)).toBeNull();
     const plain = currentsFlow([{ points: [{ x: 0, y: 0.5 }, { x: 1, y: 0.5 }] }], 1000, 1000)!;
     expect(plain(500, 500)[0]).toBeCloseTo(DEFAULT_CURRENT.strength, 5);
+  });
+
+  it('carries a blob along; one that stays put not at all; reset, every blob back where its path puts it', () => {
+    const drift = new BlobDrift();
+    const blobs = [{ x: 300, y: 500, radius: 40 }, { x: 300, y: 500, radius: 40 }];
+    for (let i = 0; i < 120; i++) drift.step(1 / 60, blobs, flow, (index) => (index === 0 ? 1 : 0));
+    const carried = drift.apply(blobs, 1000, 1000);
+    expect(carried[0]!.x).toBeGreaterThan(310);
+    expect(carried[1]).toEqual(blobs[1]);
+    drift.reset();
+    expect(drift.apply(blobs, 1000, 1000)).toEqual(blobs);
+  });
+
+  it('a blob in the hand is not carried: where the hand is, and from there when let go', () => {
+    const drift = new BlobDrift();
+    const blobs = [{ x: 300, y: 500, radius: 40 }, { x: 320, y: 500, radius: 40 }];
+    for (let i = 0; i < 120; i++) drift.step(1 / 60, blobs, flow, () => 1);
+    // the first one taken: every step, as long as it is held
+    for (let i = 0; i < 60; i++) {
+      drift.step(1 / 60, blobs, flow, () => 1);
+      drift.still(0);
+    }
+    const now = drift.apply(blobs, 1000, 1000);
+    expect(now[0]).toEqual(blobs[0]);
+    expect(now[1]!.x).toBeGreaterThan(330);
+    // let go: carried again, from where it is
+    drift.still(-1);
+    drift.step(1 / 60, blobs, flow, () => 1);
+    const after = drift.apply(blobs, 1000, 1000)[0]!.x;
+    expect(after).toBeGreaterThan(300);
+    expect(after).toBeLessThan(301);
   });
 });
