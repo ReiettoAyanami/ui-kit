@@ -61,6 +61,13 @@ export interface GlowLayers {
   draw(): void;
   /** Where the light is stopped: a texture whose red is the share of the glow stopped there (0..1), or null. */
   shadow?(): WebGLTexture | null;
+  /** How much of the glow a shadow takes away, 0..1; not said: the frame's (the page's `--lenzi-shadow`). */
+  shadowAmount?: number;
+  /**
+   * Solid things into the finished picture, before glass blurs it (so glass shows them): one fullscreen pass that
+   * writes every pixel. `blurred` is the picture itself there. False: nothing drawn, the picture stays.
+   */
+  solids?(inputs: GlowSurfaceInputs): boolean;
   /**
    * Surfaces over the finished picture: one fullscreen pass that writes every pixel (the picture where there
    * is no surface). The engine binds the target first. False: nothing drawn, the picture stays.
@@ -190,6 +197,7 @@ export class GlowEngine {
   private final: Target | null = null;
   /** The picture with the scene's surfaces over it. */
   private surfaced: Target | null = null;
+  private solided: Target | null = null;
   /** No shadow: one black pixel. */
   private readonly noShadow: WebGLTexture;
   private blurs: Target[] = [];
@@ -346,6 +354,7 @@ export class GlowEngine {
     }
     this.final = this.target(width, height, false);
     this.surfaced = this.target(width, height, false);
+    this.solided = this.target(width, height, false);
     for (let level = 1; level <= BLUR_LEVELS; level++) {
       const w = width >> level;
       const h = height >> level;
@@ -363,7 +372,7 @@ export class GlowEngine {
   render(frame: GlowFrame, layers: GlowLayers): void {
     const gl = this.gl;
     const [previous, current] = this.scene;
-    if (this.disposed || !previous || !current || !this.final || !this.surfaced || !this.lightTarget) return;
+    if (this.disposed || !previous || !current || !this.final || !this.surfaced || !this.solided || !this.lightTarget) return;
 
     // 0. the scene's own targets
     if (layers.prepare) {
@@ -411,17 +420,23 @@ export class GlowEngine {
     // 3. on the base colour, the glow darkened where something solid stops the light
     this.into(this.final);
     const shadow = layers.shadow?.() ?? null;
-    this.compose(current, bloom, frame, frame.core, strength, 1, 1, shadow, shadow ? (frame.shadow ?? 0.6) : 0);
+    this.compose(current, bloom, frame, frame.core, strength, 1, 1, shadow, shadow ? (layers.shadowAmount ?? frame.shadow ?? 0.6) : 0);
 
     // 3½. the scene's surfaces over the picture (glass, solid): from the picture, the picture blurred as glass
     // blurs, and the light alone
     let picture = this.final;
+    // what reaches a place from all around: a wide halving, but not the widest (a few pixels, it shows its steps)
+    const ambient = this.bloom[Math.min(AMBIENT_LEVEL, this.bloom.length - 1)] ?? current;
+    const light = { light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height] as [number, number], lightGain: strength, core: frame.core, base: frame.base };
+    // the solid things first, into the picture: glass shows them blurred through itself
+    if (layers.solids) {
+      this.into(this.solided);
+      if (layers.solids({ ...light, picture: picture.texture, blurred: picture.texture })) picture = this.solided;
+    }
     if (layers.surfaces) {
-      const blurred = this.blurred(this.final, GLASS_BLUR * this.scale);
+      const blurred = this.blurred(picture, GLASS_BLUR * this.scale);
       this.into(this.surfaced);
-      // what reaches a place from all around: a wide halving, but not the widest (a few pixels, it shows its steps)
-      const ambient = this.bloom[Math.min(AMBIENT_LEVEL, this.bloom.length - 1)] ?? current;
-      if (layers.surfaces({ picture: this.final.texture, blurred: blurred.texture, light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height], lightGain: strength, core: frame.core, base: frame.base })) picture = this.surfaced;
+      if (layers.surfaces({ ...light, picture: picture.texture, blurred: blurred.texture })) picture = this.surfaced;
     }
 
     // 4. the blur of the finished picture
@@ -540,11 +555,12 @@ export class GlowEngine {
   }
 
   private freeTargets(): void {
-    for (const target of [...this.scene, ...this.bloom, this.final, this.surfaced, ...this.blurs, this.lightTarget]) this.freeTarget(target);
+    for (const target of [...this.scene, ...this.bloom, this.final, this.surfaced, this.solided, ...this.blurs, this.lightTarget]) this.freeTarget(target);
     this.scene = [null, null];
     this.bloom = [];
     this.final = null;
     this.surfaced = null;
+    this.solided = null;
     this.blurs = [];
     this.lightTarget = null;
   }

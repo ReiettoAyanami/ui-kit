@@ -66,6 +66,8 @@ export interface LenziBlobSpec {
   /** Two or more colours (each a `#rrggbb`) it shifts among, slowly, round again; given, `colour` is left aside. */
   colours?: string[];
   tint?: number;
+  /** Glass: how much of what is behind it shows through, 0 to 1. */
+  transparency?: number;
   fixed?: boolean;
   weight?: number;
   /** Glass that shines too, in its colour (a solid thing that shines is a lamp: `material: 'lamp'`). */

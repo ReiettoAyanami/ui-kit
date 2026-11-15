@@ -38,8 +38,10 @@ export interface LenziBlobFlock extends LenziFleetWays {
   colour?: string;
   /** Two or more colours it shifts among, each drop at its own place along the loop; given, `colour` is left aside. */
   colours?: string[];
-  /** Glass: how much of its colour it takes, 0 to 1. */
+  /** Glass: how much its colour colours what is seen through it, 0 to 1. */
   tint?: number;
+  /** Glass: how much of what is behind it shows through, 0 to 1. */
+  transparency?: number;
   /** Glass that shines too, in its colour (a solid fleet that shines is of lamps). */
   emitting?: boolean;
 }
@@ -157,6 +159,7 @@ interface BlobBoid {
   /** Its fleet's own colour (a lamp's moved a little drop by drop), and how much of it glass takes. */
   colour?: LinearRgb;
   tintAmount?: number;
+  clarity?: number;
   /** Glass that shines. */
   emit?: boolean;
 }
@@ -353,6 +356,9 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         for (const fleet of this.current()) flockScene.draw(fleet.boids, this.fleetColours(fleet.spec, colours), Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1);
       },
       shadow: () => materials.shadowTexture(),
+      // a solid blob stops all the light behind it (2026-11-15: "solid objects can still let light through")
+      shadowAmount: 1,
+      solids: (inputs) => materials.drawSolids(inputs),
       surfaces: (inputs) => materials.drawSurfaces(inputs),
       dispose: () => {
         flockScene.dispose();
@@ -492,6 +498,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
           layer,
           ...(colour ? { colour } : {}),
           ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
+          ...(typeof spec.transparency === 'number' ? { clarity: spec.transparency } : {}),
           ...(emit ? { emit } : {}),
         });
       }
@@ -587,6 +594,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         // glass and solid: their own colour only when said (else the page's glass, or their tint)
         ...(spec?.colour || paletteOf(spec?.colours) ? { colour: own } : {}),
         ...(typeof spec?.tint === 'number' ? { tintAmount: spec.tint } : {}),
+        ...(typeof spec?.transparency === 'number' ? { clarity: spec.transparency } : {}),
         ...(spec?.emitting ? { emit: true } : {}),
       };
     });
@@ -614,6 +622,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         layer: drop.layer,
         ...(drop.colour ? { colour: drop.colour } : {}),
         ...(typeof drop.tintAmount === 'number' ? { tintAmount: drop.tintAmount } : {}),
+        ...(typeof drop.clarity === 'number' ? { clarity: drop.clarity } : {}),
         ...(drop.emit ? { emit: true } : {}),
       });
       colour++;

@@ -31,13 +31,15 @@ export const SCENE_LAYERS = [0, 3] as const;
 export const SCENE_WEIGHTS = [0.25, 4] as const;
 
 /** An object's colour (a `#rrggbb`), glass's tint and whether glass shines, as far as the link says them. */
-function lookOf(raw: Record<string, unknown>, material: unknown): { colour?: string; colours?: string[]; tint?: number; emitting?: boolean } {
-  const look: { colour?: string; colours?: string[]; tint?: number; emitting?: boolean } = {};
+function lookOf(raw: Record<string, unknown>, material: unknown): { colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean } {
+  const look: { colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean } = {};
   if (typeof raw['colour'] === 'string' && /^#[0-9a-f]{6}$/i.test(raw['colour'])) look.colour = raw['colour'].toLowerCase();
   // a few colours to shift among: two to six
   const colours = Array.isArray(raw['colours']) ? raw['colours'].filter((colour): colour is string => typeof colour === 'string' && /^#[0-9a-f]{6}$/i.test(colour)).slice(0, SCENE_LIMITS.colours) : [];
   if (colours.length >= 2) look.colours = colours.map((colour) => colour.toLowerCase());
   if (isNumber(raw['tint'])) look.tint = clamp(raw['tint'], [0, 1]);
+  // glass only: a solid thing is always opaque (2026-11-15: "solid should alway be locked at 100")
+  if (material === 'glass' && isNumber(raw['transparency'])) look.transparency = clamp(raw['transparency'], [0, 1]);
   if (material === 'glass' && raw['emitting'] === true) look.emitting = true;
   return look;
 }

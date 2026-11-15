@@ -139,6 +139,9 @@ export class LenziBlobBackground extends LenziGlowBackground {
       },
       draw: () => materials.drawLight(),
       shadow: () => materials.shadowTexture(),
+      // a solid blob stops all the light behind it (2026-11-15: "solid objects can still let light through")
+      shadowAmount: 1,
+      solids: (inputs) => materials.drawSolids(inputs),
       surfaces: (inputs) => materials.drawSurfaces(inputs),
       dispose: () => materials.dispose(),
     };
@@ -162,13 +165,14 @@ export class LenziBlobBackground extends LenziGlowBackground {
   }
 
   /** A blob's level, glass and solid colour and glass's tint, as far as it says them. */
-  private ownLook(index: number, tints: Float32Array): Pick<MaterialObject, 'layer' | 'colour' | 'tintAmount' | 'emit'> {
+  private ownLook(index: number, tints: Float32Array): Pick<MaterialObject, 'layer' | 'colour' | 'tintAmount' | 'clarity' | 'emit'> {
     const spec = this.blobSpecs()?.[index];
     if (!spec) return {};
     return {
       layer: spec.layer ?? MATERIAL_LAYERS[spec.material],
       ...(spec.colour || paletteOf(spec.colours) ? { colour: this.blobTint(index, tints) } : {}),
       ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
+      ...(typeof spec.transparency === 'number' ? { clarity: spec.transparency } : {}),
       ...(spec.emitting ? { emit: true } : {}),
     };
   }

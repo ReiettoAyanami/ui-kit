@@ -210,8 +210,6 @@ export class SceneMakerPage {
   protected readonly bodyOf = bodyOf;
   protected readonly emitsOf = emitsOf;
   protected readonly weights = SCENE_WEIGHTS;
-  /** How much of its colour glass takes when it does not say (about the page's glass). */
-  protected readonly defaultTint = 0.5;
   protected readonly materials: readonly BlobMaterial[] = ['lamp', 'glass', 'solid'];
 
   protected readonly layers = Array.from({ length: SCENE_LAYERS[1] - SCENE_LAYERS[0] + 1 }, (_, i) => SCENE_LAYERS[0] + i);
@@ -488,6 +486,16 @@ export class SceneMakerPage {
 
   protected setTint(tint: number): void {
     if (Number.isFinite(tint)) this.changeChosen((thing) => ({ ...thing, tint }));
+  }
+
+  /** Glass only: a solid thing is always opaque (lenzi, 2026-11-15: "solid should alway be locked at 100"). */
+  protected setTransparency(transparency: number): void {
+    if (Number.isFinite(transparency)) this.changeChosen((thing) => ({ ...thing, transparency }));
+  }
+
+  /** Glass's tint and transparency when it does not say (the renderer's): with a colour of its own, or the page's glass. */
+  protected glassDefaults(thing: { colour?: string; colours?: string[]; emitting?: boolean }): { tint: number; transparency: number } {
+    return thing.colour || (thing.colours?.length ?? 0) >= 2 || thing.emitting ? { tint: 0.5, transparency: 0.7 } : { tint: 0, transparency: 0.45 };
   }
 
   /** The chosen blob or fleet, changed. */
