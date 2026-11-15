@@ -1,0 +1,18 @@
+<div class="cards">
+  @for (card of cards(); track card.look) {
+    <lenzi-preview-card
+      #shown
+      [title]="card.title"
+      [lines]="values()['facts'] ? card.lines : []"
+      [icon]="values()['icon'] ? 'landscape' : null"
+      (opened)="events.log('opened: ' + card.title)"
+      (activeChange)="events.log(($event ? 'pointed at: ' : 'left: ') + card.title)"
+    >
+      <!-- the preview: still until its card is pointed at -->
+      <div class="picture" [class]="card.look" [class.moving]="shown.active()"></div>
+      @if (values()['menu']) {
+        <lenzi-card-menu [label]="'Actions for ' + card.title" [actions]="actions" (action)="events.log('menu: ' + $event)" />
+      }
+    </lenzi-preview-card>
+  }
+</div>

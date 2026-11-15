@@ -2,4 +2,6 @@
   <lenzi-nav-list lenziShellNav appName="ui-kit" subtitle="lenzi's component kit" [pages]="pages()" [bottom]="bottom" />
   <router-outlet />
 </lenzi-app-shell>
-<lenzi-version-label [version]="version" />
+@if (!framedScene) {
+  <lenzi-version-label [version]="version" />
+}

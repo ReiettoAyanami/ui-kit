@@ -137,6 +137,10 @@ the rule says what, the variable says how much.
 - **A card opens its page or its details on a tap.** It is not a button or a link when it holds
   something interactive (a toggle, a menu): their taps never reach the card.
 - **Its actions are in a ⋮ menu at its top right** (`LenziCardMenu`): Edit, Delete, Details.
+- **A card that previews what it opens is YouTube's video card** (`LenziPreviewCard`; lenzi, 2026-11-14: "usa
+  questa di youtube come base, paddin ai lati leggermente meno"): the preview on top, rounded; under it the title,
+  bold, its facts one a line, the ⋮ beside the title; a tinted surface behind it only while it is pointed at. **A
+  preview that moves starts only then** ("fai partire solo la simulazione di quella on hover").
 - **The same thing is the same colour everywhere**: its identity colour (below), shown as a dot next to
   its name.
 

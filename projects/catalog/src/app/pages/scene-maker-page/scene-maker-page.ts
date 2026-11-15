@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { LenziColorPicker } from '@lenzi/ui-kit';
+import { LenziColorPicker, describeError } from '@lenzi/ui-kit';
 
 import {
   BlobMaterial,
@@ -37,7 +37,9 @@ import {
 } from '@lenzi/ui-kit/backgrounds';
 
 import { HOME_SCENE } from '../../scenes';
-import { SCENE_LAYERS, SCENE_LIMITS, SCENE_WEIGHTS, sceneFromCode, sceneToCode } from '../../shared/scene-code';
+import { KitServer } from '../../shared/kit-server';
+import { SavedScenes } from '../../shared/saved-scenes';
+import { SCENE_LAYERS, SCENE_LIMITS, SCENE_WEIGHTS, cleanScene, sceneFromCode, sceneToCode } from '../../shared/scene-code';
 import { randomScene } from '../../shared/scene-random';
 
 /**
@@ -191,6 +193,8 @@ export function fleetDefault(fleet: LenziSceneFleet, key: FleetField['key']): nu
  * oggetto configurabile ... si apra una finestra sulla sinistra"). A fleet is its leader: the boids exist only
  * once it flies ("boid singoli non esistono prima del partire della simulazione"); a boid or a blob-boid, a toggle
  * in its window. The scene is in the page's address (`?s=`): a link is the scene; Copy gives it, and an iframe.
+ * The admin keeps scenes on the server too (2026-11-14: "la sezione admin puó creare varie scene"): Save puts the
+ * scene in the gallery of the Scenes page; opened from there (`?id=`), Save saves that one again.
  */
 @Component({
   selector: 'app-scene-maker-page',
@@ -219,6 +223,8 @@ export class SceneMakerPage {
   private readonly route = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
   private readonly document = inject(DOCUMENT);
+  protected readonly server = inject(KitServer);
+  private readonly kept = inject(SavedScenes);
 
   protected readonly limits = SCENE_LIMITS;
   protected readonly fleetFields = FLEET_FIELDS;
@@ -248,6 +254,10 @@ export class SceneMakerPage {
   readonly moving = signal<SceneObject | null>(null);
   /** The scene's code, as in the link. */
   readonly code = signal('');
+  /** The kept scene being changed (the gallery opened it: `?id=`), which Save saves again; none: Save keeps a new one. */
+  readonly savedId = signal<string | null>(this.route.snapshot.queryParamMap.get('id'));
+  /** A save is on its way: its buttons wait. */
+  protected readonly saving = signal(false);
 
   /** The space the scene fills (as the background does), px: where the objects' places are. */
   protected readonly space = signal({ width: 1, height: 1 });
@@ -325,9 +335,22 @@ export class SceneMakerPage {
 
   constructor() {
     // the link's scene, if it holds one
-    void sceneFromCode(this.route.snapshot.queryParamMap.get('s')).then((scene) => {
+    const linked = this.route.snapshot.queryParamMap.get('s');
+    void sceneFromCode(linked).then((scene) => {
       if (scene) this.scene.set(placed(scene));
     });
+    // a kept scene's id without its scene: read from the gallery (the admin's), or the id is nobody's
+    const id = this.savedId();
+    if (id && !linked) {
+      this.kept.list().subscribe({
+        next: (scenes) => {
+          const found = scenes.find((scene) => scene.id === id);
+          if (found) this.scene.set(placed(found.scene));
+          else this.savedId.set(null);
+        },
+        error: () => this.savedId.set(null),
+      });
+    }
     // paused: the blobs' outlines, read from the scene each frame (they change when a blob is moved or changed)
     const view = this.document.defaultView;
     let frame = 0;
@@ -370,11 +393,46 @@ export class SceneMakerPage {
         timer = setTimeout(async () => {
           const code = await sceneToCode(scene);
           this.code.set(code);
-          void this.router.navigate([], { relativeTo: this.route, queryParams: { s: code }, replaceUrl: true });
+          this.address(code);
         }, 300);
       });
     });
     inject(DestroyRef).onDestroy(() => clearTimeout(timer));
+  }
+
+  /** The scene (and the kept scene it is, if any) into the page's address. */
+  private address(code: string): void {
+    const id = this.savedId();
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { s: code, ...(id ? { id } : {}) }, replaceUrl: true });
+  }
+
+  /**
+   * Keeps the scene on the server, in the gallery of the Scenes page (the admin's): the kept scene it was opened
+   * from is saved again, otherwise (or `asNew`) a new one is kept, and the next Save saves that one.
+   */
+  protected save(asNew = false): void {
+    if (this.saving()) return;
+    this.saving.set(true);
+    const scene = cleanScene(this.scene()) ?? this.scene();
+    const id = asNew ? null : this.savedId();
+    (id ? this.kept.update(id, scene) : this.kept.add(scene)).subscribe({
+      next: (kept) => {
+        this.saving.set(false);
+        this.savedId.set(kept.id);
+        if (this.code()) this.address(this.code());
+        this.snackBar
+          .open(id ? 'Saved' : 'Kept in your scenes', 'See them', { duration: 5000 })
+          .onAction()
+          .subscribe(() => void this.router.navigate(['/scenes']));
+      },
+      error: (error: unknown) => {
+        this.saving.set(false);
+        // taken out of the gallery meanwhile: the next Save keeps it as a new scene
+        const gone = id !== null && (error as { status?: number } | null)?.status === 404;
+        if (gone) this.savedId.set(null);
+        this.snackBar.open(gone ? 'This scene is not in the gallery any more: Save keeps it as a new one' : `Could not save the scene: ${describeError(error)}`, 'OK', { duration: 8000 });
+      },
+    });
   }
 
   /**

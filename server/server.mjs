@@ -10,7 +10,8 @@
 //   gets them (/api/tokens.css). The kit's files need a new build, so they are not changed there.
 // Every save is kept (history.mjs) and can be undone. The admin also chooses which pages the public
 // sees (pages.mjs): the catalog itself is always public; of everything else the public gets only what
-// a public page reads (closed by default, from the pages the build wrote down).
+// a public page reads (closed by default, from the pages the build wrote down). And the admin keeps
+// scenes (scenes.mjs): the gallery of the catalog's Scenes page, the admin's alone.
 import Fastify from 'fastify';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, posix, resolve, sep } from 'node:path';
@@ -19,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { createAuth, sessionCookie } from './auth.mjs';
 import { createHistory, publicEntry } from './history.mjs';
 import { createPages } from './pages.mjs';
+import { SCENE_STORE_LIMITS, createScenes, invalidScene } from './scenes.mjs';
 import { TOKENS_CSS, TOKENS_JSON, applyValues, renderCss, readTokens, tokensByName, writeTokens } from './tokens.mjs';
 
 /** The kit's folder in this workspace: the only place the catalog may write into. */
@@ -65,6 +67,7 @@ function problem(reply, status, code, title, detail, errors = []) {
  * @param {string | null} [options.pagesPath] where the pages hidden from the public are kept
  * @param {string | null} [options.sitePagesPath] the catalog's pages, written by its build (`npm run pages`):
  *   with it the public reads only what the public pages read; without it (development) nothing is refused
+ * @param {string | null} [options.scenesPath] where the admin's scenes are kept (none: only while it runs)
  * @param {boolean} [options.trustProxy] behind a reverse proxy: its word on https and on the address
  * @param {boolean} [options.logger]
  */
@@ -80,6 +83,7 @@ export async function buildServer({
   historyPath = null,
   pagesPath = null,
   sitePagesPath = null,
+  scenesPath = null,
   trustProxy = false,
   logger = false,
 } = {}) {
@@ -87,6 +91,7 @@ export async function buildServer({
   const auth = createAuth({ user: adminUser, password: adminPassword });
   const history = createHistory(historyPath);
   const pages = await createPages({ path: pagesPath, sitePagesPath });
+  const scenes = createScenes(scenesPath);
 
   const signedIn = (request) => auth.signedIn(request.headers.cookie);
   /** Answers why not and gives false, unless the admin is signed in. */
@@ -333,6 +338,47 @@ export async function buildServer({
     return { entry: made && publicEntry(made) };
   });
 
+  // The scenes the admin keeps (the gallery of the Scenes page): the admin's alone, to read and to change.
+  // A scene is checked here for its shape and size; the catalog checks every value when it reads one.
+  const sceneBody = {
+    bodyLimit: SCENE_STORE_LIMITS.bytes * 2,
+    schema: { body: { type: 'object', required: ['scene'], properties: { scene: { type: 'object' } } } },
+  };
+  const noScene = (reply) => problem(reply, 404, 'not-found', 'No such scene', 'It is not in the gallery any more.');
+
+  app.get('/api/scenes', async (request, reply) => {
+    if (!adminOnly(request, reply)) return reply;
+    return { scenes: await scenes.list() };
+  });
+
+  app.post('/api/scenes', sceneBody, async (request, reply) => {
+    if (!adminOnly(request, reply)) return reply;
+    const reason = invalidScene(request.body.scene);
+    if (reason) return problem(reply, 400, 'invalid-scene', 'Invalid scene', reason);
+    const kept = await scenes.add(request.body.scene);
+    if (!kept) return problem(reply, 409, 'gallery-full', 'The gallery is full', `It keeps ${SCENE_STORE_LIMITS.scenes} scenes at most: take one out first.`);
+    return reply.code(201).send(kept);
+  });
+
+  app.put('/api/scenes/:id', sceneBody, async (request, reply) => {
+    if (!adminOnly(request, reply)) return reply;
+    const reason = invalidScene(request.body.scene);
+    if (reason) return problem(reply, 400, 'invalid-scene', 'Invalid scene', reason);
+    return (await scenes.update(request.params.id, request.body.scene)) ?? noScene(reply);
+  });
+
+  // Taken out of the gallery, not erased: it can be put back.
+  app.delete('/api/scenes/:id', async (request, reply) => {
+    if (!adminOnly(request, reply)) return reply;
+    if (!(await scenes.remove(request.params.id))) return noScene(reply);
+    return reply.code(204).send();
+  });
+
+  app.post('/api/scenes/:id/restore', async (request, reply) => {
+    if (!adminOnly(request, reply)) return reply;
+    return (await scenes.restore(request.params.id)) ?? noScene(reply);
+  });
+
   if (publicDir) {
     const { default: fastifyStatic } = await import('@fastify/static');
     await app.register(fastifyStatic, { root: publicDir, wildcard: false });
@@ -355,7 +401,8 @@ export async function buildServer({
 // KIT_ALLOW_FILES ("true" in development: the admin changes the kit's files too), TOKENS_JSON and
 // TOKENS_CSS (the files), TOKENS_VALUES (saved values kept apart: Docker), HISTORY_FILE (the saves),
 // PAGES_FILE (the pages hidden from the public), SITE_PAGES_FILE (the catalog's pages, from its build:
-// needed to serve the catalog), TRUST_PROXY ("true" behind a reverse proxy).
+// needed to serve the catalog), SCENES_FILE (the scenes the admin keeps), TRUST_PROXY ("true" behind a
+// reverse proxy).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   // Serving the catalog without knowing its pages would serve every file of the kit to anyone.
   if (process.env.PUBLIC_DIR && !process.env.SITE_PAGES_FILE) {
@@ -374,6 +421,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     historyPath: process.env.HISTORY_FILE || null,
     pagesPath: process.env.PAGES_FILE || null,
     sitePagesPath: process.env.SITE_PAGES_FILE || null,
+    scenesPath: process.env.SCENES_FILE || null,
     trustProxy: process.env.TRUST_PROXY === 'true',
     logger: true,
   });

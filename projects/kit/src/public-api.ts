@@ -24,6 +24,7 @@ export * from './lib/period-picker/period-picker';
 export * from './lib/color-picker/color';
 export * from './lib/color-picker/color-picker';
 export * from './lib/card-menu/card-menu';
+export * from './lib/preview-card/preview-card';
 
 // Showing data
 export * from './lib/figure/figure';

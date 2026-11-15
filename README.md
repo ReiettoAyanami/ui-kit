@@ -62,6 +62,13 @@ development the kit's files are served by `ng serve`, not by this server: the re
 variables the piece uses, only in their browser, and only until the page is loaded again. Everything else is
 read only for them: no Edit side on rules, AI notes or code, anywhere. The admin's unsaved changes are kept by the browser, as before.
 
+**The admin's scenes.** Everyone makes scenes in the scene maker and shares them by a link (the scene is in
+the link). Signed in, the maker also has **Save**: the scene is kept on the server (`.kit/scenes.json` in
+development, the volume in Docker) and shown in the gallery of the Scenes page, the admin's alone
+(`/api/scenes` answers only the admin): a card per scene, its scene in a frame that plays while the card is
+pointed at; a tap opens it in the maker, where Save saves it again. A deleted scene is marked in the file,
+not erased.
+
 Every save is kept (`.kit/history.jsonl` in development, the volume in Docker) and can be undone from
 the History page. Variables changed in the deployed catalog stay in its volume: to make them the kit's
 own, copy them from its Variables page (`Text`) into the repo's, and save there.

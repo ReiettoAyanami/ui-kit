@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, DOCUMENT, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { LenziAppShell, LenziNavEntry, LenziNavList, LenziVersionLabel } from '@lenzi/ui-kit';
@@ -22,6 +22,15 @@ export class App {
   protected readonly version = kitPackage.version;
 
   private readonly publicPages = inject(PublicPages);
+
+  /**
+   * A scene framed in another page (a card of the gallery, a site's background) is the scene alone: no version in
+   * its corner.
+   */
+  protected readonly framedScene = (() => {
+    const view = inject(DOCUMENT).defaultView;
+    return !!view && view.parent !== view && /\/scene\/?$/.test(view.location.pathname);
+  })();
 
   private readonly everyPage: LenziNavEntry[] = [
     { label: 'Overview', icon: 'home', link: '/' },

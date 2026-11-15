@@ -621,6 +621,31 @@ usageLanguage: 'html',
   },
   // Data -----------------------------------------------------------------------------------------
   {
+    id: 'preview-card',
+    name: 'Preview card',
+    category: 'Data',
+    summary: 'A card whose top is a preview of what it opens (YouTube’s video card): still until it is pointed at.',
+    api: '<lenzi-preview-card>',
+    entry: '@lenzi/ui-kit',
+    origin: 'the catalog’s gallery of scenes (2026-11-15), from the YouTube card in lenzi’s picture',
+    files: component('preview-card'),
+    ...docs('src/lib/preview-card'),
+    demo: () => import('./demos/preview-card-demo/preview-card-demo').then((m) => m.PreviewCardDemo),
+    controls: [
+      { key: 'title', label: 'Title', type: 'text', default: 'Dusk' },
+      { key: 'facts', label: 'Its facts, one a line', type: 'boolean', default: true, code: { match: /\[lines\]/ } },
+      { key: 'icon', label: 'An icon in a round well', type: 'boolean', default: false, code: { match: /\sicon="/ } },
+      { key: 'menu', label: 'Its ⋮', type: 'boolean', default: true, code: { match: /<lenzi-card-menu/ } },
+    ],
+    usage: (v) => `<lenzi-preview-card #card${attr('title', v['title'])}${v['icon'] ? ' icon="landscape"' : ''}${v['facts'] ? ' [lines]="facts"' : ''} (opened)="open()">
+  <iframe loading="lazy" tabindex="-1" [src]="preview(card.active())"></iframe>${v['menu'] ? '\n  <lenzi-card-menu label="Actions for the scene" [actions]="actions" (action)="act($event)" />' : ''}
+</lenzi-preview-card>
+
+facts = ['6 blobs, 3 fleets', 'Saved on 15 November 2026'];`,
+usageLanguage: 'html',
+    height: 420,
+  },
+  {
     id: 'figure',
     name: 'Figure',
     category: 'Data',

@@ -1,0 +1,22 @@
+<div class="card">
+  <!-- What it shows: under the button's own area, so a tap anywhere on the card opens it. -->
+  <div class="preview" [style.aspect-ratio]="ratio()">
+    <ng-content />
+  </div>
+  <div class="about">
+    @if (icon(); as icon) {
+      <mat-icon class="icon" aria-hidden="true">{{ icon }}</mat-icon>
+    }
+    <div class="words">
+      <button type="button" class="open" (click)="opened.emit()">
+        <span class="title">{{ title() }}</span>
+      </button>
+      @for (line of lines(); track $index) {
+        <span class="line">{{ line }}</span>
+      }
+    </div>
+    <div class="menu">
+      <ng-content select="lenzi-card-menu" />
+    </div>
+  </div>
+</div>

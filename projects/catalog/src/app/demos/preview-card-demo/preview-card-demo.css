@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  padding: 16px 8px;
+}
+
+/* The cards have their own padding: a small gap is enough. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+/* A picture made of the theme's colours, that drifts only while its card is pointed at. */
+.picture {
+  background-size: 200% 200%;
+  animation: drift 6s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.picture.moving {
+  animation-play-state: running;
+}
+
+.dusk {
+  background-image:
+    radial-gradient(circle at 30% 40%, var(--mat-sys-primary) 0, transparent 38%), radial-gradient(circle at 70% 65%, var(--mat-sys-tertiary) 0, transparent 30%);
+}
+
+.noon {
+  background-image:
+    radial-gradient(circle at 60% 35%, var(--mat-sys-tertiary) 0, transparent 34%), radial-gradient(circle at 25% 70%, var(--mat-sys-secondary) 0, transparent 30%);
+}
+
+.deep {
+  background-image:
+    radial-gradient(circle at 50% 55%, var(--mat-sys-primary-container) 0, transparent 44%), radial-gradient(circle at 80% 25%, var(--mat-sys-primary) 0, transparent 22%);
+}
+
+@keyframes drift {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .picture {
+    animation: none;
+  }
+}

@@ -116,6 +116,19 @@
           <mat-icon>casino</mat-icon>
           Random scene
         </button>
+        <!-- the admin keeps scenes on the server: the gallery of the Scenes page -->
+        @if (server.admin()) {
+          <button mat-button type="button" class="save" [disabled]="saving()" (click)="save()">
+            <mat-icon>save</mat-icon>
+            Save
+          </button>
+          @if (savedId()) {
+            <button mat-button type="button" class="save-new" [disabled]="saving()" (click)="save(true)">
+              <mat-icon>library_add</mat-icon>
+              Save as a new scene
+            </button>
+          }
+        }
       </div>
 
       <mat-action-list aria-label="The scene's objects">

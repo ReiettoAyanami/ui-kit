@@ -23,39 +23,25 @@
   color: var(--mat-sys-primary);
 }
 
-.cards {
+/* The gallery: a preview card per scene. The cards have their own padding, so a small gap, and the grid
+   reaches a little past the page's text at its sides: the previews line up with it. */
+.gallery {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  margin: 0 -8px;
 }
 
-@media (min-width: 720px) {
-  .cards {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* A card per scene kept: its name bold, what it holds under it, the constant that keeps it. */
-.card {
+/* A card away from the window, or one too many to draw at once: its preview rests. */
+.gallery .resting {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  padding: 16px;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--lenzi-panel-radius);
-  background: var(--mat-sys-surface-container-low);
+  align-items: center;
+  justify-content: center;
+  color: var(--mat-sys-outline);
 }
 
-.name {
-  font: var(--mat-sys-title-medium);
-}
-
-.summary {
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.api {
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-tertiary);
+.more {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }

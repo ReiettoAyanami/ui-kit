@@ -2,7 +2,8 @@
 # (server/server.mjs, Fastify) on port 8080. Everyone reads it; the admin (KIT_ADMIN_USER and
 # KIT_ADMIN_PASSWORD in the environment) signs in on its Admin page and changes the variables on the
 # fly: they are kept in /app/data (a volume) with the history of the saves, apart from the image, and
-# every visitor gets them. The kit's files change on the development server (`npm start`, or
+# every visitor gets them. The scenes the admin keeps (the Scenes page's gallery) are in the volume too.
+# The kit's files change on the development server (`npm start`, or
 # compose.dev.yaml), which writes into the repo: a new build shows them.
 
 # --- build: the library, then the catalog ------------------------------------------------------
@@ -23,11 +24,12 @@ ENV NODE_ENV=production \
     TOKENS_VALUES=/app/data/variables.json \
     HISTORY_FILE=/app/data/history.jsonl \
     PAGES_FILE=/app/data/pages.json \
+    SCENES_FILE=/app/data/scenes.json \
     SITE_PAGES_FILE=/app/site-pages.json
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
-COPY server/server.mjs server/tokens.mjs server/auth.mjs server/history.mjs server/pages.mjs ./
+COPY server/server.mjs server/tokens.mjs server/auth.mjs server/history.mjs server/pages.mjs server/scenes.mjs ./
 COPY --from=build /workspace/dist/catalog/browser /app/public
 COPY --from=build /workspace/projects/kit/src/styles/tokens.json /app/tokens/tokens.json
 # the catalog's pages and what each reads (npm run build → npm run pages): what the public may be given

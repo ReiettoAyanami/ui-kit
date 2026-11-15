@@ -1,0 +1,140 @@
+:host {
+  display: block;
+  min-width: 0;
+  /* less at the sides than above and under (lenzi, 2026-11-14: "paddin ai lati leggermente meno") */
+  --preview-card-side: 8px;
+  --preview-card-end: 12px;
+}
+
+/* YouTube's video card: nothing round it until it is pointed at, then a tinted surface behind it all. Its
+   corner follows the preview's (the preview's radius and the padding between them). */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--preview-card-end) var(--preview-card-side);
+  border-radius: calc(var(--lenzi-panel-radius) + var(--preview-card-side));
+  transition: background-color 150ms var(--lenzi-standard-easing);
+}
+
+/* the same veil as a table's row pointed at */
+:host(.active) .card {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+}
+
+/* The preview: a surface of its own, with the outline of every surface (RULES.md, "Borders and shape"). */
+.preview {
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+/* Whatever is put in it fills it (a picture, a frame): it is the page's, so reached from here. */
+.preview ::ng-deep > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+
+.about {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 4px;
+}
+
+/* An icon in a round well, as the widget card's. */
+.icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
+  color: var(--mat-sys-primary);
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.words {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* The title is the card's button: its area is the whole card, so the preview and the facts open it too. */
+.open {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  text-align: start;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.card:has(.open:focus-visible) {
+  outline: 2px solid var(--mat-sys-on-surface);
+  outline-offset: 2px;
+}
+
+.open:focus-visible {
+  outline: none;
+}
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+/* One fact a line (RULES.md, "Figures"). */
+.line {
+  overflow: hidden;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The card's ⋮: above the button's area, so its taps are its own; pulled up beside the title's first line. */
+.menu {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  margin: -8px -4px 0 0;
+}
+
+.menu:empty {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

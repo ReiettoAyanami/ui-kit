@@ -10,15 +10,49 @@
   </a>
 
   @if (server.admin()) {
-    <h2 class="group-title">Kept</h2>
-    <div class="cards">
-      @for (entry of kept; track entry.constant) {
-        <div class="card">
-          <span class="name">{{ entry.scene.name }}</span>
-          <span class="summary">{{ entry.scene.blobs.length }} blobs, {{ fleetsOf(entry.scene.fleets.length) }}</span>
-          <code class="api">{{ entry.constant }}</code>
-        </div>
+    <section aria-labelledby="scenes-saved">
+      <h2 class="group-title" id="scenes-saved">Your scenes</h2>
+      @if (error(); as error) {
+        <lenzi-status-message kind="error" [text]="error" />
+      } @else if (saved(); as scenes) {
+        @if (scenes.length) {
+          <div class="gallery">
+            @for (card of shownSaved(); track card.key) {
+              <ng-container [ngTemplateOutlet]="scene" [ngTemplateOutletContext]="{ $implicit: card, actions: savedActions }" />
+            }
+          </div>
+          @if (scenes.length > shownSaved().length) {
+            <div class="more">
+              <button mat-stroked-button type="button" (click)="showMore()">Show more</button>
+            </div>
+          }
+        } @else {
+          <lenzi-status-message text="No scenes kept yet: make one in the scene maker, then Save it" />
+        }
+      } @else {
+        <lenzi-status-message kind="loading" />
       }
-    </div>
+    </section>
+
+    <section aria-labelledby="scenes-built">
+      <h2 class="group-title" id="scenes-built">In the catalog's code</h2>
+      <div class="gallery">
+        @for (card of built(); track card.key) {
+          <ng-container [ngTemplateOutlet]="scene" [ngTemplateOutletContext]="{ $implicit: card, actions: builtActions }" />
+        }
+      </div>
+    </section>
   }
 </main>
+
+<!-- A scene's card: its scene in a frame, still until the card is pointed at, drawn only while the card is near the window. -->
+<ng-template #scene let-card let-actions="actions">
+  <lenzi-preview-card [title]="card.title" [lines]="card.lines" appInViewMargin="100px" (appInView)="seen(card.key, $event)" (opened)="open(card)" (activeChange)="play(card.key, $event)">
+    @if (live().has(card.key)) {
+      <iframe loading="lazy" tabindex="-1" [appMiniature]="screen" [title]="card.title" [attr.data-scene]="card.key" [src]="card.preview"></iframe>
+    } @else {
+      <div class="resting"><mat-icon aria-hidden="true">landscape</mat-icon></div>
+    }
+    <lenzi-card-menu [label]="'Actions for ' + card.title" [actions]="actions" (action)="act(card, $event)" />
+  </lenzi-preview-card>
+</ng-template>

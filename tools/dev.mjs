@@ -1,7 +1,7 @@
 // `npm start`: the catalog in development, with its server. Two processes, stopped together:
 // - server/server.mjs on 127.0.0.1:4301: the admin (KIT_ADMIN_USER and KIT_ADMIN_PASSWORD, read from
 //   .env) saves the variables and the kit's files from the catalog; every save is kept in
-//   .kit/history.jsonl (the History page);
+//   .kit/history.jsonl (the History page), the scenes the admin keeps in .kit/scenes.json;
 // - `ng serve catalog` on 4300, which sends /api to it (projects/catalog/proxy.conf.json).
 // Arguments go to ng serve: `npm start -- --host 0.0.0.0` inside the development container.
 import { spawn } from 'node:child_process';
@@ -14,7 +14,7 @@ else console.warn('No .env: nobody can sign in, so the catalog saves nothing. Co
 const children = [
   spawn(process.execPath, ['server/server.mjs'], {
     stdio: 'inherit',
-    env: { HISTORY_FILE: '.kit/history.jsonl', PAGES_FILE: '.kit/pages.json', ...process.env, KIT_ALLOW_FILES: 'true', HOST: '127.0.0.1', PORT: '4301' },
+    env: { HISTORY_FILE: '.kit/history.jsonl', PAGES_FILE: '.kit/pages.json', SCENES_FILE: '.kit/scenes.json', ...process.env, KIT_ALLOW_FILES: 'true', HOST: '127.0.0.1', PORT: '4301' },
   }),
   spawn('npx', ['ng', 'serve', 'catalog', ...process.argv.slice(2)], { stdio: 'inherit', shell: process.platform === 'win32' }),
 ];

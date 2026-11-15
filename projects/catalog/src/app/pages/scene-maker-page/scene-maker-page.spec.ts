@@ -1,13 +1,29 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 
-import { blobHome } from '@lenzi/ui-kit/backgrounds';
+import { LenziScene, blobHome } from '@lenzi/ui-kit/backgrounds';
 
 import { HOME_SCENE } from '../../scenes';
+import { KitServer } from '../../shared/kit-server';
+import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { SceneMakerPage, bodyOf, emitsOf, fleetDefault, layerOf, lookFor, placed } from './scene-maker-page';
 
-async function open() {
-  TestBed.configureTestingModule({ providers: [provideRouter([])] });
+/** The gallery's server, as the maker uses it: it keeps what it is given and says what it was asked. */
+function gallery() {
+  const kept = (id: string, scene: LenziScene): SavedScene => ({ id, name: scene.name ?? '', scene, createdAt: '2026-11-15T12:00:00.000Z', updatedAt: '2026-11-15T12:00:00.000Z' });
+  return {
+    list: vi.fn(() => of<SavedScene[]>([])),
+    add: vi.fn((scene: LenziScene) => of(kept('new00001', scene))),
+    update: vi.fn((id: string, scene: LenziScene) => of(kept(id, scene))),
+  };
+}
+
+async function open({ admin = false, scenes = gallery() } = {}) {
+  TestBed.configureTestingModule({
+    providers: [provideRouter([]), { provide: KitServer, useValue: { admin: signal(admin) } }, { provide: SavedScenes, useValue: scenes }],
+  });
   const fixture = TestBed.createComponent(SceneMakerPage);
   fixture.detectChanges();
   await fixture.whenStable();
@@ -19,7 +35,7 @@ async function open() {
     fixture.detectChanges();
     await fixture.whenStable();
   };
-  return { fixture, page, click, maker: fixture.componentInstance };
+  return { fixture, page, click, maker: fixture.componentInstance, scenes };
 }
 
 describe('SceneMakerPage', () => {
@@ -271,5 +287,80 @@ describe('SceneMakerPage', () => {
     expect(fleetDefault({ kind: 'boid', count: 10 }, 'maxSpeed')).toBe(150);
     expect(fleetDefault({ kind: 'blob-boid', count: 10 }, 'maxSpeed')).toBeCloseTo(105);
     expect(fleetDefault({ kind: 'blob-boid', count: 10 }, 'size')).toBe(11);
+  });
+});
+
+describe('SceneMakerPage, the admin keeping scenes', () => {
+  const saves = (page: HTMLElement) =>
+    [...page.querySelectorAll<HTMLButtonElement>('button.save, button.save-new')].map((button) => button.textContent?.replace(/\s+/g, ' ').trim());
+  const said = () => [...document.querySelectorAll('mat-snack-bar-container')].at(-1)?.textContent ?? '';
+  const press = async (fixture: { detectChanges(): void; whenStable(): Promise<unknown> }, page: HTMLElement, selector: string) => {
+    page.querySelector<HTMLButtonElement>(selector)!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  };
+
+  it('a visitor has no Save: the scene is shared by its link', async () => {
+    const { page, scenes } = await open();
+    expect(saves(page)).toEqual([]);
+    expect(scenes.list).not.toHaveBeenCalled();
+  });
+
+  it('Save keeps the scene as a new one, then saves that one again; Save as a new scene keeps another', async () => {
+    const { page, click, maker, scenes, fixture } = await open({ admin: true });
+    expect(saves(page)).toEqual(['save Save']);
+
+    await press(fixture, page, 'button.save');
+    expect(scenes.add).toHaveBeenCalledTimes(1);
+    const kept = scenes.add.mock.calls[0]![0];
+    expect(kept.name).toBe('Home');
+    expect(kept.blobs.length).toBe(HOME_SCENE.blobs.length);
+    // every object where the maker shows it
+    expect(kept.blobs.every((blob) => typeof blob.x === 'number' && typeof blob.y === 'number')).toBe(true);
+    expect(maker.savedId()).toBe('new00001');
+    expect(said()).toContain('Kept in your scenes');
+
+    // now it is that scene: Save saves it again, and another button keeps a new one
+    expect(saves(page)).toEqual(['save Save', 'library_add Save as a new scene']);
+    await click('Random scene');
+    await press(fixture, page, 'button.save');
+    expect(scenes.update).toHaveBeenCalledTimes(1);
+    expect(scenes.update.mock.calls[0]![0]).toBe('new00001');
+    expect(scenes.update.mock.calls[0]![1]).toEqual(maker.scene());
+    expect(scenes.add).toHaveBeenCalledTimes(1);
+
+    await press(fixture, page, 'button.save-new');
+    expect(scenes.add).toHaveBeenCalledTimes(2);
+  });
+
+  it('the snackbar of a save leads to the gallery', async () => {
+    const { page, fixture } = await open({ admin: true });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    await press(fixture, page, 'button.save');
+    [...document.querySelectorAll<HTMLButtonElement>('mat-snack-bar-container button')].find((button) => button.textContent?.includes('See them'))!.click();
+    expect(navigate).toHaveBeenCalledWith(['/scenes']);
+  });
+
+  it('a kept scene taken out meanwhile: said, and the next Save keeps it as a new one', async () => {
+    const scenes = gallery();
+    scenes.update.mockReturnValue(throwError(() => ({ status: 404, title: 'No such scene' })));
+    const { page, maker, fixture } = await open({ admin: true, scenes });
+    maker.savedId.set('gone0000');
+    fixture.detectChanges();
+    await press(fixture, page, 'button.save');
+    expect(scenes.update).toHaveBeenCalledWith('gone0000', expect.anything());
+    expect(maker.savedId()).toBeNull();
+    expect(said()).toContain('not in the gallery any more');
+    await press(fixture, page, 'button.save');
+    expect(scenes.add).toHaveBeenCalledTimes(1);
+  });
+
+  it('a failed save says why, and Save can be pressed again', async () => {
+    const scenes = gallery();
+    scenes.add.mockReturnValue(throwError(() => ({ status: 409, detail: 'It keeps 200 scenes at most: take one out first.' })));
+    const { page, fixture } = await open({ admin: true, scenes });
+    await press(fixture, page, 'button.save');
+    expect(said()).toContain('Could not save the scene: It keeps 200 scenes at most: take one out first. (409)');
+    expect(page.querySelector<HTMLButtonElement>('button.save')!.disabled).toBe(false);
   });
 });
