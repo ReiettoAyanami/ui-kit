@@ -119,11 +119,10 @@ export class LenziBlobBackground extends LenziGlowBackground {
         this.throws.step(delta, this.paths(), this.width, this.height);
         // the currents carry the blobs (a blob that stays put not at all, a heavy one less)
         const flow = this.flow();
-        if (flow) this.drift.step(delta, this.throws.apply(this.paths()), flow, (i) => this.carried(i));
-        else this.drift.reset();
+        if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
       },
       prepare: () => {
-        const blobs = this.drift.apply(this.throws.apply(this.paths()), this.width, this.height);
+        const blobs = this.blobsNow();
         this.drawn = blobs;
         // the join is as wide as the blobs are large: the same picture on a phone and on a wide screen
         const merge = Math.max(0, this.merge()) * this.size() * Math.min(this.width, this.height) * 0.5;
@@ -228,6 +227,26 @@ export class LenziBlobBackground extends LenziGlowBackground {
 
   protected override letGo(time: number): void {
     this.throws.release(time);
+  }
+
+  /**
+   * The blobs where they are now. With no current each is back on its own path: read here, not only as time goes on,
+   * because a still picture (a scene being made, paused) has no time, and its blobs stayed where the current or a
+   * throw had left them (lenzi, 2026-11-15: "Some object selection goes wrong right after toggling pause/play": a
+   * blob drawn away from where the maker has it).
+   */
+  private blobsNow(): BlobState[] {
+    if (!this.flow()) this.drift.reset();
+    return this.drift.apply(this.placed(), this.width, this.height);
+  }
+
+  /**
+   * The blobs where their paths and throws put them, before the currents carry them. A still picture has no time:
+   * nothing stays where a throw (or an edge it bounced off) had left it.
+   */
+  private placed(): BlobState[] {
+    if (!this.animate()) this.throws.reset();
+    return this.throws.apply(this.paths());
   }
 
   /** The blobs where their own paths put them now. */

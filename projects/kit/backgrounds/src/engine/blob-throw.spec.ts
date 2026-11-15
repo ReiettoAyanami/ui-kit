@@ -66,4 +66,18 @@ describe('throwing blobs', () => {
     throws.step(1 / 60, paths, 1000, 1000);
     expect(throws.apply(paths)[0]!.x).toBeCloseTo(300, 0);
   });
+
+  it('reset: every blob back on its own path, none held, and it goes on from there', () => {
+    const throws = new BlobThrow();
+    const paths = [blob(200, 200), blob(600, 600)];
+    throws.grab(paths, 200, 200, 0);
+    throws.drag(400, 300, 0.05);
+    throws.step(1 / 60, paths, 1000, 1000);
+    expect(throws.apply(paths)[0]!.x).toBeCloseTo(400, 0);
+    throws.reset();
+    expect(throws.holding).toBe(false);
+    expect(throws.apply(paths)).toEqual(paths);
+    throws.step(1 / 60, paths, 1000, 1000);
+    expect(throws.apply(paths)).toEqual(paths);
+  });
 });

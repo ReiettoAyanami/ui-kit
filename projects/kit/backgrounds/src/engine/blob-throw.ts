@@ -38,6 +38,16 @@ export class BlobThrow {
     return this.hold !== null;
   }
 
+  /** Every blob back on its own path, none held (nothing may be thrown: a scene being made). */
+  reset(): void {
+    this.ox = [];
+    this.oy = [];
+    this.vx = [];
+    this.vy = [];
+    this.hold = null;
+    this.pointer = null;
+  }
+
   /** The blob under a point (as drawn, with its offset), the one on top first; -1: none. */
   blobAt(blobs: readonly BlobState[], x: number, y: number): number {
     for (let i = blobs.length - 1; i >= 0; i--) {

@@ -344,7 +344,6 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         // the currents: they carry the blobs (a blob that stays put not at all, a heavy one less) and the boids
         const flow = this.flow();
         if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
-        else this.drift.reset();
         const flocks = this.current();
         const fleets = this.currentFleets();
         // the blobs where they are now, as drawn: what the flocks fly round (or melt into)
@@ -651,15 +650,24 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     return objects;
   }
 
-  /** The blobs where they are now: their paths, and where they were thrown. */
+  /**
+   * The blobs where they are now: their paths, where they were thrown, where the currents carried them. With no
+   * current each is back on its own path: read here, not only as time goes on, because a still picture (a scene being
+   * made, paused) has no time, and its blobs stayed where the current had left them (lenzi, 2026-11-15: "Some object
+   * selection goes wrong right after toggling pause/play": a blob drawn away from where the maker has it).
+   */
   private blobsNow(): BlobState[] {
+    if (!this.flow()) this.drift.reset();
     return this.drift.apply(this.placed(), this.width, this.height);
   }
 
   /** The blobs where their paths and throws put them, before the currents carry them. */
   private placed(): BlobState[] {
-    // nothing thrown when nothing may be (a scene being made): every blob where its path puts it
-    return this.throwable() ? this.throws.apply(this.paths()) : this.paths();
+    if (this.throwable() && this.animate()) return this.throws.apply(this.paths());
+    // nothing thrown when nothing may be, or in a still picture (a scene being made): every blob where its path puts
+    // it, and it plays on from there
+    this.throws.reset();
+    return this.paths();
   }
 
   /** How much a current carries a blob: a blob that stays put not at all, a heavier one less. */

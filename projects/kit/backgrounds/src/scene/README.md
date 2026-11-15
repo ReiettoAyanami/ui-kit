@@ -53,7 +53,8 @@ contenente boidi, blob, boidi-blob").
   boids are pushed along it and the blobs drift with it (a blob that stays put not at all, a heavy one less); out
   on one side, back on the other.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
-  simulation"): no fleets, the blobs still on their places, nothing thrown.
+  simulation"): no fleets, the blobs still on their places, nothing thrown, nothing carried by a current (a blob
+  is drawn exactly where the scene puts it, whatever happened while it played; it plays on from there).
 
 ## Rules
 

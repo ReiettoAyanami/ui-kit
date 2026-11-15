@@ -376,6 +376,16 @@ export class SceneMakerPage {
     inject(DestroyRef).onDestroy(() => clearTimeout(timer));
   }
 
+  /**
+   * Plays, or pauses. The marks go with the pause, without saying the pointer left them: nothing is pointed at or
+   * being moved any more.
+   */
+  protected toggle(): void {
+    this.playing.update((playing) => !playing);
+    this.pointed.set(null);
+    this.moving.set(null);
+  }
+
   protected isChosen(object: SceneObject): boolean {
     return keyOf(this.chosen()) === keyOf(object);
   }
