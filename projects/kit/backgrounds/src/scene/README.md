@@ -37,11 +37,13 @@ contenente boidi, blob, boidi-blob").
   4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
   that it spins more/less").
 - **Solid things are lit surfaces**: their colour times the light that reaches them from beyond their edge, all round,
-  less the farther in (a lamp beside one lights it, a lamp under it does not show through: lenzi, 2026-11-15, "solid
-  non emitting objects (the one on top) lets light get through still"); dark far from light, coloured by it, their
-  edge lit on the light's side. They are drawn into the picture before glass blurs it, so glass on their level
-  or above (shining or not) shows them; opaque always, and their shadow takes all the glow behind them. A solid that
-  shines (a lamp) is far brighter. Glass has a `tint` (how much its colour filters what is seen through it) and a
+  less the farther in (the light outside every solid thing, shadows taken, blurred into them: a lamp beside one lights
+  it, a lamp under it does not show through, one in another's shadow is dark; lenzi, 2026-11-15, "solid non emitting
+  objects (the one on top) lets light get through still", "the shadows too"); dark far from light, coloured by it,
+  their edge lit on the light's side. They are drawn into the picture before glass blurs it, so glass on their level
+  or above (shining or not) shows them; opaque always. Their shadow takes all the glow behind them, with a soft edge
+  (a lamp is wide: the edge is wider the farther from what casts it), and falls on solid things and glass too. A
+  solid that shines (a lamp) is far brighter. Glass has a `tint` (how much its colour filters what is seen through it) and a
   `transparency` (how much shows through against its own body, itself lit). Within a level: lamps, solids, glass.
 - **Currents** (`currents`; lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue
   forze indipendenti) che instrada i boidi e i blob verso la direzione del segmento (tipo una corrente marina)"):
