@@ -34,7 +34,9 @@ contenente boidi, blob, boidi-blob").
 - **Levels kept apart**: blobs and blob-boids of one material melt only on the same level; a higher level is drawn
   over a lower one ("same material blobs on different z index shouldnt fuse"). A lamp is solid: what is on a level
   under it (boids, blob-boids, lamps, solid things, glass) does not show through it; boids on its level or above fly
-  over it (lenzi, 2026-11-15: "under solid blobs you can see the boids still"). Glass that shines covers nothing.
+  over it (lenzi, 2026-11-15: "under solid blobs you can see the boids still"). Glass that shines covers nothing, and
+  its light has the glass's own shape: it melts into glass, never into a lamp of its level ("solid and glass
+  interacting").
 - **A blob that stays put** (`fixed`: it does not wander, it cannot be thrown) and **its weight** (`weight`, 0.25 to
   4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
   that it spins more/less").

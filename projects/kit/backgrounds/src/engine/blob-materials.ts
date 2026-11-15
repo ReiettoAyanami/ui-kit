@@ -173,8 +173,8 @@ flat in vec4 vLobesA;
 flat in vec4 vSuperB;
 flat in vec4 vLobesB;
 flat in vec4 vTint;     // a lamp's colour; glass's colour and how much of it; solid's colour
-layout(location = 0) out vec4 weights;  // glass, solid, light (the lamps and the glass that shines), the lamps alone
-layout(location = 1) out vec4 colours;  // the lights' colours by share (a little brighter towards its middle), their shares
+layout(location = 0) out vec4 weights;  // glass, solid, the glass that shines, the lamps
+layout(location = 1) out vec4 colours;  // the lamps' colours by share (a little brighter towards its middle), their shares
 layout(location = 2) out vec4 glassTint;  // glass: its colour by share and amount, and its amount by share
 layout(location = 3) out vec4 solidTint;  // solid: its colour by share, and its share
 
@@ -229,18 +229,19 @@ void main() {
     // the colours join more slowly than the edges: two lamps that met are one shape before one colour
     float share = exp(inside / 4.0) * colourFade;
     float depth = clamp(edge / vPlace.z, 0.0, 1.0);
-    // a lamp is solid: its own field too, what it covers of the levels under it
-    weights = vec4(0.0, 0.0, w, w);
+    // the lamps' own field: their light, and what they cover of the levels under them (a lamp is solid)
+    weights = vec4(0.0, 0.0, 0.0, w);
     colours = vec4(vTint.rgb * share * (0.8 + 0.2 * depth), share);
     glassTint = vec4(0.0);
     solidTint = vec4(0.0);
   } else if (vTurn.z < 1.5) {
-    // glass: where two meet, their colours and amounts by how much of each is there; glass that shines is a
-    // lamp too, in its colour, under itself
+    // glass: where two meet, their colours and amounts by how much of each is there. Glass that shines sheds light
+    // under itself, in its colour, of its own shape: how much of the glass here shines is kept apart from the lamps'
+    // field, so its light never melts into a lamp's (lenzi, 2026-11-15: "solid and glass interacting": a lamp and
+    // shining glass of one level were one shape of light, with a neck between them)
     float shining = vLobesA.w;
-    float share = exp(inside / 4.0) * colourFade * shining;
     weights = vec4(w, 0.0, w * shining, 0.0);
-    colours = vec4(vTint.rgb * share * (0.8 + 0.2 * clamp(edge / vPlace.z, 0.0, 1.0)), share);
+    colours = vec4(0.0);
     // its colour, how much that colours what is seen through it (its tint), and how much is seen through it (its
     // clarity, kept in solid's free channel), each by how much of it is there: where two meet, as much of each
     glassTint = vec4(vTint.rgb * w, vTint.a * w);
@@ -291,6 +292,7 @@ precision highp sampler2DArray;
 in vec2 uv;
 uniform sampler2DArray weights;
 uniform sampler2DArray colours;
+uniform sampler2DArray glassTints;
 uniform float layer;
 uniform float level;
 uniform float soft;   // device px over the edge
@@ -299,13 +301,20 @@ out vec4 color;
 ${FIELD_NEAR}
 void main() {
   Near n = nearAt(weights, layer);
+  float lamps = lampCover(n, soft);
   if (covering > 0.5) {
-    color = vec4(0.0, 0.0, 0.0, lampCover(n, soft));
+    color = vec4(0.0, 0.0, 0.0, lamps);
     return;
   }
-  float fill = fillOf(n.here.z, slopeOf(n.east.z, n.west.z, n.north.z, n.south.z), soft);
+  // the lamps: their own shape, their own colours
   vec4 c = texture(colours, vec3(uv, layer));
-  color = vec4(c.rgb / max(c.a, 1e-5) * fill * level, fill);
+  vec3 light = c.rgb / max(c.a, 1e-5) * lamps * level;
+  // the glass that shines: the glass's shape (melted only into the glass of its level), as much as of it shines, in
+  // the glass's colour; a lamp of its level is in front of that light, not added to it
+  float glass = n.here.r;
+  float shining = fillOf(glass, slopeOf(n.east.r, n.west.r, n.north.r, n.south.r), soft) * clamp(n.here.b / max(glass, 1e-6), 0.0, 1.0);
+  vec3 glow = texture(glassTints, vec3(uv, layer)).rgb / max(glass, 1e-6) * shining * level * 0.9;
+  color = vec4(light + glow * (1.0 - lamps), 1.0 - (1.0 - lamps) * (1.0 - shining));
 }`;
 
 // what the solid and the glass surfaces share: the light that reaches them, and how a solid thing looks in it
@@ -765,6 +774,7 @@ export class MaterialScene {
         gl.uniform2f(engine.uniform(program, 'pixel'), 1 / Math.max(1, engine.pixelWidth), 1 / Math.max(1, engine.pixelHeight));
         this.useLayers(program, 'weights', fields.weights, 0);
         this.useLayers(program, 'colours', fields.colours, 1);
+        this.useLayers(program, 'glassTints', fields.glass, 2);
         gl.uniform1f(engine.uniform(program, 'layer'), slot);
         if (under && objects.some((object) => object.material === 'lamp')) {
           gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);

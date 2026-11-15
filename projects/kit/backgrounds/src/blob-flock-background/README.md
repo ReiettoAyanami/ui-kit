@@ -58,7 +58,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   page's colour (2026-11-15: "solid shouldn't be trasparent"). The light is drawn level by level too: each level's
   lamps, then its boids; a lamp (solid) first takes away the light of the levels under it where it is, so boids,
   blob-boids and lamps under it do not show through ("under solid blobs you can see the boids still"), and the
-  solid things and glass under it are not drawn there. Glass that shines only adds its light.
+  solid things and glass under it are not drawn there. Glass that shines only adds its light, of the glass's own
+  shape and colour (a field apart from the lamps': a lamp and shining glass of one level never melt into one shape
+  of light; "solid and glass interacting").
 - **Layers** (z-levels; lenzi, 2026-11-14: "the z-index of the blobs decides which is an obstacle to what
   (they're obstacles only to objects that are on the same z-level)"): something stops only what is on its
   own layer. By default the lamps, the solid things, the boids and the lamp blob-boids are on layer 0 and
