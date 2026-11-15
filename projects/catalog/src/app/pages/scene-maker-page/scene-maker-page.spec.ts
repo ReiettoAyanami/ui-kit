@@ -221,6 +221,27 @@ describe('SceneMakerPage', () => {
     expect(maker.scene().currents).toEqual([]);
   });
 
+  it('Random scene: another scene by chance in place of this one, listed; Undo brings this one back', async () => {
+    const { page, click, maker, fixture } = await open();
+    const mine = maker.scene();
+    maker.chosen.set({ type: 'blob', index: 0 });
+    await click('Random scene');
+    const made = maker.scene();
+    expect(made).not.toBe(mine);
+    expect(made.blobs.length).toBeGreaterThanOrEqual(3);
+    expect(made.fleets[0]!.kind).toBe('boid');
+    expect(maker.chosen()).toBeNull();
+    const titles = [...page.querySelectorAll('mat-action-list [matListItemTitle]')].map((title) => title.textContent?.trim());
+    expect(titles[0]).toBe(made.name);
+    expect(titles.length).toBe(1 + made.blobs.length + made.fleets.length + (made.currents?.length ?? 0));
+
+    const undo = [...document.querySelectorAll<HTMLButtonElement>('mat-snack-bar-container button')].find((button) => button.textContent?.includes('Undo'))!;
+    undo.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene()).toBe(mine);
+  });
+
   it('a blob keeps the shape chosen for it, or (Changing) changes again', async () => {
     const { page, click, maker, fixture } = await open();
     await click('Glass blob');

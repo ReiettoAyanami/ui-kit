@@ -38,6 +38,7 @@ import {
 
 import { HOME_SCENE } from '../../scenes';
 import { SCENE_LAYERS, SCENE_LIMITS, SCENE_WEIGHTS, sceneFromCode, sceneToCode } from '../../shared/scene-code';
+import { randomScene } from '../../shared/scene-random';
 
 /**
  * A scene with every object put somewhere: a blob without a place where the background would have it (its
@@ -384,6 +385,23 @@ export class SceneMakerPage {
     this.playing.update((playing) => !playing);
     this.pointed.set(null);
     this.moving.set(null);
+  }
+
+  /**
+   * Another scene, by chance (lenzi, 2026-11-15: "put a random gen button"): blobs, fleets, now and then a current,
+   * in place of the one being made. It is one press, so the snackbar offers the scene that was there back.
+   */
+  protected randomize(): void {
+    const before = this.scene();
+    this.scene.set(placed(randomScene()));
+    this.chosen.set(null);
+    this.snackBar
+      .open('A random scene took the place of yours', 'Undo', { duration: 8000 })
+      .onAction()
+      .subscribe(() => {
+        this.scene.set(before);
+        this.chosen.set(null);
+      });
   }
 
   protected isChosen(object: SceneObject): boolean {
