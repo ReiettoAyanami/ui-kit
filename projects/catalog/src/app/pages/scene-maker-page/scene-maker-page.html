@@ -4,8 +4,28 @@
 <!-- Paused: every object where it is put, to choose and to move; the chosen one and the moving one lit. -->
 @if (!playing()) {
   <div #stage class="stage" (pointermove)="drag($event)" (pointerup)="letGo()" (pointercancel)="letGo()">
-    <!-- each blob's own outline: the highlight follows its shape -->
+    <!-- each blob's own outline: the highlight follows its shape; each current, its reach and its way -->
     <svg class="outlines" aria-hidden="true">
+      <defs>
+        <marker id="current-way" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0L10 5L0 10Z" class="way" />
+        </marker>
+      </defs>
+      @for (current of scene().currents ?? []; track $index) {
+        @let object = { type: 'current', index: $index };
+        <path class="reach" [class.chosen]="isChosen($any(object))" [attr.d]="lineOf(current)" [attr.stroke-width]="reachOf(current)" />
+        @for (segment of segmentsOf(current); track segment.index) {
+          <line
+            class="current"
+            [class.chosen]="isChosen($any(object))"
+            [attr.x1]="segment.x1"
+            [attr.y1]="segment.y1"
+            [attr.x2]="segment.x2"
+            [attr.y2]="segment.y2"
+            marker-end="url(#current-way)"
+          />
+        }
+      }
       @for (outline of outlines(); track $index) {
         @let object = { type: 'blob', index: $index };
         <path
@@ -36,6 +56,23 @@
         (keydown)="nudge($event, $any(object))"
         (click)="chosen.set($any(object))"
       ></button>
+    }
+    @for (current of scene().currents ?? []; track $index; let c = $index) {
+      @for (point of current.points; track $index; let p = $index) {
+        @let object = { type: 'point', current: c, point: p };
+        <button
+          type="button"
+          class="mark point"
+          [class.chosen]="isChosen($any({ type: 'current', index: c }))"
+          [class.moving]="isMoving($any(object))"
+          [style.left.%]="point.x * 100"
+          [style.top.%]="point.y * 100"
+          [attr.aria-label]="'Point ' + (p + 1) + ' of current ' + (c + 1) + ': arrows move it'"
+          (pointerdown)="grab($event, $any(object))"
+          (keydown)="nudge($event, $any(object))"
+          (click)="chosen.set($any({ type: 'current', index: c }))"
+        ></button>
+      }
     }
     @for (fleet of scene().fleets; track $index) {
       @let object = { type: 'fleet', index: $index };
@@ -104,6 +141,10 @@
           <mat-icon>add</mat-icon>
           Add a fleet
         </button>
+        <button mat-stroked-button type="button" [disabled]="(scene().currents?.length ?? 0) >= limits.currents" (click)="addCurrent()">
+          <mat-icon>add</mat-icon>
+          Add a current
+        </button>
       </div>
     </mat-card-content>
   </mat-card>
@@ -123,6 +164,9 @@
               }
               @case ('fleet') {
                 The leader and its fleet
+              }
+              @case ('current') {
+                A current
               }
             }
           </h2>
@@ -188,6 +232,49 @@
               <button mat-stroked-button type="button" class="remove" (click)="remove()">
                 <mat-icon>delete</mat-icon>
                 Remove the blob
+              </button>
+            }
+          }
+          @case ('current') {
+            @if (chosenCurrent(); as current) {
+              <p class="hint">
+                Near its line, blobs and boids are pushed along each segment, the way its arrow points. Drag its points on the
+                scene (paused) to bend it.
+              </p>
+              <p class="label">Reach (share of the screen, each side of its line)</p>
+              <div class="number">
+                <mat-slider min="0.02" max="0.3" step="0.01">
+                  <input matSliderThumb [value]="current.width ?? defaultCurrent.width" aria-label="Reach" (valueChange)="setCurrentWidth($event)" />
+                </mat-slider>
+                <span class="value">{{ shown(current.width ?? defaultCurrent.width) }}</span>
+              </div>
+              <h3 class="group">Each segment's push</h3>
+              @for (segment of segmentsOf(current); track segment.index) {
+                <p class="label">Segment {{ segment.index + 1 }}</p>
+                <div class="number">
+                  <mat-slider min="0" max="600" step="10">
+                    <input matSliderThumb [value]="strengthOf(current, segment.index)" [attr.aria-label]="'Segment ' + (segment.index + 1) + ' push'" (valueChange)="setStrength(segment.index, $event)" />
+                  </mat-slider>
+                  <span class="value">{{ strengthOf(current, segment.index) }}</span>
+                </div>
+              }
+              <div class="buttons">
+                <button mat-stroked-button type="button" [disabled]="current.points.length >= limits.points" (click)="addPoint()">
+                  <mat-icon>add</mat-icon>
+                  Add a point
+                </button>
+                <button mat-stroked-button type="button" [disabled]="current.points.length <= 2" (click)="removePoint()">
+                  <mat-icon>remove</mat-icon>
+                  Take the last point out
+                </button>
+                <button mat-stroked-button type="button" (click)="reverseCurrent()">
+                  <mat-icon>swap_horiz</mat-icon>
+                  Turn it the other way
+                </button>
+              </div>
+              <button mat-stroked-button type="button" class="remove" (click)="remove()">
+                <mat-icon>delete</mat-icon>
+                Remove the current
               </button>
             }
           }

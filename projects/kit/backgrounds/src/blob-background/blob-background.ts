@@ -3,6 +3,7 @@ import { Component, booleanAttribute, input, numberAttribute } from '@angular/co
 import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobsAt, paletteOf, specSettings } from '../engine/blob-field';
 import { MATERIAL_LAYERS } from '../blob-flock-background/blob-flock-background';
 import { BlobThrow } from '../engine/blob-throw';
+import { BlobDrift, LenziCurrent, currentsFlow } from '../engine/currents';
 import { LinearRgb, PALETTE_STEP, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { LenziSourceLamp } from '../glow/light-field';
 import { BlobMaterial, MaterialObject, MaterialScene } from '../engine/blob-materials';
@@ -80,6 +81,10 @@ export class LenziBlobBackground extends LenziGlowBackground {
 
   private elapsed = 0;
   private readonly throws = new BlobThrow();
+  /** The blobs' drifts in the currents, and the currents' push (kept while they are the same). */
+  private readonly drift = new BlobDrift();
+  private flowKey = '';
+  private flowAt: ((x: number, y: number) => readonly [number, number]) | null = null;
   /** The blobs of the last picture, for the light they shed on the page. */
   private drawn: readonly BlobState[] = [];
 
@@ -112,9 +117,13 @@ export class LenziBlobBackground extends LenziGlowBackground {
       advance: (delta) => {
         this.elapsed += delta;
         this.throws.step(delta, this.paths(), this.width, this.height);
+        // the currents carry the blobs (a blob that stays put not at all, a heavy one less)
+        const flow = this.flow();
+        if (flow) this.drift.step(delta, this.throws.apply(this.paths()), flow, (i) => this.carried(i));
+        else this.drift.reset();
       },
       prepare: () => {
-        const blobs = this.throws.apply(this.paths());
+        const blobs = this.drift.apply(this.throws.apply(this.paths()), this.width, this.height);
         this.drawn = blobs;
         // the join is as wide as the blobs are large: the same picture on a phone and on a wide screen
         const merge = Math.max(0, this.merge()) * this.size() * Math.min(this.width, this.height) * 0.5;
@@ -145,6 +154,27 @@ export class LenziBlobBackground extends LenziGlowBackground {
       surfaces: (inputs) => materials.drawSurfaces(inputs),
       dispose: () => materials.dispose(),
     };
+  }
+
+  /** Currents that carry the blobs along their segments (lenzi, 2026-11-14: "una corrente ... che instrada i boidi e i blob"). */
+  readonly currents = input<readonly LenziCurrent[] | null>(null);
+
+  /** How much a current carries a blob: a blob that stays put not at all, a heavier one less. */
+  private carried(index: number): number {
+    const spec = this.blobSpecs()?.[index];
+    return spec?.fixed ? 0 : 1 / Math.max(0.25, spec?.weight ?? 1);
+  }
+
+  /** The currents' push here, px/s² (kept while the currents and the space are the same), or none. */
+  private flow(): ((x: number, y: number) => readonly [number, number]) | null {
+    const currents = this.currents();
+    if (!currents?.length) return null;
+    const key = `${this.width}x${this.height}|${JSON.stringify(currents)}`;
+    if (key !== this.flowKey) {
+      this.flowKey = key;
+      this.flowAt = currentsFlow(currents, this.width, this.height);
+    }
+    return this.flowAt;
   }
 
   /** A blob's material: its own, or the list's, round again. */

@@ -3,6 +3,7 @@ import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute
 import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobEdge, blobsAt, paletteOf, specSettings } from '../engine/blob-field';
 import { BlobMaterial, DROP, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { BlobThrow } from '../engine/blob-throw';
+import { BlobDrift, LenziCurrent, currentsFlow } from '../engine/currents';
 import { Boids, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_BOID_SIZES, roundField } from '../engine/boids';
 import { LinearRgb, PALETTE_STEP, displacedColors, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
@@ -251,6 +252,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** Fleets of boids that are blobs, each of a material; none by default. */
   readonly blobFlocks = input<readonly LenziBlobFlock[]>([]);
   /**
+   * Currents (lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue forze
+   * indipendenti) che instrada i boidi e i blob"): near a segment, the boids and the blobs are pushed along it.
+   */
+  readonly currents = input<readonly LenziCurrent[] | null>(null);
+  /**
    * The boids as fleets, each its own flock with its leader's ways and its own count, colonies and size (a
    * scene's fleets); null: one flock of `boids` in `colonies`, as the inputs say.
    */
@@ -271,6 +277,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private flocks: BoidFleet[] = [];
   private fleets: Fleet[] = [];
   private flockSeed = Number.NaN;
+  /** The blobs' drifts in the currents, and the currents' push (kept while they are the same). */
+  private readonly drift = new BlobDrift();
+  private flowKey = '';
+  private flowAt: ((x: number, y: number) => readonly [number, number]) | null = null;
   /** The colours of the boid fleets that have one of their own, by colour, count, spread and seed. */
   private readonly fleetTints = new Map<string, Float32Array>();
   /** The colours shifted among, read once. */
@@ -331,6 +341,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       advance: (delta) => {
         this.elapsed += delta;
         this.throws.step(delta, this.paths(), this.width, this.height);
+        // the currents: they carry the blobs (a blob that stays put not at all, a heavy one less) and the boids
+        const flow = this.flow();
+        if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
+        else this.drift.reset();
         const flocks = this.current();
         const fleets = this.currentFleets();
         // the blobs where they are now, as drawn: what the flocks fly round (or melt into)
@@ -342,6 +356,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
           boids.setTarget(target);
           boids.setScares(scares, this.scare());
+          boids.setFlow(flow);
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
         }
       },
@@ -632,8 +647,31 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   /** The blobs where they are now: their paths, and where they were thrown. */
   private blobsNow(): BlobState[] {
+    return this.drift.apply(this.placed(), this.width, this.height);
+  }
+
+  /** The blobs where their paths and throws put them, before the currents carry them. */
+  private placed(): BlobState[] {
     // nothing thrown when nothing may be (a scene being made): every blob where its path puts it
     return this.throwable() ? this.throws.apply(this.paths()) : this.paths();
+  }
+
+  /** How much a current carries a blob: a blob that stays put not at all, a heavier one less. */
+  private carried(index: number): number {
+    const spec = this.blobSpecs()?.[index];
+    return spec?.fixed ? 0 : 1 / Math.max(0.25, spec?.weight ?? 1);
+  }
+
+  /** The currents' push here, px/s² (kept while the currents and the space are the same), or none. */
+  private flow(): ((x: number, y: number) => readonly [number, number]) | null {
+    const currents = this.currents();
+    if (!currents?.length) return null;
+    const key = `${this.width}x${this.height}|${JSON.stringify(currents)}`;
+    if (key !== this.flowKey) {
+      this.flowKey = key;
+      this.flowAt = currentsFlow(currents, this.width, this.height);
+    }
+    return this.flowAt;
   }
 
   /** The blobs where their own paths put them now. */

@@ -5,6 +5,7 @@ import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWay
 import { BlobState, DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
 import { BlobMaterial } from '../engine/blob-materials';
 import { BoidsFollow } from '../engine/boids';
+import { LenziCurrent } from '../engine/currents';
 import { LenziBackgroundFill } from '../glow-background/glow-background';
 
 /**
@@ -67,6 +68,12 @@ export interface LenziScene {
   name?: string;
   blobs: readonly LenziSceneBlob[];
   fleets: readonly LenziSceneFleet[];
+  /**
+   * Currents (lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue forze
+   * indipendenti) che instrada i boidi e i blob verso la direzione del segmento"): its points (shares of the space),
+   * each segment's push, its reach.
+   */
+  currents?: readonly LenziCurrent[];
   /** What the boids do with the pointer ('near' when not said). */
   follow?: BoidsFollow;
   /** The pointer throws the blobs about. */
@@ -83,6 +90,8 @@ export interface LenziSceneLayout {
   boidFlocks: LenziBoidFlock[];
   /** The blob-boid fleets, each its own flock of its material. */
   blobFlocks: LenziBlobFlock[];
+  /** The currents, carrying blobs and boids; null: none. */
+  currents: readonly LenziCurrent[] | null;
   follow: BoidsFollow;
   throwable: boolean;
 }
@@ -111,6 +120,7 @@ export function sceneLayout(scene: LenziScene): LenziSceneLayout {
     blobs: [...scene.blobs],
     boidFlocks: boidFleets.map((fleet) => ({ count: fleet.count, ...fleetSettings(fleet) })),
     blobFlocks: blobFleets.map((fleet) => ({ material: fleet.material ?? 'lamp', count: fleet.count, ...fleetSettings(fleet) })),
+    currents: scene.currents?.length ? scene.currents : null,
     follow: scene.follow ?? 'near',
     throwable: scene.throwable === true,
   };

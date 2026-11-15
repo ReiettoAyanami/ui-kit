@@ -1,10 +1,10 @@
 // A scene in a link and back (lenzi, 2026-11-14: "Voglio che peró una scena sia ricreabile tramite un link
 // (corto) condivisibile e iframe"): the scene's JSON, deflated, in base64url; read back, everything in it is
 // checked and kept within bounds (a link comes from anyone). A plain module (no schematic makes one).
-import { BLOB_SHAPE_NAMES, BlobMaterial, BlobShapeName, BoidsFollow, LenziScene, LenziSceneBlob, LenziSceneFleet } from '@lenzi/ui-kit/backgrounds';
+import { BLOB_SHAPE_NAMES, BlobMaterial, BlobShapeName, BoidsFollow, LenziCurrent, LenziScene, LenziSceneBlob, LenziSceneFleet } from '@lenzi/ui-kit/backgrounds';
 
 /** How much a scene may hold: what a phone and a page can carry. */
-export const SCENE_LIMITS = { blobs: 16, fleets: 8, perFleet: 1000, name: 60, colours: 6 } as const;
+export const SCENE_LIMITS = { blobs: 16, fleets: 8, perFleet: 1000, name: 60, colours: 6, currents: 4, points: 12 } as const;
 
 const MATERIALS: readonly BlobMaterial[] = ['lamp', 'glass', 'solid'];
 const FOLLOWS: readonly BoidsFollow[] = ['flee', 'near', 'target', 'none'];
@@ -85,7 +85,26 @@ export function cleanScene(raw: unknown): LenziScene | null {
       }
       return { ...clean, ...placeOf(fleet), ...lookOf(fleet, clean.kind === 'blob-boid' ? (clean.material ?? 'lamp') : null) };
     });
-  const out: LenziScene = { blobs, fleets };
+  // currents: a few points each (a segment between two), each segment's push, its reach
+  const currents: LenziCurrent[] = (Array.isArray(scene['currents']) ? scene['currents'] : [])
+    .map(record)
+    .filter((current): current is Record<string, unknown> => current !== null && Array.isArray(current['points']))
+    .map((current) => {
+      const points = (current['points'] as unknown[])
+        .map(record)
+        .filter((point): point is Record<string, unknown> => point !== null && isNumber(point['x']) && isNumber(point['y']))
+        .slice(0, SCENE_LIMITS.points)
+        .map((point) => ({ x: clamp(point['x'] as number, [0, 1]), y: clamp(point['y'] as number, [0, 1]) }));
+      const strengths = (Array.isArray(current['strengths']) ? current['strengths'] : []).filter(isNumber).slice(0, Math.max(0, points.length - 1)).map((strength) => clamp(strength, [0, 600]));
+      return {
+        points,
+        ...(strengths.length ? { strengths } : {}),
+        ...(isNumber(current['width']) ? { width: clamp(current['width'], [0.02, 0.4]) } : {}),
+      };
+    })
+    .filter((current) => current.points.length >= 2)
+    .slice(0, SCENE_LIMITS.currents);
+  const out: LenziScene = { blobs, fleets, ...(currents.length ? { currents } : {}) };
   if (typeof scene['name'] === 'string' && scene['name'].trim()) out.name = scene['name'].trim().slice(0, SCENE_LIMITS.name);
   if (FOLLOWS.includes(scene['follow'] as BoidsFollow)) out.follow = scene['follow'] as BoidsFollow;
   if (scene['throwable'] === true) out.throwable = true;

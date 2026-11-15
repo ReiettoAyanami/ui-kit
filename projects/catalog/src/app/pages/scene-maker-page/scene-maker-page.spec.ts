@@ -148,6 +148,35 @@ describe('SceneMakerPage', () => {
     expect(page.querySelector('.window')?.textContent).toContain('Weight');
   });
 
+  it('adds a current: listed, drawn with its points while paused, bent, each segment its push, turned round, removed', async () => {
+    const { page, click, maker, fixture } = await open();
+    await click('Add a current');
+    const current = () => maker.scene().currents![0]!;
+    expect(current().points.length).toBe(3);
+    expect(maker.chosen()).toEqual({ type: 'current', index: 0 });
+    expect(page.querySelectorAll('.stage .mark.point').length).toBe(3);
+    expect(page.querySelectorAll('.outlines line.current').length).toBe(2);
+    expect([...page.querySelectorAll('mat-action-list [matListItemTitle]')].map((t) => t.textContent?.trim()).at(-1)).toBe('Current');
+
+    // a point moved with the keyboard
+    const point = page.querySelector<HTMLButtonElement>('.stage .mark.point')!;
+    point.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(current().points[0]!.y).toBeCloseTo(0.56, 5);
+
+    await click('Add a point');
+    expect(current().points.length).toBe(4);
+    expect(current().strengths?.length).toBe(3);
+    const first = { ...current().points[0]! };
+    await click('Turn it the other way');
+    expect(current().points.at(-1)).toEqual(first);
+    await click('Take the last point out');
+    expect(current().points.length).toBe(3);
+    await click('Remove the current');
+    expect(maker.scene().currents).toEqual([]);
+  });
+
   it('a blob keeps the shape chosen for it, or (Changing) changes again', async () => {
     const { page, click, maker, fixture } = await open();
     await click('Glass blob');

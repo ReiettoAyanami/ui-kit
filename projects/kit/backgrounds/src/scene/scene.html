@@ -8,6 +8,7 @@
     [travel]="travel()"
     [boidFlocks]="making ? noFleets : shown.boidFlocks"
     [blobFlocks]="making ? noFleets : shown.blobFlocks"
+    [currents]="making ? null : shown.currents"
     [follow]="shown.follow"
     [throwable]="shown.throwable && !making"
   />
@@ -17,6 +18,7 @@
     [animate]="animate() && !making"
     [blobSpecs]="shown.blobs"
     [travel]="travel()"
+    [currents]="making ? null : shown.currents"
     [throwable]="shown.throwable && !making"
     [pull]="0"
   />

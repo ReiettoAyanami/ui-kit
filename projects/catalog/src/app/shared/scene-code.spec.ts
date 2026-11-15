@@ -43,6 +43,17 @@ describe('a scene in a link', () => {
       ],
       fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],
     });
+    expect(
+      cleanScene({
+        blobs: [],
+        fleets: [],
+        currents: [
+          { points: [{ x: -1, y: 0.5 }, { x: 0.5, y: 2 }, { x: 'far' }], strengths: [9000, 50, 70], width: 3 },
+          { points: [{ x: 0.1, y: 0.1 }] },
+          'river',
+        ],
+      })!.currents,
+    ).toEqual([{ points: [{ x: 0, y: 0.5 }, { x: 0.5, y: 1 }], strengths: [600], width: 0.4 }]);
     expect(scene.name).toBe('Mine');
     expect(scene.blobs.length).toBe(SCENE_LIMITS.blobs);
     expect(scene.blobs[0]).toEqual({ material: 'lamp', size: 0.5 });

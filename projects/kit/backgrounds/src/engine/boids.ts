@@ -164,6 +164,7 @@ export class Boids {
   private width: number;
   private height: number;
   private target: { x: number; y: number } | null = null;
+  private flow: ((x: number, y: number) => readonly [number, number]) | null = null;
   private field: BoidsField | null = null;
   private scares: readonly BoidsScare[] = [];
   private scareWeight = 3;
@@ -236,6 +237,11 @@ export class Boids {
   /** Where the flock goes (the pointer), or nowhere. */
   setTarget(target: { x: number; y: number } | null): void {
     this.target = target;
+  }
+
+  /** A push at every place, px/s² (currents: lenzi, 2026-11-14, "una corrente ... che instrada i boidi"), or none. */
+  setFlow(flow: ((x: number, y: number) => readonly [number, number]) | null): void {
+    this.flow = flow;
   }
 
   /** What the boids are scared of now (they may move), and how much (0: not at all). */
@@ -521,6 +527,12 @@ export class Boids {
         else if (px > width - margin) steer(-1, 0, (px - (width - margin)) / margin + 0.5);
         if (py < margin) steer(0, 1, (margin - py) / margin + 0.5);
         else if (py > height - margin) steer(0, -1, (py - (height - margin)) / margin + 0.5);
+      }
+      if (this.flow) {
+        // a current carries it along (its push added to its own steering)
+        const [cx, cy] = this.flow(px, py);
+        fx += cx;
+        fy += cy;
       }
       ax[i] = fx;
       ay[i] = fy;

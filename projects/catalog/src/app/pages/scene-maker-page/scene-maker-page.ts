@@ -31,6 +31,8 @@ import {
   LenziSceneBackground,
   LenziSceneFleet,
   LenziSceneFleetKind,
+  DEFAULT_CURRENT,
+  LenziCurrent,
   blobOutline,
 } from '@lenzi/ui-kit/backgrounds';
 
@@ -84,7 +86,20 @@ export function layerOf(object: { material?: BlobMaterial; layer?: number }, kin
 }
 
 /** What the window on the left shows: the scene's own settings, a blob, or a fleet's leader. */
-export type SceneObject = { type: 'scene' } | { type: 'blob'; index: number } | { type: 'fleet'; index: number };
+export type SceneObject =
+  | { type: 'scene' }
+  | { type: 'blob'; index: number }
+  | { type: 'fleet'; index: number }
+  | { type: 'current'; index: number }
+  /** A current's point: moved by the pointer, its current's window open. */
+  | { type: 'point'; current: number; point: number };
+
+/** One key for an object, to tell whether two are the same. */
+const keyOf = (object: SceneObject | null): string =>
+  !object ? '' : object.type === 'point' ? `point:${object.current}:${object.point}` : 'index' in object ? `${object.type}:${object.index}` : object.type;
+
+/** A new current: from the left across the middle to the right, a gentle bend, every segment pushing alike. */
+const NEW_CURRENT: LenziCurrent = { points: [{ x: 0.2, y: 0.55 }, { x: 0.5, y: 0.42 }, { x: 0.8, y: 0.55 }], strengths: [160, 160], width: 0.08 };
 
 /** A number of a fleet the window changes, with its bounds. */
 interface FleetField {
@@ -209,6 +224,7 @@ export class SceneMakerPage {
   protected readonly leaderFields = LEADER_FIELDS;
   protected readonly materialNames = MATERIAL_NAMES;
   protected readonly layerOf = layerOf;
+  protected readonly defaultCurrent = DEFAULT_CURRENT;
   protected readonly shapeChoices = SHAPE_CHOICES;
   protected readonly bodyOf = bodyOf;
   protected readonly emitsOf = emitsOf;
@@ -253,11 +269,15 @@ export class SceneMakerPage {
   protected readonly objects = computed(() => {
     const scene = this.scene();
     const [first, ...rest] = this.listed(scene);
+    // a current carries every level: after them all
     const level = (object: SceneObject) =>
-      object.type === 'blob' ? layerOf(scene.blobs[object.index]!, 'blob') : object.type === 'fleet' ? layerOf(scene.fleets[object.index]!, scene.fleets[object.index]!.kind) : 0;
+      object.type === 'blob' ? layerOf(scene.blobs[object.index]!, 'blob') : object.type === 'fleet' ? layerOf(scene.fleets[object.index]!, scene.fleets[object.index]!.kind) : -1;
     return [
       { ...first!, tooltip: '' },
-      ...rest.map((item, order) => ({ ...item, order, level: level(item.object) })).sort((a, b) => b.level - a.level || a.order - b.order).map((item) => ({ ...item, tooltip: `Level ${item.level}` })),
+      ...rest
+        .map((item, order) => ({ ...item, order, level: level(item.object) }))
+        .sort((a, b) => b.level - a.level || a.order - b.order)
+        .map((item) => ({ ...item, tooltip: item.level < 0 ? 'It carries every level' : `Level ${item.level}` })),
     ];
   });
 
@@ -277,12 +297,23 @@ export class SceneMakerPage {
         title: fleet.kind === 'boid' ? 'Boids' : `${lookName(fleet)} blob-boids`,
         detail: `Leader of ${fleet.count}`,
       })),
+      ...(scene.currents ?? []).map((current, index) => ({
+        object: { type: 'current', index } as SceneObject,
+        icon: 'waves',
+        title: 'Current',
+        detail: current.points.length === 2 ? '1 segment' : `${current.points.length - 1} segments`,
+      })),
     ];
   }
 
   protected readonly chosenBlob = computed(() => {
     const chosen = this.chosen();
     return chosen?.type === 'blob' ? (this.scene().blobs[chosen.index] ?? null) : null;
+  });
+
+  protected readonly chosenCurrent = computed(() => {
+    const chosen = this.chosen();
+    return chosen?.type === 'current' ? (this.scene().currents?.[chosen.index] ?? null) : null;
   });
 
   protected readonly chosenFleet = computed(() => {
@@ -345,8 +376,7 @@ export class SceneMakerPage {
   }
 
   protected isChosen(object: SceneObject): boolean {
-    const chosen = this.chosen();
-    return !!chosen && chosen.type === object.type && ('index' in chosen ? chosen.index : -1) === ('index' in object ? object.index : -1);
+    return keyOf(this.chosen()) === keyOf(object);
   }
 
   protected choose(object: SceneObject): void {
@@ -358,6 +388,87 @@ export class SceneMakerPage {
     this.chosen.set({ type: 'blob', index: this.scene().blobs.length - 1 });
   }
 
+  /** A current, across the middle (lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue forze indipendenti)"). */
+  protected addCurrent(): void {
+    this.scene.update((scene) => ({ ...scene, currents: [...(scene.currents ?? []), structuredClone(NEW_CURRENT)] }));
+    this.chosen.set({ type: 'current', index: (this.scene().currents?.length ?? 1) - 1 });
+  }
+
+  /** The chosen current, changed. */
+  private changeCurrent(change: (current: LenziCurrent) => LenziCurrent): void {
+    const chosen = this.chosen();
+    if (chosen?.type !== 'current') return;
+    this.scene.update((scene) => ({ ...scene, currents: (scene.currents ?? []).map((current, i) => (i === chosen.index ? change(current) : current)) }));
+  }
+
+  protected setCurrentWidth(width: number): void {
+    if (Number.isFinite(width)) this.changeCurrent((current) => ({ ...current, width }));
+  }
+
+  /** A segment's own push ("con ognuno le sue forze indipendenti"). */
+  protected setStrength(segment: number, strength: number): void {
+    if (!Number.isFinite(strength)) return;
+    this.changeCurrent((current) => {
+      const strengths = Array.from({ length: current.points.length - 1 }, (_, i) => current.strengths?.[Math.min(i, (current.strengths?.length ?? 1) - 1)] ?? DEFAULT_CURRENT.strength);
+      strengths[segment] = strength;
+      return { ...current, strengths };
+    });
+  }
+
+  protected strengthOf(current: LenziCurrent, segment: number): number {
+    const strengths = current.strengths ?? [];
+    return strengths[Math.min(segment, strengths.length - 1)] ?? DEFAULT_CURRENT.strength;
+  }
+
+  /** One more point, on along the way of the last segment (inside the space), its segment as strong as the last. */
+  protected addPoint(): void {
+    this.changeCurrent((current) => {
+      const last = current.points.at(-1)!;
+      const before = current.points.at(-2) ?? { x: last.x - 0.1, y: last.y };
+      const clamp = (value: number) => Math.round(Math.min(0.98, Math.max(0.02, value)) * 1000) / 1000;
+      const next = { x: clamp(last.x + (last.x - before.x) * 0.7), y: clamp(last.y + (last.y - before.y) * 0.7) };
+      const strengths = [...Array.from({ length: current.points.length - 1 }, (_, i) => this.strengthOf(current, i)), this.strengthOf(current, current.points.length - 2)];
+      return { ...current, points: [...current.points, next], strengths };
+    });
+  }
+
+  /** The last point out (two at least: one segment). */
+  protected removePoint(): void {
+    this.changeCurrent((current) =>
+      current.points.length <= 2 ? current : { ...current, points: current.points.slice(0, -1), strengths: current.strengths?.slice(0, current.points.length - 2) },
+    );
+  }
+
+  /** The other way round: its points backwards, each segment keeping its push. */
+  protected reverseCurrent(): void {
+    this.changeCurrent((current) => ({
+      ...current,
+      points: [...current.points].reverse(),
+      strengths: Array.from({ length: current.points.length - 1 }, (_, i) => this.strengthOf(current, i)).reverse(),
+    }));
+  }
+
+  /** A current's segments, as the screen shows them: from, to (px), and their number. */
+  protected segmentsOf(current: LenziCurrent): { x1: number; y1: number; x2: number; y2: number; index: number }[] {
+    const { width, height } = this.space();
+    return current.points.slice(1).map((to, i) => {
+      const from = current.points[i]!;
+      return { x1: from.x * width, y1: from.y * height, x2: to.x * width, y2: to.y * height, index: i };
+    });
+  }
+
+  /** A current's line through its points, px. */
+  protected lineOf(current: LenziCurrent): string {
+    const { width, height } = this.space();
+    return current.points.map((point, i) => `${i === 0 ? 'M' : 'L'}${(point.x * width).toFixed(1)} ${(point.y * height).toFixed(1)}`).join(' ');
+  }
+
+  /** How wide its reach shows, px (both sides of its line). */
+  protected reachOf(current: LenziCurrent): number {
+    const { width, height } = this.space();
+    return 2 * (current.width ?? DEFAULT_CURRENT.width) * Math.min(width, height);
+  }
+
   protected addFleet(): void {
     this.scene.update((scene) => ({ ...scene, fleets: [...scene.fleets, { kind: 'boid', count: 120, x: 0.5, y: 0.5 }] }));
     this.chosen.set({ type: 'fleet', index: this.scene().fleets.length - 1 });
@@ -365,7 +476,15 @@ export class SceneMakerPage {
 
   /** Where an object is put, as a share of the space. */
   protected placeOf(object: SceneObject): { x: number; y: number } {
-    const thing = object.type === 'blob' ? this.scene().blobs[object.index] : object.type === 'fleet' ? this.scene().fleets[object.index] : null;
+    const scene = this.scene();
+    const thing =
+      object.type === 'blob'
+        ? scene.blobs[object.index]
+        : object.type === 'fleet'
+          ? scene.fleets[object.index]
+          : object.type === 'point'
+            ? scene.currents?.[object.current]?.points[object.point]
+            : null;
     return { x: thing?.x ?? 0.5, y: thing?.y ?? 0.5 };
   }
 
@@ -377,7 +496,14 @@ export class SceneMakerPage {
         ? { ...scene, blobs: scene.blobs.map((blob, i) => (i === object.index ? { ...blob, ...place } : blob)) }
         : object.type === 'fleet'
           ? { ...scene, fleets: scene.fleets.map((fleet, i) => (i === object.index ? { ...fleet, ...place } : fleet)) }
-          : scene,
+          : object.type === 'point'
+            ? {
+                ...scene,
+                currents: (scene.currents ?? []).map((current, c) =>
+                  c === object.current ? { ...current, points: current.points.map((point, p) => (p === object.point ? place : point)) } : current,
+                ),
+              }
+            : scene,
     );
   }
 
@@ -385,7 +511,8 @@ export class SceneMakerPage {
   protected grab(event: PointerEvent, object: SceneObject): void {
     if (event.button !== 0) return;
     event.preventDefault();
-    this.chosen.set(object);
+    // a current's point: its current's window
+    this.chosen.set(object.type === 'point' ? { type: 'current', index: object.current } : object);
     this.moving.set(object);
     try {
       (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
@@ -414,19 +541,18 @@ export class SceneMakerPage {
     if (!move) return;
     event.preventDefault();
     const place = this.placeOf(object);
-    this.chosen.set(object);
+    // a current's point: its current's window
+    this.chosen.set(object.type === 'point' ? { type: 'current', index: object.current } : object);
     this.put(object, place.x + move[0], place.y + move[1]);
   }
 
   /** Whether the pointer or the keyboard is on this object. */
   protected isPointed(object: SceneObject): boolean {
-    const pointed = this.pointed();
-    return !!pointed && pointed.type === object.type && ('index' in pointed ? pointed.index : -1) === ('index' in object ? object.index : -1);
+    return keyOf(this.pointed()) === keyOf(object);
   }
 
   protected isMoving(object: SceneObject): boolean {
-    const moving = this.moving();
-    return !!moving && moving.type === object.type && ('index' in moving ? moving.index : -1) === ('index' in object ? object.index : -1);
+    return keyOf(this.moving()) === keyOf(object);
   }
 
   /** A blob's width on the screen, px (its size is a share of the space's shorter side). */
@@ -444,9 +570,13 @@ export class SceneMakerPage {
   /** Takes the chosen blob or fleet out of the scene. */
   protected remove(): void {
     const chosen = this.chosen();
-    if (!chosen || chosen.type === 'scene') return;
+    if (!chosen || chosen.type === 'scene' || chosen.type === 'point') return;
     this.scene.update((scene) =>
-      chosen.type === 'blob' ? { ...scene, blobs: scene.blobs.filter((_, i) => i !== chosen.index) } : { ...scene, fleets: scene.fleets.filter((_, i) => i !== chosen.index) },
+      chosen.type === 'blob'
+        ? { ...scene, blobs: scene.blobs.filter((_, i) => i !== chosen.index) }
+        : chosen.type === 'fleet'
+          ? { ...scene, fleets: scene.fleets.filter((_, i) => i !== chosen.index) }
+          : { ...scene, currents: (scene.currents ?? []).filter((_, i) => i !== chosen.index) },
     );
     this.chosen.set(null);
   }

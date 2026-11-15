@@ -24,5 +24,6 @@ export * from './engine/shapes';
 export * from './engine/boids';
 export * from './engine/blob-field';
 export * from './engine/blob-throw';
+export * from './engine/currents';
 export { BOID_STRETCH, type BoidShape } from './engine/flock-scene';
 export { BLOB_MATERIALS, type BlobMaterial } from './engine/blob-materials';

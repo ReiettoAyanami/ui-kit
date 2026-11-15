@@ -81,6 +81,56 @@
   filter: drop-shadow(0 0 12px var(--mat-sys-primary));
 }
 
+/* A current: its reach a faint band along its line, each segment a dashed line with an arrow its way; chosen, lit. */
+.outlines .reach {
+  fill: none;
+  stroke: color-mix(in srgb, var(--mat-sys-tertiary) 12%, transparent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: none;
+  filter: none;
+}
+
+.outlines .reach.chosen {
+  stroke: color-mix(in srgb, var(--mat-sys-tertiary) 22%, transparent);
+}
+
+.outlines .current {
+  stroke: var(--mat-sys-tertiary);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+
+.outlines .current.chosen {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mat-sys-tertiary) 70%, transparent));
+}
+
+.outlines .way {
+  fill: var(--mat-sys-tertiary);
+  stroke: none;
+}
+
+/* A current's point: a small round handle. */
+.point {
+  width: 18px;
+  height: 18px;
+  border-style: solid;
+  border-color: var(--mat-sys-tertiary);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-high) 82%, transparent);
+}
+
+.point.chosen {
+  border-color: var(--mat-sys-tertiary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mat-sys-tertiary) 30%, transparent);
+}
+
+.hint {
+  margin: 12px 0 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 /* The chosen object, and the one being moved, lit (lenzi: "add an highlight when doing so"). */
 .mark.chosen,
 .mark:focus-visible {
