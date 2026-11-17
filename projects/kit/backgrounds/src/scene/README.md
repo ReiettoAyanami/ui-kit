@@ -7,8 +7,8 @@ contenente boidi, blob, boidi-blob").
 ## What
 
 - **A scene is plain data** (`LenziScene`): its blobs (each a material and a size), its fleets (boids or
-  blob-boids, how many, in how many colonies, how wide), what the boids do with the pointer (`follow`) and
-  whether the pointer throws the blobs (`throwable`). Plain JSON: it can be kept, listed and, next, shared by a
+  blob-boids, how many, in how many colonies, how wide), what the boids do with the pointer (`follow`, the
+  default of every fleet that does not say its own) and whether the pointer throws the blobs (`throwable`). Plain JSON: it can be kept, listed and, next, shared by a
   link ("Voglio che peró una scena sia ricreabile tramite un link (corto) condivisibile e iframe").
 - **`<lenzi-scene>` draws it**: with fleets the blobs and their flocks (`LenziBlobFlockBackground`), with only
   blobs the blob background (`LenziBlobBackground`, no flock to compute). Everything those do (materials,
@@ -16,8 +16,10 @@ contenente boidi, blob, boidi-blob").
 - **A fleet is its leader** ("si decide un capo e ogni capo avrá una flotta di n boidi. questa flotta avrá tutte
   le proprietá del leader, tranne la grandezza che va configurata a parte e anche il displacement della
   stessa"): each fleet flies as its own flock, with its leader's ways (`maxSpeed`, `minSpeed`, `separation`,
-  `alignment`, `cohesion`, `wander`), which all of it takes; its `size` and `sizeVariety` are said apart. What a
-  fleet does not say, the background gives its kind (blob-boids a little slower and closer than boids).
+  `alignment`, `cohesion`, `wander`, and `follow`, what it does with the pointer: 2026-11-17, "This should be
+  configurable for every boid"), which all of it takes; its `size` and `sizeVariety` are said apart. What a
+  fleet does not say, the background gives its kind (blob-boids a little slower and closer than boids); a fleet
+  without `follow` takes the scene's.
 
 - **Every object is put somewhere, on a level, of a shape** (lenzi, 2026-11-14: "make every object selectable and
   moveable", "make the user decide the z index also by a property", "make user choose shape of blob"): a blob's
@@ -89,7 +91,7 @@ contenente boidi, blob, boidi-blob").
 
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
-wander?, x?, y?, layer? }[], follow?, throwable? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
+wander?, follow?, x?, y?, layer? }[], follow?, throwable? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
 tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 
 ## Example

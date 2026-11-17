@@ -163,6 +163,22 @@ export const SHAPE_CHOICES: readonly { value: BlobShapeName | ''; label: string;
 ];
 const MATERIAL_NAMES: Readonly<Record<BlobMaterial, string>> = { lamp: 'Lamp', glass: 'Glass', solid: 'Solid' };
 
+/**
+ * What a fleet does with the pointer (lenzi, 2026-11-17: "This should be configurable for every boid"): its own; a
+ * fleet of a scene from before, which said it once for all, the scene's; else near, as the backgrounds.
+ */
+export function followOf(fleet: LenziSceneFleet, scene: LenziScene): BoidsFollow {
+  return fleet.follow ?? scene.follow ?? 'near';
+}
+
+/** What a fleet does with the pointer, on its row. */
+const FOLLOW_WORDS: Readonly<Record<BoidsFollow, string>> = {
+  flee: 'flees the pointer',
+  near: 'near the pointer',
+  target: 'onto the pointer',
+  none: 'minds no pointer',
+};
+
 /** A fleet's number when it does not say: what the background gives its kind (blob-boids a little slower and closer). */
 export function fleetDefault(fleet: LenziSceneFleet, key: FleetField['key']): number {
   const blob = fleet.kind === 'blob-boid';
@@ -303,7 +319,7 @@ export class SceneMakerPage {
         object: { type: 'scene' } as SceneObject,
         icon: 'landscape',
         title: scene.name || 'The scene',
-        detail: `The pointer: ${scene.follow ?? 'near'}, ${scene.throwable ? 'throwing' : 'not throwing'}`,
+        detail: scene.throwable ? 'The pointer throws the blobs' : 'The pointer throws nothing',
       },
       ...scene.blobs.map((blob, index) => ({
         object: { type: 'blob', index } as SceneObject,
@@ -315,7 +331,7 @@ export class SceneMakerPage {
         object: { type: 'fleet', index } as SceneObject,
         icon: fleet.kind === 'boid' ? 'navigation' : 'bubble_chart',
         title: fleet.kind === 'boid' ? 'Boids' : `${lookName(fleet)} blob-boids`,
-        detail: `Leader of ${fleet.count}`,
+        detail: `Leader of ${fleet.count}, ${FOLLOW_WORDS[followOf(fleet, scene)]}`,
       })),
       ...(scene.currents ?? []).map((current, index) => ({
         object: { type: 'current', index } as SceneObject,
@@ -709,8 +725,14 @@ export class SceneMakerPage {
     this.scene.update((scene) => ({ ...scene, name: name.slice(0, SCENE_LIMITS.name) }));
   }
 
+  /** What the chosen fleet does with the pointer: its own (2026-11-17: "configurable for every boid"). */
   protected setFollow(follow: BoidsFollow): void {
-    this.scene.update((scene) => ({ ...scene, follow }));
+    this.setFleet({ follow });
+  }
+
+  /** What a fleet does with the pointer: its own, or (a scene from before) the scene's, or near. */
+  protected followOf(fleet: LenziSceneFleet): BoidsFollow {
+    return followOf(fleet, this.scene());
   }
 
   protected setThrowable(throwable: boolean): void {

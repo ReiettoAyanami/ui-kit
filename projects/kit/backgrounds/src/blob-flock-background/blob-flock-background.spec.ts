@@ -64,6 +64,23 @@ describe('LenziBlobFlockBackground', () => {
     expect(plain!.boids.settings.maxSpeed).toBe(150);
   });
 
+  it('each fleet, of boids or of blob-boids, does its own thing with the pointer; one that does not say takes the input', () => {
+    const fixture = TestBed.createComponent(LenziBlobFlockBackground);
+    type Flock = { boids: { settings: { follow: string } } };
+    const background = fixture.componentInstance as unknown as { current(): Flock[]; currentFleets(): Flock[] };
+    fixture.componentRef.setInput('follow', 'flee');
+    fixture.componentRef.setInput('boidFlocks', [{ count: 10, follow: 'target' }, { count: 10 }]);
+    fixture.componentRef.setInput('blobFlocks', [
+      { material: 'glass', count: 5, follow: 'none' },
+      { material: 'lamp', count: 5 },
+    ]);
+    expect(background.current().map((fleet) => fleet.boids.settings.follow)).toEqual(['target', 'flee']);
+    expect(background.currentFleets().map((fleet) => fleet.boids.settings.follow)).toEqual(['none', 'flee']);
+    // changed while flying: the same flock takes it
+    fixture.componentRef.setInput('boidFlocks', [{ count: 10, follow: 'near' }, { count: 10 }]);
+    expect(background.current().map((fleet) => fleet.boids.settings.follow)).toEqual(['near', 'flee']);
+  });
+
   it('is a source of sights while it is there; with no flock drawn yet it has none', () => {
     const sights = TestBed.inject(LenziSights);
     const fixture = TestBed.createComponent(LenziBlobFlockBackground);

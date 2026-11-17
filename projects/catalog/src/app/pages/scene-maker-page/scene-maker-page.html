@@ -216,13 +216,6 @@
               <mat-label>Name</mat-label>
               <input matInput [value]="scene().name ?? ''" [attr.maxlength]="limits.name" (input)="setName($any($event.target).value)" />
             </mat-form-field>
-            <p class="label">The pointer</p>
-            <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The pointer" [value]="scene().follow ?? 'near'" (change)="setFollow($event.value)">
-              <mat-button-toggle value="flee">Flee</mat-button-toggle>
-              <mat-button-toggle value="near">Near</mat-button-toggle>
-              <mat-button-toggle value="target">Target</mat-button-toggle>
-              <mat-button-toggle value="none">None</mat-button-toggle>
-            </mat-button-toggle-group>
           }
           @case ('blob') {
             @if (chosenBlob(); as blob) {
@@ -346,6 +339,14 @@
               }
 
               <h3 class="group">The leader's ways (the whole fleet takes them)</h3>
+              <!-- what the fleet does with the pointer, a fleet apart (lenzi, 2026-11-17: "This should be configurable for every boid") -->
+              <p class="label">The pointer</p>
+              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The pointer" [value]="followOf(fleet)" (change)="setFollow($event.value)">
+                <mat-button-toggle value="flee">Flee</mat-button-toggle>
+                <mat-button-toggle value="near">Near</mat-button-toggle>
+                <mat-button-toggle value="target">Target</mat-button-toggle>
+                <mat-button-toggle value="none">None</mat-button-toggle>
+              </mat-button-toggle-group>
               @for (field of leaderFields; track field.key) {
                 <p class="label">{{ field.label }}</p>
                 <div class="number">

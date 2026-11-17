@@ -8,7 +8,7 @@ import { LenziScene, blobHome } from '@lenzi/ui-kit/backgrounds';
 import { HOME_SCENE } from '../../scenes';
 import { KitServer } from '../../shared/kit-server';
 import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
-import { SceneMakerPage, bodyOf, emitsOf, fleetDefault, layerOf, lookFor, placed } from './scene-maker-page';
+import { SceneMakerPage, bodyOf, emitsOf, fleetDefault, followOf, layerOf, lookFor, placed } from './scene-maker-page';
 
 /** The gallery's server, as the maker uses it: it keeps what it is given and says what it was asked. */
 function gallery() {
@@ -104,6 +104,36 @@ describe('SceneMakerPage', () => {
     expect(page.querySelector('.window')?.textContent).toContain('Body');
     expect(page.querySelector('.window')?.textContent).toContain('Light');
     expect(page.querySelector('.window lenzi-color-picker')).not.toBeNull();
+  });
+
+  it('what the pointer does is said by each leader, for its fleet alone; the scene window no longer says it', async () => {
+    // lenzi, 2026-11-17: "This should be configurable for every boid" (the toggle was the scene's, for all)
+    const { page, click, maker } = await open();
+    const toggle = () => page.querySelector<HTMLElement>('.window mat-button-toggle-group[aria-label="The pointer"]');
+    const pressed = () => toggle()?.querySelector('.mat-button-toggle-checked')?.textContent?.trim();
+    await click('Home');
+    expect(toggle()).toBeNull();
+    // the home scene says it once for all (flee): every leader shows it as its own until told otherwise
+    await click('Leader of 380');
+    expect(pressed()).toBe('Flee');
+    await click('Target');
+    expect(maker.scene().fleets[0]!.follow).toBe('target');
+    expect(maker.scene().fleets.slice(1).map((fleet) => fleet.follow)).toEqual([undefined, undefined]);
+    expect(pressed()).toBe('Target');
+    const rows = () => [...page.querySelectorAll('mat-action-list .object [matListItemLine]')].map((line) => line.textContent?.trim());
+    expect(rows()).toContain('Leader of 380, onto the pointer');
+    expect(rows()).toContain('Leader of 42, flees the pointer');
+    // another leader: its own
+    await click('Leader of 42');
+    expect(pressed()).toBe('Flee');
+    await click('None');
+    expect(maker.scene().fleets.map((fleet) => fleet.follow)).toEqual(['target', 'none', undefined]);
+  });
+
+  it("a fleet's pointer: its own, else the scene's (a scene from before), else near", () => {
+    expect(followOf({ kind: 'boid', count: 1, follow: 'target' }, { blobs: [], fleets: [], follow: 'flee' })).toBe('target');
+    expect(followOf({ kind: 'boid', count: 1 }, { blobs: [], fleets: [], follow: 'flee' })).toBe('flee');
+    expect(followOf({ kind: 'boid', count: 1 }, { blobs: [], fleets: [] })).toBe('near');
   });
 
   it('adds a blob and a fleet, opening their windows, and removes them', async () => {
@@ -224,7 +254,7 @@ describe('SceneMakerPage', () => {
     const { page, click, maker, fixture } = await open();
     const sceneRow = () => page.querySelector('mat-action-list .object [matListItemLine]')?.textContent?.trim();
     const throwing = () => [...page.querySelectorAll<HTMLElement>('.objects mat-slide-toggle')].find((toggle) => toggle.textContent?.includes('The pointer throws the blobs'));
-    expect(sceneRow()).toBe('The pointer: flee, throwing');
+    expect(sceneRow()).toBe('The pointer throws the blobs');
     expect(throwing()).toBeDefined();
     // at the panel's foot, after the buttons that add (lenzi's arrow)
     expect(throwing()!.previousElementSibling?.textContent).toContain('Add a current');
@@ -238,12 +268,12 @@ describe('SceneMakerPage', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(maker.scene().throwable).toBe(false);
-    expect(sceneRow()).toBe('The pointer: flee, not throwing');
+    expect(sceneRow()).toBe('The pointer throws nothing');
     throwing()!.querySelector<HTMLButtonElement>('button')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(maker.scene().throwable).toBe(true);
-    expect(sceneRow()).toBe('The pointer: flee, throwing');
+    expect(sceneRow()).toBe('The pointer throws the blobs');
   });
 
   it('adds a current: listed, drawn with its points while paused, bent, each segment its push, turned round, removed', async () => {

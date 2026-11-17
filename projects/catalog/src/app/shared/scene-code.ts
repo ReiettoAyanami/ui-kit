@@ -84,6 +84,7 @@ export function cleanScene(raw: unknown): LenziScene | null {
         const value = fleet[key];
         if (isNumber(value)) clean[key] = key === 'colonies' ? Math.round(clamp(value, bounds)) : clamp(value, bounds);
       }
+      if (FOLLOWS.includes(fleet['follow'] as BoidsFollow)) clean.follow = fleet['follow'] as BoidsFollow;
       return { ...clean, ...placeOf(fleet), ...lookOf(fleet, clean.kind === 'blob-boid' ? (clean.material ?? 'lamp') : null) };
     });
   // currents: a few points each (a segment between two), each segment's push, its reach

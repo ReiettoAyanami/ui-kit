@@ -15,4 +15,7 @@
   fly over the blobs again.
 - A fleet's rules are in `obstacles()`: the boids fly round everything; a fleet round what is of another
   material. Do not give a fleet the same `Boids` as the boids: they would flock together.
+- Every flock is told where the pointer is (`setTarget`); what it does with it is its own settings' `follow`
+  (a fleet's, else the `follow` input's). Do not hold the pointer back from all of them because the input says
+  `none`: a fleet may say otherwise.
 - `LenziSights` is how a watching cat finds the boids (of every flock): nothing to wire.

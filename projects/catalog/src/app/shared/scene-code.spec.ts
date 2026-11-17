@@ -19,7 +19,7 @@ describe('a scene in a link', () => {
       name: '  Mine  ',
       blobs: [{ material: 'lamp', size: 9 }, { material: 'gold', size: 0.1 }, ...Array.from({ length: 30 }, () => ({ material: 'glass', size: 0.1 }))],
       fleets: [
-        { kind: 'boid', count: 1e9, maxSpeed: -5, colonies: 2.6, script: 'alert(1)' },
+        { kind: 'boid', count: 1e9, maxSpeed: -5, colonies: 2.6, script: 'alert(1)', follow: 'chase' },
         { kind: 'dragon', count: 3 },
         { kind: 'blob-boid', count: 10, material: 'gold' },
       ],
@@ -36,14 +36,15 @@ describe('a scene in a link', () => {
           { material: 'glass', size: 0.1, colour: '#AABBCC', tint: 3, emitting: true, fixed: true, weight: 99, obstacle: true },
           { material: 'solid', size: 0.1, colour: 'red', emitting: true, fixed: 'yes', weight: 'heavy', obstacle: 'yes' },
         ],
-        fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],
+        fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true, follow: 'target' }],
       }),
     ).toEqual({
       blobs: [
         { material: 'glass', size: 0.1, colour: '#aabbcc', tint: 1, emitting: true, fixed: true, weight: 4, obstacle: true },
         { material: 'solid', size: 0.1 },
       ],
-      fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true }],
+      // each fleet's own pointer (2026-11-17: "configurable for every boid")
+      fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, colour: '#112233', tint: 0.4, emitting: true, follow: 'target' }],
     });
     expect(
       cleanScene({

@@ -52,6 +52,21 @@ describe('sceneLayout', () => {
     expect(layout.throwable).toBe(false);
   });
 
+  it("each fleet says what it does with the pointer, or takes the scene's", () => {
+    const layout = sceneLayout({
+      blobs: [],
+      fleets: [
+        { kind: 'boid', count: 10, follow: 'target' },
+        { kind: 'boid', count: 10 },
+        { kind: 'blob-boid', material: 'glass', count: 5, follow: 'none' },
+      ],
+      follow: 'flee',
+    });
+    expect(layout.boidFlocks).toEqual([{ count: 10, follow: 'target' }, { count: 10 }]);
+    expect(layout.blobFlocks).toEqual([{ material: 'glass', count: 5, follow: 'none' }]);
+    expect(layout.follow).toBe('flee');
+  });
+
   it('a blob-boid fleet without a material is of lamps', () => {
     expect(sceneLayout({ blobs: [], fleets: [{ kind: 'blob-boid', count: 5 }] }).blobFlocks).toEqual([{ material: 'lamp', count: 5 }]);
   });

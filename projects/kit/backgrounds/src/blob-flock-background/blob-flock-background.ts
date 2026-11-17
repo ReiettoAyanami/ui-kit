@@ -65,6 +65,11 @@ export interface LenziFleetWays {
   wander?: number;
   /** How different their sizes are, 0 to 1 (its "displacement"). */
   sizeVariety?: number;
+  /**
+   * What it does with the pointer, a fleet apart from the others (lenzi, 2026-11-17: "This should be configurable
+   * for every boid"): flees it, flies around it, onto it, or takes no notice. Not said: the `follow` input's.
+   */
+  follow?: BoidsFollow;
 }
 
 /** A fleet of boids, its leader's ways and its own count, colonies and size. */
@@ -90,6 +95,9 @@ function originOf(fleet: { x?: number; y?: number }, width: number, height: numb
   return typeof fleet.x === 'number' && typeof fleet.y === 'number' ? { x: fleet.x * width, y: fleet.y * height } : null;
 }
 
+/** What a flock may do with the pointer. */
+const FOLLOWS: readonly BoidsFollow[] = ['none', 'near', 'target', 'flee'];
+
 /** The ways a fleet says, and only those (the rest stays the background's). */
 function waysOf(fleet: LenziFleetWays): Partial<BoidsSettings> {
   const ways: Partial<BoidsSettings> = {};
@@ -97,6 +105,7 @@ function waysOf(fleet: LenziFleetWays): Partial<BoidsSettings> {
     const value = fleet[key];
     if (typeof value === 'number' && Number.isFinite(value)) ways[key] = value;
   }
+  if (fleet.follow && FOLLOWS.includes(fleet.follow)) ways.follow = fleet.follow;
   return ways;
 }
 
@@ -354,9 +363,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         this.obstacles(flocks, fleets);
         const origin = this.origin();
         const scares = this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius }));
-        const target = this.follow() === 'none' ? null : this.pointerInside();
+        // every flock is told where the pointer is; what it does with it is its own (`follow`, a fleet apart)
+        const pointer = this.pointerInside();
         for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
-          boids.setTarget(target);
+          boids.setTarget(pointer);
           boids.setScares(scares, this.scare());
           boids.setFlow(flow);
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
@@ -817,6 +827,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         separation: spec.separation ?? shared.separation,
         wander: spec.wander ?? shared.wander,
         sizeVariety: spec.sizeVariety ?? shared.sizeVariety,
+        follow: waysOf(spec).follow ?? shared.follow,
         // kept apart by about a drop's length: a fleet of drops, not a puddle; but a flock, not a line
         // (2026-11-14: "the blob boids tend to go in a line": strong keeping apart, a strong pull to the leader
         // and a view that missed what is behind strung them out, each following the one ahead): they see all

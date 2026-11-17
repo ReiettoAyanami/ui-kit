@@ -42,8 +42,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
 - **Fleets with a leader's ways** (`boidFlocks`, and the same numbers on a `blobFlocks` fleet; lenzi, 2026-11-14:
   "ogni capo avrá una flotta di n boidi. questa flotta avrá tutte le proprietá del leader, tranne la grandezza
   ... e anche il displacement"): given `boidFlocks`, the boids are those fleets, each its own flock with its
-  own count, colonies, size, `sizeVariety` and its leader's speeds, rules and wandering; what a fleet does not
-  say is the inputs'. Without it, one flock of `boids` in `colonies`, as before. A scene (`LenziScene`) gives them.
+  own count, colonies, size, `sizeVariety` and its leader's speeds, rules, wandering and `follow` (what it does
+  with the pointer, a fleet apart: 2026-11-17, "This should be configurable for every boid"); what a fleet does
+  not say is the inputs'. Without it, one flock of `boids` in `colonies`, as before. A scene (`LenziScene`) gives them.
   A fleet with `x`, `y` (a share of the space) is born around its leader there, not already flying; a boid
   fleet's `layer` is its own level (`boidLayer` when not said).
 - **Blobs one by one** (`blobSpecs`, `LenziBlobSpec`; a scene's): each its material and size and, when said, its

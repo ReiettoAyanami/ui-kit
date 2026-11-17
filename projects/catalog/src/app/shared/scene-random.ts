@@ -72,8 +72,13 @@ export function randomScene(random: () => number = Math.random): LenziScene {
     blobs[0] = { ...rest, material: 'lamp' };
   }
 
+  // what a fleet does with the pointer, each its own (2026-11-17): mostly flees it or flies near it
+  const pointer = (): BoidsFollow => {
+    const roll = random();
+    return roll < 0.4 ? 'flee' : roll < 0.7 ? 'near' : roll < 0.85 ? 'target' : 'none';
+  };
   const fleets = Array.from({ length: whole(1, 3) }, (_, index): LenziSceneFleet => {
-    const place = { x: round(between(0.15, 0.85)), y: round(between(0.15, 0.85)), ...level() };
+    const place = { x: round(between(0.15, 0.85)), y: round(between(0.15, 0.85)), ...level(), follow: pointer() };
     // now and then a leader with ways of its own
     const ways = chance(0.35)
       ? { maxSpeed: whole(10, 24) * 10, separation: round(between(0.8, 2.2), 1), alignment: round(between(0.6, 1.8), 1), cohesion: round(between(0.6, 1.8), 1), wander: round(between(0, 0.6), 2) }
@@ -102,14 +107,11 @@ export function randomScene(random: () => number = Math.random): LenziScene {
     });
   }
 
-  const followRoll = random();
-  const follow: BoidsFollow = followRoll < 0.4 ? 'flee' : followRoll < 0.7 ? 'near' : followRoll < 0.85 ? 'target' : 'none';
   return {
     name: `${pick(NAMES_FIRST)} ${pick(NAMES_SECOND)}`,
     blobs,
     fleets,
     ...(currents.length ? { currents } : {}),
-    follow,
     throwable: true,
   };
 }

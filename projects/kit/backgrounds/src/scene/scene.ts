@@ -35,8 +35,9 @@ export type LenziSceneFleetKind = 'boid' | 'blob-boid';
 /**
  * A fleet of a scene: a leader and the n that follow it (lenzi, 2026-11-14: "si decide un capo e ogni capo avrá una
  * flotta di n boidi. questa flotta avrá tutte le proprietá del leader, tranne la grandezza che va configurata a parte
- * e anche il displacement della stessa"). Its ways (speeds, the three rules, wandering) are its leader's, and every
- * one of it takes them; its size and how different the sizes are (`sizeVariety`) are said apart.
+ * e anche il displacement della stessa"). Its ways (speeds, the three rules, wandering, what it does with the
+ * pointer) are its leader's, and every one of it takes them; its size and how different the sizes are
+ * (`sizeVariety`) are said apart.
  */
 export interface LenziSceneFleet extends LenziFleetWays, LenziScenePlace {
   kind: LenziSceneFleetKind;
@@ -74,7 +75,10 @@ export interface LenziScene {
    * each segment's push, its reach.
    */
   currents?: readonly LenziCurrent[];
-  /** What the boids do with the pointer ('near' when not said). */
+  /**
+   * What the boids do with the pointer, for every fleet that does not say its own (`LenziSceneFleet.follow`; lenzi,
+   * 2026-11-17: "This should be configurable for every boid"); 'near' when not said.
+   */
   follow?: BoidsFollow;
   /** The pointer throws the blobs about. */
   throwable?: boolean;
@@ -92,6 +96,7 @@ export interface LenziSceneLayout {
   blobFlocks: LenziBlobFlock[];
   /** The currents, carrying blobs and boids; null: none. */
   currents: readonly LenziCurrent[] | null;
+  /** What a fleet that does not say its own does with the pointer. */
   follow: BoidsFollow;
   throwable: boolean;
 }
@@ -108,6 +113,7 @@ function fleetSettings(fleet: LenziSceneFleet): FleetSettings {
   if (fleet.colour) out.colour = fleet.colour;
   if (fleet.colours?.length) out.colours = [...fleet.colours];
   if (fleet.emitting) out.emitting = true;
+  if (fleet.follow) out.follow = fleet.follow;
   return out;
 }
 
