@@ -1,4 +1,4 @@
-import { BlobDrift, DEFAULT_CURRENT, currentsFlow } from './currents';
+import { BLOB_SINK, BlobDrift, DEFAULT_CURRENT, blobCarried, blobSink, currentsFlow } from './currents';
 
 describe('currents', () => {
   // a space 1000 × 1000: a current left to right along the middle, then down
@@ -39,6 +39,50 @@ describe('currents', () => {
     expect(carried[1]).toEqual(blobs[1]);
     drift.reset();
     expect(drift.apply(blobs, 1000, 1000)).toEqual(blobs);
+  });
+
+  it("a heavier blob takes much less of a current, by the square of its weight; a lighter one more (2026-11-17)", () => {
+    expect(blobCarried(undefined)).toBe(1);
+    expect(blobCarried(1)).toBe(1);
+    expect(blobCarried(2)).toBe(1 / 4);
+    expect(blobCarried(4)).toBe(1 / 16);
+    expect(blobCarried(0.5)).toBe(2);
+    expect(blobCarried(0.1)).toBe(4);
+    expect(blobCarried(4, true)).toBe(0);
+    // carried along the same current for two seconds: the heavy one a sixteenth as far
+    const run = (weight: number) => {
+      const drift = new BlobDrift();
+      const blobs = [{ x: 300, y: 500, radius: 40 }];
+      for (let i = 0; i < 120; i++) drift.step(1 / 60, blobs, flow, () => blobCarried(weight));
+      return drift.apply(blobs, 1000, 1000)[0]!.x - 300;
+    };
+    expect(run(4)).toBeCloseTo(run(1) / 16, 5);
+  });
+
+  it("a heavier blob sinks, more than a lighter one, and lies on the floor; one of weight 1 stays; a light one rises (2026-11-17)", () => {
+    expect(blobSink(1)).toBe(0);
+    expect(blobSink(undefined)).toBe(0);
+    expect(blobSink(4)).toBe(3 * BLOB_SINK);
+    expect(blobSink(0.5)).toBe(-0.5 * BLOB_SINK);
+    expect(blobSink(4, true)).toBe(0);
+    const weights = [1, 2, 4, 0.25];
+    const blobs = weights.map((_, i) => ({ x: 150 + i * 200, y: 500, radius: 40 }));
+    const drift = new BlobDrift();
+    const fall = (seconds: number) => {
+      for (let i = 0; i < seconds * 60; i++) drift.step(1 / 60, blobs, null, () => 1, (index) => blobSink(weights[index]), 1000);
+      return drift.apply(blobs, 1000, 1000).map((blob) => blob.y);
+    };
+    const [still, heavy, heavier, light] = fall(3);
+    expect(still).toBe(500);
+    expect(heavy).toBeGreaterThan(500);
+    expect(heavier - 500).toBeGreaterThan((heavy - 500) * 2.5);
+    expect(light).toBeLessThan(500);
+    // long after: the heavy ones on the floor (never through it), the light one against the top
+    const after = fall(120);
+    expect(after[1]).toBe(1000 - 40);
+    expect(after[2]).toBe(1000 - 40);
+    expect(after[3]).toBe(40);
+    expect(after[0]).toBe(500);
   });
 
   it('a blob in the hand is not carried: where the hand is, and from there when let go', () => {

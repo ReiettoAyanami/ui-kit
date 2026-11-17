@@ -26,8 +26,37 @@ const BLOB_SHARE = 0.35;
 const BLOB_DRAG = 0.8;
 
 /**
+ * How hard a blob sinks for each unit of weight over 1, px/s² (lenzi, 2026-11-17: "when a shape is heavier we should
+ * make it sink more than the other"): with the drift's drag, it falls at about 15 px/s for each unit, weight 4 at
+ * about 45 px/s; one lighter than 1 rises as slowly.
+ */
+export const BLOB_SINK = 12;
+
+/** The weights a blob may have, and its own when not said. */
+const LIGHTEST = 0.25;
+
+/**
+ * How much of a current a blob takes (lenzi, 2026-11-17: heavier, "respond less to currents"): a blob that stays put
+ * none; one of weight 1 all; heavier, by the square of its weight (weight 2 a quarter, weight 4 a sixteenth); lighter,
+ * more, by its weight (0.5 twice).
+ */
+export function blobCarried(weight: number | undefined, fixed = false): number {
+  if (fixed) return 0;
+  const w = Math.max(LIGHTEST, weight ?? 1);
+  return 1 / (w * Math.max(1, w));
+}
+
+/** How hard a blob sinks, px/s² (down; up for one lighter than 1): none for a blob that stays put, or of weight 1. */
+export function blobSink(weight: number | undefined, fixed = false): number {
+  if (fixed) return 0;
+  return BLOB_SINK * (Math.max(LIGHTEST, weight ?? 1) - 1);
+}
+
+/**
  * Blobs carried by currents ("instrada i boidi e i blob"): each keeps a drift of its own, pushed by the current where it
- * is and slowly slowed, added to where its own path puts it; out on one side, back in on the other.
+ * is and slowly slowed, added to where its own path puts it; out on one side, back in on the other. And blobs that
+ * sink, or rise ("a shape ... heavier ... sink more than the other"): pulled down (or up) as they drift, until they lie
+ * on the floor of the space (or against its top), never through it.
  */
 export class BlobDrift {
   private drifts: { x: number; y: number; vx: number; vy: number }[] = [];
@@ -39,9 +68,17 @@ export class BlobDrift {
 
   /**
    * One step of `dt` seconds for blobs where their paths put them: each pushed by its share of the flow (`carried`:
-   * 0 for a blob that stays put, less for a heavier one).
+   * 0 for a blob that stays put, less for a heavier one), and pulled down by its weight (`sink`, px/s²: blobSink),
+   * never past the floor of a space `height` tall (nor the top, rising).
    */
-  step(dt: number, blobs: readonly { x: number; y: number }[], flow: ((x: number, y: number) => readonly [number, number]) | null, carried: (index: number) => number): void {
+  step(
+    dt: number,
+    blobs: readonly { x: number; y: number; radius?: number }[],
+    flow: ((x: number, y: number) => readonly [number, number]) | null,
+    carried: (index: number) => number,
+    sink: (index: number) => number = () => 0,
+    height = Infinity,
+  ): void {
     const drag = Math.exp(-BLOB_DRAG * dt);
     blobs.forEach((blob, i) => {
       const drift = (this.drifts[i] ??= { x: 0, y: 0, vx: 0, vy: 0 });
@@ -51,10 +88,25 @@ export class BlobDrift {
         drift.vx += fx * share * dt;
         drift.vy += fy * share * dt;
       }
+      const pull = sink(i);
+      drift.vy += pull * dt;
       drift.vx *= drag;
       drift.vy *= drag;
       drift.x += drift.vx * dt;
       drift.y += drift.vy * dt;
+      if (pull !== 0 && Number.isFinite(height)) {
+        // on the floor (or against the top): it lies there, where its own path still moves it along
+        const radius = blob.radius ?? 0;
+        const top = radius - blob.y;
+        const floor = Math.max(top, height - radius - blob.y);
+        if (drift.y > floor) {
+          drift.y = floor;
+          drift.vy = Math.min(0, drift.vy);
+        } else if (drift.y < top) {
+          drift.y = top;
+          drift.vy = Math.max(0, drift.vy);
+        }
+      }
     });
     this.drifts.length = Math.min(this.drifts.length, blobs.length);
   }

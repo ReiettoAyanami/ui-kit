@@ -45,7 +45,10 @@ export interface BlobSettings {
   ownShapes?: readonly (BlobShapeName | null | undefined)[];
   /** Each blob that never leaves its place (lenzi, 2026-11-15: "an option to make a blob unmovable"), in order. */
   fixed?: readonly (boolean | null | undefined)[];
-  /** Each blob's weight, in order (1 when not said): the heavier, the slower it turns ("a weigh parameter so that it spins more/less"). */
+  /**
+   * Each blob's weight, in order (1 when not said): the heavier, the slower it turns ("a weigh parameter so that it
+   * spins more/less"); the backgrounds also make it sink and a current carry it less (blobSink, blobCarried).
+   */
   weights?: readonly (number | null | undefined)[];
 }
 

@@ -41,7 +41,11 @@ contenente boidi, blob, boidi-blob").
   interacting").
 - **A blob that stays put** (`fixed`: it does not wander, it cannot be thrown) and **its weight** (`weight`, 0.25 to
   4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
-  that it spins more/less").
+  that it spins more/less"). **The heavier, the more it sinks and the less a current carries it** (2026-11-17:
+  "when a shape is heavier we should make it sink more than the other and respond less to currents"): heavier than
+  1, it goes down to the floor of the space and lies there (weight 4 at about 45 px/s), a current carries it by the
+  square of its weight (4: a sixteenth); lighter than 1, it rises as slowly, and a current carries it more. Weight 1
+  neither sinks nor rises.
 - **A blob that is an obstacle** (`obstacle`; lenzi, 2026-11-15: "a toggle that decides if a blob is an obstacle for
   the same z-level or not, so some blobs will be able to collide too", "only for other blobs of different
   matierials ofc, boids and same materials have their rules already"): the blobs of another material on its level

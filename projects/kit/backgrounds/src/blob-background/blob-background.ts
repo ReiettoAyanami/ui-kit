@@ -3,7 +3,7 @@ import { Component, booleanAttribute, input, numberAttribute } from '@angular/co
 import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobsAt, blobsBump, paletteOf, specSettings } from '../engine/blob-field';
 import { MATERIAL_LAYERS } from '../blob-flock-background/blob-flock-background';
 import { BlobThrow } from '../engine/blob-throw';
-import { BlobDrift, LenziCurrent, currentsFlow } from '../engine/currents';
+import { BlobDrift, LenziCurrent, blobCarried, blobSink, currentsFlow } from '../engine/currents';
 import { LinearRgb, PALETTE_STEP, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { LenziSourceLamp } from '../glow/light-field';
 import { BlobMaterial, MaterialObject, MaterialScene } from '../engine/blob-materials';
@@ -117,9 +117,9 @@ export class LenziBlobBackground extends LenziGlowBackground {
       advance: (delta) => {
         this.elapsed += delta;
         this.throws.step(delta, this.paths(), this.width, this.height);
-        // the currents carry the blobs (a blob that stays put not at all, a heavy one less)
+        // the currents carry the blobs (a blob that stays put not at all, a heavy one much less), and heavy ones sink
         const flow = this.flow();
-        if (flow) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i));
+        if (flow || this.sinks()) this.drift.step(delta, this.placed(), flow, (i) => this.carried(i), (i) => this.sink(i), this.height);
         // a blob in the hand is where the hand is: no current carries it
         this.drift.still(this.throws.held);
         this.bump();
@@ -161,10 +161,21 @@ export class LenziBlobBackground extends LenziGlowBackground {
   /** Currents that carry the blobs along their segments (lenzi, 2026-11-14: "una corrente ... che instrada i boidi e i blob"). */
   readonly currents = input<readonly LenziCurrent[] | null>(null);
 
-  /** How much a current carries a blob: a blob that stays put not at all, a heavier one less. */
+  /** How much a current carries a blob: a blob that stays put not at all, a heavier one much less (blobCarried). */
   private carried(index: number): number {
     const spec = this.blobSpecs()?.[index];
-    return spec?.fixed ? 0 : 1 / Math.max(0.25, spec?.weight ?? 1);
+    return blobCarried(spec?.weight, spec?.fixed);
+  }
+
+  /** How hard a blob sinks (a heavier one more; lighter than 1, it rises), px/s² (blobSink). */
+  private sink(index: number): number {
+    const spec = this.blobSpecs()?.[index];
+    return blobSink(spec?.weight, spec?.fixed);
+  }
+
+  /** Whether some blob sinks or rises (its weight is not 1): then the blobs drift with no current too. */
+  private sinks(): boolean {
+    return this.blobSpecs()?.some((spec) => blobSink(spec.weight, spec.fixed) !== 0) === true;
   }
 
   /** The currents' push here, px/s² (kept while the currents and the space are the same), or none. */
@@ -239,7 +250,8 @@ export class LenziBlobBackground extends LenziGlowBackground {
    * blob drawn away from where the maker has it).
    */
   private blobsNow(): BlobState[] {
-    if (!this.flow()) this.drift.reset();
+    // nothing drifts in a still picture, nor with no current and no blob that sinks
+    if (!this.animate() || (!this.flow() && !this.sinks())) this.drift.reset();
     return this.drift.apply(this.placed(), this.width, this.height);
   }
 
