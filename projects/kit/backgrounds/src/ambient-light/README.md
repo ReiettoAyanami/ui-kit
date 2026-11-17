@@ -11,7 +11,9 @@ and color").
   unless set) and blurs what is under it, so the background shows through, where it is and in its colour.
 - **The light**: a glowing background gives `LenziAmbientLight` a tiny picture of its light (32 × 18) about
   twelve times a second; every lit surface shows the part behind it as a veil (`--lenzi-lit-veil`) and along
-  its border (`--lenzi-lit-rim`). It follows scrolling and resizing.
+  its border (`--lenzi-lit-rim`). It follows scrolling and resizing. A surface that scrolls itself keeps its light
+  over what shows, not over what it held before scrolling (2026-11-17: a scrolled panel showed its light as a box
+  ending halfway down).
 - **The lamps' light too**: a glowing element near it (`lenziGlow`, see Glowing elements) lights it from the
   side that faces it, in its colour (`--lenzi-glow-veil`, `--lenzi-glow-rim`).
 - **Nothing is read from the GPU** while no surface is lit.

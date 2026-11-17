@@ -34,13 +34,14 @@ export class LenziSolid {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const style = getComputedStyle(element);
-      fitLight(element);
+      const unfit = fitLight(element);
       // solid is opaque (2026-11-14: a "solid" toggle group showed the list under it): an element that is
       // see-through by itself (a toggle group, a list, an outlined button) takes the page's surface
       element.classList.toggle('lenzi-solid-fill', !opaque(style.backgroundColor));
       const leave = field.addSurface(element);
       const stop = field.addCaster(element, () => this.solidOutline());
       destroyRef.onDestroy(() => {
+        unfit();
         leave();
         stop();
       });

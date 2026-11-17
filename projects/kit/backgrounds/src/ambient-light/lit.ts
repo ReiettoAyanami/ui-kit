@@ -22,11 +22,12 @@ export class LenziLit {
     const field = inject(LenziLightField);
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
-      fitLight(surface);
+      const unfit = fitLight(surface);
       // the background's light, and the light of the glowing elements around it (lenziGlow)
       const detach = light.attach(surface);
       const leave = field.addSurface(surface);
       destroyRef.onDestroy(() => {
+        unfit();
         detach();
         leave();
       });

@@ -572,12 +572,15 @@ html {
   overflow-clip-margin: border-box;
 }
 
-/* A surface that scrolls cannot: its light stays inside it, and no line runs inside its border. */
+/* A surface that scrolls cannot: its light stays inside it, and no line runs inside its border. And it stays over
+   what shows, moved as far as the surface has scrolled (fitLight writes how far): left where it was, it scrolled
+   away with what the surface holds (lenzi, 2026-11-17: a box of light ending halfway down a scrolled panel). */
 .lenzi-lit.lenzi-lit-scrolls::before,
 .lenzi-lit.lenzi-lit-scrolls::after,
 .lenzi-solid.lenzi-lit-scrolls::before,
 .lenzi-solid.lenzi-lit-scrolls::after {
   inset: 0;
+  transform: translate(var(--lenzi-lit-scroll-x, 0px), var(--lenzi-lit-scroll-y, 0px));
 }
 
 .lenzi-lit.lenzi-lit-scrolls::after,

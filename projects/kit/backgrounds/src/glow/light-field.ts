@@ -83,15 +83,26 @@ interface Box {
  * cuts what leaves it (`overflow: hidden`, a toggle group) would cut the light on its border, and a line of
  * light inside the border looks like a second outline (lenzi, 2026-11-14: "has a double outline now"): it
  * cuts at its border's outer edge instead (`.lenzi-lit-clipped`: `overflow: clip`, the same for what it
- * holds). A surface that scrolls cannot: the light stays inside it, with no line (`.lenzi-lit-scrolls`).
+ * holds). A surface that scrolls cannot: the light stays inside it, with no line (`.lenzi-lit-scrolls`), and it
+ * stays over what shows: it moves as far as the surface has scrolled (`--lenzi-lit-scroll-x`, `-y`; lenzi,
+ * 2026-11-17: the scene maker's panels, scrolled, showed their light as a box ending halfway down). Gives back
+ * what stops that.
  */
-export function fitLight(surface: HTMLElement): void {
+export function fitLight(surface: HTMLElement): () => void {
   const style = surface.ownerDocument.defaultView?.getComputedStyle(surface);
-  if (!style) return;
+  if (!style) return () => undefined;
   const overflow = [style.overflowX, style.overflowY];
   const scrolls = overflow.some((value) => value === 'auto' || value === 'scroll');
   surface.classList.toggle('lenzi-lit-scrolls', scrolls);
   surface.classList.toggle('lenzi-lit-clipped', !scrolls && overflow.includes('hidden'));
+  if (!scrolls) return () => undefined;
+  const follow = () => {
+    surface.style.setProperty('--lenzi-lit-scroll-x', `${surface.scrollLeft}px`);
+    surface.style.setProperty('--lenzi-lit-scroll-y', `${surface.scrollTop}px`);
+  };
+  follow();
+  surface.addEventListener('scroll', follow, { passive: true });
+  return () => surface.removeEventListener('scroll', follow);
 }
 
 /** A CSS variable as its `var()`, any other colour as it is. */
