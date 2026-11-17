@@ -53,6 +53,8 @@ export async function createPages({ path = null, sitePagesPath = null } = {}) {
     /** The hidden pages, by their address without the first "/" ("rules", "history"). */
     hidden: () => hidden,
     isHidden: (key) => hidden.includes(key),
+    /** Whether the catalog has this page; without its list (development), every page it could have. */
+    exists: (key) => !site || site.some((page) => page.key === key),
     invalid,
 
     /**

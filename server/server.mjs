@@ -11,13 +11,15 @@
 // Every save is kept (history.mjs) and can be undone. The admin also chooses which pages the public
 // sees (pages.mjs): the catalog itself is always public; of everything else the public gets only what
 // a public page reads (closed by default, from the pages the build wrote down). And the admin keeps
-// scenes (scenes.mjs): the gallery of the catalog's Scenes page, the admin's alone.
+// scenes (scenes.mjs): the gallery of the catalog's Scenes page, the admin's alone; and chooses each page's
+// background (backgrounds.mjs), which everyone reads, with the scenes of the gallery it names.
 import Fastify from 'fastify';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, posix, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createAuth, sessionCookie } from './auth.mjs';
+import { createBackgrounds } from './backgrounds.mjs';
 import { createHistory, publicEntry } from './history.mjs';
 import { createPages } from './pages.mjs';
 import { SCENE_STORE_LIMITS, createScenes, invalidScene } from './scenes.mjs';
@@ -68,6 +70,7 @@ function problem(reply, status, code, title, detail, errors = []) {
  * @param {string | null} [options.sitePagesPath] the catalog's pages, written by its build (`npm run pages`):
  *   with it the public reads only what the public pages read; without it (development) nothing is refused
  * @param {string | null} [options.scenesPath] where the admin's scenes are kept (none: only while it runs)
+ * @param {string | null} [options.backgroundsPath] where the pages' backgrounds are kept (none: only while it runs)
  * @param {boolean} [options.trustProxy] behind a reverse proxy: its word on https and on the address
  * @param {boolean} [options.logger]
  */
@@ -84,6 +87,7 @@ export async function buildServer({
   pagesPath = null,
   sitePagesPath = null,
   scenesPath = null,
+  backgroundsPath = null,
   trustProxy = false,
   logger = false,
 } = {}) {
@@ -92,6 +96,7 @@ export async function buildServer({
   const history = createHistory(historyPath);
   const pages = await createPages({ path: pagesPath, sitePagesPath });
   const scenes = createScenes(scenesPath);
+  const backgrounds = await createBackgrounds(backgroundsPath);
 
   const signedIn = (request) => auth.signedIn(request.headers.cookie);
   /** Answers why not and gives false, unless the admin is signed in. */
@@ -379,6 +384,40 @@ export async function buildServer({
     return (await scenes.restore(request.params.id)) ?? noScene(reply);
   });
 
+  // The pages' backgrounds: everyone reads them (every page draws its own), the admin chooses. A scene of the
+  // gallery comes with them, whole, so a visitor draws it without reading the gallery; one taken out says so
+  // (the page has the catalog's own again). The public gets nothing of a hidden page.
+  async function shownBackgrounds(request) {
+    const admin = signedIn(request);
+    const kept = new Map((await scenes.list()).map((entry) => [entry.id, entry]));
+    const shown = (choice) => {
+      if (!choice || choice === 'same' || !('saved' in choice)) return choice;
+      const entry = kept.get(choice.saved);
+      return entry ? { saved: entry.id, name: entry.name, scene: entry.scene } : { saved: choice.saved, missing: true };
+    };
+    const out = {};
+    for (const [key, background] of Object.entries(backgrounds.all())) {
+      if (!admin && pages.isHidden(key)) continue;
+      out[key] = { computer: shown(background.computer), phone: shown(background.phone) };
+    }
+    return { pages: out };
+  }
+
+  app.get('/api/backgrounds', async (request) => shownBackgrounds(request));
+
+  app.put(
+    '/api/backgrounds',
+    { schema: { body: { type: 'object', required: ['page', 'computer', 'phone'], properties: { page: { type: 'string' } } } } },
+    async (request, reply) => {
+      if (!adminOnly(request, reply)) return reply;
+      const { page, computer, phone } = request.body;
+      const reason = backgrounds.invalid(page, { computer, phone }, pages.exists);
+      if (reason) return problem(reply, 400, 'invalid-background', 'Invalid background', reason);
+      await backgrounds.set(page, { computer, phone });
+      return shownBackgrounds(request);
+    },
+  );
+
   if (publicDir) {
     const { default: fastifyStatic } = await import('@fastify/static');
     await app.register(fastifyStatic, { root: publicDir, wildcard: false });
@@ -401,8 +440,8 @@ export async function buildServer({
 // KIT_ALLOW_FILES ("true" in development: the admin changes the kit's files too), TOKENS_JSON and
 // TOKENS_CSS (the files), TOKENS_VALUES (saved values kept apart: Docker), HISTORY_FILE (the saves),
 // PAGES_FILE (the pages hidden from the public), SITE_PAGES_FILE (the catalog's pages, from its build:
-// needed to serve the catalog), SCENES_FILE (the scenes the admin keeps), TRUST_PROXY ("true" behind a
-// reverse proxy).
+// needed to serve the catalog), SCENES_FILE (the scenes the admin keeps), BACKGROUNDS_FILE (the pages'
+// backgrounds), TRUST_PROXY ("true" behind a reverse proxy).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   // Serving the catalog without knowing its pages would serve every file of the kit to anyone.
   if (process.env.PUBLIC_DIR && !process.env.SITE_PAGES_FILE) {
@@ -422,6 +461,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     pagesPath: process.env.PAGES_FILE || null,
     sitePagesPath: process.env.SITE_PAGES_FILE || null,
     scenesPath: process.env.SCENES_FILE || null,
+    backgroundsPath: process.env.BACKGROUNDS_FILE || null,
     trustProxy: process.env.TRUST_PROXY === 'true',
     logger: true,
   });

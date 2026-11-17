@@ -109,3 +109,27 @@
   color: var(--mat-sys-tertiary);
   overflow-wrap: anywhere;
 }
+
+/* A page and its background: its name, then the two choices side by side (one under the other on a phone). */
+.background {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.background + .background {
+  padding-top: 12px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

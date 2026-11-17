@@ -1,0 +1,6 @@
+@if (scene(); as scene) {
+  <!-- its own chunk: the scenes' engine is not in the first download -->
+  @defer (on immediate) {
+    <lenzi-scene [scene]="scene" />
+  }
+}

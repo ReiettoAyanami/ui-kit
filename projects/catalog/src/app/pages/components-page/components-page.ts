@@ -5,7 +5,6 @@ import { Router, RouterLink } from '@angular/router';
 import { LenziSearchBar, LenziShellSearch, LenziStatusMessage } from '@lenzi/ui-kit';
 
 import { CATEGORIES, DOCS, KitDoc } from '../../registry';
-import { HomeScene } from '../../shared/home-scene/home-scene';
 import { PublicPages } from '../../shared/public-pages';
 
 /**
@@ -14,7 +13,7 @@ import { PublicPages } from '../../shared/public-pages';
  */
 @Component({
   selector: 'app-components-page',
-  imports: [HomeScene, LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
+  imports: [LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
   templateUrl: './components-page.html',
   styleUrl: './components-page.css',
 })

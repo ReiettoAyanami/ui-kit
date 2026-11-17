@@ -5,16 +5,18 @@ import { LenziAppShell, LenziNavEntry, LenziNavList, LenziVersionLabel } from '@
 
 import kitPackage from '../../../kit/package.json';
 import { LiveTokens } from './shared/live-tokens';
+import { PageBackground } from './shared/page-background/page-background';
 import { PublicPages } from './shared/public-pages';
 
 /**
  * The catalog of the kit, built with the kit: its shell and drawer, its version in the corner. The
  * drawer holds links only: the pages of the catalog (the ones whoever is looking may see), the
- * components are listed on their own page.
+ * components are listed on their own page. Behind every page its background (PageBackground), the one the
+ * admin chose for it.
  */
 @Component({
   selector: 'app-root',
-  imports: [LenziAppShell, LenziNavList, LenziVersionLabel, RouterOutlet],
+  imports: [LenziAppShell, LenziNavList, LenziVersionLabel, PageBackground, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

@@ -8,7 +8,6 @@ import { LenziLit } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
-import { HomeScene } from '../../shared/home-scene/home-scene';
 import { CATEGORIES, DOCS } from '../../registry';
 import { PHONE_QUERY } from '../../scenes';
 import { PublicPages } from '../../shared/public-pages';
@@ -23,7 +22,7 @@ const MASCOT_PHONE_MOST = 220;
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [CodeEditor, HomeScene, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })
@@ -34,7 +33,7 @@ export class OverviewPage {
    * The cat in the corner (lenzi, 2026-11-14: "in the bottom right corner zoomed in a lot ... the cat lower
    * half should be cut by the bottom of the screen for now", then "cat should be bigger, a bit more on top"):
    * its width, px, 42% of the window's, between 260 and 720 (on a phone 140 to 220, "on mobile make the cat
-   * smaller"); a little over a third of it below the screen. The background is the home's scene (HomeScene).
+   * smaller"); a little over a third of it below the screen. The background is the page's (PageBackground): the home's scene, unless the admin chose another.
    */
   protected readonly mascot = signal(MASCOT_LEAST);
   protected readonly aspect = CAT_ASPECT;

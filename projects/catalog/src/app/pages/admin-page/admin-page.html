@@ -57,6 +57,79 @@
           </div>
         }
       </section>
+
+      <section class="public" aria-labelledby="admin-backgrounds">
+        <h2 class="part-title" id="admin-backgrounds">The pages' backgrounds</h2>
+        <p class="part-text">
+          One scene behind each page, the same for everyone: one of the catalog's code, one of your scenes, or none. A phone can
+          have a lighter one. Saved at once; a page you never chose for keeps its own (the home's scene behind the overview and
+          the components).
+        </p>
+        @if (backgroundError(); as error) {
+          <p class="error" role="alert">{{ error }}</p>
+        }
+        @if (galleryError(); as error) {
+          <lenzi-status-message kind="error" [text]="error" compact />
+        }
+        @if (!backgrounds.known()) {
+          <lenzi-status-message kind="loading" compact />
+        } @else {
+          <div class="panel group">
+            <header class="group-head">
+              <h3 class="group-title">Pages</h3>
+              <span class="buttons">
+                <a mat-button routerLink="/scenes">Your scenes</a>
+              </span>
+            </header>
+            @for (row of backgroundRows(); track row.key) {
+              <div class="background">
+                <span class="names">
+                  <span class="page-title">{{ row.title }}</span>
+                  <code class="page-address">/{{ row.key }}</code>
+                </span>
+                <div class="choices">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>On a computer</mat-label>
+                    <mat-select [value]="row.computer" [disabled]="savingBackground()" (selectionChange)="setBackground(row.key, 'computer', $event.value)">
+                      <mat-option value="none">None</mat-option>
+                      @for (group of sceneGroups(); track group.label) {
+                        <mat-optgroup [label]="group.label">
+                          @for (option of group.options; track option.value) {
+                            <mat-option [value]="option.value">{{ option.name }}</mat-option>
+                          }
+                        </mat-optgroup>
+                      }
+                      @if (row.otherComputer; as other) {
+                        <mat-option [value]="other.value" disabled>{{ other.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>On a phone</mat-label>
+                    <mat-select [value]="row.phone" [disabled]="savingBackground()" (selectionChange)="setBackground(row.key, 'phone', $event.value)">
+                      <mat-option value="same">As on a computer</mat-option>
+                      <mat-option value="none">None</mat-option>
+                      @for (group of sceneGroups(); track group.label) {
+                        <mat-optgroup [label]="group.label">
+                          @for (option of group.options; track option.value) {
+                            <mat-option [value]="option.value">{{ option.name }}</mat-option>
+                          }
+                        </mat-optgroup>
+                      }
+                      @if (row.otherPhone; as other) {
+                        <mat-option [value]="other.value" disabled>{{ other.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                @if (row.missing) {
+                  <p class="hint">A scene chosen here was taken out of the gallery: the page shows its own until you choose again.</p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
     } @else if (session.configured) {
       <form class="panel" aria-label="Sign in" (submit)="signIn($event)">
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
