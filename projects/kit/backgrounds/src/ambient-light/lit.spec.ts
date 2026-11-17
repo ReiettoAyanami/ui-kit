@@ -1,5 +1,5 @@
 // Written by hand: a test of a directive and of the services it uses.
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { LenziAmbientLight } from './ambient-light';
@@ -17,7 +17,45 @@ class Host {}
 })
 class ScrollingHost {}
 
+@Component({
+  imports: [LenziLit],
+  template: `<div class="surface" [lenziLit]="over()"><p>A card</p></div>`,
+})
+class SwitchedHost {
+  readonly over = signal(false);
+}
+
 describe('LenziLit', () => {
+  it('[lenziLit]="…" lights it only while the app says so; off it is solid and takes no light (2026-11-17)', async () => {
+    const fixture = TestBed.createComponent(SwitchedHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const surface = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.surface')!;
+    const light = TestBed.inject(LenziAmbientLight);
+    expect(surface.classList.contains('lenzi-lit')).toBe(false);
+    expect(light.wanted).toBe(false);
+
+    fixture.componentInstance.over.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(surface.classList.contains('lenzi-lit')).toBe(true);
+    expect(light.wanted).toBe(true);
+
+    fixture.componentInstance.over.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(surface.classList.contains('lenzi-lit')).toBe(false);
+    expect(light.wanted).toBe(false);
+
+    // on again, then gone: it lets go
+    fixture.componentInstance.over.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(light.wanted).toBe(true);
+    fixture.destroy();
+    expect(light.wanted).toBe(false);
+  });
+
   it('makes a lit surface without putting anything inside it; lets go of the light when it goes', async () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();

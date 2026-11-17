@@ -4,5 +4,9 @@
   button, a bar of the page); nothing else to wire.
 - Never call `LenziAmbientLight` from an app: the backgrounds feed it, the directive reads it.
 - Do not light every card by default: ask, or follow the app's design; a solid card stays solid.
+- Over a background, light the page's own surfaces (cards, panels, a card's ⋮) and only while the background is
+  there: `[lenziLit]="overBackground()"` (RULES.md, 2026-11-17). Not what is inside them. A surface that sets its
+  own `background` in the app's CSS: set it only `:not(.lenzi-lit)`, or it covers the glass. A coloured surface
+  keeps its colour lit with `--lenzi-lit-surface` (its colour, not an amount).
 - Never tune glass, veil or rim per surface in an app: they are global variables of the kit.
 - Check the contrast of the text on a lit surface over the brightest part of the background before presenting.

@@ -10,6 +10,8 @@ import { MatSliderModule } from '@angular/material/slider';
 import { LenziColorPicker } from '@lenzi/ui-kit';
 
 import { Control, Values } from '../../registry';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { overBackground } from '../current-background';
 
 /**
  * The GUI of a demo: one field per parameter (text, a slider, a switch, the choices as pills or a
@@ -17,11 +19,14 @@ import { Control, Values } from '../../registry';
  */
 @Component({
   selector: 'app-controls-panel',
-  imports: [LenziColorPicker, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, MatSliderModule],
+  imports: [LenziColorPicker, LenziLit, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSliderModule, MatSlideToggleModule],
   templateUrl: './controls-panel.html',
   styleUrl: './controls-panel.css',
 })
 export class ControlsPanel {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   readonly controls = input.required<readonly Control[]>();
   readonly values = model.required<Values>();
   readonly reset = output<void>();

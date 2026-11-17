@@ -9,7 +9,7 @@
         <h2 class="group-title">{{ group.label }}</h2>
         <div class="cards">
           @for (library of group.libraries; track library.package) {
-            <article class="card">
+            <article class="card" [lenziLit]="lit()">
               <header class="card-head">
                 <span class="names">
                   <a class="name" [href]="library.url" target="_blank" rel="noopener">{{ library.name }}</a>

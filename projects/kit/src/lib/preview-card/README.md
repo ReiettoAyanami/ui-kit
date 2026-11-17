@@ -18,6 +18,8 @@ on hover"). The preview in a rounded box; under it the title, bold, and its fact
   when the pointer leaves: a gallery of them is still.
 - An icon in a round well before the title only when the cards of a list are of different kinds (YouTube's
   channel picture).
+- **Over a background it is lit** (lenzi, 2026-11-17: "cards or any elements over the background should turn into
+  lit elements"): `lenziLit` on it, and on its ⋮: a lit surface with the border every surface has, all the time.
 
 ## API
 

@@ -16,6 +16,8 @@ import { SaveHint } from '../save-hint/save-hint';
 import { tokensToCss } from '../token-css';
 import { TokenEditor } from '../token-editor/token-editor';
 import { TokenDef, TokenGroup, TokensApi } from '../tokens-api';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { overBackground } from '../current-background';
 
 /** The easing curves offered by name; any other is kept as written (and editable as text). */
 const EASINGS = [
@@ -44,11 +46,14 @@ function split(value: string): { number: number; unit: string } {
  */
 @Component({
   selector: 'app-token-panel',
-  imports: [LenziColorPicker, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, SaveHint, TokenEditor],
+  imports: [LenziColorPicker, LenziLit, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, SaveHint, TokenEditor],
   templateUrl: './token-panel.html',
   styleUrl: './token-panel.css',
 })
 export class TokenPanel {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   readonly groups = input.required<readonly TokenGroup[]>();
   /** What the editor is called, for a screen reader. */
   readonly label = input('Variables');

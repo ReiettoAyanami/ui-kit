@@ -12,6 +12,7 @@ import { CATEGORIES, DOCS } from '../../registry';
 import { PHONE_QUERY } from '../../scenes';
 import { PublicPages } from '../../shared/public-pages';
 import { GlassPage } from '../../shared/glass-page/glass-page';
+import { overBackground } from '../../shared/current-background';
 
 /** The cat's width in the corner, px: never smaller, never larger. */
 const MASCOT_LEAST = 260;
@@ -28,6 +29,9 @@ const MASCOT_PHONE_MOST = 220;
   styleUrl: './overview-page.css',
 })
 export class OverviewPage {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   private readonly publicPages = inject(PublicPages);
 
   /**

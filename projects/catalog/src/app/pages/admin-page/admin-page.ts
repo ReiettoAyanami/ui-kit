@@ -16,6 +16,8 @@ import { PublicPages } from '../../shared/public-pages';
 import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { SitePage } from '../../site-map';
 import { GlassPage } from '../../shared/glass-page/glass-page';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { overBackground } from '../../shared/current-background';
 
 /**
  * Where the catalog's one admin signs in (lenzi, 2026-11-12: "pagina admin per abilitare la modifica
@@ -38,6 +40,7 @@ import { GlassPage } from '../../shared/glass-page/glass-page';
     GlassPage,
     LenziFigure,
     LenziFigureGrid,
+    LenziLit,
     LenziStatusMessage,
     MatButtonModule,
     MatFormFieldModule,
@@ -50,6 +53,9 @@ import { GlassPage } from '../../shared/glass-page/glass-page';
   styleUrl: './admin-page.css',
 })
 export class AdminPage {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   private readonly dialogs = inject(LenziDialogs);
   protected readonly server = inject(KitServer);
 

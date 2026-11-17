@@ -42,16 +42,29 @@
   padding: 16px;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: var(--lenzi-panel-radius);
-  background: var(--mat-sys-surface-container-low);
   color: inherit;
   text-decoration: none;
   transition: background-color 150ms linear;
 }
 
+/* Solid without a background; lit, the glass shows (RULES.md, 2026-11-17). */
+.card:not(.lenzi-lit) {
+  background: var(--mat-sys-surface-container-low);
+}
+
+.card:not(.lenzi-lit):hover,
+.card:not(.lenzi-lit):focus-visible {
+  background: var(--mat-sys-surface-container);
+}
+
 .card:hover,
 .card:focus-visible {
-  background: var(--mat-sys-surface-container);
   outline: none;
+}
+
+/* lit: the border says it, as the overview's cards */
+.card.lenzi-lit:hover {
+  border-color: var(--mat-sys-primary);
 }
 
 .card:focus-visible {

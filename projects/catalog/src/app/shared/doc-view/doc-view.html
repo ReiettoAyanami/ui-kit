@@ -12,7 +12,7 @@
   <lenzi-status-message kind="error" [text]="failure" />
 } @else if (draft(); as text) {
   @if (changed() || mode() === 'edit') {
-    <div class="bar">
+    <div class="bar" [lenziLit]="lit()">
       <span class="state">{{ changed() ? 'Changed, not saved' : 'Edit the Markdown: Read shows it as it will read' }}</span>
       <span class="buttons">
         <button mat-stroked-button type="button" [disabled]="!changed()" (click)="discard()">Discard</button>

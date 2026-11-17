@@ -11,6 +11,10 @@
   padding: 16px;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: var(--lenzi-panel-radius);
+}
+
+/* Solid without a background; lit, the glass shows (RULES.md, 2026-11-17). */
+.panel:not(.lenzi-lit) {
   background: var(--mat-sys-surface-container-low);
 }
 

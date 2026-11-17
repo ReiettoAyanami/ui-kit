@@ -7,7 +7,7 @@
 
   @if (server.session(); as session) {
     @if (session.signedIn) {
-      <section class="panel" aria-label="Signed in">
+      <section class="panel" aria-label="Signed in" [lenziLit]="lit()">
         <lenzi-figure-grid>
           <lenzi-figure label="Signed in as" [value]="session.user" />
           <lenzi-figure label="Variables and colours" value="Saved for everyone, at once" />
@@ -38,7 +38,7 @@
         @if (publicPages.hidden() === null) {
           <lenzi-status-message kind="loading" compact />
         } @else {
-          <div class="panel group">
+          <div class="panel group" [lenziLit]="lit()">
             <header class="group-head">
               <h3 class="group-title">Pages</h3>
               <span class="buttons">
@@ -74,7 +74,7 @@
         @if (!backgrounds.known()) {
           <lenzi-status-message kind="loading" compact />
         } @else {
-          <div class="panel group">
+          <div class="panel group" [lenziLit]="lit()">
             <header class="group-head">
               <h3 class="group-title">Pages</h3>
               <span class="buttons">
@@ -131,7 +131,7 @@
         }
       </section>
     } @else if (session.configured) {
-      <form class="panel" aria-label="Sign in" (submit)="signIn($event)">
+      <form class="panel" aria-label="Sign in" [lenziLit]="lit()" (submit)="signIn($event)">
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>User</mat-label>
           <input matInput name="username" autocomplete="username" autocapitalize="none" spellcheck="false" [value]="user()" (input)="user.set($any($event.target).value)" />
@@ -148,7 +148,7 @@
         </div>
       </form>
     } @else {
-      <section class="panel" aria-label="No admin">
+      <section class="panel" aria-label="No admin" [lenziLit]="lit()">
         <lenzi-status-message text="This server has no admin: nothing can be saved from the catalog." />
         <p class="how">
           The admin is one user and one password in the server's environment: copy <code>.env.example</code> to <code>.env</code>, set

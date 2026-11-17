@@ -18,7 +18,7 @@
     <div class="layout">
       <app-token-panel class="groups" sticky [groups]="tokens.value().groups" label="The global variables" (saved)="tokens.reload()" />
 
-      <aside class="preview" aria-label="Preview">
+      <aside class="preview" aria-label="Preview" [lenziLit]="lit()">
         <h2 class="group-title">Preview</h2>
         <div class="glass-stage">
           <div class="glass-window">

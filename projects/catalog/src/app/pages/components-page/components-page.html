@@ -6,7 +6,7 @@
       <h2 class="category">{{ group.category }}</h2>
       <div class="cards">
         @for (doc of group.docs; track doc.id) {
-          <a class="card" [routerLink]="['/components', doc.id]">
+          <a class="card" [lenziLit]="lit()" [routerLink]="['/components', doc.id]">
             <span class="name">{{ doc.name }}</span>
             <span class="summary">{{ doc.summary }}</span>
             <code class="api">{{ doc.api }}</code>

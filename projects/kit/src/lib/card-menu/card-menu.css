@@ -1,6 +1,15 @@
 :host {
   display: inline-flex;
   flex: none;
+  /* round as its button, so it can be a lit surface (lenziLit on it, over a background: 2026-11-17, "the menu on
+     the right should also a lit element") */
+  border-radius: 50%;
+  corner-shape: round;
+}
+
+/* Lit, it is a surface over the background: the border every surface has. */
+:host(.lenzi-lit) {
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
 }
 
 /* The menu lives in the overlay: its items are styled from here through Material's tokens. */

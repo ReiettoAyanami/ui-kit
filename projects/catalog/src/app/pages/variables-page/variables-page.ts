@@ -24,6 +24,8 @@ import { KitServer } from '../../shared/kit-server';
 import { TokenPanel } from '../../shared/token-panel/token-panel';
 import { TokensApi } from '../../shared/tokens-api';
 import { GlassPage } from '../../shared/glass-page/glass-page';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { overBackground } from '../../shared/current-background';
 
 /**
  * The global variables of the look (RULES.md, every value comes from them): every one with its control
@@ -36,6 +38,7 @@ import { GlassPage } from '../../shared/glass-page/glass-page';
   imports: [
     GlassPage,
     LenziDelta,
+    LenziLit,
     LenziPillToggle,
     LenziSearchBar,
     LenziSegmentedBar,
@@ -51,6 +54,9 @@ import { GlassPage } from '../../shared/glass-page/glass-page';
   styleUrl: './variables-page.css',
 })
 export class VariablesPage {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   private readonly api = inject(TokensApi);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);

@@ -214,6 +214,14 @@ the rule says what, the variable says how much.
   backlight feature where elements get slightly alominated by it"): glass that shows the background through
   it, with its light as a veil and along the border. Without it, cards stay solid. Reduce transparency makes
   them solid and unlit.
+- **A page over a background has a glass pane behind its elements** (lenzi, 2026-11-17: "whenever we have a
+  background like this, we need a glass panel behind like in overview and components"): lit glass with a panel's
+  border, away from the screen's edges; on a phone the whole screen. Without a background, no pane.
+- **Over a background, every card and element of the page is lit; without one, solid** (lenzi, 2026-11-17:
+  "wherever page we have a background cards or any elements over the background should turn into lit elements,
+  also the menu on the right should also a lit element. not an emitter"): the page's own surfaces (cards, panels,
+  a card's ⋮), `[lenziLit]="overBackground"`; what is inside them (code, an editor, a demo) stays as it is. Lit is
+  not glowing: a lit element takes light, a glowing one (`lenziGlow`) sheds it.
 - **Decoration**: hidden from screen readers, never in the way of a click; stopped out of view and with
   reduced motion; a still picture where there is no WebGL2.
 - **Blobs are made of the page's materials** (lenzi, 2026-11-14: "Fai in modo che i blob possano anche essere

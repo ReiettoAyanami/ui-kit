@@ -4,6 +4,14 @@
   /* less at the sides than above and under (lenzi, 2026-11-14: "paddin ai lati leggermente meno") */
   --preview-card-side: 8px;
   --preview-card-end: 12px;
+  /* the card's corner, so it can be a lit surface (lenziLit on it, over a background: 2026-11-17, "cards or any
+     elements over the background should turn into lit elements") */
+  border-radius: calc(var(--lenzi-panel-radius) + var(--preview-card-side));
+}
+
+/* Lit, it is a surface over the background all the time: the border every surface has. */
+:host(.lenzi-lit) {
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
 }
 
 /* YouTube's video card: nothing round it until it is pointed at, then a tinted surface behind it all. Its

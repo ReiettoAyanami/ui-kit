@@ -11,6 +11,7 @@ import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { sceneFromCode } from '../../shared/scene-code';
 import { SCENE_FRAME_READY } from '../scene-view-page/scene-view-page';
 import { GALLERY_STEP, ScenesPage, sceneHolds } from './scenes-page';
+import { HOME_SCENE } from '../../scenes';
 import { CurrentBackground } from '../../shared/current-background';
 
 const DUSK: LenziScene = { name: 'Dusk', blobs: [{ material: 'lamp', size: 0.2 }], fleets: [{ kind: 'boid', count: 80 }] };
@@ -42,14 +43,15 @@ async function shown({ admin = true, scenes = [kept('dusk0001', DUSK), kept('non
       return true;
     }),
   };
+  const background = signal<LenziScene | null>(null);
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
       { provide: KitServer, useValue: { admin: signal(admin) } },
       { provide: SavedScenes, useValue: server },
       { provide: LenziDialogs, useValue: dialogs },
-      // no background behind the page here (its pane is GlassPage's own test)
-      { provide: CurrentBackground, useValue: { scene: signal(null) } },
+      // what is behind the page: none unless a test puts one
+      { provide: CurrentBackground, useValue: { scene: background } },
     ],
   });
   const fixture = TestBed.createComponent(ScenesPage);
@@ -76,10 +78,19 @@ async function shown({ admin = true, scenes = [kept('dusk0001', DUSK), kept('non
     [...document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-panel button')].find((item) => item.textContent?.includes(action))!.click();
     await settle();
   };
-  return { fixture, page, server, dialogs, cards, titles, choose, settle };
+  return { fixture, page, server, dialogs, cards, titles, choose, settle, background };
 }
 
 describe('ScenesPage', () => {
+  it("over a background the cards and their ⋮ are lit; without one, as they were (2026-11-17)", async () => {
+    const { cards, settle, background } = await shown();
+    const lit = () => cards('built').map((card) => [card.classList.contains('lenzi-lit'), card.querySelector('lenzi-card-menu')!.classList.contains('lenzi-lit')]);
+    expect(lit()).toEqual([[false, false], [false, false]]);
+    background.set(HOME_SCENE);
+    await settle();
+    expect(lit()).toEqual([[true, true], [true, true]]);
+  });
+
   it('sends a visitor to the scene maker, and only there', async () => {
     const { page, server } = await shown({ admin: false });
     expect(page.querySelector('a[href="/scenes/maker"]')).not.toBeNull();

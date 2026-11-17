@@ -23,6 +23,9 @@ and color").
 
 - **Only where the app asks**: cards and panels are solid ("Cards solid" in the rules); `lenziLit` is for
   surfaces over a background, chosen one by one.
+- **Lit while there is a background** (lenzi, 2026-11-17: "wherever page we have a background cards or any elements
+  over the background should turn into lit elements"): `[lenziLit]="overBackground"` makes it lit only while the app
+  says so; off, the surface is the solid one it was and takes no light. `lenziLit` alone is always lit.
 - **The amounts are global variables** (the Variables page): an app never changes them for one surface.
 - **Over a plain background** a lit surface is glass only: a plain background sheds no light.
 
@@ -31,6 +34,7 @@ and color").
 | | Name | What |
 | --- | --- | --- |
 | directive | `[lenziLit]` | the element turns into a lit surface |
+| input | `lenziLit` | `boolean`, `true`: lit; `false`, the surface without it (the attribute alone: `true`) |
 | service | `LenziAmbientLight` | `wanted`, `attach(surface)`, `shine(...)`, `dim(source)`: used by the backgrounds |
 | variable | `--lenzi-lit-glass` | `46%`: how much of its colour a lit surface keeps |
 | variable | `--lenzi-lit-veil` | `34%`: the light over it |
@@ -42,6 +46,8 @@ and color").
 ```html
 <lenzi-blob-background />
 <mat-card appearance="outlined" lenziLit>…</mat-card>
+<!-- lit only while the page has a background -->
+<article class="card" [lenziLit]="overBackground()">…</article>
 <button mat-stroked-button lenziLit type="button">Like</button>
 ```
 

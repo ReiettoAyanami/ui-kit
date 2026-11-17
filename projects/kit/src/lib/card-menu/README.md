@@ -11,6 +11,8 @@ Edit, Delete). Its taps never reach the card, which opens its page or its detail
 - **Delete asks first** (`LenziConfirmDialog`) and is in the error colour (`destructive: true`).
 - Actions in whole words, each with its icon; Delete last.
 - A card the user cannot act on (the signed-in admin's own card) has no menu.
+- **Over a background it is lit, as its card** (lenzi, 2026-11-17: "the menu on the right should also a lit
+  element. not an emitter"): `lenziLit` on it makes it a round lit surface with a border.
 
 ## API
 

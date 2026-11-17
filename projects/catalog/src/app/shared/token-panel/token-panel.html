@@ -38,7 +38,7 @@
         <p class="group-description">{{ group.description }}</p>
       }
       @for (token of group.tokens; track token.name) {
-        <div class="token" [class.changed]="isChanged(token)">
+        <div class="token" [class.changed]="isChanged(token)" [lenziLit]="lit()">
           <div class="token-head">
             <span class="token-names">
               <span class="token-label">{{ token.label }}</span>

@@ -18,7 +18,7 @@
     </header>
     <p class="part-text">Variables changed here and not saved: only this browser sees them.</p>
     @for (item of different(); track item.name) {
-      <article class="card">
+      <article class="card" [lenziLit]="lit()">
         <div class="names">
           <span class="name">{{ item.label }}</span>
           <code class="variable">{{ item.name }}</code>
@@ -49,7 +49,7 @@
     </header>
     <p class="part-text">Every change of a variable made here, the newest first. Going back changes it here only.</p>
     @for (item of changes(); track item.change.at + item.change.name) {
-      <article class="card">
+      <article class="card" [lenziLit]="lit()">
         <div class="names">
           <span class="name">{{ item.label }}</span>
           <code class="variable">{{ item.change.name }}</code>
@@ -88,7 +88,7 @@
       <lenzi-status-message kind="error" [text]="failure" compact />
     } @else if (kitSaves(); as saves) {
       @for (item of saves; track item.save.id) {
-        <article class="card">
+        <article class="card" [lenziLit]="lit()">
           <div class="names">
             <span class="name">{{ item.title }}</span>
             <span class="variable">{{ item.save.kind === 'file' ? 'A file of the kit' : 'Variables' }}</span>

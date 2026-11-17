@@ -10,4 +10,6 @@
 - `lines`: one fact each, already formatted ("6 blobs, 3 fleets" is one fact: what it holds). No "·".
 - The menu: `<lenzi-card-menu>` inside the card, with a `label` that names it; Delete `destructive` and asked
   first (`LenziConfirmDialog`). A card nothing can be done to has no menu.
+- Over a background: `[lenziLit]="overBackground()"` on the card and on its `<lenzi-card-menu>` (LenziLit, from
+  `@lenzi/ui-kit/backgrounds`). The card has the corner and, lit, the border for it.
 - `opened` is the tap: navigate, or open the details. Never also bind `(click)` on the card.

@@ -75,6 +75,11 @@
 }
 
 /* Glass (lenziLit): its own colour is the glass's; pointed at, its border lights up. */
+/* Solid without a background (RULES.md, 2026-11-17). */
+.section:not(.lenzi-lit) {
+  background: var(--mat-sys-surface-container-low);
+}
+
 .section:hover,
 .section:focus-visible {
   border-color: var(--mat-sys-primary);

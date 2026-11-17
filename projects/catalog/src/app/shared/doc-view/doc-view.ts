@@ -11,6 +11,8 @@ import { KitFiles } from '../kit-files';
 import { KitServer } from '../kit-server';
 import { Markdown } from '../markdown/markdown';
 import { SaveHint } from '../save-hint/save-hint';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { overBackground } from '../current-background';
 
 /**
  * A document of the kit (RULES.md, AI-RULES.md, a piece's README.md and AI.md), to read and, for the
@@ -20,11 +22,14 @@ import { SaveHint } from '../save-hint/save-hint';
  */
 @Component({
   selector: 'app-doc-view',
-  imports: [CodeEditor, LenziStatusMessage, Markdown, MatButtonModule, MatButtonToggleModule, SaveHint],
+  imports: [CodeEditor, LenziLit, LenziStatusMessage, Markdown, MatButtonModule, MatButtonToggleModule, SaveHint],
   templateUrl: './doc-view.html',
   styleUrl: './doc-view.css',
 })
 export class DocView {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   /** The file, relative to projects/kit. */
   readonly path = input.required<string>();
   /** What the document is: "the rules", "the AI notes" (the messages say it). */

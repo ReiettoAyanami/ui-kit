@@ -19,6 +19,8 @@ import { TokenGroup, TokensApi } from '../../shared/tokens-api';
 import { DOCS, KitDoc, Values, codedControls, defaults, docById, readUsage } from '../../registry';
 import { PublicPages } from '../../shared/public-pages';
 import { GlassPage } from '../../shared/glass-page/glass-page';
+import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { overBackground } from '../../shared/current-background';
 
 const TABS = ['playground', 'rules', 'ai', 'code', 'variables'] as const;
 type Tab = (typeof TABS)[number];
@@ -39,6 +41,7 @@ type Tab = (typeof TABS)[number];
     GlassPage,
     LenziFigure,
     LenziFigureGrid,
+    LenziLit,
     LenziNotFound,
     LenziStatusMessage,
     MatButtonModule,
@@ -51,6 +54,9 @@ type Tab = (typeof TABS)[number];
   styleUrl: './component-page.css',
 })
 export class ComponentPage {
+  /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
+  protected readonly lit = overBackground();
+
   readonly id = input.required<string>();
   readonly tab = input<string | undefined>(undefined);
 

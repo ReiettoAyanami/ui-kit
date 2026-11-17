@@ -16,8 +16,17 @@
   margin: 8px 0 24px;
   padding: 12px 16px;
   border-radius: var(--lenzi-bar-radius);
-  background: var(--mat-sys-tertiary-container);
   color: var(--mat-sys-on-tertiary-container);
   font: var(--mat-sys-body-medium);
   overflow-wrap: anywhere;
+}
+
+/* Solid without a background; lit, the glass shows (RULES.md, 2026-11-17). */
+.for-claude:not(.lenzi-lit) {
+  background: var(--mat-sys-tertiary-container);
+}
+
+/* Lit, it keeps its colour. */
+.for-claude {
+  --lenzi-lit-surface: var(--mat-sys-tertiary-container);
 }
