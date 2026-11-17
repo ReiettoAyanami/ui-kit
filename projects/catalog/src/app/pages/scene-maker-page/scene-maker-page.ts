@@ -298,7 +298,13 @@ export class SceneMakerPage {
   /** The objects as the scene lists them. */
   private listed(scene: LenziScene) {
     return [
-      { object: { type: 'scene' } as SceneObject, icon: 'landscape', title: scene.name || 'The scene', detail: 'The pointer, throwing' },
+      // what the pointer does, as it is (2026-11-17: it said "throwing" for a scene that throws nothing)
+      {
+        object: { type: 'scene' } as SceneObject,
+        icon: 'landscape',
+        title: scene.name || 'The scene',
+        detail: `The pointer: ${scene.follow ?? 'near'}, ${scene.throwable ? 'throwing' : 'not throwing'}`,
+      },
       ...scene.blobs.map((blob, index) => ({
         object: { type: 'blob', index } as SceneObject,
         icon: blob.material === 'glass' && blob.emitting ? 'flare' : MATERIAL_ICONS[blob.material],

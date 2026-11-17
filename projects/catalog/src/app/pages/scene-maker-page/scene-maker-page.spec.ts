@@ -218,6 +218,25 @@ describe('SceneMakerPage', () => {
     expect(maker.scene().blobs[1]!.obstacle).toBe(false);
   });
 
+  it('a scene that throws no blob says so: on its row, and in a blob window, with a button that turns throwing on', async () => {
+    // 2026-11-17, "after toggling it stays put i can't interact with any object during play": the scene threw nothing
+    const { page, click, maker, fixture } = await open();
+    const sceneRow = () => page.querySelector('mat-action-list .object [matListItemLine]')?.textContent?.trim();
+    expect(sceneRow()).toBe('The pointer: flee, throwing');
+    await click('Glass blob');
+    expect(page.querySelector('.window .throw-off')).toBeNull();
+
+    maker.scene.update((scene) => ({ ...scene, throwable: false }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(sceneRow()).toBe('The pointer: flee, not throwing');
+    expect(page.querySelector('.window .throw-off')?.textContent).toContain('throws no blob');
+    await click('Turn throwing on');
+    expect(maker.scene().throwable).toBe(true);
+    expect(page.querySelector('.window .throw-off')).toBeNull();
+    expect(sceneRow()).toBe('The pointer: flee, throwing');
+  });
+
   it('adds a current: listed, drawn with its points while paused, bent, each segment its push, turned round, removed', async () => {
     const { page, click, maker, fixture } = await open();
     await click('Add a current');
