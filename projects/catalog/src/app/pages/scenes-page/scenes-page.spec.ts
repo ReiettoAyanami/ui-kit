@@ -11,6 +11,7 @@ import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { sceneFromCode } from '../../shared/scene-code';
 import { SCENE_FRAME_READY } from '../scene-view-page/scene-view-page';
 import { GALLERY_STEP, ScenesPage, sceneHolds } from './scenes-page';
+import { CurrentBackground } from '../../shared/current-background';
 
 const DUSK: LenziScene = { name: 'Dusk', blobs: [{ material: 'lamp', size: 0.2 }], fleets: [{ kind: 'boid', count: 80 }] };
 const kept = (id: string, scene: LenziScene, day = 15): SavedScene => ({
@@ -47,6 +48,8 @@ async function shown({ admin = true, scenes = [kept('dusk0001', DUSK), kept('non
       { provide: KitServer, useValue: { admin: signal(admin) } },
       { provide: SavedScenes, useValue: server },
       { provide: LenziDialogs, useValue: dialogs },
+      // no background behind the page here (its pane is GlassPage's own test)
+      { provide: CurrentBackground, useValue: { scene: signal(null) } },
     ],
   });
   const fixture = TestBed.createComponent(ScenesPage);

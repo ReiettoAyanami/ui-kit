@@ -11,6 +11,7 @@ import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { KitFiles } from '../../shared/kit-files';
 import { KitServer } from '../../shared/kit-server';
 import { SaveHint } from '../../shared/save-hint/save-hint';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 interface Library {
   name: string;
@@ -33,7 +34,7 @@ interface Libraries {
  */
 @Component({
   selector: 'app-libraries-page',
-  imports: [CodeEditor, LenziFigure, LenziFigureGrid, LenziStatusMessage, MatButtonModule, MatExpansionModule, MatIconModule, SaveHint],
+  imports: [CodeEditor, GlassPage, LenziFigure, LenziFigureGrid, LenziStatusMessage, MatButtonModule, MatExpansionModule, MatIconModule, SaveHint],
   templateUrl: './libraries-page.html',
   styleUrl: './libraries-page.css',
 })

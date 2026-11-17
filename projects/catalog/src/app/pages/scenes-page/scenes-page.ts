@@ -16,6 +16,7 @@ import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { sceneToCode } from '../../shared/scene-code';
 import { HOME_PHONE_SCENE, HOME_SCENE } from '../../scenes';
 import { SCENE_FRAME_READY, sceneFrameMessage } from '../scene-view-page/scene-view-page';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 /** A scene's card in the gallery. */
 export interface SceneCard {
@@ -59,7 +60,7 @@ export function sceneHolds(scene: LenziScene): string {
  */
 @Component({
   selector: 'app-scenes-page',
-  imports: [InView, LenziCardMenu, Miniature, LenziPreviewCard, LenziStatusMessage, MatButtonModule, MatIconModule, NgTemplateOutlet, RouterLink],
+  imports: [GlassPage, InView, LenziCardMenu, LenziPreviewCard, LenziStatusMessage, MatButtonModule, MatIconModule, Miniature, NgTemplateOutlet, RouterLink],
   templateUrl: './scenes-page.html',
   styleUrl: './scenes-page.css',
 })

@@ -11,11 +11,7 @@
   [style.bottom.px]="-mascot() / aspect * BELOW"
 />
 
-<main class="page">
-  <!-- A glass pane behind the page's elements (lenzi, 2026-11-14: "add a glass pane around the elements at
-       the center"): a layer of its own, not their container, so the glass cards over it still blur the
-       background and not the pane (a glass container would be their backdrop root). -->
-  <div class="pane" lenziLit aria-hidden="true"></div>
+<main class="page" appGlassPage>
   <header class="hero">
     <h1 class="title">ui-kit</h1>
     <p class="lead">

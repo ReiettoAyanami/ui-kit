@@ -6,6 +6,7 @@ import { LenziSearchBar, LenziShellSearch, LenziStatusMessage } from '@lenzi/ui-
 
 import { CATEGORIES, DOCS, KitDoc } from '../../registry';
 import { PublicPages } from '../../shared/public-pages';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 /**
  * Every page of the kit, by category, with a search bar (RULES.md: the search is in the URL, `?q=`,
@@ -13,7 +14,7 @@ import { PublicPages } from '../../shared/public-pages';
  */
 @Component({
   selector: 'app-components-page',
-  imports: [LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
+  imports: [GlassPage, LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
   templateUrl: './components-page.html',
   styleUrl: './components-page.css',
 })

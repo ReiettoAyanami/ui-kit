@@ -23,6 +23,7 @@ import {
 import { KitServer } from '../../shared/kit-server';
 import { TokenPanel } from '../../shared/token-panel/token-panel';
 import { TokensApi } from '../../shared/tokens-api';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 /**
  * The global variables of the look (RULES.md, every value comes from them): every one with its control
@@ -33,6 +34,7 @@ import { TokensApi } from '../../shared/tokens-api';
 @Component({
   selector: 'app-variables-page',
   imports: [
+    GlassPage,
     LenziDelta,
     LenziPillToggle,
     LenziSearchBar,

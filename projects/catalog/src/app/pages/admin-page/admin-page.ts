@@ -15,6 +15,7 @@ import { PageBackground, PageBackgrounds, choiceOf, choiceValue } from '../../sh
 import { PublicPages } from '../../shared/public-pages';
 import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { SitePage } from '../../site-map';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 /**
  * Where the catalog's one admin signs in (lenzi, 2026-11-12: "pagina admin per abilitare la modifica
@@ -34,6 +35,7 @@ import { SitePage } from '../../site-map';
 @Component({
   selector: 'app-admin-page',
   imports: [
+    GlassPage,
     LenziFigure,
     LenziFigureGrid,
     LenziStatusMessage,

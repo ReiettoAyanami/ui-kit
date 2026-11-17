@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
+import { CurrentBackground } from '../current-background';
 import { EVERY_COMPONENT } from '../page-backgrounds';
 import { PageBackground } from './page-background';
 
@@ -43,16 +44,16 @@ describe('PageBackground', () => {
       fixture.detectChanges();
       await fixture.whenStable();
     };
-    return { fixture, page, go };
+    return { fixture, page, go, phone: TestBed.inject(CurrentBackground).phone };
   }
 
   it("the overview has the home's whole scene, a phone the lighter one (only blobs); a page without one, nothing", async () => {
-    const { fixture, page, go } = await open();
-    fixture.componentInstance.phone.set(false);
+    const { page, go, phone } = await open();
+    phone.set(false);
     await go('/');
     expect(page.querySelector('lenzi-blob-flock-background')).not.toBeNull();
 
-    fixture.componentInstance.phone.set(true);
+    phone.set(true);
     await go('/');
     expect(page.querySelector('lenzi-blob-flock-background')).toBeNull();
     expect(page.querySelector('lenzi-blob-background')).not.toBeNull();

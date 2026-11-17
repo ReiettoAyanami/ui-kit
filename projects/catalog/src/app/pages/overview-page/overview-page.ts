@@ -11,6 +11,7 @@ import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { CATEGORIES, DOCS } from '../../registry';
 import { PHONE_QUERY } from '../../scenes';
 import { PublicPages } from '../../shared/public-pages';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 /** The cat's width in the corner, px: never smaller, never larger. */
 const MASCOT_LEAST = 260;
@@ -22,7 +23,7 @@ const MASCOT_PHONE_MOST = 220;
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [CodeEditor, LenziCat, LenziLit, LenziFigure, LenziFigureGrid, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, GlassPage, LenziCat, LenziFigure, LenziFigureGrid, LenziLit, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })

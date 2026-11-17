@@ -16,16 +16,8 @@
   padding: 8px 24px 32px;
 }
 
-/* The glass pane: as large as the page, behind its elements, with the border and radius of a panel. */
-.pane {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--lenzi-panel-radius);
-}
-
-.page > :not(.pane) {
+/* The glass pane behind the page's elements is the one every page over a background has (GlassPage). */
+.page > * {
   position: relative;
 }
 
@@ -33,18 +25,6 @@
   .page {
     margin: 8px 8px 32px;
     padding: 8px 16px 24px;
-  }
-
-  /* On a phone the glass pane is the whole screen, over all the background (lenzi, 2026-11-14: "on mobile
-     make the glass pane on the back fullscreen covering the full background"): still behind the page's
-     elements (the page's own layer) and the cat. As tall as the screen without the browser's address bar
-     (100lvh): when the bar hides while scrolling, no strip of background shows under it. */
-  .pane {
-    position: fixed;
-    inset: 0;
-    min-height: 100lvh;
-    border: none;
-    border-radius: 0;
   }
 }
 

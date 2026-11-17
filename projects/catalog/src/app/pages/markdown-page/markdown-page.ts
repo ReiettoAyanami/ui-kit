@@ -2,11 +2,12 @@ import { Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 import { DocView } from '../../shared/doc-view/doc-view';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 /** A document of the kit as a page, to read and to change: RULES.md (the look) or AI-RULES.md (how Claude works with the kit). */
 @Component({
   selector: 'app-markdown-page',
-  imports: [DocView, MatIconModule],
+  imports: [DocView, GlassPage, MatIconModule],
   templateUrl: './markdown-page.html',
   styleUrl: './markdown-page.css',
 })

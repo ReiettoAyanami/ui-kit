@@ -18,6 +18,7 @@ import { TokenPanel } from '../../shared/token-panel/token-panel';
 import { TokenGroup, TokensApi } from '../../shared/tokens-api';
 import { DOCS, KitDoc, Values, codedControls, defaults, docById, readUsage } from '../../registry';
 import { PublicPages } from '../../shared/public-pages';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 const TABS = ['playground', 'rules', 'ai', 'code', 'variables'] as const;
 type Tab = (typeof TABS)[number];
@@ -32,9 +33,10 @@ type Tab = (typeof TABS)[number];
   imports: [
     CodeEditor,
     CodeView,
-    DocView,
     ControlsPanel,
     DemoStage,
+    DocView,
+    GlassPage,
     LenziFigure,
     LenziFigureGrid,
     LenziNotFound,

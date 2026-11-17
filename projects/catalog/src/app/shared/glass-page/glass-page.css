@@ -1,0 +1,37 @@
+/* The page lays its elements over the pane; it gets no layer of its own (a search bar in it rides into the top bar). */
+:host {
+  position: relative;
+}
+
+/* Over a background: away from the screen's edges, as the overview (the class twice: over the page's own margins).
+   On a phone the page keeps its own: the pane is the whole screen there. */
+@media (min-width: 600px) {
+  :host(.app-glass-page.app-glass-page) {
+    width: calc(100% - 32px);
+    margin-top: 16px;
+    margin-bottom: 48px;
+  }
+}
+
+/* The glass pane: as large as the page, behind its elements (over the background, which is under everything), with
+   the border and radius of a panel. */
+.pane {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+}
+
+@media (max-width: 599px) {
+  /* On a phone the pane is the whole screen, over all the background (lenzi, 2026-11-14: "on mobile make the glass
+     pane on the back fullscreen covering the full background"). As tall as the screen without the browser's address
+     bar (100lvh): when the bar hides while scrolling, no strip of background shows under it. */
+  .pane {
+    position: fixed;
+    inset: 0;
+    min-height: 100lvh;
+    border: none;
+    border-radius: 0;
+  }
+}

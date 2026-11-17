@@ -10,6 +10,7 @@ import { LenziConfirmData, LenziConfirmDialog, LenziDialogs, LenziFigure, LenziS
 import { KitSave, KitServer } from '../../shared/kit-server';
 import { LiveTokens, VariableChange } from '../../shared/live-tokens';
 import { TokenDef, TokensApi } from '../../shared/tokens-api';
+import { GlassPage } from '../../shared/glass-page/glass-page';
 
 const WHEN = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
 const SHOWN = 20;
@@ -29,7 +30,7 @@ interface Shown {
  */
 @Component({
   selector: 'app-history-page',
-  imports: [LenziFigure, LenziStatusMessage, MatButtonModule, MatIconModule],
+  imports: [GlassPage, LenziFigure, LenziStatusMessage, MatButtonModule, MatIconModule],
   templateUrl: './history-page.html',
   styleUrl: './history-page.css',
 })
