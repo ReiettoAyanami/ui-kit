@@ -54,15 +54,18 @@ export class LenziAmbientLight {
   /**
    * A background's light, now: `pixels` is r, g, b, a for `width` × `height` px, the top row first;
    * `area` says where the background is on the screen; `light` is a light base colour (the light
-   * then darkens surfaces with its colour instead of brightening them).
+   * then darkens surfaces with its colour instead of brightening them); `withLamps`, the background's lamps light the
+   * surfaces' faces already: over them only `--lenzi-lit-picture-veil` of the veil (their words stay readable), along
+   * their borders all of it (2026-11-17).
    */
-  shine(source: object, pixels: Uint8Array, width: number, height: number, area: () => LenziLightArea, light = false): void {
+  shine(source: object, pixels: Uint8Array, width: number, height: number, area: () => LenziLightArea, light = false, withLamps = false): void {
     const root = this.document.defaultView?.getComputedStyle(this.document.documentElement);
     const amount = (name: string, otherwise: number) => {
       const value = parseFloat(root?.getPropertyValue(name) ?? '');
       return Number.isFinite(value) ? Math.min(1, Math.max(0, value / 100)) : otherwise;
     };
-    const veil = this.encode(pixels, width, height, amount('--lenzi-lit-veil', 0.34));
+    const share = withLamps ? amount('--lenzi-lit-picture-veil', 0.5) : 1;
+    const veil = this.encode(pixels, width, height, amount('--lenzi-lit-veil', 0.34) * share);
     const rim = veil ? this.encode(pixels, width, height, amount('--lenzi-lit-rim', 0.8)) : null;
     if (!veil || !rim) return;
     this.source = source;

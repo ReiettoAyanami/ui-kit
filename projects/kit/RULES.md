@@ -253,7 +253,9 @@ the rule says what, the variable says how much.
   component is interacting with light"): `lenziSolid`. Glass lets the light through. A shadow falls only on
   what lies under the element ("The one on the bottom shouldn't be able to cast to the one on top").
 - **A blob background's blobs are lights** for the glass over them (lenzi, 2026-11-14), gently: the words on
-  the glass stay readable.
+  the glass stay readable. **And the light behind a lit surface lies on it too** (lenzi, 2026-11-17: "the buttons on
+  top i think arent litElements or they aren't receiveing light properly": a card far from every blob was darker
+  than the glass under it): all of it along its border, `--lenzi-lit-picture-veil` of it over its words.
 - **The light lies over what an element holds**, never under its children only (lenzi, 2026-11-14: the
   selector "shouldn't ignore the light at all").
 - **How much light lies on a surface, and how dark a shadow is, is global** (`--lenzi-glow-veil`,

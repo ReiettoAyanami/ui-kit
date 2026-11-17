@@ -15,7 +15,11 @@ and color").
   over what shows, not over what it held before scrolling (2026-11-17: a scrolled panel showed its light as a box
   ending halfway down).
 - **The lamps' light too**: a glowing element near it (`lenziGlow`, see Glowing elements) lights it from the
-  side that faces it, in its colour (`--lenzi-glow-veil`, `--lenzi-glow-rim`).
+  side that faces it, in its colour (`--lenzi-glow-veil`, `--lenzi-glow-rim`). A background whose blobs are lamps (a
+  scene) gives both: its blobs light the surfaces from their side, and the light behind each surface lies along its
+  border whole and over its colour as `--lenzi-lit-picture-veil` says (lenzi, 2026-11-17: "the buttons on top i think
+  arent litElements or they aren't receiveing light properly"; with the lamps alone a card far from every blob was
+  half as bright as the glass under it).
 - **Nothing is read from the GPU** while no surface is lit.
 - **Reduce transparency** (the kit's `LenziAppearance`, or the system's) makes lit surfaces solid and unlit.
 
@@ -39,6 +43,7 @@ and color").
 | variable | `--lenzi-lit-glass` | `46%`: how much of its colour a lit surface keeps |
 | variable | `--lenzi-lit-veil` | `34%`: the light over it |
 | variable | `--lenzi-lit-rim` | `80%`: the light along its border |
+| variable | `--lenzi-lit-picture-veil` | `50%`: under a background with lamps, how much of the veil the light behind gives (the border all of it) |
 | variable | `--lenzi-lit-surface` | its colour (unset: `--mat-sys-surface`) |
 
 ## Example

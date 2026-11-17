@@ -446,14 +446,19 @@ export abstract class LenziGlowBackground implements OnChanges {
 
   /**
    * The background's objects as lights for the page's surfaces (lenzi, 2026-11-14: the blobs' light
-   * "should act more like this on the glass surfaces"), in the space's px; null: the background lights
-   * them with its picture instead (LenziAmbientLight).
+   * "should act more like this on the glass surfaces"), in the space's px, lighting them from their side;
+   * null: none. Every background lights them with its picture too (LenziAmbientLight).
    */
   protected lamps(): LenziSourceLamp[] | null {
     return null;
   }
 
-  /** The light of the picture just drawn, for the page's lit surfaces. */
+  /**
+   * The light of the picture just drawn, for the page's lit surfaces: its lamps' (from their side, by distance) and
+   * the picture behind each surface (lenzi, 2026-11-17: "the buttons on top i think arent litElements or they aren't
+   * receiveing light properly": with the lamps alone, a card far from every blob took next to none, darker than the
+   * glass it lay on).
+   */
   private shine(now: number, always = false): void {
     const engine = this.engine;
     if (!engine) return;
@@ -471,12 +476,12 @@ export abstract class LenziGlowBackground implements OnChanges {
         this,
         lamps.map((lamp) => ({ ...lamp, left: lamp.left + box.left, right: lamp.right + box.left, top: lamp.top + box.top, bottom: lamp.bottom + box.top })),
       );
-      return;
     }
+    // and the light behind each surface, a few times a second
     if (!this.ambient.wanted || (!always && now - this.lastLight < LIGHT_EVERY)) return;
     this.lastLight = now;
     this.shining = true;
-    this.ambient.shine(this, engine.readLight(), LIGHT_WIDTH, LIGHT_HEIGHT, () => this.host.getBoundingClientRect(), luminance(this.baseColour) > 0.4);
+    this.ambient.shine(this, engine.readLight(), LIGHT_WIDTH, LIGHT_HEIGHT, () => this.host.getBoundingClientRect(), luminance(this.baseColour) > 0.4, !!lamps);
   }
 
   private moving(): boolean {
