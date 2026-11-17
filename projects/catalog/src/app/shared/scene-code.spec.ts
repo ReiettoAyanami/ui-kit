@@ -1,3 +1,5 @@
+import { STRONGEST_CURRENT } from '@lenzi/ui-kit/backgrounds';
+
 import { HOME_SCENE } from '../scenes';
 import { SCENE_LIMITS, cleanScene, sceneFromCode, sceneToCode } from './scene-code';
 
@@ -53,7 +55,7 @@ describe('a scene in a link', () => {
           'river',
         ],
       })!.currents,
-    ).toEqual([{ points: [{ x: 0, y: 0.5 }, { x: 0.5, y: 1 }], strengths: [600], width: 0.4 }]);
+    ).toEqual([{ points: [{ x: 0, y: 0.5 }, { x: 0.5, y: 1 }], strengths: [STRONGEST_CURRENT], width: 0.4 }]);
     expect(scene.name).toBe('Mine');
     expect(scene.blobs.length).toBe(SCENE_LIMITS.blobs);
     expect(scene.blobs[0]).toEqual({ material: 'lamp', size: 0.5 });

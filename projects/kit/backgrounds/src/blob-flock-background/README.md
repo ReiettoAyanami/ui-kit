@@ -53,8 +53,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   pushed less; its own material melts into it, the flocks keep their rules). Given, it is
   the blobs; without it, `blobs`, `materials`, `blobSizes` and `blobLayers` as before. A fleet takes `colour`,
   `colours`, `tint` and `emitting` too.
-- **Currents** (`currents`, `LenziCurrent`: points, each segment's push, a reach): near a segment the boids are
-  pushed along it (`Boids.setFlow`) and the blobs drift with it (`BlobDrift`). The blob background takes them too.
+- **Currents** (`currents`, `LenziCurrent`: points, each segment's push up to `STRONGEST_CURRENT`, a reach): near a
+  segment the boids are turned along it and carried by it past their own top speed (`Boids.setFlow`,
+  `Boids.carriedX`/`carriedY`) and the blobs drift with it (`BlobDrift`). The blob background takes them too.
 - **Levels kept apart**: one field per level (up to four), drawn from the lowest up: blobs of one material on two
   levels do not melt, the higher drawn over the lower. A solid thing without a colour is in its tint, not the
   page's colour (2026-11-15: "solid shouldn't be trasparent"). The light is drawn level by level too: each level's

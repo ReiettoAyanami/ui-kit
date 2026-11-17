@@ -272,8 +272,8 @@
           @case ('current') {
             @if (chosenCurrent(); as current) {
               <p class="hint">
-                Near its line, blobs and boids are pushed along each segment, the way its arrow points. Drag its points on the
-                scene (paused) to bend it.
+                Near its line, blobs and boids are carried along each segment, the way its arrow points: the stronger its push,
+                the faster, boids even past their own top speed. Drag its points on the scene (paused) to bend it.
               </p>
               <p class="label">Reach (share of the screen, each side of its line)</p>
               <div class="number">
@@ -286,7 +286,7 @@
               @for (segment of segmentsOf(current); track segment.index) {
                 <p class="label">Segment {{ segment.index + 1 }}</p>
                 <div class="number">
-                  <mat-slider min="0" max="600" step="10">
+                  <mat-slider min="0" [max]="strongestCurrent" step="10">
                     <input matSliderThumb [value]="strengthOf(current, segment.index)" [attr.aria-label]="'Segment ' + (segment.index + 1) + ' push'" (valueChange)="setStrength(segment.index, $event)" />
                   </mat-slider>
                   <span class="value">{{ strengthOf(current, segment.index) }}</span>

@@ -57,9 +57,10 @@ contenente boidi, blob, boidi-blob").
   `transparency` (how much shows through against its own body, itself lit). Within a level: lamps, solids, glass.
 - **Currents** (`currents`; lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue
   forze indipendenti) che instrada i boidi e i blob verso la direzione del segmento (tipo una corrente marina)"):
-  points (shares of the space), each segment's push (`strengths`, px/s²), a reach (`width`). Near a segment the
-  boids are pushed along it and the blobs drift with it (a blob that stays put not at all, a heavy one less); out
-  on one side, back on the other.
+  points (shares of the space), each segment's push (`strengths`, px/s², up to `STRONGEST_CURRENT`, 2000), a reach
+  (`width`). Near a segment the boids are turned along it and carried by it, past their own top speed (about half
+  the push, as px/s, on top of their flight; 2026-11-17, "a stronger push"), and the blobs drift with it (a blob that
+  stays put not at all, a heavy one less); out on one side, back on the other.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
   simulation"): no fleets, the blobs still on their places, nothing thrown, nothing carried by a current (a blob
   is drawn exactly where the scene puts it, whatever happened while it played; it plays on from there).

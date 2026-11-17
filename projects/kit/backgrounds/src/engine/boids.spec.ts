@@ -1,4 +1,5 @@
 import { Boids, BoidsSettings, MAX_BOIDS } from './boids';
+import { STRONGEST_CURRENT, currentsFlow } from './currents';
 
 /** A flock with every rule off, so a test turns on the one it is about. */
 const QUIET: Partial<BoidsSettings> = { separation: 0, alignment: 0, cohesion: 0, follow: 'none', wander: 0, minSpeed: 0, viewAngle: 360 };
@@ -228,6 +229,42 @@ describe('a flock of boids', () => {
     run(turning, 3);
     expect(turning.x[0]!).toBeLessThan(400);
     expect(turning.vx[0]!).toBeLessThan(0);
+  });
+
+  it('a strong current carries a boid past its own top speed; out of it, that slows down', () => {
+    // 2026-11-17, "a stronger push": a boid's own speed is capped, what the current carries it at is not
+    const flock = new Boids({ ...QUIET, count: 1, maxSpeed: 120 }, 100000, 1000);
+    place(flock, [[1000, 500, 0, 120]]);
+    const strongest = currentsFlow([{ points: [{ x: 0, y: 0.5 }, { x: 1, y: 0.5 }], strengths: [STRONGEST_CURRENT], width: 0.2 }], 100000, 1000)!;
+    flock.setFlow(strongest);
+    run(flock, 2);
+    const from = flock.x[0]!;
+    run(flock, 1);
+    // its own 120 px/s and about half the push carried on top
+    expect(flock.x[0]! - from).toBeGreaterThan(120 + STRONGEST_CURRENT * 0.4);
+    expect(Math.hypot(flock.vx[0]!, flock.vy[0]!)).toBeLessThanOrEqual(120.01);
+    flock.setFlow(null);
+    run(flock, 2);
+    expect(flock.carriedX[0]!).toBeLessThan(STRONGEST_CURRENT * 0.05);
+  });
+
+  it('a current carries a boid neither through an edge nor into an obstacle', () => {
+    const edged = new Boids({ ...QUIET, count: 1, edges: 'avoid', maxSpeed: 100 }, 400, 400);
+    place(edged, [[200, 200, 100, 0]]);
+    edged.setFlow(() => [STRONGEST_CURRENT, 0]);
+    run(edged, 3);
+    expect(edged.x[0]!).toBeLessThanOrEqual(400);
+
+    const flock = new Boids({ ...QUIET, count: 1, minSpeed: 100, maxSpeed: 120 }, 2000, 600);
+    place(flock, [[100, 305, 120, 0]]);
+    flock.setObstacles([{ x: 500, y: 300, radius: 120 }]);
+    flock.setFlow(() => [800, 0]);
+    let closest = Infinity;
+    for (let step = 0; step < 60 * 4; step++) {
+      flock.step(1 / 60);
+      closest = Math.min(closest, Math.hypot(flock.x[0]! - 500, flock.y[0]! - 300));
+    }
+    expect(closest).toBeGreaterThanOrEqual(120 - 0.01);
   });
 
   it('new settings keep the boids that are there; a new size keeps their place in proportion', () => {

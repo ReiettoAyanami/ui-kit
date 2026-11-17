@@ -1,7 +1,8 @@
 // Currents (lenzi, 2026-11-14: "vorrei che i boidi possano seguire una corrente (definita da una serie di segmenti,
 // con ognuno le sue forze indipendenti) che instrada i boidi e i blob verso la direzione del segmento (tipo una
 // corrente marina)"): a line of segments; near a segment, things are pushed along it, by that segment's own strength,
-// less the farther they are from its line. Pure numbers. A plain module (no schematic makes one).
+// less the farther they are from its line, and carried by it (boids past their own top speed, `Boids.setFlow`).
+// Pure numbers. A plain module (no schematic makes one).
 
 /** A current: its points in order (each a share of the space, 0 to 1 each way), a segment between each two. */
 export interface LenziCurrent {
@@ -13,6 +14,12 @@ export interface LenziCurrent {
 }
 
 export const DEFAULT_CURRENT = { strength: 160, width: 0.08 } as const;
+
+/**
+ * The strongest push a segment may have, px/s² (lenzi, 2026-11-17: "make the currents so that their configuration
+ * allows for a stronger push"; it was 600). Boids are carried too, past their own top speed (`Boids.setFlow`).
+ */
+export const STRONGEST_CURRENT = 2000;
 
 /** How much of a current's push a blob takes (it is heavier than a boid), and how fast its drift slows, per second. */
 const BLOB_SHARE = 0.35;

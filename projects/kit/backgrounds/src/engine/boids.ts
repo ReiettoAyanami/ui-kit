@@ -123,6 +123,12 @@ const MOST_SPEED = 1.15;
 export const MAX_BOIDS = 4000;
 
 /**
+ * How fast what a current carries a boid slows, per second: its push builds it up, so in a steady current a boid is
+ * carried at half the push (px/s², as px/s) on top of its own flight, past its own top speed.
+ */
+const CARRY_DRAG = 2;
+
+/**
  * A round obstacle, CSS px (lenzi, 2026-11-14: "a background that is the combination of flocks and blobs
  * the latter being a obstacle for the flocks").
  */
@@ -154,6 +160,9 @@ export class Boids {
   y = new Float32Array(0);
   vx = new Float32Array(0);
   vy = new Float32Array(0);
+  /** What a current carries each boid at, px/s, on top of its own flight (`vx`, `vy`, its heading): 0 with none. */
+  carriedX = new Float32Array(0);
+  carriedY = new Float32Array(0);
   /** Each boid's own number, 0..1, drawn once: what makes it a little different (its size). */
   own = new Float32Array(0);
   /** Each boid's size, times the flock's: its own number spread by `sizeVariety`; a leader `leaderSize`. */
@@ -239,7 +248,11 @@ export class Boids {
     this.target = target;
   }
 
-  /** A push at every place, px/s² (currents: lenzi, 2026-11-14, "una corrente ... che instrada i boidi"), or none. */
+  /**
+   * A push at every place, px/s² (currents: lenzi, 2026-11-14, "una corrente ... che instrada i boidi"), or none. It
+   * turns the boids its way, and carries them along, like water, past their own top speed (2026-11-17: "a stronger
+   * push"): in a steady push p a boid is carried at p / 2 px/s more; out of it, that slows down within a second or so.
+   */
   setFlow(flow: ((x: number, y: number) => readonly [number, number]) | null): void {
     this.flow = flow;
   }
@@ -291,6 +304,8 @@ export class Boids {
     this.y = grow(this.y);
     this.vx = grow(this.vx);
     this.vy = grow(this.vy);
+    this.carriedX = grow(this.carriedX);
+    this.carriedY = grow(this.carriedY);
     this.own = grow(this.own);
     const speed = (this.settings.minSpeed + this.settings.maxSpeed) / 2;
     const origin = this.settings.origin;
@@ -326,7 +341,7 @@ export class Boids {
     const s = this.settings;
     const n = this.count;
     if (n === 0 || dt <= 0) return;
-    const { x, y, vx, vy, ax, ay, width, height } = this;
+    const { x, y, vx, vy, carriedX, carriedY, ax, ay, width, height } = this;
     const wrap = s.edges === 'wrap';
     const scales = this.scales;
     // a boid's size sets how fast it flies and how far it sees its flock: the small ones a little slower,
@@ -529,18 +544,23 @@ export class Boids {
         else if (py > height - margin) steer(0, -1, (py - (height - margin)) / margin + 0.5);
       }
       if (this.flow) {
-        // a current carries it along (its push added to its own steering)
-        const [cx, cy] = this.flow(px, py);
-        fx += cx;
-        fy += cy;
+        // a current turns it its way (its push added to its own steering) and carries it along, past its top speed
+        const [wx, wy] = this.flow(px, py);
+        fx += wx;
+        fy += wy;
+        carriedX[i] = carriedX[i]! + wx * dt;
+        carriedY[i] = carriedY[i]! + wy * dt;
       }
       ax[i] = fx;
       ay[i] = fy;
       this.arrived[i] = arrived ? 1 : 0;
     }
 
-    // 3. the move: each as fast as its size lets it
+    // 3. the move: each as fast as its size lets it, and what a current carries it at on top
+    const slowing = Math.exp(-CARRY_DRAG * dt);
     for (let i = 0; i < n; i++) {
+      const carryX = (carriedX[i] = carriedX[i]! * slowing);
+      const carryY = (carriedY[i] = carriedY[i]! * slowing);
       const fastest = Math.max(1, s.maxSpeed) * speedOf(i);
       const slowest = Math.min(fastest, Math.max(0, s.minSpeed) * speedOf(i));
       let nvx = vx[i]! + ax[i]! * dt;
@@ -556,20 +576,22 @@ export class Boids {
       }
       vx[i] = nvx;
       vy[i] = nvy;
-      let nx = x[i]! + nvx * dt;
-      let ny = y[i]! + nvy * dt;
+      let nx = x[i]! + (nvx + carryX) * dt;
+      let ny = y[i]! + (nvy + carryY) * dt;
       if (wrap) {
         nx = ((nx % width) + width) % width;
         ny = ((ny % height) + height) % height;
       } else {
         // a boid that still reaches an edge (flying straight at it, it can only brake, and it never
-        // flies slower than its slowest) bounces off it
+        // flies slower than its slowest) bounces off it; the edge stops what a current carries it at, that way
         if (nx <= 0 || nx >= width) {
           vx[i] = nx <= 0 ? Math.abs(nvx) : -Math.abs(nvx);
+          carriedX[i] = 0;
           nx = Math.min(width, Math.max(0, nx));
         }
         if (ny <= 0 || ny >= height) {
           vy[i] = ny <= 0 ? Math.abs(nvy) : -Math.abs(nvy);
+          carriedY[i] = 0;
           ny = Math.min(height, Math.max(0, ny));
         }
       }
@@ -587,6 +609,12 @@ export class Boids {
           if (inward < 0) {
             vx[i] = vx[i]! - inward * ux;
             vy[i] = vy[i]! - inward * uy;
+          }
+          // nor is it carried into it: along its edge instead
+          const carriedIn = carriedX[i]! * ux + carriedY[i]! * uy;
+          if (carriedIn < 0) {
+            carriedX[i] = carriedX[i]! - carriedIn * ux;
+            carriedY[i] = carriedY[i]! - carriedIn * uy;
           }
         }
       }

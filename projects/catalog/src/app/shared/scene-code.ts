@@ -1,7 +1,7 @@
 // A scene in a link and back (lenzi, 2026-11-14: "Voglio che peró una scena sia ricreabile tramite un link
 // (corto) condivisibile e iframe"): the scene's JSON, deflated, in base64url; read back, everything in it is
 // checked and kept within bounds (a link comes from anyone). A plain module (no schematic makes one).
-import { BLOB_SHAPE_NAMES, BlobMaterial, BlobShapeName, BoidsFollow, LenziCurrent, LenziScene, LenziSceneBlob, LenziSceneFleet } from '@lenzi/ui-kit/backgrounds';
+import { BLOB_SHAPE_NAMES, BlobMaterial, BlobShapeName, BoidsFollow, LenziCurrent, LenziScene, LenziSceneBlob, LenziSceneFleet, STRONGEST_CURRENT } from '@lenzi/ui-kit/backgrounds';
 
 /** How much a scene may hold: what a phone and a page can carry. */
 export const SCENE_LIMITS = { blobs: 16, fleets: 8, perFleet: 1000, name: 60, colours: 6, currents: 4, points: 12 } as const;
@@ -96,7 +96,7 @@ export function cleanScene(raw: unknown): LenziScene | null {
         .filter((point): point is Record<string, unknown> => point !== null && isNumber(point['x']) && isNumber(point['y']))
         .slice(0, SCENE_LIMITS.points)
         .map((point) => ({ x: clamp(point['x'] as number, [0, 1]), y: clamp(point['y'] as number, [0, 1]) }));
-      const strengths = (Array.isArray(current['strengths']) ? current['strengths'] : []).filter(isNumber).slice(0, Math.max(0, points.length - 1)).map((strength) => clamp(strength, [0, 600]));
+      const strengths = (Array.isArray(current['strengths']) ? current['strengths'] : []).filter(isNumber).slice(0, Math.max(0, points.length - 1)).map((strength) => clamp(strength, [0, STRONGEST_CURRENT]));
       return {
         points,
         ...(strengths.length ? { strengths } : {}),

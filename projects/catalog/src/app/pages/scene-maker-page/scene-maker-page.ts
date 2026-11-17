@@ -33,6 +33,7 @@ import {
   LenziSceneFleetKind,
   DEFAULT_CURRENT,
   LenziCurrent,
+  STRONGEST_CURRENT,
   blobOutline,
 } from '@lenzi/ui-kit/backgrounds';
 
@@ -232,6 +233,7 @@ export class SceneMakerPage {
   protected readonly materialNames = MATERIAL_NAMES;
   protected readonly layerOf = layerOf;
   protected readonly defaultCurrent = DEFAULT_CURRENT;
+  protected readonly strongestCurrent = STRONGEST_CURRENT;
   protected readonly shapeChoices = SHAPE_CHOICES;
   protected readonly bodyOf = bodyOf;
   protected readonly emitsOf = emitsOf;
