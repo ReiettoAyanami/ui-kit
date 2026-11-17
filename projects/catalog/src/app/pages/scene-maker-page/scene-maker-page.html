@@ -131,17 +131,20 @@
         }
       </div>
 
+      <!-- what the pointer does to the blobs while the scene plays, always at hand (lenzi, 2026-11-17: "fai in modo che sia
+           sempre configurabile, dal pannello generale non solo quando non c'é") -->
+      <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
+
       <mat-action-list aria-label="The scene's objects">
         @for (item of objects(); track $index) {
-          <!-- a row: the object (a click opens its window), its level, and the button that takes it out of the scene -->
-          <div class="object">
+          <!-- a row: the object (a click opens its window), its level, and the button that takes it out of the scene; its
+               tooltip beside the whole row, not over its level and its button (2026-11-17, a screenshot of "Level 0" over them) -->
+          <div class="object" [matTooltip]="item.tooltip" matTooltipPosition="right">
             <button
               mat-list-item
               type="button"
               [activated]="isChosen(item.object)"
               [attr.aria-pressed]="isChosen(item.object)"
-              [matTooltip]="item.tooltip"
-              matTooltipPosition="right"
               (click)="choose(item.object)"
             >
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
@@ -219,7 +222,6 @@
               <mat-button-toggle value="target">Target</mat-button-toggle>
               <mat-button-toggle value="none">None</mat-button-toggle>
             </mat-button-toggle-group>
-            <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
           }
           @case ('blob') {
             @if (chosenBlob(); as blob) {
@@ -256,15 +258,6 @@
               <mat-slide-toggle class="toggle" [checked]="blob.fixed === true" (change)="setBlob({ fixed: $event.checked })">
                 It stays put (it does not wander, it cannot be thrown)
               </mat-slide-toggle>
-              <!-- a scene that throws nothing: said here, where a blob's throwing is chosen (2026-11-17: "after toggling it
-                   stays put i can't interact with any object during play", in a scene that threw no blob at all) -->
-              @if (scene().throwable !== true) {
-                <p class="hint throw-off">The pointer throws no blob in this scene: it is off in the scene's window.</p>
-                <button mat-stroked-button type="button" class="throw-on" (click)="setThrowable(true)">
-                  <mat-icon>pan_tool</mat-icon>
-                  Turn throwing on
-                </button>
-              }
               <p class="label">Weight (the heavier, the slower it turns and the less it is pushed)</p>
               <div class="number">
                 <mat-slider [min]="weights[0]" [max]="weights[1]" step="0.05">

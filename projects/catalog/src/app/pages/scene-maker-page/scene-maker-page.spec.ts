@@ -218,22 +218,28 @@ describe('SceneMakerPage', () => {
     expect(maker.scene().blobs[1]!.obstacle).toBe(false);
   });
 
-  it('a scene that throws no blob says so: on its row, and in a blob window, with a button that turns throwing on', async () => {
-    // 2026-11-17, "after toggling it stays put i can't interact with any object during play": the scene threw nothing
+  it('throwing is always at hand in the main panel, whatever window is open; the scene row says whether it throws', async () => {
+    // 2026-11-17: "after toggling it stays put i can't interact with any object during play" (the scene threw nothing),
+    // then "fai in modo che sia sempre configurabile, dal pannello generale"
     const { page, click, maker, fixture } = await open();
     const sceneRow = () => page.querySelector('mat-action-list .object [matListItemLine]')?.textContent?.trim();
+    const throwing = () => [...page.querySelectorAll<HTMLElement>('.objects mat-slide-toggle')].find((toggle) => toggle.textContent?.includes('The pointer throws the blobs'));
     expect(sceneRow()).toBe('The pointer: flee, throwing');
+    expect(throwing()).toBeDefined();
     await click('Glass blob');
-    expect(page.querySelector('.window .throw-off')).toBeNull();
+    expect(throwing()).toBeDefined();
+    // only there: not again in a window
+    expect(page.querySelector('.window')?.textContent).not.toContain('The pointer throws the blobs');
 
-    maker.scene.update((scene) => ({ ...scene, throwable: false }));
+    throwing()!.querySelector<HTMLButtonElement>('button')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
+    expect(maker.scene().throwable).toBe(false);
     expect(sceneRow()).toBe('The pointer: flee, not throwing');
-    expect(page.querySelector('.window .throw-off')?.textContent).toContain('throws no blob');
-    await click('Turn throwing on');
+    throwing()!.querySelector<HTMLButtonElement>('button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
     expect(maker.scene().throwable).toBe(true);
-    expect(page.querySelector('.window .throw-off')).toBeNull();
     expect(sceneRow()).toBe('The pointer: flee, throwing');
   });
 
