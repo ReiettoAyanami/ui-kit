@@ -103,6 +103,11 @@ export interface MaterialLook {
 
 /** The most objects the fields hold, the most lamps and solid things the shadow looks at. */
 export const MAX_MATERIAL_OBJECTS = 512;
+/**
+ * How much brighter a lamp (a solid thing that shines) is than the look's `level`, which glass that shines keeps
+ * (lenzi, 2026-11-17: "fai in modo che gli oggetti solidi ed emittenti ... siano piú luminosi").
+ */
+export const LAMP_SHINE = 2.6;
 const MAX_LAMPS = 16;
 /** A solid thing in the light: how much of its colour shows with no light on it, and how fast light brightens it. */
 const SOLID_FLOOR = 0.06;
@@ -308,7 +313,7 @@ void main() {
   }
   // the lamps: their own shape, their own colours
   vec4 c = texture(colours, vec3(uv, layer));
-  vec3 light = c.rgb / max(c.a, 1e-5) * lamps * level;
+  vec3 light = c.rgb / max(c.a, 1e-5) * lamps * level * ${LAMP_SHINE.toFixed(2)};
   // the glass that shines: the glass's shape (melted only into the glass of its level), as much as of it shines, in
   // the glass's colour; a lamp of its level is in front of that light, not added to it
   float glass = n.here.r;

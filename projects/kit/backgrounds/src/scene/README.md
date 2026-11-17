@@ -53,7 +53,9 @@ contenente boidi, blob, boidi-blob").
   their edge lit on the light's side. They are drawn into the picture before glass blurs it, so glass on their level
   or above (shining or not) shows them; opaque always. Their shadow takes all the glow behind them, with a soft edge
   (a lamp is wide: the edge is wider the farther from what casts it), and falls on solid things and glass too. A
-  solid that shines (a lamp) is far brighter. Glass has a `tint` (how much its colour filters what is seen through it) and a
+  solid that shines (a lamp) is far brighter: its light is `LAMP_SHINE` (2.6) times what glass that shines has (lenzi,
+  2026-11-17: "fai in modo che gli oggetti solidi ed emittenti ... siano piú luminosi"; it was 1, and the lamps looked
+  dull beside shining glass; the words on lit glass over a lamp are a little less clear for it). Glass has a `tint` (how much its colour filters what is seen through it) and a
   `transparency` (how much shows through against its own body, itself lit). Within a level: lamps, solids, glass.
 - **Currents** (`currents`; lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue
   forze indipendenti) che instrada i boidi e i blob verso la direzione del segmento (tipo una corrente marina)"):
