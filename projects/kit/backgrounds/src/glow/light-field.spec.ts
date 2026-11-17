@@ -129,6 +129,20 @@ describe('LenziLightField', () => {
     expect(veil(surface)).toBe('');
   });
 
+  it("a source's light along a border can be stronger than over the face (a blob: gentle on the words, whole on the edge)", () => {
+    const surface = placed(300, 0, 100, 100);
+    field.addSurface(surface);
+    const source = {};
+    field.setSourceLamps(source, [{ left: 150, top: 40, right: 200, bottom: 60, color: '#00ff00', strength: 0.2, rimStrength: 1, reach: 200 }]);
+    field.update(1);
+    const strengths = (value: string, name: string) => [...value.matchAll(new RegExp(`var\\(${name}\\) \\* ([0-9.]+)`, 'g'))].map((m) => Number(m[1]));
+    const face = Math.max(...strengths(veil(surface), '--lenzi-glow-veil'));
+    const edge = Math.max(...strengths(surface.style.getPropertyValue('--lenzi-lamps-rim'), '--lenzi-glow-rim'));
+    // the same gradient, its stops a share of each strength: the edge five times the face (1 against 0.2)
+    expect(face).toBeGreaterThan(0);
+    expect(edge / face).toBeCloseTo(5, 5);
+  });
+
   it('a shadow is the box and what is behind it, away from the light', () => {
     const shadow = shadowOf({ left: 10, top: 10, right: 20, bottom: 20 }, { x: 0, y: 15 });
     const points = shadow.length / 2;

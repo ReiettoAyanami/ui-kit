@@ -137,6 +137,12 @@ const HEAD_START = 3;
 /** How much light a blob is, and how bright as a light on the page (as the blob background's). */
 const BLOB_LIGHT = 0.5;
 const BLOB_LAMP = 0.28;
+/**
+ * How bright a lamp blob is along a lit surface's border: as a lamp of the page (lenzi, 2026-11-18: a panel beside a
+ * large lamp stayed grey along its edge, "lo stesso identico problema"). Over the surface's face it stays BLOB_LAMP,
+ * gentle, so its words stay readable.
+ */
+const BLOB_LAMP_RIM = 1;
 /** A blob-boid: its radius unless told, and how fast it flies against a boid (it is heavier). */
 const BLOB_BOID_SIZE = 11;
 const BLOB_BOID_SPEED = 0.7;
@@ -339,6 +345,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         bottom: blob.y + blob.radius,
         color: linearToHex(this.blobTint(index, tints)),
         strength: strength * BLOB_LAMP,
+        rimStrength: strength * BLOB_LAMP_RIM,
         reach: blob.radius * 2.4,
       }));
   }

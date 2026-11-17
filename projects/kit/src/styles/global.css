@@ -565,9 +565,11 @@ html {
 }
 
 /* A surface that cuts what leaves it cuts at its border's outer edge, so the light lies on its border
-   (inside it, it would look like a second outline: lenzi, 2026-11-14, "has a double outline now"). */
-.lenzi-lit.lenzi-lit-clipped,
-.lenzi-solid.lenzi-lit-clipped {
+   (inside it, it would look like a second outline: lenzi, 2026-11-14, "has a double outline now"). Over the app's
+   own `overflow: hidden` (the class twice: an app's rule of one class and its scope attribute is as strong as one
+   class twice, and comes later), or the light along its border is cut away (2026-11-18). */
+.lenzi-lit.lenzi-lit.lenzi-lit-clipped,
+.lenzi-solid.lenzi-solid.lenzi-lit-clipped {
   overflow: clip;
   overflow-clip-margin: border-box;
 }

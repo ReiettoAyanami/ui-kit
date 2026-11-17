@@ -20,6 +20,9 @@ and color").
   border whole and over its colour as `--lenzi-lit-picture-veil` says (lenzi, 2026-11-17: "the buttons on top i think
   arent litElements or they aren't receiveing light properly"; with the lamps alone a card far from every blob was
   half as bright as the glass under it).
+- **Its border takes the light only if it does not scroll itself** (2026-11-18): a surface that scrolls keeps its
+  light inside and draws no line on its border; let what it holds scroll instead. One that clips (`overflow:
+  hidden`) is cut at its border's outer edge, over the app's own rule, so the line lies on its border.
 - **Nothing is read from the GPU** while no surface is lit.
 - **Reduce transparency** (the kit's `LenziAppearance`, or the system's) makes lit surfaces solid and unlit.
 

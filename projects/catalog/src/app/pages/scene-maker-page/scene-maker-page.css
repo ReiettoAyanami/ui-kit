@@ -170,10 +170,18 @@
   padding: 0 var(--lenzi-float-gap) 24px;
 }
 
+/* A lit panel: what it holds scrolls, not the panel (lenzi, 2026-11-18, the list's edge grey beside a large lamp:
+   "lo stesso identico problema"): a surface that scrolls keeps its light inside and takes none on its border; one that
+   only clips takes it there (the kit cuts it at its border's outer edge). */
 .panel {
   pointer-events: auto;
   box-sizing: border-box;
   max-height: calc(100dvh - 2 * var(--lenzi-float-gap) - var(--lenzi-shell-bar-height, 64px) - 24px);
+  overflow: hidden;
+}
+
+.panel > mat-card-content {
+  min-height: 0;
   overflow-y: auto;
 }
 
