@@ -44,6 +44,8 @@ export interface GlowSurfaceInputs {
   ambientSize: [number, number];
   /** How much of that light is the glow on the screen (the composite's own gain). */
   lightGain: number;
+  /** How bright the objects themselves are in the picture (the frame's `core`, the composite's gain on them). */
+  core: number;
 }
 
 /**
@@ -424,7 +426,7 @@ export class GlowEngine {
     let picture = this.final;
     // what reaches a place from all around: a wide halving, but not the widest (a few pixels, it shows its steps)
     const ambient = this.bloom[Math.min(AMBIENT_LEVEL, this.bloom.length - 1)] ?? current;
-    const light = { light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height] as [number, number], lightGain: strength };
+    const light = { light: bloom.texture, ambient: ambient.texture, ambientSize: [ambient.width, ambient.height] as [number, number], lightGain: strength, core: frame.core };
     // the solid things first, into the picture: glass shows them blurred through itself
     if (layers.solids) {
       this.into(this.solided);

@@ -104,10 +104,18 @@ export interface MaterialLook {
 /** The most objects the fields hold, the most lamps and solid things the shadow looks at. */
 export const MAX_MATERIAL_OBJECTS = 512;
 /**
- * How much brighter a lamp (a solid thing that shines) is than the look's `level`, which glass that shines keeps
- * (lenzi, 2026-11-17: "fai in modo che gli oggetti solidi ed emittenti ... siano piú luminosi").
+ * How much more light a lamp (a solid thing that shines) sheds than the look's `level`, which glass that shines keeps
+ * (lenzi, 2026-11-17: "fai in modo che gli oggetti solidi ed emittenti ... siano piú luminosi"): its glow, and the
+ * light it sheds on what is round it.
  */
 export const LAMP_SHINE = 2.6;
+/**
+ * How much light a lamp's body shows as, at `brightness` 1: its own colour, all but full (about 95% of it, a little
+ * more towards its middle), as a light that is on (lenzi, 2026-11-17: "sono ancora colorate troppo scure ... devono
+ * essere piú vibrant, cosí sono proprio spente"). Its body only: the light it sheds stays `LAMP_SHINE`'s. A lamp's light
+ * alone, through the picture's curve (more light, more of its colour, never white), left it at about 70%.
+ */
+export const LAMP_BODY = 3.5;
 const MAX_LAMPS = 16;
 /** A solid thing in the light: how much of its colour shows with no light on it, and how fast light brightens it. */
 const SOLID_FLOOR = 0.06;
@@ -415,8 +423,21 @@ uniform sampler2D picture;
 uniform int layers;
 uniform sampler2DArray weights;
 uniform sampler2DArray solidTints;
+uniform sampler2DArray colours;   // the lamps' colours by share (a little brighter towards their middle), their shares
+uniform float lampLight;          // how much light a lamp is, as the light pass adds it (the look's level × LAMP_SHINE)
+uniform float core;               // the picture's gain on the objects themselves
 out vec4 color;
 ${SURFACE_LIGHT}
+// a lamp's body as a light that is on: its own colour, all but full (lenzi, 2026-11-17: "devono essere piú vibrant, cosí
+// sono proprio spente"). The picture shows a lamp as its light, which is also its glow and the light it sheds round it:
+// what its body lacks of that is added here, to its body only, over what the picture made of its light (so what flies
+// over it still shows)
+vec3 lampLift(float layer) {
+  vec4 k = texture(colours, vec3(uv, layer));
+  if (k.a <= 1e-5) return vec3(0.0);
+  vec3 own = k.rgb / k.a;
+  return max(shine(own * ${LAMP_BODY.toFixed(2)} * core) - shine(own * lampLight * core), vec3(0.0));
+}
 void main() {
   // the picture: where a lamp is, the lamp as it is drawn, with what flies over it
   vec3 shown = decode(texture(picture, uv).rgb);
@@ -427,8 +448,9 @@ void main() {
     float layer = float(i);
     Near n = nearAt(weights, layer);
     vec4 w = n.here;
-    // a level's lamps cover the solid things of the levels under it: the picture again there
-    c = mix(c, shown, lampCover(n, lampSoft));
+    // a level's lamps cover the solid things of the levels under it: the picture again there, the lamp's body lit up
+    float cover = lampCover(n, lampSoft);
+    if (cover > 0.0) c = mix(c, shown + lampLift(layer), cover);
     Edge solid = edgeOf(w.g, slopeOf(n.east.g, n.west.g, n.north.g, n.south.g));
     vec3 albedo = texture(solidTints, vec3(uv, layer)).rgb / max(w.g, 1e-6);
     if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, l), solid.fill);
@@ -647,6 +669,8 @@ export class MaterialScene {
   /** This frame's light on the solid faces, or null (not drawn yet, or nothing solid). */
   private faced: WebGLTexture | null = null;
   private has = { lamp: false, glass: false, solid: false };
+  /** Whether some lamp (a solid thing that shines, not glass) is there: its body is lit up in the solids pass. */
+  private bodies = false;
   private shadowed = false;
 
   constructor(private readonly engine: GlowEngine) {
@@ -678,6 +702,7 @@ export class MaterialScene {
     this.objects = objects.slice(0, MAX_MATERIAL_OBJECTS);
     this.look = look;
     this.has = { lamp: false, glass: false, solid: false };
+    this.bodies = this.objects.some((object) => object.material === 'lamp');
     for (const object of this.objects) {
       this.has[object.material] = true;
       if (shines(object)) this.has.lamp = true;
@@ -802,16 +827,17 @@ export class MaterialScene {
   }
 
   /**
-   * The solid things into the finished picture, before glass blurs it: lit by the light round them, every level's;
-   * false when there are none.
+   * The solid things into the finished picture, before glass blurs it: lit by the light round them, every level's; and
+   * the lamps' bodies lit up to their own colour (so glass shows them so too). False when there are neither.
    */
   drawSolids(inputs: GlowSurfaceInputs): boolean {
     const look = this.look;
     const fields = this.fields;
-    if (!this.has.solid || !look || !fields) return false;
+    if ((!this.has.solid && !this.bodies) || !look || !fields) return false;
     const engine = this.engine;
     const gl = engine.gl;
-    this.drawFace(inputs, fields);
+    // the light on the solid faces: only when there is something solid
+    if (this.has.solid) this.drawFace(inputs, fields);
     const program = this.solidPass;
     gl.useProgram(program);
     engine.useTexture(program, 'picture', inputs.picture, 0);
@@ -821,6 +847,10 @@ export class MaterialScene {
     this.useLayers(program, 'solidTints', fields.solid, 4);
     gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
     this.lightUniforms(program, inputs, look, 5);
+    // the lamps' colours, and how the light pass and the picture made their light: what their bodies lack is added
+    this.useLayers(program, 'colours', fields.colours, 7);
+    gl.uniform1f(engine.uniform(program, 'lampLight'), look.level * LAMP_SHINE);
+    gl.uniform1f(engine.uniform(program, 'core'), inputs.core);
     engine.fullscreen();
     return true;
   }

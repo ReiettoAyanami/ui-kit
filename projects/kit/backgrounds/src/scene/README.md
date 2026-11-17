@@ -55,7 +55,10 @@ contenente boidi, blob, boidi-blob").
   (a lamp is wide: the edge is wider the farther from what casts it), and falls on solid things and glass too. A
   solid that shines (a lamp) is far brighter: its light is `LAMP_SHINE` (2.6) times what glass that shines has (lenzi,
   2026-11-17: "fai in modo che gli oggetti solidi ed emittenti ... siano piú luminosi"; it was 1, and the lamps looked
-  dull beside shining glass; the words on lit glass over a lamp are a little less clear for it). Glass has a `tint` (how much its colour filters what is seen through it) and a
+  dull beside shining glass; the words on lit glass over a lamp are a little less clear for it). Its body shows its own
+  colour all but full, a little more towards its middle (`LAMP_BODY`; lenzi, 2026-11-17: "sono ancora colorate troppo
+  scure ... devono essere piú vibrant, cosí sono proprio spente"): its light alone, through the picture's curve, left it
+  at about 70% of its colour. Only its body: the light it sheds round it stays `LAMP_SHINE`'s. Glass has a `tint` (how much its colour filters what is seen through it) and a
   `transparency` (how much shows through against its own body, itself lit). Within a level: lamps, solids, glass.
 - **Currents** (`currents`; lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue
   forze indipendenti) che instrada i boidi e i blob verso la direzione del segmento (tipo una corrente marina)"):
