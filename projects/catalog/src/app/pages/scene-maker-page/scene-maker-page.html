@@ -131,10 +131,6 @@
         }
       </div>
 
-      <!-- what the pointer does to the blobs while the scene plays, always at hand (lenzi, 2026-11-17: "fai in modo che sia
-           sempre configurabile, dal pannello generale non solo quando non c'é") -->
-      <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
-
       <mat-action-list aria-label="The scene's objects">
         @for (item of objects(); track $index) {
           <!-- a row: the object (a click opens its window), its level, and the button that takes it out of the scene; its
@@ -180,6 +176,11 @@
           Add a current
         </button>
       </div>
+
+      <!-- what the pointer does to the blobs while the scene plays: in the main panel, at its foot, always there (lenzi,
+           2026-11-17: "fai in modo che sia sempre configurabile, dal pannello generale non solo quando non c'é", then
+           "dev'essere nel pannello generale, non in quello dei blob", an arrow at the panel's foot) -->
+      <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
     </mat-card-content>
   </mat-card>
 

@@ -226,6 +226,9 @@ describe('SceneMakerPage', () => {
     const throwing = () => [...page.querySelectorAll<HTMLElement>('.objects mat-slide-toggle')].find((toggle) => toggle.textContent?.includes('The pointer throws the blobs'));
     expect(sceneRow()).toBe('The pointer: flee, throwing');
     expect(throwing()).toBeDefined();
+    // at the panel's foot, after the buttons that add (lenzi's arrow)
+    expect(throwing()!.previousElementSibling?.textContent).toContain('Add a current');
+    expect(throwing()!.nextElementSibling).toBeNull();
     await click('Glass blob');
     expect(throwing()).toBeDefined();
     // only there: not again in a window
