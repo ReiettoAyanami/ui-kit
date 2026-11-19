@@ -220,9 +220,13 @@ export class LenziCat {
   protected readonly aspect = CAT_ASPECT;
   protected readonly shape = computed(() => CAT_BACKS[this.back()] ?? CAT_BACKS.plain);
   protected readonly mask = computed(() => MASKS[this.back()] ?? MASKS.plain);
-  /** Liquid glass at the cat's size: a bezel a fourteenth of its width, as thick as a sixth (a thin ear stays clear). */
-  protected readonly liquidBezel = computed(() => Math.max(5, Math.round(this.size() / 14)));
-  protected readonly liquidThickness = computed(() => Math.max(10, Math.round(this.size() / 6)));
+  /**
+   * Liquid glass at the cat's size: a bezel a sixth of its width, as thick as a third, a round profile (lenzi,
+   * 2026-11-19: "l'effetto mi sa che é un po' debole"). A squircle bends most at the very edge, under the cat's thick
+   * lines; a round bezel this wide bends most just inside them (about 13 px in at 320 px) and still much farther in.
+   */
+  protected readonly liquidBezel = computed(() => Math.max(6, Math.round(this.size() / 6)));
+  protected readonly liquidThickness = computed(() => Math.max(12, Math.round(this.size() / 3)));
   protected readonly face = computed(() => {
     const expression = this.expression();
     if (expression === 'none') return null;

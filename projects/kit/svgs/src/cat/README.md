@@ -24,8 +24,9 @@ traced into vectors, in the theme's colours.
   - `plain`: the page's surface, a little lighter than the page (`--lenzi-cat-fill`).
   - `glass`: a lit surface (`lenziLit`): the background and the lamps' light show through it. With
     `glass="liquid"` (lenzi, 2026-11-19: "metti un toggle per liquidglass") it is Liquid Glass instead
-    (`lenziLiquidGlass`): clear, it bends what is behind it near the cat's own outline (a bezel a fourteenth of its
-    width). Chromium only bends.
+    (`lenziLiquidGlass`): clear, it bends what is behind it near the cat's own outline: a round bezel a sixth of its
+    width, as thick as a third, so it bends most just inside its thick lines ("l'effetto mi sa che é un po'
+    debole": a squircle bent most under them). Chromium only bends.
   - `lamp`: a glowing element (`lenziGlow`): its lines glow in its colour (`glowColor`), and it lights the
     lit surfaces around it (`glowStrength`, `glowReach`, as `lenziGlow`).
   - `solid`: a solid element (`lenziSolid`): on a lit floor it casts the cat's shadow, not a box's: its
