@@ -1,6 +1,7 @@
 import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, inject, input, numberAttribute } from '@angular/core';
 
-import { LenziGlassSurface, liquidGlassMaps } from './liquid-glass-maps';
+import { LenziSights } from '../sights/sights';
+import { LenziGlassSurface, RIM_ANGLES, liquidGlassMaps } from './liquid-glass-maps';
 
 let made = 0;
 const SVG = 'http://www.w3.org/2000/svg';
@@ -16,8 +17,10 @@ function refracts(view: Window | null): boolean {
  * chiama appunto LenziLiquidGlass diverso dal classico vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo";
  * the way: kube.io, "Liquid Glass in the Browser"). Not the kit's glass (`lenziLit`, a frosted pane with a border):
  * a clear slab with a curved bezel that bends what is behind it near its edge (refraction, an SVG filter as its
- * backdrop-filter), a little blur and saturation, and a rim of light only on its very edge, where it faces the light.
- * No border. Chromium bends; other browsers get the blur only.
+ * backdrop-filter), a little blur and saturation, and a rim of light only on its very edge. No border. The rim is lit
+ * by the boids of a flock behind (lenzi: "quelli devono esserci solo quando i boidi ci si avvicinano"): none while none
+ * is near, brighter the more come, on the side they come from, all round once they are under it
+ * (`LenziSights.around`). Chromium bends; other browsers get the blur only.
  */
 @Directive({
   selector: '[lenziLiquidGlass]',
@@ -40,14 +43,21 @@ export class LenziLiquidGlass {
   readonly saturation = input(1.5, { transform: numberAttribute });
   /** How bright the rim is, 0 to 1. */
   readonly rim = input(0.5, { transform: numberAttribute });
-  /** Where the rim's light comes from, degrees (-90: from the top). */
+  /** Where the rim's light comes from with no flock to light it, degrees (-90: from the top). */
   readonly lightAngle = input(-60, { transform: numberAttribute });
+  /** How many boids near the glass light its rim whole. */
+  readonly rimBoids = input(60, { transform: numberAttribute });
 
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly document = inject(DOCUMENT);
   private readonly id = `lenzi-liquid-glass-${++made}`;
+  private readonly sights = inject(LenziSights);
   private svg: SVGSVGElement | null = null;
   private size = '';
+  /** The rim pictures (data URLs) by side, the last from all round; which is shown, and how bright. */
+  private rims: string[] = [];
+  private shownRim = -1;
+  private shownSlope = '';
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -61,9 +71,17 @@ export class LenziLiquidGlass {
       this.build();
       const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(later) : null;
       resize?.observe(this.element);
+      // the rim, lit by the boids near the glass, at every frame
+      let lighting: number | null = null;
+      const light = () => {
+        this.light();
+        lighting = view?.requestAnimationFrame(light) ?? null;
+      };
+      light();
       destroyRef.onDestroy(() => {
         resize?.disconnect();
         if (frame !== null) view?.cancelAnimationFrame(frame);
+        if (lighting !== null) view?.cancelAnimationFrame(lighting);
         this.svg?.remove();
         this.element.style.removeProperty('backdrop-filter');
       });
@@ -90,13 +108,16 @@ export class LenziLiquidGlass {
       surface: this.surface(),
       lightAngle: this.lightAngle(),
     });
-    const picture = (data: Uint8ClampedArray) => {
+    const picture = (data: Uint8ClampedArray): string => {
       const canvas = this.document.createElement('canvas');
       canvas.width = maps.width;
       canvas.height = maps.height;
       canvas.getContext('2d')?.putImageData(new ImageData(new Uint8ClampedArray(data), maps.width, maps.height), 0, 0);
       return canvas.toDataURL();
     };
+    this.rims = maps.rims.map((rim) => picture(rim.data));
+    this.shownRim = this.rims.length - 1;
+    this.shownSlope = '';
     const svg = this.svg ?? (this.document.createElementNS(SVG, 'svg') as SVGSVGElement);
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('width', '0');
@@ -111,8 +132,8 @@ export class LenziLiquidGlass {
   <feDisplacementMap in="SourceGraphic" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
   <feGaussianBlur in="bent" stdDeviation="${Math.max(0, this.blur())}" result="soft"/>
   <feColorMatrix in="soft" type="saturate" values="${saturation}" result="glass"/>
-  <feImage href="${picture(maps.specular)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="light"/>
-  <feComponentTransfer in="light" result="rim"><feFuncA type="linear" slope="${Math.max(0, this.rim())}"/></feComponentTransfer>
+  <feImage class="lenzi-liquid-glass-rim" href="${this.rims[this.rims.length - 1]}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="light"/>
+  <feComponentTransfer in="light" result="rim"><feFuncA class="lenzi-liquid-glass-rim-light" type="linear" slope="0"/></feComponentTransfer>
   <feBlend in="rim" in2="glass" mode="screen"/>
 </filter>`;
     // the filter in the page before the glass points at it (pointed at first, Chromium shows nothing)
@@ -121,5 +142,42 @@ export class LenziLiquidGlass {
       this.svg = svg;
     }
     this.element.style.setProperty('backdrop-filter', `url(#${this.id})`);
+  }
+
+  /**
+   * The rim now: as bright as the boids near the glass are many (none: dark), from the side they are on, all round
+   * once their middle is under the glass.
+   */
+  private light(): void {
+    const svg = this.svg;
+    if (!svg || this.rims.length === 0) return;
+    const box = this.element.getBoundingClientRect();
+    const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    const crowd = this.sights.around(middle, Math.max(box.width, box.height) * 0.8);
+    const bright = crowd ? Math.max(0, this.rim()) * Math.min(1, crowd.count / Math.max(1, this.rimBoids())) : 0;
+    let side = this.rims.length - 1;
+    if (crowd) {
+      const ox = (crowd.x - middle.x) / Math.max(1, box.width / 2);
+      const oy = (crowd.y - middle.y) / Math.max(1, box.height / 2);
+      if (Math.hypot(ox, oy) > 0.35) {
+        const angle = (Math.atan2(oy, ox) * 180) / Math.PI;
+        let best = 0;
+        RIM_ANGLES.forEach((candidate, k) => {
+          const gap = Math.abs(((angle - candidate + 540) % 360) - 180);
+          const bestGap = Math.abs(((angle - RIM_ANGLES[best]! + 540) % 360) - 180);
+          if (gap < bestGap) best = k;
+        });
+        side = best;
+      }
+    }
+    if (side !== this.shownRim) {
+      this.shownRim = side;
+      svg.querySelector('.lenzi-liquid-glass-rim')?.setAttribute('href', this.rims[side]!);
+    }
+    const slope = bright.toFixed(2);
+    if (slope !== this.shownSlope) {
+      this.shownSlope = slope;
+      svg.querySelector('.lenzi-liquid-glass-rim-light')?.setAttribute('slope', slope);
+    }
   }
 }

@@ -23,6 +23,10 @@ zona di testo").
   together (a fifth of their cohesion) and follow no leader: otherwise they bunch up on one part of the words.
 - **Settled, they hardly move** (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"): near
   its place a boid slows down onto it and may stop; its wander is a sixth of what it was; the places drift very slowly.
+- **A blob, then an explosion** (lenzi, 2026-11-19: "quando arrivano fai in modo che diventino un blob e quando
+  ripartono il blob circa esplode e ripartono verso la prossima"): settled, the drops melt into one blob (4 times
+  their size); leaving for another zone, the boids settled in the old one are thrown out of it, each away from its
+  middle (520 px/s, a little more or less each), and melt hardly at all as they fly on.
 - **Many on the way, one cover at the end** ("si veda proprio il fatto che siano tanti quindi magari dovrebbero unirsi
   solo quando sono più vicini"; "alzala quando arrivano e abbassala quando partono"): a drop on its way melts into the
   others hardly at all (a tenth of its size); settled at its place (`Boids.away`), far more (1.8 times its size), so

@@ -346,6 +346,27 @@ describe('a flock of boids', () => {
     expect(Math.min(...Array.from(flock.away.slice(0, 40)))).toBeGreaterThan(0.7);
   });
 
+  it('leaving a zone for another, the boids settled in it are thrown out of it, each away from its middle', () => {
+    const flock = new Boids({ count: 40, maxSpeed: 110 }, 3000, 3000, 6);
+    flock.setHome({ left: 1000, top: 1000, right: 1400, bottom: 1200 });
+    run(flock, 12);
+    const before = Array.from({ length: 40 }, (_, i) => [flock.x[i]!, flock.y[i]!] as const);
+    flock.setHome({ left: 1000, top: 2400, right: 1400, bottom: 2600 });
+    // at once: carried outwards from the old zone's middle (1200, 1100)
+    const outwards = before.filter(([x, y], i) => (x - 1200) * flock.carriedX[i]! + (y - 1100) * flock.carriedY[i]! > 0);
+    expect(outwards.length).toBeGreaterThan(30);
+    expect(Math.max(...Array.from(flock.carriedX.slice(0, 40)).map(Math.abs))).toBeGreaterThan(200);
+  });
+
+  it('a zone that only moves a little (the page scrolled on the screen) throws nothing', () => {
+    const flock = new Boids({ count: 10, maxSpeed: 110 }, 3000, 3000, 6);
+    flock.setHome({ left: 1000, top: 1000, right: 1400, bottom: 1200 });
+    run(flock, 6);
+    const carried = Array.from(flock.carriedY.slice(0, 10));
+    flock.setHome({ left: 1000, top: 990, right: 1400, bottom: 1190 });
+    expect(Array.from(flock.carriedY.slice(0, 10))).toEqual(carried);
+  });
+
   it('a current carries a boid neither through an edge nor into an obstacle', () => {
     const edged = new Boids({ ...QUIET, count: 1, edges: 'avoid', maxSpeed: 100 }, 400, 400);
     place(edged, [[200, 200, 100, 0]]);

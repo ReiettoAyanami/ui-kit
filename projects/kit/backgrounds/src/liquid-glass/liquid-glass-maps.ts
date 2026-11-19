@@ -36,9 +36,17 @@ export interface LenziLiquidGlassMaps {
   displacement: Uint8ClampedArray;
   /** The largest displacement, px: feDisplacementMap's scale. */
   scale: number;
-  /** RGBA: white, its alpha the rim's light. */
+  /** RGBA: white, its alpha the rim's light from `lightAngle`. */
   specular: Uint8ClampedArray;
+  /**
+   * The rim's light from each of RIM_ANGLES (degrees) and, last, from all round (`angle` null): what the glass shows
+   * as the boids come from one side or settle under it.
+   */
+  rims: { angle: number | null; data: Uint8ClampedArray }[];
 }
+
+/** The sides a rim can be lit from, degrees (0: from the right, 90: from below). */
+export const RIM_ANGLES = [0, 45, 90, 135, 180, -135, -90, -45] as const;
 
 const convexSquircle = (x: number) => Math.pow(1 - Math.pow(1 - x, 4), 1 / 4);
 const convexCircle = (x: number) => Math.sqrt(1 - (1 - x) ** 2);
@@ -100,6 +108,8 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
   const ly = Math.sin(light);
   const displacement = new Uint8ClampedArray(width * height * 4);
   const specular = new Uint8ClampedArray(width * height * 4);
+  const directions = [...RIM_ANGLES.map((angle) => ({ angle: angle as number | null, x: Math.cos((angle * Math.PI) / 180), y: Math.sin((angle * Math.PI) / 180) })), { angle: null, x: 0, y: 0 }];
+  const rims = directions.map((direction) => ({ angle: direction.angle, data: new Uint8ClampedArray(width * height * 4) }));
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const px = x + 0.5 - hw;
@@ -110,6 +120,7 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
       displacement[at + 2] = 128;
       displacement[at + 3] = 255;
       specular[at] = specular[at + 1] = specular[at + 2] = 255;
+      for (const rim of rims) rim.data[at] = rim.data[at + 1] = rim.data[at + 2] = 255;
       if (d <= 0 || d >= bezel) {
         displacement[at] = displacement[at + 1] = 128;
         continue;
@@ -130,7 +141,13 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
       const rim = Math.pow(Math.max(0, 1 - d / Math.min(bezel, 6)), 2);
       const glance = Math.max(0, facing) + 0.35 * Math.max(0, -facing);
       specular[at + 3] = Math.round(255 * rim * glance);
+      directions.forEach((direction, k) => {
+        // from one side: lit where the edge faces it; from all round (null): the whole rim, evenly
+        const toward = nx * direction.x + ny * direction.y;
+        const lit = direction.angle === null ? 0.7 : Math.max(0, toward) + 0.25 * Math.max(0, -toward);
+        rims[k]!.data[at + 3] = Math.round(255 * rim * lit);
+      });
     }
   }
-  return { width, height, displacement, scale: largest, specular };
+  return { width, height, displacement, scale: largest, specular, rims };
 }

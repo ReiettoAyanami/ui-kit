@@ -44,6 +44,8 @@ const HOME_COHESION = 0.2;
 const HOME_ALIGNMENT = 0.3;
 /** The points of a zone the boids are dealt round (its quarters), and how far inside a line's edge a place keeps, px. */
 const HOME_TARGETS = 4;
+/** How fast the boids settled in a zone are thrown out of it when they leave for another, px/s (a little more or less each). */
+const HOME_BURST = 520;
 /** On the way to a zone, how far aside from the way a boid aims at most, times how far it still has to go. */
 const HOME_FAN = 0.35;
 const HOME_INSET = 6;
@@ -322,6 +324,7 @@ export class Boids {
    * they hardly hold together and follow no leader, so they spread over all of them.
    */
   setHome(areas: BoidsArea | readonly BoidsArea[] | null, weight = 2): void {
+    const before = this.homeBounds;
     const all = areas === null ? [] : 'left' in areas ? [areas] : areas;
     this.homes = all.filter((area) => area.right > area.left && area.bottom > area.top);
     const sizes = this.homes.map((area) => (area.right - area.left) * (area.bottom - area.top));
@@ -337,6 +340,28 @@ export class Boids {
         }
       : null;
     this.homeWeight = Math.max(0, weight);
+    if (before && this.homeBounds && this.homeWeight > 0) this.burstFrom(before, this.homeBounds);
+  }
+
+  /**
+   * Off to another zone (lenzi, 2026-11-19: "quando ripartono il blob circa esplode e ripartono verso la prossima"):
+   * the boids settled in the zone they leave are thrown out of it, each away from its middle, before they fly on.
+   */
+  private burstFrom(was: BoidsArea, now: BoidsArea): void {
+    const cx = (was.left + was.right) / 2;
+    const cy = (was.top + was.bottom) / 2;
+    const size = Math.max(was.right - was.left, was.bottom - was.top);
+    if (Math.hypot((now.left + now.right) / 2 - cx, (now.top + now.bottom) / 2 - cy) < size / 2) return;
+    for (let i = 0; i < this.count; i++) {
+      if (this.away[i]! > 0.5) continue;
+      const dx = this.x[i]! - cx;
+      const dy = this.y[i]! - cy;
+      const length = Math.hypot(dx, dy) || 1;
+      const push = HOME_BURST * (0.6 + 0.8 * this.own[i]!);
+      this.carriedX[i] = this.carriedX[i]! + (dx / length) * push;
+      this.carriedY[i] = this.carriedY[i]! + (dy / length) * push;
+      this.away[i] = 1;
+    }
   }
 
   /** The space is this large now; the boids keep their places (a page that grew: they stay where they were on it). */

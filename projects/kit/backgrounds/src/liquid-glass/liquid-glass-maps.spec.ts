@@ -37,4 +37,17 @@ describe('liquidGlassMaps', () => {
     expect(alpha(100, 0)).toBeGreaterThan(alpha(100, 119));
     expect(alpha(100, 10)).toBe(0);
   });
+
+  it('has a rim for each side the light may come from and one all round, none lit in the middle', () => {
+    const maps = liquidGlassMaps(SHAPE);
+    expect(maps.rims.length).toBe(9);
+    expect(maps.rims.at(-1)!.angle).toBeNull();
+    const alpha = (data: Uint8ClampedArray, x: number, y: number) => data[(y * maps.width + x) * 4 + 3]!;
+    const fromLeft = maps.rims.find((rim) => rim.angle === 180)!.data;
+    expect(alpha(fromLeft, 0, 60)).toBeGreaterThan(alpha(fromLeft, 199, 60));
+    const round = maps.rims.at(-1)!.data;
+    expect(alpha(round, 0, 60)).toBe(alpha(round, 199, 60));
+    expect(alpha(round, 100, 60)).toBe(0);
+  });
 });
+

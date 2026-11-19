@@ -15,8 +15,10 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   moves sideways. That shift, at each distance from the edge, along the edge's normal (round corners too), is drawn
   into a displacement map (red and green, 128 none) and given to `feDisplacementMap`, its scale the largest shift.
 - **A little blur and saturation** of what is behind (`blur` 1.5 px, `saturation` 1.5).
-- **No border**: only a rim of light on the very edge (a few px), strongest where the edge faces the light
-  (`lightAngle`, -60°: from the top left), a little on the opposite side (`rim`, 0.5).
+- **No border**: only a rim of light on the very edge (a few px), and only when the boids of a flock behind come near
+  (lenzi, 2026-11-19: "quelli devono esserci solo quando i boidi ci si avvicinano"): dark while none is near,
+  brighter the more there are (whole at `rimBoids`, 60; `rim` 0.5 at most), lit on the side they come from (eight
+  sides), all round once they are under the glass (`LenziSights.around`, at every frame; the nine rims drawn once).
 - **One filter per glass, made for its size**, again when it changes size (the maps are as large as it is).
 
 ## Rules
