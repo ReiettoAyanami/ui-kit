@@ -21,6 +21,13 @@ zona di testo").
 - **They cover all of it**: each boid keeps to its own place in its quarter of its line, the places spread evenly and drifting slowly
   along it and back, so the flock lies under every line and still moves. Kept to a zone, the boids hardly hold
   together (a fifth of their cohesion) and follow no leader: otherwise they bunch up on one part of the words.
+- **Settled, they hardly move** (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"): near
+  its place a boid slows down onto it and may stop; its wander is a sixth of what it was; the places drift very slowly.
+- **Many on the way, one cover at the end** ("si veda proprio il fatto che siano tanti quindi magari dovrebbero unirsi
+  solo quando sono più vicini"): a drop on its way melts into the others hardly at all; near its place (`Boids.away`)
+  it melts as much as before.
+- **With `scroll: 1`** on the background or the scene, the flock goes with the page as it scrolls, as if it were on
+  it: the words never slide off the flock; the next zone pulls it on from there.
 - How hard they keep to it is the background's `gather` (2; 0: they ignore the zones).
 - No zone on the screen: they fly as they would without any.
 

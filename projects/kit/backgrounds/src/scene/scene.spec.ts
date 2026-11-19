@@ -52,6 +52,11 @@ describe('sceneLayout', () => {
     expect(layout.throwable).toBe(false);
   });
 
+  it("says how far the fleets go with the page's scroll: not at all when not said", () => {
+    expect(sceneLayout(HOME).scroll).toBe(0);
+    expect(sceneLayout({ blobs: [], fleets: [{ kind: 'boid', count: 10 }], scroll: 1 }).scroll).toBe(1);
+  });
+
   it("each fleet says what it does with the pointer, or takes the scene's", () => {
     const layout = sceneLayout({
       blobs: [],

@@ -165,6 +165,8 @@ interface BlobBoid {
   radius: number;
   material: LenziBlobMaterial;
   heading: number;
+  /** How far it still is from its place in a zone (`Boids.away`): 0 there, 1 on its way. */
+  away: number;
   /** Its fleet's layer. */
   layer: number;
   /** Its fleet's own colour (a lamp's moved a little drop by drop), and how much of it glass takes. */
@@ -184,6 +186,9 @@ interface BlobBoid {
  * it. The boids are something to look at (LenziSights). What every glowing background does is
  * LenziGlowBackground's.
  */
+
+/** On its way to its place (`Boids.away` 1), how much less a drop melts into the others. */
+const DROP_APART = 0.85;
 @Component({
   selector: 'lenzi-blob-flock-background',
   imports: [],
@@ -269,6 +274,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** How hard the boids keep to the zone of the page they gather under (`lenziGather`); 0: they do not. */
   readonly gather = input(2, { transform: numberAttribute });
   /**
+   * How far the boids go with the page's scroll (lenzi, 2026-11-19: "lo scroll della pagina non deve influire sulla
+   * posizione dei boidi ... se scrollo i boidi devono rimanere ... e seguirmi"): 1, as far as the words, at once, as if
+   * they were on the page; 0, not at all (behind it, fixed). The boids and the blob-boids, not the blobs.
+   */
+  readonly scroll = input(0, { transform: numberAttribute });
+  /**
    * The boids as fleets, each its own flock with its leader's ways and its own count, colonies and size (a
    * scene's fleets); null: one flock of `boids` in `colonies`, as the inputs say.
    */
@@ -284,6 +295,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   private elapsed = 0;
   private readonly view = inject(DOCUMENT).defaultView;
+  /** The page's scroll at the last frame; null: not read yet. */
+  private scrolledTo: { x: number; y: number } | null = null;
   private drawn: readonly BlobState[] = [];
   private readonly throws = new BlobThrow();
   private readonly scares = inject(LenziScares);
@@ -372,10 +385,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         // every flock is told where the pointer is; what it does with it is its own (`follow`, a fleet apart)
         const pointer = this.pointerInside();
         const home = this.homeNow(origin);
+        const [shiftX, shiftY] = this.scrolled();
         for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
           boids.setTarget(pointer);
           boids.setScares(scares, this.scare());
           boids.setFlow(flow);
+          boids.shift(shiftX, shiftY);
           boids.setHome(home, this.gather());
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
         }
@@ -536,6 +551,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
           radius: this.radiusOf(fleet, i),
           material: spec.material,
           heading: Math.atan2(boids.vy[i]!, boids.vx[i]!),
+          away: boids.away[i] ?? 0,
           layer,
           ...(colour ? { colour } : {}),
           ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
@@ -652,7 +668,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         x: drop.x,
         y: drop.y,
         radius: drop.radius,
-        merge: Math.min(merge, drop.radius * 0.6),
+        // on their way to a zone they melt hardly at all, so they are seen as many; near their places they melt into one
+        // (lenzi, 2026-11-19: "si veda proprio il fatto che siano tanti quindi magari dovrebbero unirsi solo quando sono
+        // più vicini")
+        merge: Math.min(merge, drop.radius * 0.6) * (1 - DROP_APART * drop.away),
         rotation: drop.heading,
         from: BLOB_BOID_SHAPE,
         to: BLOB_BOID_SHAPE,
@@ -722,6 +741,18 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private sink(index: number): number {
     const spec = this.blobSpecs()?.[index];
     return blobSink(spec?.weight, spec?.fixed);
+  }
+
+  /** How far the boids go with what the page scrolled since the last frame, px (the words go up as it scrolls down). */
+  private scrolled(): readonly [number, number] {
+    const view = this.view;
+    if (!view) return [0, 0];
+    const now = { x: view.scrollX, y: view.scrollY };
+    const was = this.scrolledTo;
+    this.scrolledTo = now;
+    const share = this.scroll();
+    if (!was || share === 0) return [0, 0];
+    return [-(now.x - was.x) * share, -(now.y - was.y) * share];
   }
 
   /** The lines of the zone of the page the boids gather under now (`lenziGather`), in the space's px; none. */

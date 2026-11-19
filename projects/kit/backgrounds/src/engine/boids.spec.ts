@@ -295,8 +295,11 @@ describe('a flock of boids', () => {
     expect(counts[0]!).toBeGreaterThan(25);
     expect(counts[1]!).toBeGreaterThan(25);
     expect(counts[2]!).toBeGreaterThan(11);
-    // the ends of the long lines are covered too
-    expect(Array.from({ length: 90 }, (_, i) => i).filter((i) => near(i, lines[0]!) && flock.x[i]! > 1250).length).toBeGreaterThan(2);
+    // every quarter of a long line is covered, its ends too
+    for (let quarter = 0; quarter < 4; quarter++) {
+      const from = 400 + quarter * 250;
+      expect(Array.from({ length: 90 }, (_, i) => i).filter((i) => near(i, lines[0]!) && flock.x[i]! >= from && flock.x[i]! < from + 250).length).toBeGreaterThan(4);
+    }
   });
 
   it('on the way to a far zone the flock comes apart in four streams, and comes together in it', () => {
@@ -318,6 +321,32 @@ describe('a flock of boids', () => {
       const from = 200 + quarter * 400;
       expect(Array.from({ length: 80 }, (_, i) => i).filter((i) => flock.x[i]! >= from && flock.x[i]! < from + 400 && flock.y[i]! > 2150 && flock.y[i]! < 2350).length).toBeGreaterThan(12);
     }
+  });
+
+  it('moves with the page at once when shifted, in from the other side past an edge', () => {
+    const flock = new Boids({ ...QUIET, count: 2 }, 1000, 800);
+    place(flock, [
+      [500, 400, 0, 0],
+      [500, 50, 0, 0],
+    ]);
+    flock.shift(0, -100);
+    expect(flock.y[0]!).toBeCloseTo(300);
+    expect(flock.y[1]!).toBeCloseTo(750);
+  });
+
+  it('settled at its place in its box it hardly moves, and says it is there (away 0); on its way, away 1', () => {
+    const flock = new Boids({ count: 40, maxSpeed: 110 }, 2000, 2000, 4);
+    flock.setHome({ left: 600, top: 900, right: 1400, bottom: 1000 });
+    run(flock, 12);
+    const before = Array.from(flock.x.slice(0, 40));
+    run(flock, 1);
+    const moved = before.map((x, i) => Math.abs(flock.x[i]! - x));
+    // in a second a free boid flies 60 px or more; settled, most move far less
+    expect(moved.filter((d) => d < 25).length).toBeGreaterThan(30);
+    expect(Math.max(...Array.from(flock.away.slice(0, 40)))).toBeLessThan(0.5);
+    flock.setHome({ left: 600, top: 100, right: 1400, bottom: 200 });
+    run(flock, 0.5);
+    expect(Math.min(...Array.from(flock.away.slice(0, 40)))).toBeGreaterThan(0.7);
   });
 
   it('a current carries a boid neither through an edge nor into an obstacle', () => {

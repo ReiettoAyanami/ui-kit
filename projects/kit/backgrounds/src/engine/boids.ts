@@ -33,7 +33,11 @@ const HOME_RUSH_REACH = 240;
 /** The places of a flock in its box: the plastic number's sequence (even in two dimensions), and how fast they drift. */
 const HOME_SPREAD_X = 0.7548776662466927;
 const HOME_SPREAD_Y = 0.5698402909980532;
-const HOME_DRIFT = 0.03;
+const HOME_DRIFT = 0.012;
+/** How far from its place, px, a boid counts as on its way (`away` 1); at its place, 0. */
+const HOME_JOIN_REACH = 90;
+/** Settled at its place, how much of its wander is left: it hardly moves (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"). */
+const HOME_SETTLED_WANDER = 0.15;
 /** How much a flock kept to boxes holds together, times its cohesion. */
 const HOME_COHESION = 0.2;
 /** How much a flock kept to boxes heads the same way, times its alignment: not as one, so it spreads on the way. */
@@ -223,6 +227,12 @@ export class Boids {
   private arrived = new Uint8Array(0);
   /** How many times its top speed a boid may fly now: more than 1 while it hurries back to its box. */
   private rush = new Float32Array(0);
+  /**
+   * How far each boid still is from its place in the boxes it keeps to, 0 (there) to 1 (on its way, HOME_JOIN_REACH or
+   * farther), eased: what a drawing reads to melt the drops only near their places (lenzi, 2026-11-19: "dovrebbero unirsi
+   * solo quando sono più vicini"). 0 with no boxes.
+   */
+  away = new Float32Array(0);
   /** The boxes the boids keep to, and where each starts and ends in their total area (shares, 0..1). */
   private homes: readonly BoidsArea[] = [];
   private homeShares: number[] = [];
@@ -329,6 +339,27 @@ export class Boids {
     this.homeWeight = Math.max(0, weight);
   }
 
+  /**
+   * Moves every boid by this much, px, at once (the page scrolled and the flock goes with it: lenzi, 2026-11-19, "lo
+   * scroll della pagina non deve influire sulla posizione dei boidi ... se scrollo i boidi devono rimanere ... e
+   * seguirmi"); past an edge, in from the other side when the edges wrap.
+   */
+  shift(dx: number, dy: number): void {
+    if (dx === 0 && dy === 0) return;
+    const { x, y, width, height } = this;
+    const wrap = this.settings.edges === 'wrap';
+    for (let i = 0; i < this.count; i++) {
+      let nx = x[i]! + dx;
+      let ny = y[i]! + dy;
+      if (wrap) {
+        nx = ((nx % width) + width) % width;
+        ny = ((ny % height) + height) % height;
+      }
+      x[i] = nx;
+      y[i] = ny;
+    }
+  }
+
   /** What the boids are scared of now (they may move), and how much (0: not at all). */
   setScares(scares: readonly BoidsScare[], weight = 3): void {
     this.scares = scares;
@@ -405,6 +436,7 @@ export class Boids {
     this.ay = new Float32Array(count);
     this.arrived = new Uint8Array(count);
     this.rush = new Float32Array(count).fill(1);
+    this.away = new Float32Array(count);
     this.scaleKey = '';
     this.sizeUp();
   }
@@ -595,6 +627,7 @@ export class Boids {
         }
       }
       let rush = 1;
+      let homeDistance = 0;
       if (keeping) {
         // its quarter of the zone (lenzi, 2026-11-19: "usa 4 punti di target così che si spalmano meglio sulla zona di
         // testo"): the boids are dealt round the HOME_TARGETS quarters, so they go to the zone in as many streams
@@ -613,6 +646,7 @@ export class Boids {
         const placeX = home.left + inset + ((quarter + swing(0.5 + HOME_SPREAD_X * i + this.homeTime * HOME_DRIFT)) / HOME_TARGETS) * innerWidth;
         const placeY = home.top + inset + across * innerHeight;
         const toPlace = Math.hypot(placeX - px, placeY - py);
+        homeDistance = toPlace;
         // out of its line: hurry, the faster the farther; far off, to its quarter's point of the zone, then to its place
         const outX = Math.max(home.left - px, 0, px - home.right);
         const outY = Math.max(home.top - py, 0, py - home.bottom);
@@ -635,10 +669,15 @@ export class Boids {
           steer(aimX - px, aimY - py, this.homeWeight * 2, top * rush, s.maxForce * (2 + rush));
         } else {
           // in it: to its own place, more than the flock's own rules, so the flock spreads under every line
-          steer(placeX - px, placeY - py, this.homeWeight * 1.5 * Math.min(1, toPlace / 40));
+          // near it, slower and slower onto it (it may stop there): settled, it hardly moves
+          arrived = toPlace < HOME_JOIN_REACH;
+          steer(placeX - px, placeY - py, this.homeWeight * 1.5 * Math.min(1, toPlace / 40), top * Math.min(1, toPlace / HOME_JOIN_REACH), s.maxForce * 2);
         }
       }
       this.rush[i] = rush;
+      // how far it still is from its place, eased over a few tenths of a second
+      const awayNow = keeping ? (rush > 1 ? 1 : Math.min(1, homeDistance / HOME_JOIN_REACH)) : 0;
+      this.away[i] = this.away[i]! + (awayNow - this.away[i]!) * Math.min(1, dt * 5);
       if (field) {
         // an obstacle near it: away from it, and along it the way it is already going, so it flows round
         const margin = Math.max(24, see * 0.8);
@@ -655,7 +694,8 @@ export class Boids {
       }
       if (s.wander > 0) {
         // a turn of its own, across its heading
-        const turn = (this.random() * 2 - 1) * s.wander * s.maxForce;
+        const settled = keeping ? HOME_SETTLED_WANDER + (1 - HOME_SETTLED_WANDER) * this.away[i]! : 1;
+        const turn = (this.random() * 2 - 1) * s.wander * s.maxForce * settled;
         fx += (-hy / speed) * turn;
         fy += (hx / speed) * turn;
       }
