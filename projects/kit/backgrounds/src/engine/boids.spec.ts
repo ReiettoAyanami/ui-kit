@@ -1,4 +1,4 @@
-import { Boids, BoidsSettings, MAX_BOIDS } from './boids';
+import { Boids, BoidsSettings, MAX_BOIDS, honeycomb } from './boids';
 import { STRONGEST_CURRENT, currentsFlow } from './currents';
 
 /** A flock with every rule off, so a test turns on the one it is about. */
@@ -365,6 +365,18 @@ describe('a flock of boids', () => {
     const carried = Array.from(flock.carriedY.slice(0, 10));
     flock.setHome({ left: 1000, top: 990, right: 1400, bottom: 1190 });
     expect(Array.from(flock.carriedY.slice(0, 10))).toEqual(carried);
+  });
+
+  it('a honeycomb fills its box evenly, its edges too, with no more points than asked', () => {
+    const points = honeycomb(600, 300, 120);
+    expect(points.length).toBeLessThanOrEqual(120);
+    expect(points.length).toBeGreaterThan(90);
+    const xs = points.map(([x]) => x);
+    const ys = points.map(([, y]) => y);
+    expect(Math.min(...xs)).toBeLessThan(0.1);
+    expect(Math.max(...xs)).toBeGreaterThan(0.9);
+    expect(Math.min(...ys)).toBeLessThan(0.1);
+    expect(Math.max(...ys)).toBeGreaterThan(0.9);
   });
 
   it('a current carries a boid neither through an edge nor into an obstacle', () => {

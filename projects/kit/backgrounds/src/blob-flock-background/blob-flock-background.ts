@@ -192,6 +192,8 @@ interface BlobBoid {
 /** How far a drop melts into the others, times its size: settled at its place in a zone, and on its way. */
 const DROP_JOIN_SETTLED = 4;
 const DROP_JOIN_ON_WAY = 0.1;
+/** Nearer its place than this (`Boids.away`), a drop is round. */
+const DROP_ROUND = 0.3;
 @Component({
   selector: 'lenzi-blob-flock-background',
   imports: [],
@@ -714,7 +716,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         mix: 0,
         material: drop.material,
         tint: bright(drop.colour ?? tint(colour), drop.material),
-        drop: true,
+        // settled, round (a blob is made of round drops: lenzi, "il blob con una forma più decente"); on its way, a drop
+        drop: !(drop.homed && drop.away < DROP_ROUND),
         layer: drop.layer,
         ...(drop.colour ? { colour: drop.colour } : {}),
         ...(typeof drop.tintAmount === 'number' ? { tintAmount: drop.tintAmount } : {}),

@@ -23,6 +23,9 @@ zona di testo").
   together (a fifth of their cohesion) and follow no leader: otherwise they bunch up on one part of the words.
 - **Settled, they hardly move** (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"): near
   its place a boid slows down onto it and may stop; its wander is a sixth of what it was; the places drift very slowly.
+- **An even blob** (lenzi, 2026-11-19: "il blob con una forma più decente"): settled, each boid keeps to a point of an
+  even honeycomb over its box (`honeycomb`), as many points as boids, stirring 3 px round it; the drops there are round
+  (a drop again on its way), so the blob fills the zone with a smooth edge, not a lumpy one.
 - **A blob, then an explosion** (lenzi, 2026-11-19: "quando arrivano fai in modo che diventino un blob e quando
   ripartono il blob circa esplode e ripartono verso la prossima"): settled, the drops melt into one blob (4 times
   their size); leaving for another zone, the boids settled in the old one are thrown out of it, each away from its

@@ -33,7 +33,6 @@ const HOME_RUSH_REACH = 240;
 /** The places of a flock in its box: the plastic number's sequence (even in two dimensions), and how fast they drift. */
 const HOME_SPREAD_X = 0.7548776662466927;
 const HOME_SPREAD_Y = 0.5698402909980532;
-const HOME_DRIFT = 0.012;
 /** How far from its place, px, a boid counts as on its way (`away` 1); at its place, 0. */
 const HOME_JOIN_REACH = 90;
 /** Settled at its place, how much of its wander is left: it hardly moves (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"). */
@@ -50,8 +49,39 @@ const HOME_BURST = 520;
 const HOME_FAN = 0.35;
 const HOME_INSET = 6;
 const fraction = (value: number) => value - Math.floor(value);
-/** From 0 to 1 and back, as the value goes on: a place that drifts along a box and back, never jumping across it. */
-const swing = (value: number) => 1 - Math.abs(2 * fraction(value) - 1);
+/** How far a boid settled in a box stirs round its place, px. */
+const HOME_STIR = 3;
+
+/**
+ * At most `count` points of an even honeycomb over a box (`width` × `height`), as shares of it (0 to 1), row by row:
+ * the spacing as large as lets them all fit, so they fill it evenly, its edges too.
+ */
+export function honeycomb(width: number, height: number, count: number): [number, number][] {
+  if (count <= 0) return [];
+  let spacing = Math.sqrt((width * height * 2) / (Math.sqrt(3) * count));
+  for (let tries = 0; tries < 40; tries++) {
+    const rowGap = spacing * (Math.sqrt(3) / 2);
+    const rows = Math.max(1, Math.floor(height / rowGap) + 1);
+    const points: [number, number][] = [];
+    for (let row = 0; row < rows; row++) {
+      const shift = row % 2 ? spacing / 2 : 0;
+      const columns = Math.max(1, Math.floor((width - shift) / spacing) + 1);
+      for (let column = 0; column < columns; column++) {
+        const x = rows === 1 && columns === 1 ? width / 2 : shift + column * spacing;
+        const y = rows === 1 ? height / 2 : row * rowGap;
+        points.push([Math.min(1, x / width), Math.min(1, y / height)]);
+      }
+    }
+    if (points.length <= count) {
+      // centred: the room left over shared on both sides
+      const right = Math.max(...points.map(([x]) => x));
+      const bottom = Math.max(...points.map(([, y]) => y));
+      return points.map(([x, y]) => [x + (1 - right) / 2, y + (1 - bottom) / 2]);
+    }
+    spacing *= 1.04;
+  }
+  return [[0.5, 0.5]];
+}
 
 export interface BoidsScare {
   x: number;
@@ -240,6 +270,11 @@ export class Boids {
   private homeShares: number[] = [];
   /** The box round all of them. */
   private homeBounds: BoidsArea | null = null;
+  /** Each boid's box and its place in it (shares of the box inside its inset), for the boxes of `homeKey`. */
+  private homeBox = new Uint16Array(0);
+  private homeU = new Float32Array(0);
+  private homeV = new Float32Array(0);
+  private homeKey = '';
   /** Seconds kept to a box: its places drift along it with them. */
   private homeTime = 0;
   private homeWeight = 2;
@@ -340,7 +375,41 @@ export class Boids {
         }
       : null;
     this.homeWeight = Math.max(0, weight);
+    this.placeInHomes();
     if (before && this.homeBounds && this.homeWeight > 0) this.burstFrom(before, this.homeBounds);
+  }
+
+  /**
+   * Each boid's place in the boxes: the boids shared among the boxes by their area (the plastic number's sequence),
+   * then each box's boids on an even honeycomb over it, as many points as boids (lenzi, 2026-11-19: "il blob con una
+   * forma più decente"). Made again only when the boxes' sizes or the count change.
+   */
+  private placeInHomes(): void {
+    const n = this.count;
+    const key = `${n}|${this.homes.map((area) => `${Math.round(area.right - area.left)}x${Math.round(area.bottom - area.top)}`).join(',')}`;
+    if (key === this.homeKey || this.homes.length === 0) return;
+    this.homeKey = key;
+    this.homeBox = new Uint16Array(n);
+    this.homeU = new Float32Array(n);
+    this.homeV = new Float32Array(n);
+    const members: number[][] = this.homes.map(() => []);
+    for (let i = 0; i < n; i++) {
+      const share = fraction(0.5 + HOME_SPREAD_Y * i);
+      let box = 0;
+      while (box < this.homeShares.length - 1 && share >= this.homeShares[box]!) box++;
+      this.homeBox[i] = box;
+      members[box]!.push(i);
+    }
+    members.forEach((boids, box) => {
+      const home = this.homes[box]!;
+      const inset = Math.min(HOME_INSET, (home.right - home.left) / 4, (home.bottom - home.top) / 4);
+      const points = honeycomb(Math.max(1, home.right - home.left - inset * 2), Math.max(1, home.bottom - home.top - inset * 2), boids.length);
+      boids.forEach((i, k) => {
+        const point = points[k % Math.max(1, points.length)] ?? [0.5, 0.5];
+        this.homeU[i] = point[0];
+        this.homeV[i] = point[1];
+      });
+    });
   }
 
   /**
@@ -646,20 +715,20 @@ export class Boids {
       if (keeping) {
         // its quarter of the zone (lenzi, 2026-11-19: "usa 4 punti di target così che si spalmano meglio sulla zona di
         // testo"): the boids are dealt round the HOME_TARGETS quarters, so they go to the zone in as many streams
-        const quarter = i % HOME_TARGETS;
-        // its line: the one its share of the total area falls in (the plastic number's sequence spreads the shares)
-        const share = fraction(0.5 + HOME_SPREAD_Y * i);
-        let box = 0;
-        while (box < this.homeShares.length - 1 && share >= this.homeShares[box]!) box++;
-        const home = this.homes[box]!;
-        const from = box === 0 ? 0 : this.homeShares[box - 1]!;
-        const across = (share - from) / Math.max(1e-9, this.homeShares[box]! - from);
-        // its own place: in its quarter of its line, drifting slowly along the quarter and back, at its height in the line
+        // its box and its place in it: a point of an even honeycomb over the box (lenzi, 2026-11-19: "il blob con una
+        // forma più decente": places spread at random left a lumpy edge), stirring a little round it
+        const box = this.homeBox[i] ?? 0;
+        const home = this.homes[box] ?? this.homes[0]!;
         const inset = Math.min(HOME_INSET, (home.right - home.left) / 4, (home.bottom - home.top) / 4);
         const innerWidth = home.right - home.left - inset * 2;
         const innerHeight = home.bottom - home.top - inset * 2;
-        const placeX = home.left + inset + ((quarter + swing(0.5 + HOME_SPREAD_X * i + this.homeTime * HOME_DRIFT)) / HOME_TARGETS) * innerWidth;
-        const placeY = home.top + inset + across * innerHeight;
+        const u = this.homeU[i] ?? 0.5;
+        const v = this.homeV[i] ?? 0.5;
+        const stir = HOME_STIR * Math.sin(this.homeTime * 0.7 + i * 1.7);
+        const placeX = home.left + inset + u * innerWidth + stir;
+        const placeY = home.top + inset + v * innerHeight + HOME_STIR * Math.cos(this.homeTime * 0.6 + i * 2.3);
+        // its quarter of the zone (lenzi: "usa 4 punti di target"): the one its place is in, so its stream goes there
+        const quarter = Math.min(HOME_TARGETS - 1, Math.floor(((placeX - (this.homeBounds?.left ?? 0)) / Math.max(1, (this.homeBounds?.right ?? 1) - (this.homeBounds?.left ?? 0))) * HOME_TARGETS));
         const toPlace = Math.hypot(placeX - px, placeY - py);
         homeDistance = toPlace;
         // out of its line: hurry, the faster the farther; far off, to its quarter's point of the zone, then to its place
