@@ -23,4 +23,15 @@ describe('LenziSights', () => {
     sights.add({}, () => null);
     expect(sights.nearest({ x: 0, y: 0 })).toEqual({ x: 50, y: 0 });
   });
+
+  it('says the middle of the sights round a point and how many, of every source; none with none there', () => {
+    const sights = new LenziSights();
+    sights.add({}, () => null, () => ({ x: 100, y: 100, count: 3 }));
+    sights.add({}, () => null, () => ({ x: 200, y: 100, count: 1 }));
+    sights.add({}, () => null);
+    expect(sights.around({ x: 0, y: 0 }, 500)).toEqual({ x: 125, y: 100, count: 4 });
+    const empty = new LenziSights();
+    empty.add({}, () => null, () => null);
+    expect(empty.around({ x: 0, y: 0 }, 500)).toBeNull();
+  });
 });

@@ -39,12 +39,14 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
 
 ## Solid text
 
-`.lenzi-solid-text` (lenzi, 2026-11-19: "lettere scure sul bagliore", "Le lettere devono fare ombra"): the letters are
-the page's surface (`--lenzi-solid-surface`), so over a glowing background behind the page they are dark solid shapes
-that block it, and each casts a hard shadow (down and right, 0.06 × 0.08 em) of the surface at `--lenzi-shadow`, which
-takes that much of the glow away. On the bare page both are the page's colour: the words are not seen until something
-glows behind them. Only the letters: never `lenziSolid` on a block of such text (its box would be opaque and hide the
-glow).
+`lenziSolidText` (lenzi, 2026-11-19: "lettere scure sul bagliore"; "deve proiettare ombra verso la camera"): the
+letters are the page's surface (`--lenzi-solid-surface`), so over a glowing background behind the page they are dark
+solid shapes that block it. The light comes from behind them, so their shadow comes towards whoever looks: copies of
+the letters under them and over the background, each a little larger than the last from the point the light comes
+from (the middle of the boids round the words: `LenziSights.around`), fading as they grow (`shadowStrength`, 0.6). The
+shadow grows out of each letter away from the light and follows it as the boids move. On the bare page the letters and
+their shadow are the page's colour, unseen; with no boid round the words, no shadow. Only the letters: never
+`lenziSolid` on a block of such text (its box would be opaque and hide the glow).
 
 ## Rules
 

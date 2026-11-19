@@ -336,6 +336,25 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         }
       }
       return best;
+    }, (point, radius) => {
+      // the boids round a point: their middle and how many (what lights solid text from behind)
+      const origin = this.origin();
+      const cx = point.x - origin.x + this.offset.x;
+      const cy = point.y - origin.y + this.offset.y;
+      let x = 0;
+      let y = 0;
+      let count = 0;
+      for (const flock of [...this.flocks.map((fleet) => fleet.boids), ...this.fleets.map((fleet) => fleet.boids)]) {
+        for (let i = 0; i < flock.count; i++) {
+          const bx = flock.x[i]!;
+          const by = flock.y[i]!;
+          if (Math.abs(bx - cx) > radius || Math.abs(by - cy) > radius) continue;
+          x += bx;
+          y += by;
+          count++;
+        }
+      }
+      return count ? { x: x / count - this.offset.x + origin.x, y: y / count - this.offset.y + origin.y, count } : null;
     });
     inject(DestroyRef).onDestroy(leave);
   }

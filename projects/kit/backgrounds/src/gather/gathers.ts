@@ -31,6 +31,25 @@ export function linesOf(rects: Iterable<LenziGatherArea>): LenziGatherArea[] {
 }
 
 /**
+ * The boxes of the text an element shows, line by line: its text, not what is hidden from screen readers (the copies
+ * of solid text's shadow, `lenziSolidText`).
+ */
+function textRects(element: Element): LenziGatherArea[] {
+  const document = element.ownerDocument;
+  const range = document?.createRange?.();
+  if (!range || !document.createTreeWalker) return [];
+  const rects: LenziGatherArea[] = [];
+  const walker = document.createTreeWalker(element, 4 /* NodeFilter.SHOW_TEXT */);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim() || node.parentElement?.closest('[aria-hidden="true"]')) continue;
+    range.selectNodeContents(node);
+    rects.push(...Array.from(range.getClientRects?.() ?? []));
+  }
+  range.detach?.();
+  return rects;
+}
+
+/**
  * The zones of the page the boids of a flock background gather under (`lenziGather`; lenzi, 2026-11-19: "i boidi
  * devono rimanere sulla zona di testo e spostarsi al prossimo scroll velocemente verso la nuova zona di testo e andare
  * sotto tutta a quella zona di testo"). The flock backgrounds read them at every step: of all of them, the one the
@@ -67,13 +86,8 @@ export class LenziGathers {
       }
     }
     if (!best) return [];
-    const range = best.ownerDocument?.createRange?.();
-    if (range) {
-      range.selectNodeContents(best);
-      const lines = linesOf(Array.from(range.getClientRects?.() ?? []));
-      range.detach?.();
-      if (lines.length) return lines;
-    }
+    const lines = linesOf(textRects(best));
+    if (lines.length) return lines;
     const box = best.getBoundingClientRect();
     return [{ left: box.left, top: box.top, right: box.right, bottom: box.bottom }];
   }

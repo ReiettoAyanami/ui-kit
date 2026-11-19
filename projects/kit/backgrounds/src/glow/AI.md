@@ -13,3 +13,5 @@
   draws, and the words under the glass stay sharp. A floor is `lenziLit` + `lenzi-lit-under`, which has none.
 - Few lamps per page, and only for something alive; ask lenzi before lighting a whole list.
 - Never call `LenziLightField` from an app: the directives and the backgrounds use it.
+- Words over a glowing background that should be dark solid shapes with a shadow towards the viewer: `lenziSolidText`
+  on the block of words (a heading and its paragraph). Never `lenziSolid` on it, never a `text-shadow` of your own.
