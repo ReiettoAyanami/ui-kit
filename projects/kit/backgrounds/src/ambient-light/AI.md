@@ -10,3 +10,7 @@
   keeps its colour lit with `--lenzi-lit-surface` (its colour, not an amount).
 - Never tune glass, veil or rim per surface in an app: they are global variables of the kit.
 - Check the contrast of the text on a lit surface over the brightest part of the background before presenting.
+- **A lit surface does not scroll itself**: let what it holds scroll (`overflow: hidden` on the surface, `overflow:
+  auto; min-height: 0` on its content). A surface that scrolls keeps its light inside and takes none on its border
+  (the line of light cannot lie on a scroller's border): lenzi, 2026-11-18, the scene maker's list grey along its edge
+  beside a large lamp, "lo stesso identico problema".

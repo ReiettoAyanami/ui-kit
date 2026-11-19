@@ -23,6 +23,11 @@ export interface LenziSourceLamp {
   /** Any CSS colour. */
   color: string;
   strength: number;
+  /**
+   * How bright along a surface's border, when not as over its face (a background's blob: gentle over the words, a
+   * lamp's whole along the border; lenzi, 2026-11-18, a panel beside a large lamp: "lo stesso identico problema").
+   */
+  rimStrength?: number;
   reach: number;
 }
 
@@ -68,6 +73,8 @@ interface Shining {
   box: Box;
   color: string;
   strength: number;
+  /** Along a border (the face's when not said). */
+  rimStrength?: number;
   reach: number;
 }
 
@@ -226,7 +233,12 @@ export class LenziLightField {
       if (strength > 0 && lamp.reach > 0) shining.push({ element: entry.element, box: entry.element.getBoundingClientRect(), color: lamp.color, strength, reach: lamp.reach });
     }
     for (const lamps of this.sources.values()) {
-      for (const lamp of lamps) if (lamp.strength > 0 && lamp.reach > 0) shining.push({ element: null, box: lamp, color: lamp.color, strength: Math.min(2, lamp.strength), reach: lamp.reach });
+      for (const lamp of lamps) {
+        if (lamp.strength > 0 && lamp.reach > 0) {
+          const rimStrength = lamp.rimStrength === undefined ? undefined : Math.min(2, Math.max(0, lamp.rimStrength));
+          shining.push({ element: null, box: lamp, color: lamp.color, strength: Math.min(2, lamp.strength), rimStrength, reach: lamp.reach });
+        }
+      }
     }
     const casters = [...this.casters].map(([element, outline]) => {
       const box = element.getBoundingClientRect() as Box;
@@ -252,7 +264,7 @@ export class LenziLightField {
         continue;
       }
       const data: unknown[] = [];
-      const gradients = (amount: string) => {
+      const gradients = (amount: string, rim = false) => {
         const list = reaching.map((light) => {
           // centred on the lamp (2026-11-14: "they're generally uncentered"): an ellipse round its box, full
           // over it, fading `reach` px off it (the worklet fades off its outline exactly)
@@ -262,7 +274,8 @@ export class LenziLightField {
           const radius = { x: half.x + light.reach, y: half.y + light.reach };
           const inner = (half.x / radius.x + half.y / radius.y) / 2;
           const stop = (share: number) => `${Math.round((inner + (1 - inner) * share) * 1000) / 10}%`;
-          const at = (share: number) => mix(light.color, amount, light.strength * share);
+          const strength = rim ? (light.rimStrength ?? light.strength) : light.strength;
+          const at = (share: number) => mix(light.color, amount, strength * share);
           const fade = LIGHT_STOPS.map(([where, share]) => (share === 0 ? 'transparent' : `${at(share)} ${stop(where)}`));
           return `radial-gradient(ellipse ${Math.round(radius.x)}px ${Math.round(radius.y)}px at ${Math.round(x)}px ${Math.round(y)}px, ${fade.join(', ')})`;
         });
@@ -286,7 +299,7 @@ export class LenziLightField {
         data.push([...lampBox, Math.round(light.reach), ...this.rgb(light.color), round(light.strength), shadows]);
       }
       if (own) data.push([0, 0, 0, 0, -1, ...this.rgb(own.color), round(own.strength * OWN_LIGHT)]);
-      this.write(surface, gradients('--lenzi-glow-veil'), gradients('--lenzi-glow-rim'), `'${JSON.stringify(data)}'`);
+      this.write(surface, gradients('--lenzi-glow-veil'), gradients('--lenzi-glow-rim', true), `'${JSON.stringify(data)}'`);
     }
 
     return shining.length > 0 || moving;

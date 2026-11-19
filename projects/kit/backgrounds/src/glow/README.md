@@ -65,7 +65,7 @@ opaque and hide the glow). Light rays through the page, cut by these words, were
 | input | `glowReach` | `number` px | `220` |
 | directive | `lenziSolid` | a solid element: lit, casts shadows | |
 | class | `lenzi-lit-under` | with `lenziLit`: a floor, lit under what it holds | |
-| service | `LenziLightField` | `addLamp`, `setSourceLamps`, `addSurface`, `addCaster`, `wake`, `update`: used by the directives and the backgrounds | |
+| service | `LenziLightField` | `addLamp`, `setSourceLamps`, `addSurface`, `addCaster`, `wake`, `update`: used by the directives and the backgrounds; a source lamp may say `rimStrength`, brighter along a border than over a face (a background's blob: gentle on the words, a lamp's whole on the edge) | |
 | variable | `--lenzi-glow-veil` | how much of a lamp's light lies over a surface | `70%` |
 | variable | `--lenzi-glow-rim` | how much runs along its border | `100%` |
 | variable | `--lenzi-shadow` | how much light a solid element's shadow takes away | `60%` |

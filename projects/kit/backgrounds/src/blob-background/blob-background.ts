@@ -22,6 +22,12 @@ const BLOB_LIGHT = 0.5;
  * many, and often right behind a surface: more than this and the surface's words fade (measured, 2026-11-14).
  */
 const BLOB_LAMP = 0.28;
+/**
+ * How bright a lamp blob is along a lit surface's border: as a lamp of the page (lenzi, 2026-11-18: a panel beside a
+ * large lamp stayed grey along its edge, "lo stesso identico problema"). Over the surface's face it stays BLOB_LAMP,
+ * gentle, so its words stay readable.
+ */
+const BLOB_LAMP_RIM = 1;
 
 /**
  * A background of glowing blobs (lenzi, 2026-11-13: "supershapes like the ones that materialui uses,
@@ -107,6 +113,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
         bottom: blob.y + blob.radius,
         color: linearToHex(this.blobTint(index, tints)),
         strength: strength * BLOB_LAMP,
+        rimStrength: strength * BLOB_LAMP_RIM,
         reach: blob.radius * 2.4,
       }));
   }
