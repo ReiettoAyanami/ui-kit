@@ -1720,6 +1720,8 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
       'svgs/src/cat/cat.css',
       'svgs/src/cat/cat.spec.ts',
       'svgs/src/cat/cat-art.ts',
+      'backgrounds/src/liquid-glass/liquid-glass.ts',
+      'backgrounds/src/liquid-glass/liquid-glass-maps.ts',
       'backgrounds/src/glow/solid.ts',
       'backgrounds/src/glow/light-field.ts',
     ],
@@ -1762,6 +1764,7 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
         ],
         code: { attr: 'material', otherwise: 'plain' },
       },
+      { key: 'liquid', label: 'Liquid glass (with glass: it bends what is behind)', type: 'boolean', default: false, code: { match: /^\s+glass="liquid"$/m } },
       {
         key: 'color',
         label: 'Lamp colour',
@@ -1801,11 +1804,12 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
     usage: (v) => `<!-- import { LenziCat } from '@lenzi/ui-kit/svgs'; -->
 
 <!-- an expression (happy, sleepy, sad, watching, none) over a back (plain, hard-hat), in a material
-     (plain, glass, lamp, solid); a label makes it an image for a screen reader -->
+     (plain, glass, lamp, solid; glass="liquid" for Liquid Glass); a label makes it an image for a screen reader -->
 ${tag('lenzi-cat', [
   `expression="${v['expression']}"`,
   plain('back', v['back'], 'plain'),
   plain('material', v['material'], 'plain'),
+  v['liquid'] ? 'glass="liquid"' : '',
   `glowColor="${v['color']}"`,
   bound('glowStrength', v['strength'], 1),
   bound('glowReach', v['reach'], 220),

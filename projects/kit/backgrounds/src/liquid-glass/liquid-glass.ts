@@ -1,7 +1,7 @@
-import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, inject, input, numberAttribute } from '@angular/core';
+import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, effect, inject, input, numberAttribute, untracked } from '@angular/core';
 
 import { LenziSights } from '../sights/sights';
-import { LenziGlassSurface, RIM_ANGLES, liquidGlassMaps } from './liquid-glass-maps';
+import { LenziGlassSurface, RIM_ANGLES, liquidGlassMaps, liquidGlassOutlineMaps } from './liquid-glass-maps';
 
 let made = 0;
 const SVG = 'http://www.w3.org/2000/svg';
@@ -47,6 +47,14 @@ export class LenziLiquidGlass {
   readonly lightAngle = input(-60, { transform: numberAttribute });
   /** How many boids near the glass light its rim whole. */
   readonly rimBoids = input(60, { transform: numberAttribute });
+  /**
+   * A shape of its own (lenzi, 2026-11-19: Liquid Glass on the cat): an SVG path (filled even-odd), stretched over the
+   * element as `glassViewBox` says, as a mask of the same path is; the bezel follows its outline. None: the element's
+   * box, with its corners' radius.
+   */
+  readonly glassPath = input<string | null>(null);
+  /** The path's view box, as SVG writes it ("min-x min-y width height"). */
+  readonly glassViewBox = input('0 0 100 100');
 
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly document = inject(DOCUMENT);
@@ -58,9 +66,16 @@ export class LenziLiquidGlass {
   private rims: string[] = [];
   private shownRim = -1;
   private shownSlope = '';
+  /** Draws the filter again at the next frame, once it is in the page. */
+  private rebuild: (() => void) | null = null;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    // a setting changed: the filter again (its key says whether anything it is made of changed)
+    effect(() => {
+      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.rim(), this.lightAngle(), this.glassPath(), this.glassViewBox()];
+      untracked(() => this.rebuild?.());
+    });
     afterNextRender(() => {
       const view = this.document.defaultView;
       if (!refracts(view)) return;
@@ -68,6 +83,7 @@ export class LenziLiquidGlass {
       const later = () => {
         if (frame === null) frame = view?.requestAnimationFrame(() => ((frame = null), this.build())) ?? null;
       };
+      this.rebuild = later;
       this.build();
       const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(later) : null;
       resize?.observe(this.element);
@@ -95,19 +111,13 @@ export class LenziLiquidGlass {
     const height = Math.round(box.height);
     if (width < 2 || height < 2) return;
     const radius = parseFloat(this.document.defaultView?.getComputedStyle(this.element).borderTopLeftRadius ?? '0') || 0;
-    const key = `${width}x${height}|${radius}|${this.bezel()}|${this.thickness()}|${this.ior()}|${this.surface()}|${this.lightAngle()}|${this.refraction()}|${this.blur()}|${this.saturation()}|${this.rim()}`;
+    const path = this.glassPath();
+    const key = `${width}x${height}|${radius}|${this.bezel()}|${this.thickness()}|${this.ior()}|${this.surface()}|${this.lightAngle()}|${this.refraction()}|${this.blur()}|${this.saturation()}|${this.rim()}|${this.glassViewBox()}|${path ?? ''}`;
     if (key === this.size) return;
     this.size = key;
-    const maps = liquidGlassMaps({
-      width,
-      height,
-      radius,
-      bezel: this.bezel(),
-      thickness: this.thickness(),
-      ior: this.ior(),
-      surface: this.surface(),
-      lightAngle: this.lightAngle(),
-    });
+    const optics = { bezel: this.bezel(), thickness: this.thickness(), ior: this.ior(), surface: this.surface(), lightAngle: this.lightAngle() };
+    const inside = path ? this.outline(path, width, height) : null;
+    const maps = inside ? liquidGlassOutlineMaps({ width, height, inside, ...optics }) : liquidGlassMaps({ width, height, radius, ...optics });
     const picture = (data: Uint8ClampedArray): string => {
       const canvas = this.document.createElement('canvas');
       canvas.width = maps.width;
@@ -142,6 +152,21 @@ export class LenziLiquidGlass {
       this.svg = svg;
     }
     this.element.style.setProperty('backdrop-filter', `url(#${this.id})`);
+  }
+
+  /** What the path covers at this size, one alpha a pixel (0 out, 255 in); null when it cannot be drawn. */
+  private outline(path: string, width: number, height: number): Uint8ClampedArray | null {
+    const [minX = 0, minY = 0, boxWidth = 100, boxHeight = 100] = this.glassViewBox().trim().split(/[\s,]+/).map(Number);
+    const context = Object.assign(this.document.createElement('canvas'), { width, height }).getContext('2d');
+    if (!context || typeof Path2D !== 'function' || !(boxWidth > 0) || !(boxHeight > 0)) return null;
+    const sx = width / boxWidth;
+    const sy = height / boxHeight;
+    context.setTransform(sx, 0, 0, sy, -minX * sx, -minY * sy);
+    context.fill(new Path2D(path), 'evenodd');
+    const pixels = context.getImageData(0, 0, width, height).data;
+    const inside = new Uint8ClampedArray(width * height);
+    for (let i = 0; i < inside.length; i++) inside[i] = pixels[i * 4 + 3]!;
+    return inside;
   }
 
   /**

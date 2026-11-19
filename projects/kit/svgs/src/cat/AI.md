@@ -3,7 +3,8 @@
 - Import `LenziCat` from `@lenzi/ui-kit/svgs`; `<lenzi-cat expression="sleepy" />`. Give it a `label` only
   when it says something (an empty state, a page being built: `back="hard-hat"`); otherwise it is decoration.
 - Do not put `lenziLit`, `lenziGlow` or `lenziSolid` on `<lenzi-cat>` itself: they would take its box. Use its
-  `material` input: the material goes on its body, masked to the cat's outline.
+  `material` input: the material goes on its body, masked to the cat's outline. Liquid Glass is
+  `material="glass" glass="liquid"`, never `lenziLiquidGlass` on the cat.
 - A solid cat's shadow uses its outline (`CAT_BACKS[…].outline`, passed to `lenziSolid`'s `solidOutline`),
   hollows kept. Another drawing that is not a box does the same: `[solidOutline]="points"`, a polygon in
   fractions of its box.

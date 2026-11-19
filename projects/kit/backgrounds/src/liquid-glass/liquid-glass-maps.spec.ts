@@ -1,4 +1,4 @@
-import { bezelShift, glassHeight, liquidGlassMaps } from './liquid-glass-maps';
+import { bezelShift, glassHeight, liquidGlassMaps, liquidGlassOutlineMaps } from './liquid-glass-maps';
 
 const SHAPE = { width: 200, height: 120, radius: 24, bezel: 20, thickness: 40, ior: 1.5, surface: 'squircle' as const, lightAngle: -60 };
 
@@ -48,6 +48,31 @@ describe('liquidGlassMaps', () => {
     const round = maps.rims.at(-1)!.data;
     expect(alpha(round, 0, 60)).toBe(alpha(round, 199, 60));
     expect(alpha(round, 100, 60)).toBe(0);
+  });
+});
+
+describe('liquidGlassOutlineMaps', () => {
+  // a disc of radius 40 in the middle of 100 × 100: what a canvas's alpha gives for it
+  const size = 100;
+  const inside = Array.from({ length: size * size }, (_, i) => (Math.hypot((i % size) + 0.5 - 50, Math.floor(i / size) + 0.5 - 50) <= 40 ? 255 : 0));
+  const maps = liquidGlassOutlineMaps({ width: size, height: size, inside, bezel: 14, thickness: 30, ior: 1.5, surface: 'squircle', lightAngle: -90 });
+  const at = (x: number, y: number) => (y * size + x) * 4;
+
+  it('follows the outline: the middle and what is outside stay as they are, the bezel takes from inwards', () => {
+    expect([maps.displacement[at(50, 50)], maps.displacement[at(50, 50) + 1]]).toEqual([128, 128]);
+    expect([maps.displacement[at(3, 3)], maps.displacement[at(3, 3) + 1]]).toEqual([128, 128]);
+    // just inside the left edge, it takes from the right; the right edge from the left; the top from below
+    expect(maps.displacement[at(15, 50)]!).toBeGreaterThan(128);
+    expect(maps.displacement[at(84, 50)]!).toBeLessThan(128);
+    expect(maps.displacement[at(50, 15) + 1]!).toBeGreaterThan(128);
+    // the same on both sides, a pixel's steps apart
+    expect(Math.abs(maps.displacement[at(15, 50)]! - 128 - (128 - maps.displacement[at(84, 50)]!))).toBeLessThan(12);
+  });
+
+  it('lights its own edge, from where the light is, and nothing in the middle', () => {
+    const alpha = (x: number, y: number) => maps.specular[at(x, y) + 3]!;
+    expect(alpha(50, 50)).toBe(0);
+    expect(alpha(50, 11)).toBeGreaterThan(alpha(50, 88));
   });
 });
 

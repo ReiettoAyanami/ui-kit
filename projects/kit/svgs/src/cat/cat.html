@@ -2,7 +2,19 @@
   <!-- the body: a material shaped as the cat -->
   @switch (material()) {
     @case ('glass') {
-      <div class="shape" lenziLit [style.mask-image]="mask()"></div>
+      @if (glass() === 'liquid') {
+        <div
+          class="shape"
+          lenziLiquidGlass
+          [glassPath]="shape().silhouette"
+          [glassViewBox]="viewBox"
+          [bezel]="liquidBezel()"
+          [thickness]="liquidThickness()"
+          [style.mask-image]="mask()"
+        ></div>
+      } @else {
+        <div class="shape" lenziLit [style.mask-image]="mask()"></div>
+      }
     }
     @case ('lamp') {
       <div

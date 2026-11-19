@@ -26,6 +26,8 @@ export class CatDemo {
   protected readonly expression = computed(() => String(this.values()['expression'] ?? 'happy') as LenziCatExpression);
   protected readonly back = computed(() => String(this.values()['back'] ?? 'plain') as LenziCatBack);
   protected readonly material = computed(() => String(this.values()['material'] ?? 'solid') as LenziCatMaterial);
+  /** Glass: frosted, or liquid with the switch on. */
+  protected readonly glass = computed(() => (this.values()['liquid'] === true ? 'liquid' : 'frosted'));
   protected readonly color = computed(() => String(this.values()['color'] ?? '#b388ff'));
   protected readonly size = computed(() => this.num('size', 160));
   protected readonly animated = computed(() => this.values()['animated'] !== false);

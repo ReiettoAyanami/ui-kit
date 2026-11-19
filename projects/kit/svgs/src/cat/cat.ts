@@ -1,6 +1,6 @@
 import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, booleanAttribute, computed, effect, inject, input, numberAttribute, signal, viewChild } from '@angular/core';
 
-import { LenziGlow, LenziLit, LenziPoint, LenziSights, LenziSolid } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassKind, LenziGlow, LenziLiquidGlass, LenziLit, LenziPoint, LenziSights, LenziSolid } from '@lenzi/ui-kit/backgrounds';
 
 import { CAT_ASPECT, CAT_BACKS, CAT_EXPRESSIONS, CAT_EYE_EDGES, CAT_VIEW_BOX, CatEyeEdges, CatShape } from './cat-art';
 
@@ -158,12 +158,13 @@ const MASKS = { plain: maskOf(CAT_BACKS.plain), 'hard-hat': maskOf(CAT_BACKS['ha
  * in the theme's colours. An expression over a back ("make me choose what expression and what back to
  * use"); watching, its eyes follow the pointer ("make it so that it follows the mouse cursor with the eyes
  * a bit"), and the nearest boid of a flock on the page when the pointer is not there. Its body takes a material, shaped as the cat (not as a box): the page's surface, glass
- * (`lenziLit`), a lamp (`lenziGlow`: it lights what is around it) or solid (`lenziSolid`: it casts the cat's
- * shadow). It breathes, blinks and twitches its whiskers, a little (not with reduced motion).
+ * (`lenziLit`; or Liquid Glass, `glass="liquid"`, bending what is behind it along the cat's own outline), a lamp
+ * (`lenziGlow`: it lights what is around it) or solid (`lenziSolid`: it casts the cat's shadow). It breathes, blinks
+ * and twitches its whiskers, a little (not with reduced motion).
  */
 @Component({
   selector: 'lenzi-cat',
-  imports: [LenziGlow, LenziLit, LenziSolid],
+  imports: [LenziGlow, LenziLiquidGlass, LenziLit, LenziSolid],
   templateUrl: './cat.html',
   styleUrl: './cat.css',
   host: {
@@ -179,6 +180,12 @@ export class LenziCat {
   readonly expression = input<LenziCatExpression>('happy');
   readonly back = input<LenziCatBack>('plain');
   readonly material = input<LenziCatMaterial>('plain');
+  /**
+   * Its glass, when it is glass (lenzi, 2026-11-19: "metti un toggle per liquidglass"): `frosted`, the page's glass
+   * (`lenziLit`); or `liquid`, clear glass that bends what is behind it near the cat's outline (`lenziLiquidGlass`),
+   * as the blobs' `glass="liquid"`.
+   */
+  readonly glass = input<LenziGlassKind>('frosted');
   /** Its width, px; its height follows the drawing. */
   readonly size = input(96, { transform: numberAttribute });
   /** Breathing, blinking, twitching its whiskers. */
@@ -213,6 +220,9 @@ export class LenziCat {
   protected readonly aspect = CAT_ASPECT;
   protected readonly shape = computed(() => CAT_BACKS[this.back()] ?? CAT_BACKS.plain);
   protected readonly mask = computed(() => MASKS[this.back()] ?? MASKS.plain);
+  /** Liquid glass at the cat's size: a bezel a fourteenth of its width, as thick as a sixth (a thin ear stays clear). */
+  protected readonly liquidBezel = computed(() => Math.max(5, Math.round(this.size() / 14)));
+  protected readonly liquidThickness = computed(() => Math.max(10, Math.round(this.size() / 6)));
   protected readonly face = computed(() => {
     const expression = this.expression();
     if (expression === 'none') return null;

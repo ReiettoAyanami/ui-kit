@@ -19,7 +19,12 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   (lenzi, 2026-11-19: "quelli devono esserci solo quando i boidi ci si avvicinano"): dark while none is near,
   brighter the more there are (whole at `rimBoids`, 60; `rim` 0.5 at most), lit on the side they come from (eight
   sides), all round once they are under the glass (`LenziSights.around`, at every frame; the nine rims drawn once).
-- **One filter per glass, made for its size**, again when it changes size (the maps are as large as it is).
+- **One filter per glass, made for its size**, again when it changes size or a setting (the maps are as large as it
+  is).
+- **Any shape** (lenzi, 2026-11-19: Liquid Glass on the cat): `glassPath`, an SVG path stretched over the element as
+  `glassViewBox` says, and the bezel follows its outline: the path is drawn into pixels and each pixel's distance from
+  the outline found (an exact distance transform, softened a little). The element still takes the shape's mask
+  (`mask-image`) to show only inside it. Without a path: the element's box and its corners' radius.
 
 ## Rules
 
@@ -43,7 +48,10 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `saturation` | 1: as it is | `1.5` |
 | input | `rim` | 0 to 1 | `0.5` |
 | input | `lightAngle` | degrees | `-60` |
+| input | `glassPath` | an SVG path (even-odd): the glass's own shape | `null` (its box) |
+| input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |
+| function | `liquidGlassOutlineMaps(outline)` | the same for any shape, from what it covers (one alpha a pixel) | |
 
 ## Example
 

@@ -22,7 +22,10 @@ traced into vectors, in the theme's colours.
   (`LenziSights`: nothing to set), or straight ahead.
 - **A material shaped as the cat** (`material`): its body takes it inside its outline, not in a box.
   - `plain`: the page's surface, a little lighter than the page (`--lenzi-cat-fill`).
-  - `glass`: a lit surface (`lenziLit`): the background and the lamps' light show through it.
+  - `glass`: a lit surface (`lenziLit`): the background and the lamps' light show through it. With
+    `glass="liquid"` (lenzi, 2026-11-19: "metti un toggle per liquidglass") it is Liquid Glass instead
+    (`lenziLiquidGlass`): clear, it bends what is behind it near the cat's own outline (a bezel a fourteenth of its
+    width). Chromium only bends.
   - `lamp`: a glowing element (`lenziGlow`): its lines glow in its colour (`glowColor`), and it lights the
     lit surfaces around it (`glowStrength`, `glowReach`, as `lenziGlow`).
   - `solid`: a solid element (`lenziSolid`): on a lit floor it casts the cat's shadow, not a box's: its
@@ -47,6 +50,7 @@ traced into vectors, in the theme's colours.
 | `expression` | `'happy' \| 'sleepy' \| 'sad' \| 'watching' \| 'none'` | `'happy'` |
 | `back` | `'plain' \| 'hard-hat'` | `'plain'` |
 | `material` | `'plain' \| 'glass' \| 'lamp' \| 'solid'` | `'plain'` |
+| `glass` | `'frosted' \| 'liquid'`: the glass of a glass cat | `'frosted'` |
 | `size` | number, px | `96` |
 | `animated` | boolean | `true` |
 | `label` | string | `''` (decoration) |

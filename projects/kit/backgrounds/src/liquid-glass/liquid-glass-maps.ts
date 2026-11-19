@@ -85,6 +85,18 @@ function roundedBox(px: number, py: number, hw: number, hh: number, r: number): 
   return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
 }
 
+/** What the maps are made from: a size, and the signed distance from the glass's edge at a point (negative inside). */
+interface DistanceField {
+  width: number;
+  height: number;
+  /** At a point in px from the top left corner. */
+  distance: (x: number, y: number) => number;
+  /** How far apart the distance is read to find the edge's direction, px (wider on a field of pixels: smoother). */
+  step: number;
+}
+
+type Optics = Pick<LenziLiquidGlassShape, 'thickness' | 'ior' | 'surface' | 'lightAngle'>;
+
 /** The maps for a glass of this shape: where each pixel is seen from, and the rim's light. */
 export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassMaps {
   const width = Math.max(1, Math.round(shape.width));
@@ -93,9 +105,142 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
   const hh = height / 2;
   const radius = Math.min(Math.max(0, shape.radius), hw, hh);
   const bezel = Math.max(1, Math.min(shape.bezel, hw, hh));
+  return mapsOf({ width, height, step: 0.5, distance: (x, y) => roundedBox(x - hw, y - hh, hw, hh, radius) }, bezel, shape);
+}
+
+/**
+ * A glass of any shape (lenzi, 2026-11-19: Liquid Glass on the cat): what it covers, one value a pixel from 0 (out) to
+ * 255 (in), as a canvas's alpha gives it; the bezel follows its outline.
+ */
+export interface LenziLiquidGlassOutline extends Omit<LenziLiquidGlassShape, 'radius'> {
+  inside: ArrayLike<number>;
+}
+
+/** The maps for a glass of any shape, from what it covers (its outline drawn into pixels). */
+export function liquidGlassOutlineMaps(outline: LenziLiquidGlassOutline): LenziLiquidGlassMaps {
+  const width = Math.max(1, Math.round(outline.width));
+  const height = Math.max(1, Math.round(outline.height));
+  const field = signedDistanceField(outline.inside, width, height);
+  let deepest = 0;
+  for (const value of field) deepest = Math.max(deepest, -value);
+  const bezel = Math.max(1, Math.min(outline.bezel, deepest));
+  const sample = (x: number, y: number) => {
+    const fx = Math.min(width - 1, Math.max(0, x - 0.5));
+    const fy = Math.min(height - 1, Math.max(0, y - 0.5));
+    const x0 = Math.floor(fx);
+    const y0 = Math.floor(fy);
+    const x1 = Math.min(width - 1, x0 + 1);
+    const y1 = Math.min(height - 1, y0 + 1);
+    const tx = fx - x0;
+    const ty = fy - y0;
+    const top = field[y0 * width + x0]! * (1 - tx) + field[y0 * width + x1]! * tx;
+    const bottom = field[y1 * width + x0]! * (1 - tx) + field[y1 * width + x1]! * tx;
+    return top * (1 - ty) + bottom * ty;
+  };
+  return mapsOf({ width, height, step: 1.5, distance: sample }, bezel, outline);
+}
+
+const FAR = 1e20;
+
+/** The squared distance to the nearest feature along one line (Felzenszwalb and Huttenlocher's lower envelope). */
+function distanceAlong(f: Float64Array, n: number, d: Float64Array, v: Int32Array, z: Float64Array): void {
+  let k = 0;
+  v[0] = 0;
+  z[0] = -FAR;
+  z[1] = FAR;
+  for (let q = 1; q < n; q++) {
+    let s = (f[q]! + q * q - (f[v[k]!]! + v[k]! * v[k]!)) / (2 * q - 2 * v[k]!);
+    while (s <= z[k]!) {
+      k--;
+      s = (f[q]! + q * q - (f[v[k]!]! + v[k]! * v[k]!)) / (2 * q - 2 * v[k]!);
+    }
+    k++;
+    v[k] = q;
+    z[k] = s;
+    z[k + 1] = FAR;
+  }
+  k = 0;
+  for (let q = 0; q < n; q++) {
+    while (z[k + 1]! < q) k++;
+    d[q] = (q - v[k]!) ** 2 + f[v[k]!]!;
+  }
+}
+
+/** The squared distance of every cell to the nearest feature (0 in `grid`; FAR elsewhere), in place. */
+function squaredDistances(grid: Float64Array, width: number, height: number): void {
+  const longest = Math.max(width, height);
+  const f = new Float64Array(longest);
+  const d = new Float64Array(longest);
+  const v = new Int32Array(longest);
+  const z = new Float64Array(longest + 1);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) f[y] = grid[y * width + x]!;
+    distanceAlong(f, height, d, v, z);
+    for (let y = 0; y < height; y++) grid[y * width + x] = d[y]!;
+  }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) f[x] = grid[y * width + x]!;
+    distanceAlong(f, width, d, v, z);
+    for (let x = 0; x < width; x++) grid[y * width + x] = d[x]!;
+  }
+}
+
+/**
+ * The signed distance of every pixel's middle from the outline (negative inside), px, softened a little so the edge's
+ * direction does not step with the pixels. What is past the picture's border is outside.
+ */
+function signedDistanceField(inside: ArrayLike<number>, width: number, height: number): Float32Array {
+  // one pixel of outside all round
+  const w = width + 2;
+  const h = height + 2;
+  const toInside = new Float64Array(w * h).fill(FAR);
+  const toOutside = new Float64Array(w * h).fill(0);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if ((inside[y * width + x] ?? 0) < 128) continue;
+      toInside[(y + 1) * w + x + 1] = 0;
+      toOutside[(y + 1) * w + x + 1] = FAR;
+    }
+  }
+  squaredDistances(toInside, w, h);
+  squaredDistances(toOutside, w, h);
+  let field = new Float32Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const at = (y + 1) * w + x + 1;
+      field[y * width + x] = toOutside[at]! > 0 ? -(Math.sqrt(toOutside[at]!) - 0.5) : Math.sqrt(toInside[at]!) - 0.5;
+    }
+  }
+  // two passes of a 3 × 3 average: a smoother slope, the same edge
+  for (let pass = 0; pass < 2; pass++) {
+    const soft = new Float32Array(width * height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let sum = 0;
+        let count = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+            sum += field[ny * width + nx]!;
+            count++;
+          }
+        }
+        soft[y * width + x] = sum / count;
+      }
+    }
+    field = soft;
+  }
+  return field;
+}
+
+/** The maps from a distance field: the bending in the bezel, and the rim's light on the very edge. */
+function mapsOf(field: DistanceField, bezel: number, optics: Optics): LenziLiquidGlassMaps {
+  const { width, height, distance, step } = field;
   // the shift at each distance from the edge, once (it depends on nothing else), and the largest
   const steps = Math.ceil(bezel * 2);
-  const shifts = Array.from({ length: steps + 1 }, (_, i) => bezelShift({ ...shape, bezel }, (i / steps) * bezel));
+  const shifts = Array.from({ length: steps + 1 }, (_, i) => bezelShift({ ...optics, bezel }, (i / steps) * bezel));
   const largest = Math.max(1e-6, ...shifts.map(Math.abs));
   const shiftAt = (d: number) => {
     const at = Math.min(steps, Math.max(0, (d / bezel) * steps));
@@ -103,7 +248,7 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
     const f = at - i;
     return (shifts[i] ?? 0) * (1 - f) + (shifts[Math.min(steps, i + 1)] ?? 0) * f;
   };
-  const light = (shape.lightAngle * Math.PI) / 180;
+  const light = (optics.lightAngle * Math.PI) / 180;
   const lx = Math.cos(light);
   const ly = Math.sin(light);
   const displacement = new Uint8ClampedArray(width * height * 4);
@@ -112,10 +257,9 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
   const rims = directions.map((direction) => ({ angle: direction.angle, data: new Uint8ClampedArray(width * height * 4) }));
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const px = x + 0.5 - hw;
-      const py = y + 0.5 - hh;
-      const edge = roundedBox(px, py, hw, hh, radius);
-      const d = -edge;
+      const px = x + 0.5;
+      const py = y + 0.5;
+      const d = -distance(px, py);
       const at = (y * width + x) * 4;
       displacement[at + 2] = 128;
       displacement[at + 3] = 255;
@@ -126,9 +270,8 @@ export function liquidGlassMaps(shape: LenziLiquidGlassShape): LenziLiquidGlassM
         continue;
       }
       // the outward normal of the edge here: the distance's slope
-      const e = 0.5;
-      let nx = roundedBox(px + e, py, hw, hh, radius) - roundedBox(px - e, py, hw, hh, radius);
-      let ny = roundedBox(px, py + e, hw, hh, radius) - roundedBox(px, py - e, hw, hh, radius);
+      let nx = distance(px + step, py) - distance(px - step, py);
+      let ny = distance(px, py + step) - distance(px, py - step);
       const length = Math.hypot(nx, ny) || 1;
       nx /= length;
       ny /= length;

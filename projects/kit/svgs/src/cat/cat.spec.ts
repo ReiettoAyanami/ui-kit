@@ -63,7 +63,12 @@ describe('LenziCat', () => {
     expect(shape().style.maskImage).toContain('data:image/svg+xml');
     await set({ material: 'glass' });
     expect(shape().classList).toContain('lenzi-lit');
-    await set({ material: 'lamp', glowColor: '#ff0000' });
+    // Liquid Glass (2026-11-19): clear glass shaped as the cat, not frosted
+    await set({ glass: 'liquid' });
+    expect(shape().classList).toContain('lenzi-liquid-glass');
+    expect(shape().classList).not.toContain('lenzi-lit');
+    expect(shape().style.maskImage).toContain('data:image/svg+xml');
+    await set({ glass: 'frosted', material: 'lamp', glowColor: '#ff0000' });
     expect(shape().classList).toContain('lenzi-glow-on');
     expect(host().querySelector('.ink')?.classList).toContain('lit');
     await set({ material: 'solid' });
