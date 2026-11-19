@@ -1,0 +1,40 @@
+import { bezelShift, glassHeight, liquidGlassMaps } from './liquid-glass-maps';
+
+const SHAPE = { width: 200, height: 120, radius: 24, bezel: 20, thickness: 40, ior: 1.5, surface: 'squircle' as const, lightAngle: -60 };
+
+describe('liquidGlassMaps', () => {
+  it('the bezel rises from the edge to the flat top; a lip goes back down', () => {
+    expect(glassHeight('squircle', 0)).toBe(0);
+    expect(glassHeight('squircle', 1)).toBe(1);
+    expect(glassHeight('circle', 0.5)).toBeGreaterThan(0.8);
+    expect(glassHeight('lip', 1)).toBeCloseTo(0);
+  });
+
+  it('bends nothing at the very edge nor on the flat middle, and something in between', () => {
+    expect(bezelShift(SHAPE, 0)).toBe(0);
+    expect(bezelShift(SHAPE, 20)).toBe(0);
+    expect(Math.abs(bezelShift(SHAPE, 8))).toBeGreaterThan(0.1);
+  });
+
+  it('leaves the middle as it is and takes pixels from inwards near the edge, the same on both sides', () => {
+    const maps = liquidGlassMaps(SHAPE);
+    const at = (x: number, y: number) => (y * maps.width + x) * 4;
+    const middle = at(100, 60);
+    expect([maps.displacement[middle], maps.displacement[middle + 1]]).toEqual([128, 128]);
+    // near the left edge, halfway up: it takes from the right (inwards), the right edge from the left
+    const left = at(6, 60);
+    const right = at(193, 60);
+    expect(maps.displacement[left]!).toBeGreaterThan(128);
+    expect(maps.displacement[right]!).toBeLessThan(128);
+    expect(maps.displacement[left]! - 128).toBeCloseTo(128 - maps.displacement[right]!, -0.5);
+    expect(maps.scale).toBeGreaterThan(0);
+  });
+
+  it('lights only the very edge, most where it faces the light (top left), none in the middle', () => {
+    const maps = liquidGlassMaps(SHAPE);
+    const alpha = (x: number, y: number) => maps.specular[(y * maps.width + x) * 4 + 3]!;
+    expect(alpha(100, 60)).toBe(0);
+    expect(alpha(100, 0)).toBeGreaterThan(alpha(100, 119));
+    expect(alpha(100, 10)).toBe(0);
+  });
+});

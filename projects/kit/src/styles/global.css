@@ -521,6 +521,15 @@ html {
   color: var(--lenzi-solid-surface, var(--mat-sys-surface));
 }
 
+/* Liquid Glass (lenziLiquidGlass; lenzi, 2026-11-19: "quasi come il liquid glass di IOS ... diverso dal classico
+   vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo"): clear, no border, no fill. Chromium gets the bending
+   filter from the directive (inline backdrop-filter); every other browser this blur and saturation only. */
+.lenzi-liquid-glass {
+  border: none;
+  background: transparent;
+  backdrop-filter: blur(1.5px) saturate(1.5);
+}
+
 /* Every surface takes only its own light. Custom properties inherit, so a surface with none of its own would
    draw the light of the surface that holds it (lenzi, 2026-11-14: "if i try to move the play button, the
    light moves on multiple surfaces": the cards showed the floor's light, in the floor's coordinates). What

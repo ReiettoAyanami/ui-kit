@@ -59,6 +59,9 @@ the rule says what, the variable says how much.
   snackbars, tooltips, the top bar. **Solid**: cards, tables and panels of a page (nothing is under
   them), and the info bars (they must stand out).
 - **The scrims blur the page** behind a dialog, a page window or the drawer (6 px).
+- **Liquid Glass is another material** (lenzi, 2026-11-19: "quasi come il liquid glass di IOS ... diverso dal classico
+  vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo"): `lenziLiquidGlass`, clear, it bends what is behind it
+  near its curved edge, and has no border, only a rim of light on its very edge. Chromium only bends.
 - **Reduce transparency** (`LenziAppearance`, and the system's own `prefers-reduced-transparency`) makes
   every surface solid again.
 
