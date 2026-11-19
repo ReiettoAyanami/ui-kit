@@ -739,6 +739,11 @@ export class SceneMakerPage {
     this.scene.update((scene) => ({ ...scene, throwable }));
   }
 
+  /** The glass of the scene: liquid, or the page's frosted glass (not said). */
+  protected setLiquid(liquid: boolean): void {
+    this.scene.update(({ glass: _, ...scene }) => (liquid ? { ...scene, glass: 'liquid' } : scene));
+  }
+
   /** A shape the blob keeps, or none ('': it changes from one into another). */
   protected setShape(shape: BlobShapeName | '' | undefined): void {
     const chosen = this.chosen();

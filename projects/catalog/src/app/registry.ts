@@ -175,6 +175,22 @@ const BLOB_MATERIAL_CONTROL: Control = {
   code: { match: /\[materials\]="\[([^\]]*)\]"/, otherwise: "'lamp'" },
 };
 
+/**
+ * How the glass blobs look (lenzi, 2026-11-19: "un'altra scelta nel kit"): the page's frosted glass, or liquid glass
+ * that bends what is behind it near its edge, as lenziLiquidGlass.
+ */
+const GLASS_KIND_CONTROL: Control = {
+  key: 'glass',
+  label: 'Their glass is',
+  type: 'select',
+  default: 'frosted',
+  options: [
+    { value: 'frosted', label: "frosted (the page's glass)" },
+    { value: 'liquid', label: 'liquid (it bends what is behind it)' },
+  ],
+  code: { match: /\bglass="(\w+)"/, otherwise: 'frosted' },
+};
+
 /** The fleets of blob-boids as the code writes them: only the ones with boids. */
 const blobFlocksAttribute = (v: Values) => {
   const fleets = (['lamp', 'glass', 'solid'] as const)
@@ -1215,6 +1231,7 @@ ${tag('lenzi-background', [
       { key: 'soft', label: 'Soft edge (px)', type: 'number', default: 2, min: 0, max: 80, step: 1 },
       { key: 'pull', label: 'Drawn by the pointer (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.05 },
       BLOB_MATERIAL_CONTROL,
+      GLASS_KIND_CONTROL,
       { key: 'throwable', label: 'The pointer throws them (drag one)', type: 'boolean', default: false, code: { match: /\bthrowable\b/ } },
       ...GLOW_CONTROLS,
     ],
@@ -1232,6 +1249,7 @@ ${tag('lenzi-blob-background', [
   bound('soft', v['soft'], 2),
   bound('pull', v['pull'], 0),
   v['blobMaterials'] === "'lamp'" ? '' : `[materials]="[${v['blobMaterials']}]"`,
+  plain('glass', v['glass'], 'frosted'),
   v['throwable'] ? 'throwable' : '',
   ...glowAttributes(v),
 ])}`,
@@ -1367,6 +1385,7 @@ ${tag('lenzi-flock-background', [
       { key: 'spin', label: 'Turns a minute', type: 'number', default: 1.2, min: 0, max: 10, step: 0.1 },
       { key: 'merge', label: 'How softly blobs join (0 to 1)', type: 'number', default: 0.35, min: 0, max: 1, step: 0.05 },
       { ...BLOB_MATERIAL_CONTROL, default: "'lamp', 'glass'" },
+      GLASS_KIND_CONTROL,
       { key: 'lampBoids', label: 'Blob-boids, lamp', type: 'number', default: 16, min: 0, max: 120, step: 1, code: { match: /material: 'lamp', count: (\d+)/, otherwise: 0 } },
       { key: 'glassBoids', label: 'Blob-boids, glass', type: 'number', default: 16, min: 0, max: 120, step: 1, code: { match: /material: 'glass', count: (\d+)/, otherwise: 0 } },
       { key: 'solidBoids', label: 'Blob-boids, solid', type: 'number', default: 0, min: 0, max: 120, step: 1, code: { match: /material: 'solid', count: (\d+)/, otherwise: 0 } },
@@ -1430,6 +1449,7 @@ ${tag('lenzi-blob-flock-background', [
   bound('spin', v['spin'], 1.2),
   bound('merge', v['merge'], 0.35),
   v['blobMaterials'] === "'lamp'" ? '' : `[materials]="[${v['blobMaterials']}]"`,
+  plain('glass', v['glass'], 'frosted'),
   blobFlocksAttribute(v),
   v['glassAbove'] ? '' : `[materialLayers]="{ lamp: 0, glass: 0, solid: 0 }"`,
   bound('boids', v['boids'], 380),

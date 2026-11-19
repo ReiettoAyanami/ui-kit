@@ -4,6 +4,7 @@ import { LenziBlobBackground } from '../blob-background/blob-background';
 import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWays } from '../blob-flock-background/blob-flock-background';
 import { BlobState, DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
 import { BlobMaterial } from '../engine/blob-materials';
+import { LenziGlassKind } from '../engine/liquid-profile';
 import { BoidsFollow } from '../engine/boids';
 import { BlobShapeName } from '../engine/shapes';
 import { LenziCurrent } from '../engine/currents';
@@ -90,6 +91,11 @@ export interface LenziScene {
    * whole page, scrolling with it and flying across it; 'screen' or not said, the window, fixed behind the page.
    */
   space?: 'screen' | 'page';
+  /**
+   * How its glass blobs look (lenzi, 2026-11-19): 'frosted' or not said, the page's glass; 'liquid', clear glass that
+   * bends what is behind it near its edge (`LenziBlobBackground.glass`).
+   */
+  glass?: LenziGlassKind;
 }
 
 /** What the backgrounds are given for a scene. */
@@ -109,6 +115,8 @@ export interface LenziSceneLayout {
   throwable: boolean;
   /** Where the fleets live: the window, or the whole page. */
   space: 'screen' | 'page';
+  /** How the glass blobs look. */
+  glass: LenziGlassKind;
 }
 
 type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean; shapes?: BlobShapeName[] };
@@ -140,6 +148,7 @@ export function sceneLayout(scene: LenziScene): LenziSceneLayout {
     currents: scene.currents?.length ? scene.currents : null,
     follow: scene.follow ?? 'near',
     throwable: scene.throwable === true,
+    glass: scene.glass === 'liquid' ? 'liquid' : 'frosted',
     space: scene.space === 'page' ? 'page' : 'screen',
   };
 }

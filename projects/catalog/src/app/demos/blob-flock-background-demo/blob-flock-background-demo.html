@@ -6,6 +6,7 @@
   [spin]="num('spin', blobs.spin)"
   [merge]="num('merge', 0.35)"
   [materials]="materials()"
+  [glass]="text('glass', 'frosted') === 'liquid' ? 'liquid' : 'frosted'"
   [blobFlocks]="fleets()"
   [materialLayers]="layers()"
   [boids]="num('boids', 380)"

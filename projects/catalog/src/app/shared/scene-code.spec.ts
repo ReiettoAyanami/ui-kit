@@ -10,6 +10,13 @@ describe('a scene in a link', () => {
     expect(await sceneFromCode(code)).toEqual(HOME_SCENE);
   });
 
+  it("keeps the scene's liquid glass, and nothing else as its glass (2026-11-19)", async () => {
+    const liquid = { ...HOME_SCENE, glass: 'liquid' as const };
+    expect((await sceneFromCode(await sceneToCode(liquid)))?.glass).toBe('liquid');
+    expect(cleanScene({ blobs: [], fleets: [], glass: 'frosted' })?.glass).toBeUndefined();
+    expect(cleanScene({ blobs: [], fleets: [], glass: 'molten' })?.glass).toBeUndefined();
+  });
+
   it('a code that is not a scene is none', async () => {
     for (const code of [null, '', 'x123', 'z!!!', 'zAAAA', `j${btoa('{"blobs": 3}')}`]) expect(await sceneFromCode(code)).toBeNull();
   });

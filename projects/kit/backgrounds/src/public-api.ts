@@ -32,3 +32,4 @@ export * from './engine/blob-throw';
 export * from './engine/currents';
 export { BOID_STRETCH, type BoidShape } from './engine/flock-scene';
 export { BLOB_MATERIALS, type BlobMaterial } from './engine/blob-materials';
+export { LIQUID_GLASS, liquidLookOf, liquidProfile, type LenziGlassKind, type LenziLiquidBlobGlass } from './engine/liquid-profile';

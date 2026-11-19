@@ -15,6 +15,7 @@ import { LinearRgb } from './color';
 import { BlobShape } from './shapes';
 import { shapeUniforms } from './blob-field';
 import { GlowEngine, GlowSurfaceInputs, GlowTarget } from './glow-engine';
+import { LIQUID_STEPS, LenziLiquidBlobGlass, LiquidProfile, liquidProfile } from './liquid-profile';
 
 /** What a blob is made of: a lamp (the glowing blobs), glass, or something solid. */
 export type BlobMaterial = 'lamp' | 'glass' | 'solid';
@@ -99,6 +100,11 @@ export interface MaterialLook {
   borderWidth: number;
   /** Solid: its colour. */
   solid: LinearRgb;
+  /**
+   * Glass that bends what is behind it, as `lenziLiquidGlass` does, instead of frosting it (lenzi, 2026-11-19:
+   * "un'altra scelta nel kit"): clear, no border, a curved bezel along its edge, its shape as it changes. None: frosted.
+   */
+  liquid?: LenziLiquidBlobGlass | null;
 }
 
 /** The most objects the fields hold, the most lamps and solid things the shadow looks at. */
@@ -140,6 +146,12 @@ const SHADOW_SPREAD = 0.6;
 /** How much of the widest glow reaches a glass or solid surface from all around, and glass's frost (linear). */
 const AMBIENT = 4;
 const FROST = 0.012;
+/** Liquid glass: how saturated what is seen through it is (1: as it is; the directive's 1.5), how much of the veil it keeps, and how much it is seen through, unless a blob says (its own colour, the page's glass). */
+const LIQUID_SATURATION = 1.4;
+const LIQUID_VEIL = 0.25;
+/** How far further in the edge's normal is looked at, a share of the bezel: where it turns round, the bending fades. */
+const LIQUID_LOOK_AHEAD = 0.35;
+const LIQUID_CLARITY = { own: 0.85, page: 0.94 } as const;
 /** How far an object's share reaches, in its merges: beyond, e^-9 of it. */
 const REACH = 9;
 const FLOATS = 28;
@@ -470,8 +482,36 @@ uniform int layers;
 uniform sampler2DArray weights;
 uniform sampler2DArray glassTints;
 uniform sampler2DArray solidTints;
+// liquid glass (1) or frosted (0); its bezel and largest shift, device px; the shift over the bezel, from the edge in
+uniform float liquid;
+uniform float bezelPx;
+uniform float liftPx;
+uniform float profile[${LIQUID_STEPS + 1}];
 out vec4 color;
 ${SURFACE_LIGHT}
+
+// how far what is seen at a place inside the bezel comes from, inwards, device px (as lenziLiquidGlass bends)
+float bendAt(float inside) {
+  if (inside <= 0.0 || inside >= bezelPx) return 0.0;
+  float at = inside / bezelPx * ${LIQUID_STEPS.toFixed(1)};
+  int i = min(int(at), ${LIQUID_STEPS - 1});
+  return mix(profile[i], profile[i + 1], at - float(i)) * liftPx;
+}
+
+// the glass's edge normal at another place of its level
+vec2 glassNormalAt(float layer, vec2 at) {
+  vec2 slope = 0.5 * vec2(
+    edgeAt(texture(weights, vec3(at + vec2(pixel.x, 0.0), layer)).r) - edgeAt(texture(weights, vec3(at - vec2(pixel.x, 0.0), layer)).r),
+    edgeAt(texture(weights, vec3(at + vec2(0.0, pixel.y), layer)).r) - edgeAt(texture(weights, vec3(at - vec2(0.0, pixel.y), layer)).r));
+  return length(slope) > 1e-6 ? normalize(slope) : vec2(0.0);
+}
+
+// how much of the bending holds here: all of it while the edge's normal a little further in is the same; none where
+// it turns round, the middle of a blob thinner than its bezel (there the bezels of both sides met in a tear)
+float steadyAt(float layer, vec2 out_) {
+  vec2 further = glassNormalAt(layer, uv - out_ * bezelPx * ${LIQUID_LOOK_AHEAD.toFixed(2)} * pixel);
+  return smoothstep(0.0, 0.9, dot(out_, further));
+}
 
 // one level over the picture so far: its solid things (in the picture already, drawn again over a lower level's
 // glass), then its glass over them
@@ -489,19 +529,30 @@ vec3 level(vec3 c, float layer, Near n, Light l) {
     vec3 colour = t.rgb / share;
     float tint = clamp(t.a / share, 0.0, 1.0);
     float clarity = clamp(solidTint.a / share, 0.0, 1.0);
-    // what is behind it, blurred, through its colour as a filter (its hue, not its darkness)
+    vec2 out_ = length(glass.slope) > 1e-6 ? normalize(glass.slope) : vec2(0.0);
+    // what is behind it: blurred (frosted); or bent near its edge, from inwards, and clear (liquid: the field's slope is
+    // the edge's normal and its depth the distance from it, at every frame, whatever its shape)
+    vec3 behind;
+    if (liquid > 0.5) {
+      float bend = bendAt(glass.inside);
+      if (bend != 0.0) bend *= steadyAt(layer, out_);
+      behind = decode(texture(picture, uv - out_ * bend * pixel).rgb);
+      behind = max(vec3(0.0), mix(vec3(dot(behind, vec3(0.2126, 0.7152, 0.0722))), behind, ${LIQUID_SATURATION.toFixed(2)}));
+    } else {
+      behind = decode(texture(blurred, uv).rgb);
+    }
+    // through its colour as a filter (its hue, not its darkness)
     float most = max(colour.r, max(colour.g, colour.b));
-    vec3 through = decode(texture(blurred, uv).rgb) * mix(vec3(1.0), colour / max(most, 1e-4), tint);
+    vec3 through = behind * mix(vec3(1.0), colour / max(most, 1e-4), tint);
     // its own body lit as a surface is (frosted glass takes the light round it): dark where it is dark, so it sits in
     // the scene instead of on it
     vec3 body = colour * (${GLASS_FLOOR.toFixed(3)} + (1.0 - exp(-l.around * ${SOLID_LIGHT.toFixed(2)})));
-    vec3 g = mix(body, through, clarity) + ${FROST.toFixed(3)};
-    g += shine(l.around) * veil;
-    // its edge: a line, lit on the side that faces the light
-    vec2 out_ = length(glass.slope) > 1e-6 ? normalize(glass.slope) : vec2(0.0);
+    vec3 g = mix(body, through, clarity) + ${FROST.toFixed(3)} * (1.0 - liquid);
+    g += shine(l.around) * veil * mix(1.0, ${LIQUID_VEIL.toFixed(2)}, liquid);
+    // its edge: a line, lit on the side that faces the light (liquid: no line, only the light on it)
     float facing = max(0.0, dot(out_, l.way));
     float band = clamp(borderPx - glass.inside + 0.5, 0.0, 1.0);
-    g = mix(g, border, band * 0.8);
+    g = mix(g, border, band * 0.8 * (1.0 - liquid));
     g += shine(l.here * (0.35 + 0.65 * facing)) * rim * band;
     c = mix(c, g, glass.fill);
   }
@@ -658,6 +709,9 @@ export class MaterialScene {
   /** Each of those levels' own number (a scene's `layer`): where the light of other things falls among them. */
   private layers: number[] = [0];
   private look: MaterialLook | null = null;
+  /** The liquid glass's profile, and the look it was made for. */
+  private profile: LiquidProfile | null = null;
+  private profileKey = '';
   /** Each level's fields, a layer of one texture each: the weights, the lamps' colours, glass's, solid's. */
   private fields: LayeredFields | null = null;
   private shadowTarget: GlowTarget | null = null;
@@ -749,7 +803,9 @@ export class MaterialScene {
             : object.material === 'glass'
               ? [...(object.colour ?? (object.emit ? object.tint : (look?.glass ?? object.tint))), clamp01(object.tintAmount ?? (ownGlass ? 0.5 : 0))]
               : [...(object.colour ?? object.tint), 1];
-        const clarity = clamp01(object.clarity ?? (ownGlass ? 0.7 : 1 - (look?.glassAmount ?? 0.5)));
+        const clarity = clamp01(
+          object.clarity ?? (look?.liquid ? (ownGlass ? LIQUID_CLARITY.own : LIQUID_CLARITY.page) : ownGlass ? 0.7 : 1 - (look?.glassAmount ?? 0.5)),
+        );
         data.set([object.x, object.y, Math.max(0.5, object.radius), Math.max(0.5, object.merge)], at);
         data.set([object.rotation, object.mix, BLOB_MATERIALS.indexOf(object.material), object.drop ? 1 : 0], at + 4);
         // the free place after the first shape's lobes: whether glass shines
@@ -944,8 +1000,26 @@ export class MaterialScene {
     this.useLayers(program, 'solidTints', fields.solid, 6);
     gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
     this.lightUniforms(program, inputs, look, 7);
+    this.liquidUniforms(program, look);
     engine.fullscreen();
     return true;
+  }
+
+  /** The liquid glass's bending (its profile made again only when the look changes it), or frosted glass. */
+  private liquidUniforms(program: WebGLProgram, look: MaterialLook): void {
+    const engine = this.engine;
+    const gl = engine.gl;
+    const liquid = look.liquid ?? null;
+    gl.uniform1f(engine.uniform(program, 'liquid'), liquid ? 1 : 0);
+    if (!liquid) return;
+    const key = `${liquid.bezel}|${liquid.thickness}|${liquid.ior}|${liquid.refraction}`;
+    if (key !== this.profileKey || !this.profile) {
+      this.profileKey = key;
+      this.profile = liquidProfile(liquid);
+    }
+    gl.uniform1f(engine.uniform(program, 'bezelPx'), Math.max(1, liquid.bezel) * engine.scale);
+    gl.uniform1f(engine.uniform(program, 'liftPx'), this.profile.largest * engine.scale);
+    gl.uniform1fv(engine.uniform(program, 'profile'), this.profile.shifts);
   }
 
   dispose(): void {

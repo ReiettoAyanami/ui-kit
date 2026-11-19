@@ -10,6 +10,7 @@
   [soft]="num('soft', 2)"
   [pull]="num('pull', 0)"
   [materials]="materials()"
+  [glass]="text('glass', 'frosted') === 'liquid' ? 'liquid' : 'frosted'"
   [throwable]="values()['throwable'] === true"
   [spread]="num('spread', 0.2)"
   [seed]="num('seed', 1)"

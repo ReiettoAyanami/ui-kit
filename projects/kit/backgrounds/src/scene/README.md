@@ -75,6 +75,8 @@ contenente boidi, blob, boidi-blob").
 - **Where the fleets live** (`space`; lenzi, 2026-11-19: "La posizione dei boidi non deve ignorare la pagina"):
   `'page'`, on the whole page (they scroll with it and fly across it, turning at its edges); `'screen'` or not said,
   the window. The blobs stay on the window.
+- **Its glass** (`glass`; lenzi, 2026-11-19): `'liquid'`, the glass blobs and blob-boids bend what is behind them near
+  their edge (see the blob background's README); `'frosted'` or not said, the page's glass.
 - **Zones of the page** (`lenziGather`): the fleets gather under the one the window shows most of (see
   `gather/README.md`); nothing to say in the scene.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
@@ -100,7 +102,7 @@ contenente boidi, blob, boidi-blob").
 
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, shapes?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
-wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
+wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space?, glass? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
 tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 
 ## Example

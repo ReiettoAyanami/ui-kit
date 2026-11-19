@@ -12,6 +12,7 @@
     [follow]="shown.follow"
     [throwable]="shown.throwable && !making"
     [space]="making ? 'screen' : shown.space"
+    [glass]="shown.glass"
   />
 } @else {
   <lenzi-blob-background
@@ -22,5 +23,6 @@
     [currents]="making ? null : shown.currents"
     [throwable]="shown.throwable && !making"
     [pull]="0"
+    [glass]="shown.glass"
   />
 }
