@@ -24,6 +24,15 @@ change from one into another and melt into each other where they meet, glowing o
   lit surfaces), glass (blurs what is behind it, takes the light around it, as the page's glass), solid (the
   page's surface, its edge lit on the side of the light, a hard shadow on the glow behind it, following its
   shape). Blobs melt only into blobs of their own material.
+- **Liquid glass** (`glass="liquid"`; lenzi, 2026-11-19: "capire se questa tecnica per il rendering del vetro si
+  può usare su forme che non sono regolari e stabili come le supershapes ... un'altra scelta nel kit"): the glass blobs
+  are clear and bend what is behind them near their edge, as `lenziLiquidGlass` does (kube.io's way: a curved bezel,
+  Snell's law), instead of frosting it; no border, only the light on their edge. It follows their shape at every frame,
+  as they turn, change shape and melt into one another: the blobs' field gives the distance from the edge and its
+  normal at every place, and the bezel's bending is read there. It bends what the background draws (the glow, the
+  boids, the other blobs), not the page over it; WebGL2, so every browser that draws the blobs (the directive bends
+  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 22 px, 48 px, 1.5, 1).
+  One kind of glass for all the glass blobs of a background.
 - **Thrown** (`throwable`, off; lenzi, 2026-11-14: "kinda like throwing them around"): the pointer takes a
   blob (a hand shows over one) and throws it; it flies on, slows down, bounces off the edges and drifts back
   to its path. Pressing on the page's own things (a link, a button, a field) never takes a blob.
@@ -53,6 +62,8 @@ change from one into another and melt into each other where they meet, glowing o
 | input | `throwable` | `boolean` (the pointer throws them) | `false` |
 | input | `materials` | `('lamp' \| 'glass' \| 'solid')[]`, each blob's, round again | `['lamp']` |
 | input | `blobSizes` | `number[] \| null`, each blob's size (a share of the smaller side), round again | `null` |
+| input | `glass` | `'frosted' \| 'liquid'` (`LenziGlassKind`), how the glass blobs look | `'frosted'` |
+| input | `liquid` | `Partial<LenziLiquidBlobGlass> \| null`: `bezel`, `thickness` (px), `ior`, `refraction` | `null` (`LIQUID_GLASS`) |
 | input | `fill`, `accent`, `base`, `spread`, `seed`, `brightness`, `glow`, `halo`, `blur`, `speed`, `animate`, `pointer`, `resolution`, `lights` | every glowing background's | see Flock background |
 
 ## Example

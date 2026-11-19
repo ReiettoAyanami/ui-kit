@@ -248,6 +248,21 @@ describe('SceneMakerPage', () => {
     expect(maker.scene().blobs[1]!.obstacle).toBe(false);
   });
 
+  it("the scene's glass is frosted until the toggle makes it liquid, and back (2026-11-19)", async () => {
+    const { page, maker, fixture } = await open();
+    const liquid = () => [...page.querySelectorAll<HTMLElement>('.objects mat-slide-toggle')].find((toggle) => toggle.textContent?.includes('Liquid glass'));
+    expect(liquid()).toBeDefined();
+    expect(maker.scene().glass).toBeUndefined();
+    liquid()!.querySelector<HTMLButtonElement>('button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().glass).toBe('liquid');
+    liquid()!.querySelector<HTMLButtonElement>('button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect('glass' in maker.scene()).toBe(false);
+  });
+
   it('throwing is always at hand in the main panel, whatever window is open; the scene row says whether it throws', async () => {
     // 2026-11-17: "after toggling it stays put i can't interact with any object during play" (the scene threw nothing),
     // then "fai in modo che sia sempre configurabile, dal pannello generale"
@@ -258,7 +273,9 @@ describe('SceneMakerPage', () => {
     expect(throwing()).toBeDefined();
     // at the panel's foot, after the buttons that add (lenzi's arrow)
     expect(throwing()!.previousElementSibling?.textContent).toContain('Add a current');
-    expect(throwing()!.nextElementSibling).toBeNull();
+    // under it only the scene's glass (2026-11-19)
+    expect(throwing()!.nextElementSibling?.textContent).toContain('Liquid glass');
+    expect(throwing()!.nextElementSibling!.nextElementSibling).toBeNull();
     await click('Glass blob');
     expect(throwing()).toBeDefined();
     // only there: not again in a window

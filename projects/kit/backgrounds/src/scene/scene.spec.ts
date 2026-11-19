@@ -33,6 +33,11 @@ describe('sceneLayout', () => {
     expect(layout.throwable).toBe(true);
   });
 
+  it('gives the glass blobs frosted unless the scene says liquid', () => {
+    expect(sceneLayout(HOME).glass).toBe('frosted');
+    expect(sceneLayout({ ...HOME, glass: 'liquid' }).glass).toBe('liquid');
+  });
+
   it("each fleet keeps its leader's ways, its size and its sizes' variety; a fleet without boids is left out", () => {
     const layout = sceneLayout({
       blobs: [],

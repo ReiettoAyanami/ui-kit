@@ -6,5 +6,8 @@
   respects reduced motion and has a fallback.
 - Colours: pass a theme variable name to `accent` and `base`, never a hex the theme has.
 - Do not raise `brightness` behind text; check the contrast of the text over a blob before presenting.
+- Liquid glass is `glass="liquid"` (tuned with `[liquid]`), never a `lenziLiquidGlass` over a blob: the directive
+  bends the page over a still box, the background bends its own blobs as they move. It needs something behind it to
+  bend (other blobs, a flock): glass blobs alone over the plain base show only their edge.
 - Shapes are names from `BLOB_SHAPE_NAMES`; an unknown name is dropped silently, so check the spelling.
 - A page with a glowing background is a lazy route.

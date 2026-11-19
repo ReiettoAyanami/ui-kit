@@ -8,6 +8,7 @@ import { LinearRgb, PALETTE_STEP, hexToLinear, linearToHex, paletteAt } from '..
 import { LenziSourceLamp } from '../glow/light-field';
 import { BlobMaterial, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { GlowEngine } from '../engine/glow-engine';
+import { LenziGlassKind, LenziLiquidBlobGlass, liquidLookOf } from '../engine/liquid-profile';
 import { knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 
@@ -78,6 +79,14 @@ export class LenziBlobBackground extends LenziGlowBackground {
    * `blobSizes` are left aside.
    */
   readonly blobSpecs = input<readonly LenziBlobSpec[] | null>(null);
+  /**
+   * How its glass blobs look (lenzi, 2026-11-19: "un'altra scelta nel kit"): `frosted`, the page's glass (`lenziLit`);
+   * or `liquid`, clear glass that bends what is behind it near its edge, as `lenziLiquidGlass` does, on shapes that
+   * move and melt.
+   */
+  readonly glass = input<LenziGlassKind>('frosted');
+  /** Liquid glass: its bezel, thickness (px), refractive index and how much it bends; what is not said, `LIQUID_GLASS`'s. */
+  readonly liquid = input<Partial<LenziLiquidBlobGlass> | null>(null);
 
   private elapsed = 0;
   private readonly throws = new BlobThrow();
@@ -144,7 +153,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
             tint: this.blobTint(index, tints),
             ...this.ownLook(index, tints),
           })),
-          { level: BLOB_LIGHT, soft: Math.max(0, this.soft()), ...this.surfaceLook },
+          { level: BLOB_LIGHT, soft: Math.max(0, this.soft()), ...this.surfaceLook, liquid: liquidLookOf(this.glass(), this.liquid()) },
         );
         materials.prepare();
       },

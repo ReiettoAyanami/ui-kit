@@ -110,6 +110,7 @@ export function cleanScene(raw: unknown): LenziScene | null {
   if (typeof scene['name'] === 'string' && scene['name'].trim()) out.name = scene['name'].trim().slice(0, SCENE_LIMITS.name);
   if (FOLLOWS.includes(scene['follow'] as BoidsFollow)) out.follow = scene['follow'] as BoidsFollow;
   if (scene['throwable'] === true) out.throwable = true;
+  if (scene['glass'] === 'liquid') out.glass = 'liquid';
   return out;
 }
 

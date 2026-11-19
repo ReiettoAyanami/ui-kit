@@ -8,6 +8,7 @@ import { Boids, BoidsArea, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS
 import { LinearRgb, PALETTE_STEP, displacedColors, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
+import { LenziGlassKind, LenziLiquidBlobGlass, liquidLookOf } from '../engine/liquid-profile';
 import { BLOB_SHAPES, BlobShape, BlobShapeName, knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziSourceLamp } from '../glow/light-field';
@@ -234,6 +235,14 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** How softly two blobs join, 0 to 1, and how soft their edge is, px. */
   readonly merge = input(0.35, { transform: numberAttribute });
   readonly soft = input(2, { transform: numberAttribute });
+  /**
+   * How its glass blobs look (lenzi, 2026-11-19: "un'altra scelta nel kit"): `frosted`, the page's glass (`lenziLit`);
+   * or `liquid`, clear glass that bends what is behind it near its edge, as `lenziLiquidGlass` does, on shapes that
+   * move and melt.
+   */
+  readonly glass = input<LenziGlassKind>('frosted');
+  /** Liquid glass: its bezel, thickness (px), refractive index and how much it bends; what is not said, `LIQUID_GLASS`'s. */
+  readonly liquid = input<Partial<LenziLiquidBlobGlass> | null>(null);
 
   // the flock
   /** How many boids, 4000 at most (2026-11-14: "aumenta leggermente i boidi"). */
@@ -436,7 +445,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       },
       prepare: () => {
         this.drawn = this.blobsNow();
-        materials.set(this.objects(), { level: BLOB_LIGHT, soft: Math.max(0, this.soft()), ...this.surfaceLook });
+        materials.set(this.objects(), { level: BLOB_LIGHT, soft: Math.max(0, this.soft()), ...this.surfaceLook, liquid: liquidLookOf(this.glass(), this.liquid()) });
         materials.prepare();
       },
       draw: () => {

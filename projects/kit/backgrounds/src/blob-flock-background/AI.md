@@ -19,3 +19,5 @@
   (a fleet's, else the `follow` input's). Do not hold the pointer back from all of them because the input says
   `none`: a fleet may say otherwise.
 - `LenziSights` is how a watching cat finds the boids (of every flock): nothing to wire.
+- Liquid glass: `glass="liquid"` (tuned with `[liquid]`), for every glass blob and blob-boid of the background; never a
+  `lenziLiquidGlass` over a blob. It bends what the background draws: put lamps or a flock behind the glass.

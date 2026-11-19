@@ -30,6 +30,15 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   of the light, and a hard shadow on the glow behind it, the shadow following its shape). Blobs melt only
   into blobs of their own material. `blobSizes` gives each blob its own size ("un blob grande, un/due blob
   piccoli dello stesso materiale").
+- **Liquid glass** (`glass="liquid"`; lenzi, 2026-11-19: "capire se questa tecnica per il rendering del vetro si
+  può usare su forme che non sono regolari e stabili come le supershapes ... un'altra scelta nel kit"): the glass blobs
+  and blob-boids are clear and bend what is behind them near their edge, as `lenziLiquidGlass` does (kube.io's way: a curved bezel,
+  Snell's law), instead of frosting it; no border, only the light on their edge. It follows their shape at every frame,
+  as they turn, change shape and melt into one another: the blobs' field gives the distance from the edge and its
+  normal at every place, and the bezel's bending is read there. It bends what the background draws (the glow, the
+  boids, the other blobs), not the page over it; WebGL2, so every browser that draws the blobs (the directive bends
+  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 22 px, 48 px, 1.5, 1).
+  One kind of glass for all the glass blobs of a background.
 - **Fleets of blob-boids** (`blobFlocks`: `{ material, count, colonies?, size? }`; "un tipo di boid che puó
   essere un blob di qualsiasi materiale"): boids that are blobs, drops as the boids are ("i blob boidi fai che
   siano gocce pure loro": a round head `size` px wide, 11 by default, narrowing to a round tail, pointing

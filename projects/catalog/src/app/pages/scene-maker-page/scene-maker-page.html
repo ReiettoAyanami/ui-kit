@@ -181,6 +181,8 @@
            2026-11-17: "fai in modo che sia sempre configurabile, dal pannello generale non solo quando non c'é", then
            "dev'essere nel pannello generale, non in quello dei blob", an arrow at the panel's foot) -->
       <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
+      <!-- how its glass looks, under it (lenzi, 2026-11-19: "un'altra scelta nel kit"): the page's frosted glass, or liquid -->
+      <mat-slide-toggle class="toggle" [checked]="scene().glass === 'liquid'" (change)="setLiquid($event.checked)">Liquid glass: it bends what is behind it</mat-slide-toggle>
     </mat-card-content>
   </mat-card>
 
