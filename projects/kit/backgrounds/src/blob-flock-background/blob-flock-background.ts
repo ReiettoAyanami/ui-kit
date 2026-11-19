@@ -197,7 +197,7 @@ interface BlobBoid {
  */
 
 /** How far a drop melts into the others, times its size: settled at its place in a zone, and on its way. */
-const DROP_JOIN_SETTLED = 4;
+const DROP_JOIN_SETTLED = 1.6;
 const DROP_JOIN_ON_WAY = 0.1;
 /** Nearer its place than this (`Boids.away`), a drop is round. */
 const DROP_ROUND = 0.3;
@@ -719,7 +719,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         // on their way to a zone they melt hardly at all, so they are seen as many; at their places, far more than drops
         // do anywhere else, into one cover under the words (lenzi, 2026-11-19: "dovrebbero unirsi solo quando sono più
         // vicini"; "l'unione dei boidi non funziona quando sono sul testo, magari alzala quando arrivano e abbassala quando
-        // partono"; "quando arrivano fai in modo che diventino un blob"). Not in a zone (away 0 with none): as before.
+        // partono"; "quando arrivano fai in modo che diventino un blob"; then "una forma un po' più definita non così tanto
+        // blob": 1.6 times its size, not 4). Not in a zone (away 0 with none): as before.
         merge: drop.homed ? drop.radius * (DROP_JOIN_SETTLED * (1 - drop.away) + DROP_JOIN_ON_WAY * drop.away) : Math.min(merge, drop.radius * 0.6),
         rotation: drop.heading,
         from: drop.shape ?? BLOB_BOID_SHAPE,
@@ -822,7 +823,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private homeNow(origin: { x: number; y: number }): BoidsArea[] {
     return this.gathers
       .areas(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height)
-      .map((area) => ({ left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y }));
+      .map((area) => ({ left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y, radius: area.radius ?? 0 }));
   }
 
   /** Whether some blob sinks or rises (its weight is not 1): then the blobs drift with no current too. */

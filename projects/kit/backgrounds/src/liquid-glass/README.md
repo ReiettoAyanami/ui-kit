@@ -3,7 +3,7 @@
 `lenziLiquidGlass` (`@lenzi/ui-kit/backgrounds`; lenzi, 2026-11-19: "deve essere quasi come il liquid glass di IOS,
 prova a fare un materiale che si chiama appunto LenziLiquidGlass diverso dal classico vetro"; "il bordo voglio che
 rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Browser: Refraction with CSS and SVG"
-(Chris Feijoo), chosen by lenzi.
+(Chris Feijoo), chosen by lenzi; the reference for this material: https://kube.io/blog/liquid-glass-css-svg/
 
 ## What
 

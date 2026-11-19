@@ -10,12 +10,13 @@ export interface LenziGatherOptions {
   spill: number;
 }
 
-/** A zone of the page the boids gather under: a box, CSS px from the window's top left. */
+/** A zone of the page the boids gather under: a box, CSS px from the window's top left, and its corners' radius. */
 export interface LenziGatherArea {
   left: number;
   top: number;
   right: number;
   bottom: number;
+  radius?: number;
 }
 
 /**
@@ -99,10 +100,13 @@ export class LenziGathers {
     if (!best) return [];
     const { to, spill } = this.elements.get(best)!();
     const grow = Math.max(0, spill);
-    const grown = (area: LenziGatherArea): LenziGatherArea => ({ left: area.left - grow, top: area.top - grow, right: area.right + grow, bottom: area.bottom + grow });
+    const grown = (area: LenziGatherArea): LenziGatherArea => ({ left: area.left - grow, top: area.top - grow, right: area.right + grow, bottom: area.bottom + grow, radius: (area.radius ?? 0) + grow });
     const lines = to === 'text' ? linesOf(textRects(best)) : [];
     if (lines.length) return lines.map(grown);
     const box = best.getBoundingClientRect();
-    return [grown({ left: box.left, top: box.top, right: box.right, bottom: box.bottom })];
+    // the box with its rounded corners (a window of glass: the flock takes its shape)
+    const view = best.ownerDocument?.defaultView;
+    const radius = (view && parseFloat(view.getComputedStyle(best).borderTopLeftRadius)) || 0;
+    return [grown({ left: box.left, top: box.top, right: box.right, bottom: box.bottom, radius })];
   }
 }

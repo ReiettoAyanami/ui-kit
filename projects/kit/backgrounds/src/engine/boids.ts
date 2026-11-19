@@ -21,6 +21,8 @@ export interface BoidsArea {
   top: number;
   right: number;
   bottom: number;
+  /** Its corners' radius, px: the boids settle within its rounded shape. */
+  radius?: number;
 }
 
 /**
@@ -35,8 +37,6 @@ const HOME_SPREAD_X = 0.7548776662466927;
 const HOME_SPREAD_Y = 0.5698402909980532;
 /** How far from its place, px, a boid counts as on its way (`away` 1); at its place, 0. */
 const HOME_JOIN_REACH = 90;
-/** Settled at its place, how much of its wander is left: it hardly moves (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"). */
-const HOME_SETTLED_WANDER = 0.15;
 /** How much a flock kept to boxes holds together, times its cohesion. */
 const HOME_COHESION = 0.2;
 /** How much a flock kept to boxes heads the same way, times its alignment: not as one, so it spreads on the way. */
@@ -45,19 +45,28 @@ const HOME_ALIGNMENT = 0.3;
 const HOME_TARGETS = 4;
 /** How fast the boids settled in a zone are thrown out of it when they leave for another, px/s (a little more or less each). */
 const HOME_BURST = 520;
+/** How long a zone takes to empty when the boids leave it for another, s: the side towards the new one first. */
+const HOME_LEAVE = 1.6;
 /** On the way to a zone, how far aside from the way a boid aims at most, times how far it still has to go. */
 const HOME_FAN = 0.35;
 const HOME_INSET = 6;
 const fraction = (value: number) => value - Math.floor(value);
 /** How far a boid settled in a box stirs round its place, px. */
-const HOME_STIR = 3;
+const HOME_STIR = 0.6;
 
 /**
  * At most `count` points of an even honeycomb over a box (`width` × `height`), as shares of it (0 to 1), row by row:
  * the spacing as large as lets them all fit, so they fill it evenly, its edges too.
  */
-export function honeycomb(width: number, height: number, count: number): [number, number][] {
+export function honeycomb(width: number, height: number, count: number, radius = 0): [number, number][] {
   if (count <= 0) return [];
+  // within the rounded box: a corner's points only inside its arc
+  const r = Math.min(Math.max(0, radius), width / 2, height / 2);
+  const inside = (x: number, y: number) => {
+    const qx = Math.max(r - x, x - (width - r), 0);
+    const qy = Math.max(r - y, y - (height - r), 0);
+    return qx === 0 || qy === 0 || Math.hypot(qx, qy) <= r;
+  };
   let spacing = Math.sqrt((width * height * 2) / (Math.sqrt(3) * count));
   for (let tries = 0; tries < 40; tries++) {
     const rowGap = spacing * (Math.sqrt(3) / 2);
@@ -69,7 +78,7 @@ export function honeycomb(width: number, height: number, count: number): [number
       for (let column = 0; column < columns; column++) {
         const x = rows === 1 && columns === 1 ? width / 2 : shift + column * spacing;
         const y = rows === 1 ? height / 2 : row * rowGap;
-        points.push([Math.min(1, x / width), Math.min(1, y / height)]);
+        if (inside(x, y)) points.push([Math.min(1, x / width), Math.min(1, y / height)]);
       }
     }
     if (points.length <= count) {
@@ -275,6 +284,9 @@ export class Boids {
   private homeU = new Float32Array(0);
   private homeV = new Float32Array(0);
   private homeKey = '';
+  /** The zone being left, slowly: its boxes, each boid's place in them, its middle; and when each boid goes (NaN: not waiting). */
+  private leaving: { homes: readonly BoidsArea[]; box: Uint16Array; u: Float32Array; v: Float32Array; cx: number; cy: number } | null = null;
+  private leaveAt = new Float32Array(0);
   /** Seconds kept to a box: its places drift along it with them. */
   private homeTime = 0;
   private homeWeight = 2;
@@ -360,6 +372,7 @@ export class Boids {
    */
   setHome(areas: BoidsArea | readonly BoidsArea[] | null, weight = 2): void {
     const before = this.homeBounds;
+    const was = { homes: this.homes, box: this.homeBox, u: this.homeU, v: this.homeV };
     const all = areas === null ? [] : 'left' in areas ? [areas] : areas;
     this.homes = all.filter((area) => area.right > area.left && area.bottom > area.top);
     const sizes = this.homes.map((area) => (area.right - area.left) * (area.bottom - area.top));
@@ -376,7 +389,7 @@ export class Boids {
       : null;
     this.homeWeight = Math.max(0, weight);
     this.placeInHomes();
-    if (before && this.homeBounds && this.homeWeight > 0) this.burstFrom(before, this.homeBounds);
+    if (before && this.homeBounds && this.homeWeight > 0) this.leave(was, before, this.homeBounds);
   }
 
   /**
@@ -386,7 +399,7 @@ export class Boids {
    */
   private placeInHomes(): void {
     const n = this.count;
-    const key = `${n}|${this.homes.map((area) => `${Math.round(area.right - area.left)}x${Math.round(area.bottom - area.top)}`).join(',')}`;
+    const key = `${n}|${this.homes.map((area) => `${Math.round(area.right - area.left)}x${Math.round(area.bottom - area.top)}r${Math.round(area.radius ?? 0)}`).join(',')}`;
     if (key === this.homeKey || this.homes.length === 0) return;
     this.homeKey = key;
     this.homeBox = new Uint16Array(n);
@@ -403,7 +416,7 @@ export class Boids {
     members.forEach((boids, box) => {
       const home = this.homes[box]!;
       const inset = Math.min(HOME_INSET, (home.right - home.left) / 4, (home.bottom - home.top) / 4);
-      const points = honeycomb(Math.max(1, home.right - home.left - inset * 2), Math.max(1, home.bottom - home.top - inset * 2), boids.length);
+      const points = honeycomb(Math.max(1, home.right - home.left - inset * 2), Math.max(1, home.bottom - home.top - inset * 2), boids.length, Math.max(0, (home.radius ?? 0) - inset));
       boids.forEach((i, k) => {
         const point = points[k % Math.max(1, points.length)] ?? [0.5, 0.5];
         this.homeU[i] = point[0];
@@ -413,24 +426,46 @@ export class Boids {
   }
 
   /**
-   * Off to another zone (lenzi, 2026-11-19: "quando ripartono il blob circa esplode e ripartono verso la prossima"):
-   * the boids settled in the zone they leave are thrown out of it, each away from its middle, before they fly on.
+   * Off to another zone (lenzi, 2026-11-19: "quando ripartono il blob circa esplode e ripartono verso la prossima";
+   * "non deve sparire tutto in una volta andrebbe fatto scomparire pian piano"): the boids settled in the zone they
+   * leave stay in their places a while, the side towards the new zone first to go, the far side last (HOME_LEAVE in
+   * all, a little more or less each); each, as it goes, is thrown out from the old zone's middle and flies on.
    */
-  private burstFrom(was: BoidsArea, now: BoidsArea): void {
-    const cx = (was.left + was.right) / 2;
-    const cy = (was.top + was.bottom) / 2;
-    const size = Math.max(was.right - was.left, was.bottom - was.top);
-    if (Math.hypot((now.left + now.right) / 2 - cx, (now.top + now.bottom) / 2 - cy) < size / 2) return;
+  private leave(was: { homes: readonly BoidsArea[]; box: Uint16Array; u: Float32Array; v: Float32Array }, from: BoidsArea, to: BoidsArea): void {
+    const cx = (from.left + from.right) / 2;
+    const cy = (from.top + from.bottom) / 2;
+    const size = Math.max(from.right - from.left, from.bottom - from.top);
+    const dx = (to.left + to.right) / 2 - cx;
+    const dy = (to.top + to.bottom) / 2 - cy;
+    const far = Math.hypot(dx, dy);
+    if (far < size / 2) return;
+    this.leaving = { ...was, cx, cy };
+    if (this.leaveAt.length !== this.count) this.leaveAt = new Float32Array(this.count).fill(Number.NaN);
     for (let i = 0; i < this.count; i++) {
-      if (this.away[i]! > 0.5) continue;
-      const dx = this.x[i]! - cx;
-      const dy = this.y[i]! - cy;
-      const length = Math.hypot(dx, dy) || 1;
-      const push = HOME_BURST * (0.6 + 0.8 * this.own[i]!);
-      this.carriedX[i] = this.carriedX[i]! + (dx / length) * push;
-      this.carriedY[i] = this.carriedY[i]! + (dy / length) * push;
-      this.away[i] = 1;
+      if (this.away[i]! > 0.5) {
+        this.leaveAt[i] = Number.NaN;
+        continue;
+      }
+      // how far towards the new zone it is in the old one: -1 the far side, 1 the near side (the zone's half-extent that way)
+      const reach = (Math.abs(dx / far) * (from.right - from.left) + Math.abs(dy / far) * (from.bottom - from.top)) / 2;
+      const toward = ((this.x[i]! - cx) * dx + (this.y[i]! - cy) * dy) / far / Math.max(1, reach);
+      const order = (1 - Math.max(-1, Math.min(1, toward))) / 2;
+      this.leaveAt[i] = this.homeTime + HOME_LEAVE * order * (0.8 + 0.4 * this.own[i]!);
     }
+  }
+
+  /** A boid's turn to leave the zone it waited in: thrown out from its middle, on its way. */
+  private depart(i: number): void {
+    const leaving = this.leaving;
+    this.leaveAt[i] = Number.NaN;
+    if (!leaving) return;
+    const dx = this.x[i]! - leaving.cx;
+    const dy = this.y[i]! - leaving.cy;
+    const length = Math.hypot(dx, dy) || 1;
+    const push = HOME_BURST * (0.6 + 0.8 * this.own[i]!);
+    this.carriedX[i] = this.carriedX[i]! + (dx / length) * push;
+    this.carriedY[i] = this.carriedY[i]! + (dy / length) * push;
+    this.away[i] = 1;
   }
 
   /** The space is this large now; the boids keep their places (a page that grew: they stay where they were on it). */
@@ -661,8 +696,10 @@ export class Boids {
         // kept to boxes, they hardly head the same way or hold together (their places spread them), and not at all on
         // the way to them (rushing at the last step): the flock comes apart on the way and together in its box
         const onTheWay = keeping && this.rush[i]! > 1;
-        steer(headX, headY, keeping ? (onTheWay ? 0 : s.alignment * HOME_ALIGNMENT) : s.alignment);
-        steer(centreX, centreY, keeping ? (onTheWay ? 0 : s.cohesion * HOME_COHESION) : s.cohesion);
+        // at its place, none at all: it keeps still (lenzi, 2026-11-19: "non deve continuare a muoversi")
+        const calm = keeping ? Math.min(1, this.away[i]! * 2) : 1;
+        steer(headX, headY, keeping ? (onTheWay ? 0 : s.alignment * HOME_ALIGNMENT * calm) : s.alignment);
+        steer(centreX, centreY, keeping ? (onTheWay ? 0 : s.cohesion * HOME_COHESION * calm) : s.cohesion);
       } else {
         steer(awayX, awayY, s.separation);
       }
@@ -717,16 +754,20 @@ export class Boids {
         // testo"): the boids are dealt round the HOME_TARGETS quarters, so they go to the zone in as many streams
         // its box and its place in it: a point of an even honeycomb over the box (lenzi, 2026-11-19: "il blob con una
         // forma più decente": places spread at random left a lumpy edge), stirring a little round it
-        const box = this.homeBox[i] ?? 0;
-        const home = this.homes[box] ?? this.homes[0]!;
+        // still waiting in the zone being left (its turn to go not come yet), or there now: off it goes
+        const leaving = this.leaving;
+        const waiting = leaving !== null && this.leaveAt[i]! > this.homeTime;
+        if (!waiting && leaving && !Number.isNaN(this.leaveAt[i] ?? Number.NaN)) this.depart(i);
+        const place = waiting ? leaving : { homes: this.homes, box: this.homeBox, u: this.homeU, v: this.homeV };
+        const box = place.box[i] ?? 0;
+        const home = place.homes[box] ?? place.homes[0] ?? this.homes[0]!;
         const inset = Math.min(HOME_INSET, (home.right - home.left) / 4, (home.bottom - home.top) / 4);
         const innerWidth = home.right - home.left - inset * 2;
         const innerHeight = home.bottom - home.top - inset * 2;
-        const u = this.homeU[i] ?? 0.5;
-        const v = this.homeV[i] ?? 0.5;
-        const stir = HOME_STIR * Math.sin(this.homeTime * 0.7 + i * 1.7);
-        const placeX = home.left + inset + u * innerWidth + stir;
-        const placeY = home.top + inset + v * innerHeight + HOME_STIR * Math.cos(this.homeTime * 0.6 + i * 2.3);
+        const u = place.u[i] ?? 0.5;
+        const v = place.v[i] ?? 0.5;
+        const placeX = home.left + inset + u * innerWidth + HOME_STIR * Math.sin(this.homeTime * 0.25 + i * 1.7);
+        const placeY = home.top + inset + v * innerHeight + HOME_STIR * Math.cos(this.homeTime * 0.21 + i * 2.3);
         // its quarter of the zone (lenzi: "usa 4 punti di target"): the one its place is in, so its stream goes there
         const quarter = Math.min(HOME_TARGETS - 1, Math.floor(((placeX - (this.homeBounds?.left ?? 0)) / Math.max(1, (this.homeBounds?.right ?? 1) - (this.homeBounds?.left ?? 0))) * HOME_TARGETS));
         const toPlace = Math.hypot(placeX - px, placeY - py);
@@ -778,7 +819,8 @@ export class Boids {
       }
       if (s.wander > 0) {
         // a turn of its own, across its heading
-        const settled = keeping ? HOME_SETTLED_WANDER + (1 - HOME_SETTLED_WANDER) * this.away[i]! : 1;
+        // settled, no turn of its own: it keeps still at its place
+        const settled = keeping ? Math.min(1, this.away[i]! * 2) : 1;
         const turn = (this.random() * 2 - 1) * s.wander * s.maxForce * settled;
         fx += (-hy / speed) * turn;
         fy += (hx / speed) * turn;
@@ -802,6 +844,9 @@ export class Boids {
       ay[i] = fy;
       this.arrived[i] = arrived ? 1 : 0;
     }
+
+    // the zone being left: forgotten once no boid waits in it
+    if (this.leaving && !this.leaveAt.some((at) => !Number.isNaN(at))) this.leaving = null;
 
     // 3. the move: each as fast as its size lets it, and what a current carries it at on top
     const slowing = Math.exp(-CARRY_DRAG * dt);

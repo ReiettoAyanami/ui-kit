@@ -11,7 +11,7 @@ describe('LenziGathers', () => {
     const shown = zone(100, 300, 800, 400); // all of it
     gathers.add(shown);
     gathers.add(zone(100, 850, 800, 400)); // 50 px of it
-    expect(gathers.areas(1000, 900)).toEqual([{ left: 100, top: 300, right: 900, bottom: 700 }]);
+    expect(gathers.areas(1000, 900)).toEqual([{ left: 100, top: 300, right: 900, bottom: 700, radius: 0 }]);
   });
 
   it('gives none when no zone is on the screen, or when it was taken away', () => {
@@ -60,7 +60,7 @@ describe('LenziGathers, by box and spilling over', () => {
     const gathers = new LenziGathers();
     const element = { getBoundingClientRect: () => ({ left: 100, top: 300, right: 900, bottom: 700, width: 800, height: 400 }) } as unknown as Element;
     gathers.add(element, () => ({ to: 'box', spill: 20 }));
-    expect(gathers.areas(1000, 900)).toEqual([{ left: 80, top: 280, right: 920, bottom: 720 }]);
+    expect(gathers.areas(1000, 900)).toEqual([{ left: 80, top: 280, right: 920, bottom: 720, radius: 20 }]);
   });
 });
 

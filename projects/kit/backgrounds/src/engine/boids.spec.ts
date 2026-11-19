@@ -342,20 +342,35 @@ describe('a flock of boids', () => {
     expect(moved.filter((d) => d < 25).length).toBeGreaterThan(30);
     expect(Math.max(...Array.from(flock.away.slice(0, 40)))).toBeLessThan(0.5);
     flock.setHome({ left: 600, top: 100, right: 1400, bottom: 200 });
-    run(flock, 0.5);
-    expect(Math.min(...Array.from(flock.away.slice(0, 40)))).toBeGreaterThan(0.7);
+    // they leave the old zone one after another (HOME_LEAVE): soon none is left in it
+    run(flock, 2.5);
+    expect(Array.from(flock.y.slice(0, 40)).filter((y) => y > 880).length).toBe(0);
   });
 
-  it('leaving a zone for another, the boids settled in it are thrown out of it, each away from its middle', () => {
+  it('leaving a zone for another, the boids go one after another, the side towards the new zone first, each thrown out', () => {
     const flock = new Boids({ count: 40, maxSpeed: 110 }, 3000, 3000, 6);
     flock.setHome({ left: 1000, top: 1000, right: 1400, bottom: 1200 });
     run(flock, 12);
-    const before = Array.from({ length: 40 }, (_, i) => [flock.x[i]!, flock.y[i]!] as const);
+    // the new zone is below: the lower half goes first
     flock.setHome({ left: 1000, top: 2400, right: 1400, bottom: 2600 });
-    // at once: carried outwards from the old zone's middle (1200, 1100)
-    const outwards = before.filter(([x, y], i) => (x - 1200) * flock.carriedX[i]! + (y - 1100) * flock.carriedY[i]! > 0);
-    expect(outwards.length).toBeGreaterThan(30);
-    expect(Math.max(...Array.from(flock.carriedX.slice(0, 40)).map(Math.abs))).toBeGreaterThan(200);
+    run(flock, 0.3);
+    const gone = (i: number) => flock.away[i]! > 0.5;
+    const lower = Array.from({ length: 40 }, (_, i) => i).filter((i) => flock.y[i]! > 1100);
+    const upper = Array.from({ length: 40 }, (_, i) => i).filter((i) => flock.y[i]! <= 1100 && flock.y[i]! >= 1000);
+    expect(lower.filter(gone).length / Math.max(1, lower.length)).toBeGreaterThan(upper.filter(gone).length / Math.max(1, upper.length));
+    expect(upper.some((i) => !gone(i))).toBe(true);
+    run(flock, 2);
+    expect(Array.from({ length: 40 }, (_, i) => i).every(gone)).toBe(true);
+  });
+
+  it('settled in a box it keeps still: its own place, a fraction of a px round it', () => {
+    const flock = new Boids({ count: 20, maxSpeed: 110 }, 2000, 2000, 2);
+    flock.setHome({ left: 600, top: 600, right: 1000, bottom: 900, radius: 40 });
+    run(flock, 15);
+    const before = Array.from(flock.x.slice(0, 20));
+    run(flock, 1);
+    expect(before.filter((x, i) => Math.abs(flock.x[i]! - x) < 6).length).toBeGreaterThan(16);
+    expect(flock.x[0]).toBeGreaterThan(590);
   });
 
   it('a zone that only moves a little (the page scrolled on the screen) throws nothing', () => {
@@ -365,6 +380,14 @@ describe('a flock of boids', () => {
     const carried = Array.from(flock.carriedY.slice(0, 10));
     flock.setHome({ left: 1000, top: 990, right: 1400, bottom: 1190 });
     expect(Array.from(flock.carriedY.slice(0, 10))).toEqual(carried);
+  });
+
+  it('a honeycomb with round corners leaves the corners out', () => {
+    const square = honeycomb(300, 300, 200);
+    const round = honeycomb(300, 300, 200, 100);
+    const corner = (points: [number, number][]) => points.filter(([x, y]) => x < 0.08 && y < 0.08).length;
+    expect(corner(square)).toBeGreaterThan(0);
+    expect(corner(round)).toBe(0);
   });
 
   it('a honeycomb fills its box evenly, its edges too, with no more points than asked', () => {
