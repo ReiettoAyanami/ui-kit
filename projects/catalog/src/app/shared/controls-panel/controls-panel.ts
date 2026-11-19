@@ -12,6 +12,11 @@ import { LenziColorPicker } from '@lenzi/ui-kit';
 import { Control, Values } from '../../registry';
 import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
+/** The pills' room on one line of the panel, px, and what a pill takes: a character of its label, and its own padding. */
+const PILLS_ROOM = 280;
+const PILL_CHARACTER = 8;
+const PILL_PADDING = 32;
+
 /**
  * The GUI of a demo: one field per parameter (text, a slider, a switch, the choices as pills or a
  * select, a colour picker). Every change goes to the demo at once; Reset brings the defaults back.
@@ -32,6 +37,16 @@ export class ControlsPanel {
 
   protected set(key: string, value: string | number | boolean): void {
     this.values.update((values) => ({ ...values, [key]: value }));
+  }
+
+  /**
+   * The choices as pills when they are few and fit on one line; a select otherwise (lenzi, 2026-11-19: three pills with
+   * long labels wrapped onto two lines, "il selettore sulla destra é fottuto").
+   */
+  protected pills(control: Control): boolean {
+    const options = control.options ?? [];
+    const width = options.reduce((sum, option) => sum + option.label.length * PILL_CHARACTER + PILL_PADDING, 0);
+    return options.length <= 3 && width <= PILLS_ROOM;
   }
 
   protected number(text: string, control: Control): number {

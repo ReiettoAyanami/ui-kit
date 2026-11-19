@@ -32,7 +32,7 @@
           </div>
         }
         @case ('select') {
-          @if ((control.options ?? []).length <= 3) {
+          @if (pills(control)) {
             <span class="label" [id]="'label-' + control.key">{{ control.label }}</span>
             <mat-button-toggle-group
               class="choices"
