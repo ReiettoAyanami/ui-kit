@@ -23,13 +23,15 @@ zona di testo").
   together (a fifth of their cohesion) and follow no leader: otherwise they bunch up on one part of the words.
 - **Settled, they hardly move** (lenzi, 2026-11-19: "che si muovano di meno una volta che raggiungono la meta"): near
   its place a boid slows down onto it and may stop; its wander is a sixth of what it was; the places drift very slowly.
-- **An even blob** (lenzi, 2026-11-19: "il blob con una forma più decente"): settled, each boid keeps to a point of an
-  even honeycomb over its box (`honeycomb`), as many points as boids, stirring 3 px round it; the drops there are round
-  (a drop again on its way), so the blob fills the zone with a smooth edge, not a lumpy one.
-- **A blob, then an explosion** (lenzi, 2026-11-19: "quando arrivano fai in modo che diventino un blob e quando
-  ripartono il blob circa esplode e ripartono verso la prossima"): settled, the drops melt into one blob (4 times
-  their size); leaving for another zone, the boids settled in the old one are thrown out of it, each away from its
-  middle (520 px/s, a little more or less each), and melt hardly at all as they fly on.
+- **The zone's shape, still** (lenzi, 2026-11-19: "il blob con una forma più decente"; "non deve continuare a
+  muoversi ... deve essere una forma un po' più definita non così tanto blob"): settled, each boid keeps to a point of
+  an even honeycomb over its box (`honeycomb`), within its rounded corners (a box zone's `border-radius`, plus its
+  spill), as many points as boids; there it keeps still (no alignment, cohesion or wander of its own, 0.6 px of stir),
+  round, and melts with its neighbours only a little (1.6 times its size), so the flock takes the zone's shape.
+- **Leaving slowly, each with its burst** ("quando ripartono il blob circa esplode"; "non deve sparire tutto in una
+  volta andrebbe fatto scomparire pian piano"): for another zone, the boids settled in the old one go one after
+  another over 1.6 s, the side towards the new zone first; each, as it goes, is thrown out from the old zone's middle
+  (520 px/s) and melts hardly at all on its way.
 - **Many on the way, one cover at the end** ("si veda proprio il fatto che siano tanti quindi magari dovrebbero unirsi
   solo quando sono più vicini"; "alzala quando arrivano e abbassala quando partono"): a drop on its way melts into the
   others hardly at all (a tenth of its size); settled at its place (`Boids.away`), far more (1.8 times its size), so
