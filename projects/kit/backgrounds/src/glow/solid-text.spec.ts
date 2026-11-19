@@ -17,16 +17,16 @@ describe('LenziSolidText', () => {
     await fixture.whenStable();
     const element = fixture.nativeElement.querySelector('[lenziSolidText]') as HTMLElement;
     expect(element.classList).toContain('lenzi-solid-text');
-    const layers = Array.from(element.querySelectorAll<HTMLElement>('.lenzi-solid-text-shadow'));
-    expect(layers.length).toBe(12);
-    for (const layer of layers) {
-      expect(layer.getAttribute('aria-hidden')).toBe('true');
-      expect(layer.textContent).toBe('LoremIpsum dolor');
-      expect(layer.style.opacity).toBe('0');
-    }
+    const shadows = Array.from(element.querySelectorAll<HTMLElement>('.lenzi-solid-text-shadow'));
+    expect(shadows.length).toBe(1);
+    expect(shadows[0]!.getAttribute('aria-hidden')).toBe('true');
+    expect(shadows[0]!.style.opacity).toBe('0');
+    const copies = Array.from(shadows[0]!.querySelectorAll<HTMLElement>('.lenzi-solid-text-copy'));
+    expect(copies.length).toBe(8);
+    for (const copy of copies) expect(copy.textContent).toBe('LoremIpsum dolor');
   });
 
-  it('with boids round the words, the copies grow from where the light is', async () => {
+  it('with boids round the words, a faint shadow away from them', async () => {
     TestBed.inject(LenziSights).add({}, () => null, () => ({ x: 10, y: 20, count: 80 }));
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
@@ -35,7 +35,8 @@ describe('LenziSolidText', () => {
     const element = fixture.nativeElement.querySelector('[lenziSolidText]') as HTMLElement;
     const box = element.getBoundingClientRect();
     if (box.bottom <= 0) return; // no layout here: nothing on the screen to light
-    const [first, last] = [element.querySelector<HTMLElement>('.lenzi-solid-text-shadow:first-child')!, Array.from(element.querySelectorAll<HTMLElement>('.lenzi-solid-text-shadow')).at(-1)!];
-    expect(Number(first.style.opacity) + Number(last.style.opacity)).toBeGreaterThan(0);
+    const shadow = element.querySelector<HTMLElement>('.lenzi-solid-text-shadow')!;
+    expect(Number(shadow.style.opacity)).toBeGreaterThan(0);
+    expect(Number(shadow.style.opacity)).toBeLessThanOrEqual(0.45);
   });
 });
