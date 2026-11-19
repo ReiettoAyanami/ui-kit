@@ -37,6 +37,15 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
   element: the light is in its `::before` and `::after` (a card's own `::after`, a border for forced colours,
   gives way). With reduced motion the light switches on and off at once.
 
+## Solid text
+
+`.lenzi-solid-text` (lenzi, 2026-11-19: "lettere scure sul bagliore", "Le lettere devono fare ombra"): the letters are
+the page's surface (`--lenzi-solid-surface`), so over a glowing background behind the page they are dark solid shapes
+that block it, and each casts a hard shadow (down and right, 0.06 × 0.08 em) of the surface at `--lenzi-shadow`, which
+takes that much of the glow away. On the bare page both are the page's colour: the words are not seen until something
+glows behind them. Only the letters: never `lenziSolid` on a block of such text (its box would be opaque and hide the
+glow).
+
 ## Rules
 
 - **Lamps are few**: a lamp says "this is alive" (playing, recording, the thing you are on). A page full of
