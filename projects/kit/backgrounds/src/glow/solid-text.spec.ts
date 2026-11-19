@@ -1,53 +1,54 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { LenziSights } from '../sights/sights';
+import { LenziLightBlockers } from './light-blockers';
+import { LenziLightRays } from './light-rays';
 import { LenziSolidText } from './solid-text';
+import { LenziSights } from '../sights/sights';
 
 @Component({
-  imports: [LenziSolidText],
-  template: `<section><div lenziSolidText><h2>Lorem</h2><p>Ipsum dolor</p></div></section>`,
+  imports: [LenziLightRays, LenziSolidText],
+  template: `<section><div lenziSolidText><h2>Lorem</h2><p>Ipsum dolor</p></div></section><lenzi-light-rays />`,
 })
 class Host {}
 
 describe('LenziSolidText', () => {
-  it('makes the words solid and puts their shadow, a copy of them, just before them', async () => {
+  it('makes the words solid and stops the light: it is a blocker that draws its words', async () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     await fixture.whenStable();
     const element = fixture.nativeElement.querySelector('[lenziSolidText]') as HTMLElement;
     expect(element.classList).toContain('lenzi-solid-text');
-    // the shadow: the block copied whole just before it, hidden from screen readers, unseen with no light
-    const shadow = element.previousElementSibling as HTMLElement;
-    expect(shadow.classList).toContain('lenzi-solid-text-shadow');
-    expect(shadow.getAttribute('aria-hidden')).toBe('true');
-    expect(shadow.style.opacity).toBe('0');
-    expect(shadow.textContent).toBe(element.textContent);
-    expect(fixture.nativeElement.querySelectorAll('.lenzi-solid-text-shadow').length).toBe(1);
+    const blockers = TestBed.inject(LenziLightBlockers).all();
+    expect(blockers.length).toBe(1);
+    const drawn: string[] = [];
+    blockers[0]!.draw({ set font(_: string) {}, fillText: (text: string) => drawn.push(text) } as unknown as CanvasRenderingContext2D);
+    // no layout here: nothing on the screen, or its words
+    expect(drawn.every((text) => ['Lorem', 'Ipsum', 'dolor'].includes(text))).toBe(true);
+    fixture.destroy();
+    expect(TestBed.inject(LenziLightBlockers).all().length).toBe(0);
   });
+});
 
-  it('with boids round the words, a faint shadow away from them', async () => {
-    TestBed.inject(LenziSights).add({}, () => null, () => ({ x: 10, y: 20, count: 80 }));
+describe('LenziLightRays', () => {
+  it('is a picture over the page, hidden from screen readers, never in the way of a tap', async () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     await fixture.whenStable();
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const element = fixture.nativeElement.querySelector('[lenziSolidText]') as HTMLElement;
-    const box = element.getBoundingClientRect();
-    if (box.bottom <= 0) return; // no layout here: nothing on the screen to light
-    const shadow = element.previousElementSibling as HTMLElement;
-    expect(Number(shadow.style.opacity)).toBeGreaterThan(0);
-    expect(Number(shadow.style.opacity)).toBeLessThanOrEqual(0.45);
+    const rays = fixture.nativeElement.querySelector('lenzi-light-rays') as HTMLElement;
+    expect(rays.classList).toContain('lenzi-light-rays');
+    expect(rays.getAttribute('aria-hidden')).toBe('true');
+    expect(rays.querySelector('canvas')).not.toBeNull();
   });
+});
 
-  it('its copy is exactly as wide as the words, to the fraction of a px (the same lines)', async () => {
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const element = fixture.nativeElement.querySelector('[lenziSolidText]') as HTMLElement;
-    element.style.width = '431.4px';
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const shadow = element.previousElementSibling as HTMLElement;
-    expect(shadow.style.width).toBe(`${element.getBoundingClientRect().width}px`);
+describe('LenziSights lights', () => {
+  it('gives every light of every source, and none once a source is gone', () => {
+    const sights = new LenziSights();
+    const leave = sights.addLights({}, () => [{ x: 1, y: 2, radius: 3, colour: '#fff' }]);
+    sights.addLights({}, () => [{ x: 4, y: 5, radius: 6, colour: '#000' }]);
+    expect(sights.lights().length).toBe(2);
+    leave();
+    expect(sights.lights()).toEqual([{ x: 4, y: 5, radius: 6, colour: '#000' }]);
   });
 });

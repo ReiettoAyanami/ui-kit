@@ -1,133 +1,95 @@
-import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, inject, input, numberAttribute } from '@angular/core';
+import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, inject } from '@angular/core';
 
-import { LenziSights } from '../sights/sights';
+import { LenziLightBlocker, LenziLightBlockers } from './light-blockers';
+
+/** A word of the text and where it lies in the block, CSS px from the block's top left. */
+interface Word {
+  text: string;
+  font: string;
+  x: number;
+  /** Its baseline. */
+  y: number;
+}
 
 /**
- * How long the shadow is at most (times the font size of the words it falls from), in how many steps its hard shape is
- * drawn (each the letters again, a little farther along), and how far round the words a light counts (times their
- * box's larger side).
- */
-const LENGTH = 0.14;
-const STEPS = 8;
-const AROUND = 1.2;
-
-/**
- * Solid words lit from behind (lenzi, 2026-11-19: "lettere scure sul bagliore"; "deve proiettare ombra verso la
- * camera"; "dev'essere più definita e leggermente meno evidente, dev'essere simile a quella che usiamo per gli elementi
- * lit solidi"): the letters are the page's surface (`.lenzi-solid-text`), dark shapes over a glow behind the page, and
- * each throws a hard, faint shadow away from the light, as a solid element does.
- *
- * The shadow is the block of words itself, copied whole (its classes, its width: the same lines, the same letters) just
- * before it, so under it: each of its parts moved away from the light (the middle of the boids round the words,
- * `LenziSights.around`) by up to LENGTH of its own font size, the way back to the letters filled with the same letters
- * (a `text-shadow` of steps, opaque, so one hard shape), and all of it at one faintness. Straight behind the words the
- * light hides the shadow under them. On the bare page it is the page's colour (unseen); with no light round the words,
- * none.
+ * Solid words between a glowing background and whoever looks (lenzi, 2026-11-19: "i boidi sono fatti di luce e il
+ * testo blocca luce. Boidi > Testo > Utente. Quindi io dovrei vedere che i boidi mi castano la luce verso di me e la
+ * tagliano come forma del testo"): the letters are the page's surface (`.lenzi-solid-text`), dark shapes over the glow,
+ * and they stop its light: the light rays (`<lenzi-light-rays>`) cut the shape of every word out of the light coming
+ * through the page, so the beams that reach the viewer carry the words' shadow.
  */
 @Directive({
   selector: '[lenziSolidText]',
   host: { class: 'lenzi-solid-text' },
 })
-export class LenziSolidText {
-  /** How much of the glow the shadow takes away, 0 to 1 (a solid element's takes `--lenzi-shadow`, 60%). */
-  readonly shadowStrength = input(0.45, { transform: numberAttribute });
-
+export class LenziSolidText implements LenziLightBlocker {
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-  private readonly sights = inject(LenziSights);
   private readonly view = inject(DOCUMENT).defaultView;
-  private shadow: HTMLElement | null = null;
-  /** The font size of each of the words' own children, px: a heading's shadow as long as its letters are large. */
-  private sizes: number[] = [];
-  private frame: number | null = null;
+  private words: Word[] = [];
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    const leave = inject(LenziLightBlockers).add(this);
     afterNextRender(() => {
-      this.build();
-      // the words changed: their shadow again (the shadow is outside them: building it changes nothing they watch)
-      const watch = new MutationObserver(() => this.build());
+      this.measure();
+      const watch = new MutationObserver(() => this.measure());
       watch.observe(this.element, { childList: true, subtree: true, characterData: true });
-      // where the words are and how wide, whenever that changes (the page's font arriving after the first layout: a
-      // copy kept at the width before it broke its lines elsewhere, and read as the words twice)
-      const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.fit()) : null;
+      const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.measure()) : null;
       resize?.observe(this.element);
-      void this.element.ownerDocument.fonts?.ready.then(() => this.build());
-      const tick = () => {
-        this.place();
-        this.frame = this.view?.requestAnimationFrame(tick) ?? null;
-      };
-      tick();
+      void this.element.ownerDocument.fonts?.ready.then(() => this.measure());
       destroyRef.onDestroy(() => {
         watch.disconnect();
         resize?.disconnect();
-        if (this.frame !== null) this.view?.cancelAnimationFrame(this.frame);
-        this.shadow?.remove();
       });
     });
+    destroyRef.onDestroy(leave);
   }
 
-  /** The shadow: the block of words copied whole, just before it (under it), hidden from screen readers. */
-  private build(): void {
-    this.shadow?.remove();
-    const shadow = this.element.cloneNode(true) as HTMLElement;
-    // a copy, not the words: no id, not the directive's mark
-    shadow.removeAttribute('id');
-    shadow.removeAttribute('lenzisolidtext');
-    for (const element of Array.from(shadow.querySelectorAll('[id]'))) element.removeAttribute('id');
-    shadow.classList.add('lenzi-solid-text-shadow');
-    shadow.setAttribute('aria-hidden', 'true');
-    shadow.setAttribute('inert', '');
-    this.sizes = Array.from(this.element.children).map((child) => parseFloat(this.view?.getComputedStyle(child).fontSize ?? '') || 16);
-    this.element.before(shadow);
-    this.shadow = shadow;
-    this.fit();
-  }
-
-  /**
-   * The copy exactly where the words are, exactly as wide (to the fraction of a px: `offsetWidth` rounds, and a line
-   * that just fitted in the words broke a word earlier in a copy a fifth of a px narrower), so the same lines.
-   */
-  private fit(): void {
-    const shadow = this.shadow;
-    if (!shadow) return;
-    const box = this.element.getBoundingClientRect();
-    const holder = (shadow.offsetParent as HTMLElement | null) ?? this.element.ownerDocument.documentElement;
-    const room = holder.getBoundingClientRect();
-    shadow.style.left = `${box.left - room.left - holder.clientLeft + holder.scrollLeft}px`;
-    shadow.style.top = `${box.top - room.top - holder.clientTop + holder.scrollTop}px`;
-    shadow.style.width = `${box.width}px`;
-  }
-
-  /** Over the words' place, each part moved away from the light now, as far as the light is from straight behind. */
-  private place(): void {
-    const shadow = this.shadow;
-    if (!shadow) return;
-    this.fit();
-    const box = this.element.getBoundingClientRect();
-    const shown = box.bottom > 0 && box.top < (this.view?.innerHeight ?? 0);
-    const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-    const light = shown ? this.sights.around(middle, Math.max(box.width, box.height) * AROUND) : null;
-    const strength = light ? Math.max(0, Math.min(1, this.shadowStrength())) * Math.min(1, light.count / 40) : 0;
-    if (!light || strength === 0) {
-      shadow.style.opacity = '0';
-      return;
+  /** Its words as they lie in it (the browser's own boxes of each word), kept until it changes. */
+  private measure(): void {
+    const document = this.element.ownerDocument;
+    const view = this.view;
+    if (!view || !document.createTreeWalker) return;
+    const block = this.element.getBoundingClientRect();
+    const range = document.createRange();
+    const measuring = document.createElement('canvas').getContext('2d');
+    const words: Word[] = [];
+    const walker = document.createTreeWalker(this.element, 4 /* NodeFilter.SHOW_TEXT */);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent ?? '';
+      const parent = node.parentElement;
+      if (!text.trim() || !parent || parent.closest('[aria-hidden="true"]')) continue;
+      const style = view.getComputedStyle(parent);
+      const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      let ascent = parseFloat(style.fontSize) * 0.8;
+      if (measuring) {
+        measuring.font = font;
+        const metrics = measuring.measureText('Hg');
+        ascent = metrics.fontBoundingBoxAscent || ascent;
+      }
+      for (const match of text.matchAll(/\S+/g)) {
+        range.setStart(node, match.index);
+        range.setEnd(node, match.index + match[0].length);
+        const box = range.getClientRects()[0];
+        if (!box) continue;
+        words.push({ text: match[0], font, x: box.left - block.left, y: box.top - block.top + ascent });
+      }
     }
-    const dx = middle.x - light.x;
-    const dy = middle.y - light.y;
-    const away = Math.hypot(dx, dy);
-    const off = Math.min(1, away / (Math.max(box.width, box.height) / 2));
-    const ux = away > 1e-3 ? dx / away : 0;
-    const uy = away > 1e-3 ? dy / away : 0;
-    Array.from(shadow.children).forEach((child, c) => {
-      const length = LENGTH * (this.sizes[c] ?? 16) * off;
-      const part = child as HTMLElement;
-      part.style.transform = `translate(${(ux * length).toFixed(2)}px, ${(uy * length).toFixed(2)}px)`;
-      // the way back to the letters: the same letters, step by step, opaque (one hard shape)
-      part.style.textShadow = Array.from({ length: STEPS - 1 }, (_, k) => {
-        const back = (length * (k + 1)) / STEPS;
-        return `${(-ux * back).toFixed(2)}px ${(-uy * back).toFixed(2)}px 0 currentColor`;
-      }).join(', ');
-    });
-    shadow.style.opacity = strength.toFixed(3);
+    range.detach?.();
+    this.words = words;
+  }
+
+  /** Its words, where they are on the screen now. */
+  draw(context: CanvasRenderingContext2D): void {
+    const block = this.element.getBoundingClientRect();
+    const height = this.view?.innerHeight ?? 0;
+    if (block.bottom < 0 || block.top > height) return;
+    let font = '';
+    for (const word of this.words) {
+      if (word.font !== font) {
+        context.font = font = word.font;
+      }
+      context.fillText(word.text, block.left + word.x, block.top + word.y);
+    }
   }
 }

@@ -13,7 +13,7 @@ import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-bac
 import { LenziSourceLamp } from '../glow/light-field';
 import { LenziGathers } from '../gather/gathers';
 import { LenziScares } from '../scare/scares';
-import { LenziSights } from '../sights/sights';
+import { LenziScreenLight, LenziSights } from '../sights/sights';
 
 /** What a blob is made of: a lamp (it glows), glass (it takes the light), solid (it stops it). */
 export type LenziBlobMaterial = BlobMaterial;
@@ -356,7 +356,34 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       }
       return count ? { x: x / count - this.offset.x + origin.x, y: y / count - this.offset.y + origin.y, count } : null;
     });
-    inject(DestroyRef).onDestroy(leave);
+    // its lights, for the rays they throw through the page (LenziLightRays): the lamp drops and the lamp blobs
+    const unlight = inject(LenziSights).addLights(this, () => this.screenLights());
+    inject(DestroyRef).onDestroy(() => {
+      leave();
+      unlight();
+    });
+  }
+
+  /** Its lamps on the screen now: each lamp drop and lamp blob, where it is, how large, its colour. */
+  private screenLights(): LenziScreenLight[] {
+    if (!this.animate()) return [];
+    const origin = this.origin();
+    const out: LenziScreenLight[] = [];
+    for (const drop of this.blobBoids(this.fleets)) {
+      if (drop.material !== 'lamp' && !drop.emit) continue;
+      out.push({ x: drop.x + origin.x, y: drop.y + origin.y, radius: drop.radius, colour: drop.colour ? linearToHex(drop.colour) : this.accentHex() });
+    }
+    this.drawn.forEach((blob, index) => {
+      if (this.materialOf(index) !== 'lamp') return;
+      out.push({ x: blob.x + origin.x, y: blob.y + origin.y, radius: blob.radius, colour: this.accentHex() });
+    });
+    return out;
+  }
+
+  /** The accent as a hex colour, for a light that has none of its own. */
+  private accentHex(): string {
+    const colours = this.objectColours();
+    return linearToHex([colours[0] ?? 0.7, colours[1] ?? 0.55, colours[2] ?? 1]);
   }
 
   protected override trail(): number {

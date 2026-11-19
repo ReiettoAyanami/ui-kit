@@ -37,18 +37,22 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
   element: the light is in its `::before` and `::after` (a card's own `::after`, a border for forced colours,
   gives way). With reduced motion the light switches on and off at once.
 
-## Solid text
+## Solid text and light rays
 
-`lenziSolidText` (lenzi, 2026-11-19: "lettere scure sul bagliore"; "deve proiettare ombra verso la camera";
-"dev'essere più definita e leggermente meno evidente, dev'essere simile a quella che usiamo per gli elementi lit
-solidi"): the letters are the page's surface (`--lenzi-solid-surface`), so over a glowing background behind the page
-they are dark solid shapes that block it. Each throws a hard, faint shadow away from the light, as a solid element
-does: the letters drawn again under themselves, step by step along the way away from the light (the middle of the
-boids round the words: `LenziSights.around`), one shape at one faintness (`shadowStrength`, 0.45: a little less than a
-solid element's 60%). The farther the light is from straight behind the words, the longer the shadow, up to 0.14 of
-the font size; straight behind them, it hides under them. It follows the light as the boids move. On the bare page the
-letters and their shadow are the page's colour, unseen; with no boid round the words, no shadow. Only the letters:
-never `lenziSolid` on a block of such text (its box would be opaque and hide the glow).
+lenzi, 2026-11-19: "io voglio vedere che ci sono dei fasci di luce che mi arrivano contro e che il testo è in ombra
+secondo questa cosa ... i boidi sono fatti di luce e il testo blocca luce. Boidi > Testo > Utente. Quindi io dovrei
+vedere che i boidi mi castano la luce verso di me e la tagliano come forma del testo".
+
+- **`lenziSolidText`** on a block of words: the letters are the page's surface (`--lenzi-solid-surface`), dark shapes
+  over a glowing background behind the page, and they stop its light (`LenziLightBlockers`): each word, where the
+  browser lays it out, is cut out of the light.
+- **`<lenzi-light-rays>`**, one a page: the light of the glowing background's lamps (its lamp drops and lamp blobs:
+  `LenziSights.lights`) coming through the page towards whoever looks. The lights are drawn soft on a small picture
+  (`resolution`, half the window), the words cut out of it, and the picture stretched out from the middle of the
+  lights step by step, fainter each step (`steps` 40, `decay` 0.94, `length` 0.3): a bright place becomes a beam,
+  a word a dark shaft of shadow in it. Added over the page (`strength` 0.35, screen blend), never in the way of a tap.
+- On the bare page the words are the page's colour, unseen; with no light, no beams.
+- Never `lenziSolid` on a block of such text (its box would be opaque and hide the glow).
 
 ## Rules
 

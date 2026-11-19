@@ -242,10 +242,10 @@ the rule says what, the variable says how much.
 
 ## Light
 
-- **Words can be solid too** (lenzi, 2026-11-19: "lettere scure sul bagliore"; "deve proiettare ombra verso la
-  camera"; "simile a quella che usiamo per gli elementi lit solidi"): `lenziSolidText` makes them the page's surface,
-  dark shapes over a glow behind the page; each throws a hard, faint shadow away from the light, as a solid element
-  does, moving with it. On the bare page they and their shadow are not seen. No box round them.
+- **Words can be solid too, and light comes through the page** (lenzi, 2026-11-19: "i boidi sono fatti di luce e il
+  testo blocca luce. Boidi > Testo > Utente"): `lenziSolidText` makes words the page's surface and stops the light
+  behind them; `<lenzi-light-rays>` draws the beams of that light coming towards the viewer, each word a shaft of
+  shadow in them. On the bare page the words are not seen. No box round them.
 - **A glowing element is a lamp on the page's plane** (lenzi, 2026-11-14: "a lit surface and projects light
   directly onto the others component ... this elements must act on the same plain as the other elements
   unlike the backhgorund"): `lenziGlow` on any element (a button, a list, a card, a chip). It glows in its
