@@ -10,15 +10,19 @@ zona di testo").
   `<lenzi-blob-flock-background>` and `<lenzi-scene>` gather under it.
 - **One zone at a time**: of the zones on the page, the one the window shows most of. Scrolled to another, that one.
 - **Out of it, they hurry**: up to 4 times their top speed when far, slowing to their own as they come in.
-- **In it, they cover all of it**: each boid keeps to its own place in the box, the places spread evenly and drifting
-  slowly along it and back, so the flock lies under the whole zone and still moves.
+- **Under each line of its text** (lenzi, 2026-11-19: "usa più zone nell'area di testo altrimenti i boidi si mettono
+  solo su una parte della scritta"): a zone with text is its lines (`linesOf`, from the browser's boxes of the text),
+  not its whole box; one without text (a picture) is its box. The boids are shared among the lines by their length.
+- **They cover all of it**: each boid keeps to its own place in its line, the places spread evenly and drifting slowly
+  along it and back, so the flock lies under every line and still moves. Kept to a zone, the boids hardly hold
+  together (a fifth of their cohesion) and follow no leader: otherwise they bunch up on one part of the words.
 - How hard they keep to it is the background's `gather` (2; 0: they ignore the zones).
 - No zone on the screen: they fly as they would without any.
 
 ## Rules
 
-- **The zone is the box of what it marks**: put it on the block of text, not on a section a screen tall, or the
-  boids spread over the empty part too.
+- **Put it on the block of text** (a heading and its paragraph): its lines are where the boids go. On a section a
+  screen tall with no text of its own, they would cover its empty box.
 - A flock covers as much as it has boids: a zone wider than the flock gets a thin cover. Size the fleets for the
   largest zone.
 - Scares (`lenziScare`) still scare them out of a zone.

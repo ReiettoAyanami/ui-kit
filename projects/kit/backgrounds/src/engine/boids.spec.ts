@@ -279,6 +279,26 @@ describe('a flock of boids', () => {
     }
   });
 
+  it('shares itself among several boxes (the lines of a text) by their area, each of them covered', () => {
+    const flock = new Boids({ count: 90, maxSpeed: 120, colonies: 3, leaderPull: 0.4 }, 2000, 2000, 7);
+    const lines = [
+      { left: 400, top: 800, right: 1400, bottom: 840 },
+      { left: 400, top: 860, right: 1400, bottom: 900 },
+      { left: 400, top: 920, right: 900, bottom: 960 },
+    ];
+    flock.setHome(lines);
+    run(flock, 10);
+    const near = (i: number, line: (typeof lines)[number]) =>
+      flock.x[i]! > line.left - 20 && flock.x[i]! < line.right + 20 && flock.y[i]! > line.top - 20 && flock.y[i]! < line.bottom + 20;
+    const counts = lines.map((line) => Array.from({ length: 90 }, (_, i) => i).filter((i) => near(i, line)).length);
+    // two long lines and a half one: about 36, 36 and 18, the leaders followed by nobody
+    expect(counts[0]!).toBeGreaterThan(25);
+    expect(counts[1]!).toBeGreaterThan(25);
+    expect(counts[2]!).toBeGreaterThan(11);
+    // the ends of the long lines are covered too
+    expect(Array.from({ length: 90 }, (_, i) => i).filter((i) => near(i, lines[0]!) && flock.x[i]! > 1250).length).toBeGreaterThan(2);
+  });
+
   it('a current carries a boid neither through an edge nor into an obstacle', () => {
     const edged = new Boids({ ...QUIET, count: 1, edges: 'avoid', maxSpeed: 100 }, 400, 400);
     place(edged, [[200, 200, 100, 0]]);

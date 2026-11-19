@@ -115,8 +115,11 @@ export class LenziFlockBackground extends LenziGlowBackground {
           this.scare(),
         );
         // the zone of the page they gather under (lenziGather), in the space
-        const area = this.gathers.area(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height);
-        flock.setHome(area && { left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y }, this.gather());
+        const areas = this.gathers.areas(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height);
+        flock.setHome(
+          areas.map((area) => ({ left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y })),
+          this.gather(),
+        );
         // two steps for a slow frame, so the flock flies as far as the time that went by
         for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) flock.step(Math.min(left, LONGEST_STEP));
       },

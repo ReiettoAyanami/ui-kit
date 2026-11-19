@@ -724,10 +724,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     return blobSink(spec?.weight, spec?.fixed);
   }
 
-  /** The zone of the page the boids gather under now (`lenziGather`), in the space's px; none. */
-  private homeNow(origin: { x: number; y: number }): BoidsArea | null {
-    const area = this.gathers.area(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height);
-    return area && { left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y };
+  /** The lines of the zone of the page the boids gather under now (`lenziGather`), in the space's px; none. */
+  private homeNow(origin: { x: number; y: number }): BoidsArea[] {
+    return this.gathers
+      .areas(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height)
+      .map((area) => ({ left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y }));
   }
 
   /** Whether some blob sinks or rises (its weight is not 1): then the blobs drift with no current too. */

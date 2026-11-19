@@ -34,6 +34,8 @@ const HOME_RUSH_REACH = 240;
 const HOME_SPREAD_X = 0.7548776662466927;
 const HOME_SPREAD_Y = 0.5698402909980532;
 const HOME_DRIFT = 0.03;
+/** How much a flock kept to boxes holds together, times its cohesion. */
+const HOME_COHESION = 0.2;
 const fraction = (value: number) => value - Math.floor(value);
 /** From 0 to 1 and back, as the value goes on: a place that drifts along a box and back, never jumping across it. */
 const swing = (value: number) => 1 - Math.abs(2 * fraction(value) - 1);
@@ -214,7 +216,9 @@ export class Boids {
   private arrived = new Uint8Array(0);
   /** How many times its top speed a boid may fly now: more than 1 while it hurries back to its box. */
   private rush = new Float32Array(0);
-  private home: BoidsArea | null = null;
+  /** The boxes the boids keep to, and where each starts and ends in their total area (shares, 0..1). */
+  private homes: readonly BoidsArea[] = [];
+  private homeShares: number[] = [];
   /** Seconds kept to a box: its places drift along it with them. */
   private homeTime = 0;
   private homeWeight = 2;
@@ -287,13 +291,21 @@ export class Boids {
   }
 
   /**
-   * The box the boids keep to now (it may move), or none, and how hard they keep to it (lenzi, 2026-11-19: "i boidi
-   * devono rimanere sulla zona di testo e spostarsi al prossimo scroll velocemente verso la nuova zona di testo e andare
-   * sotto tutta a quella zona di testo"). Out of it a boid hurries back, up to HOME_RUSH times its top speed; in it,
-   * near its edge, it turns back in; the flock's own rules (keep apart) spread it over the box.
+   * The boxes the boids keep to now (they may move: the lines of a block of text), or none, and how hard they keep to
+   * them (lenzi, 2026-11-19: "i boidi devono rimanere sulla zona di testo e spostarsi al prossimo scroll velocemente
+   * verso la nuova zona di testo e andare sotto tutta a quella zona di testo"; "usa più zone nell'area di testo
+   * altrimenti i boidi si mettono solo su una parte della scritta"). The boids are shared among the boxes by their
+   * area; each boid keeps to its own place in its box, the places spread evenly and drifting slowly along it and back.
+   * Out of its box a boid hurries back, up to HOME_RUSH times its top speed. While they keep to boxes they hardly hold
+   * together and follow no leader, so they spread over all of them.
    */
-  setHome(area: BoidsArea | null, weight = 2): void {
-    this.home = area && area.right > area.left && area.bottom > area.top ? area : null;
+  setHome(areas: BoidsArea | readonly BoidsArea[] | null, weight = 2): void {
+    const all = areas === null ? [] : 'left' in areas ? [areas] : areas;
+    this.homes = all.filter((area) => area.right > area.left && area.bottom > area.top);
+    const sizes = this.homes.map((area) => (area.right - area.left) * (area.bottom - area.top));
+    const total = sizes.reduce((sum, size) => sum + size, 0);
+    let start = 0;
+    this.homeShares = sizes.map((size) => (start += size / total));
     this.homeWeight = Math.max(0, weight);
   }
 
@@ -385,7 +397,8 @@ export class Boids {
     const { x, y, vx, vy, carriedX, carriedY, ax, ay, width, height } = this;
     const wrap = s.edges === 'wrap';
     const scales = this.scales;
-    if (this.home) this.homeTime += dt;
+    const keeping = this.homes.length > 0 && this.homeWeight > 0;
+    if (keeping) this.homeTime += dt;
     // a boid's size sets how fast it flies and how far it sees its flock: the small ones a little slower,
     // following from a little farther, so the large ones (the leaders) end up ahead
     const sizeSpeed = Math.max(0, s.sizeSpeed ?? 0);
@@ -510,12 +523,13 @@ export class Boids {
       if (seen > 0) {
         steer(awayX, awayY, s.separation);
         steer(headX, headY, s.alignment);
-        steer(centreX, centreY, s.cohesion);
+        // kept to boxes, they hardly hold together: their places spread them
+        steer(centreX, centreY, keeping ? s.cohesion * HOME_COHESION : s.cohesion);
       } else {
         steer(awayX, awayY, s.separation);
       }
       // its colony's leader, if it has one and is not it: towards it, the nearest way round
-      const leaderPull = s.leaderPull ?? 0;
+      const leaderPull = keeping ? 0 : (s.leaderPull ?? 0);
       const leader = i % colonies;
       if (leaderPull > 0 && leader !== i && leader < n) {
         let lx = x[leader]! - px;
@@ -559,9 +573,15 @@ export class Boids {
         }
       }
       let rush = 1;
-      const home = this.homeWeight > 0 ? this.home : null;
-      if (home) {
-        // its box: back into it (the nearest way, out of it the faster the farther), and away from its edge inside it
+      if (keeping) {
+        // its box: the one its share of the total area falls in (the plastic number's sequence spreads the shares)
+        const share = fraction(0.5 + HOME_SPREAD_Y * i);
+        let box = 0;
+        while (box < this.homeShares.length - 1 && share >= this.homeShares[box]!) box++;
+        const home = this.homes[box]!;
+        const from = box === 0 ? 0 : this.homeShares[box - 1]!;
+        const across = (share - from) / Math.max(1e-9, this.homeShares[box]! - from);
+        // back into it (the nearest way, out of it the faster the farther), and away from its edge inside it
         const inset = Math.min(see * 0.5, (home.right - home.left) / 2, (home.bottom - home.top) / 2);
         const tx = Math.min(home.right - inset, Math.max(home.left + inset, px)) - px;
         const ty = Math.min(home.bottom - inset, Math.max(home.top + inset, py)) - py;
@@ -576,7 +596,7 @@ export class Boids {
           const innerWidth = home.right - home.left - inset * 2;
           const innerHeight = home.bottom - home.top - inset * 2;
           const placeX = home.left + inset + swing(0.5 + HOME_SPREAD_X * i + this.homeTime * HOME_DRIFT) * innerWidth;
-          const placeY = home.top + inset + fraction(0.5 + HOME_SPREAD_Y * i) * innerHeight;
+          const placeY = home.top + inset + across * innerHeight;
           // more than the flock's own rules, so it spreads instead of gathering in one corner
           steer(placeX - px, placeY - py, this.homeWeight * 1.5 * Math.min(1, Math.hypot(placeX - px, placeY - py) / 40));
         }
