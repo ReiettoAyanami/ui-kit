@@ -52,6 +52,11 @@ describe('sceneLayout', () => {
     expect(layout.throwable).toBe(false);
   });
 
+  it('gives a blob-boid fleet its shapes', () => {
+    const layout = sceneLayout({ blobs: [], fleets: [{ kind: 'blob-boid', material: 'lamp', count: 10, shapes: ['cookie9', 'burst'] }] });
+    expect(layout.blobFlocks[0]!.shapes).toEqual(['cookie9', 'burst']);
+  });
+
   it('says where the fleets live: the window when not said, or the whole page', () => {
     expect(sceneLayout(HOME).space).toBe('screen');
     expect(sceneLayout({ blobs: [], fleets: [{ kind: 'boid', count: 10 }], space: 'page' }).space).toBe('page');

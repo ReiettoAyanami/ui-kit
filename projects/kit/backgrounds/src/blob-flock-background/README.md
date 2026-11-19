@@ -80,6 +80,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
 - **Where the boids live** (`space`, `'screen'` by default): `'page'`, the whole page; the boids and blob-boids scroll
   with it and fly across it, turning at its edges (`edges` 'avoid'), born where the window is. The blobs stay on the
   window.
+- **Blob-boids of other shapes** (`shapes` on a fleet; lenzi, 2026-11-19: "Riesci a farli a forma di fiore questi
+  boidi? tipo cookie o sun o burst (anche randomici eh)"): instead of drops, the blob shapes (`BLOB_SHAPES`: `cookie9`,
+  `sunny`, `burst`, `flower`…), one each dealt at random among those given, turned the way it flies.
 - **Small boids are a little slower and follow from a little farther** (`sizeSpeed`, `sizeReach`; "che
   naturalmente i piú grandi stanno in testa"): the large ones, the leaders, end up ahead.
 - **The lamp blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements

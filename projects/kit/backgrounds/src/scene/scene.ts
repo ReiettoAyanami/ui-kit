@@ -5,6 +5,7 @@ import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWay
 import { BlobState, DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
 import { BlobMaterial } from '../engine/blob-materials';
 import { BoidsFollow } from '../engine/boids';
+import { BlobShapeName } from '../engine/shapes';
 import { LenziCurrent } from '../engine/currents';
 import { LenziBackgroundFill } from '../glow-background/glow-background';
 
@@ -57,6 +58,8 @@ export interface LenziSceneFleet extends LenziFleetWays, LenziScenePlace {
   transparency?: number;
   /** Glass blob-boids that shine too (solid ones that shine are of lamps). */
   emitting?: boolean;
+  /** Blob-boids: the shapes they take instead of drops, each one of them at random ("a forma di fiore ... anche randomici"). */
+  shapes?: BlobShapeName[];
 }
 
 /**
@@ -108,7 +111,7 @@ export interface LenziSceneLayout {
   space: 'screen' | 'page';
 }
 
-type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean };
+type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean; shapes?: BlobShapeName[] };
 
 /** A fleet's ways, sizes, place, level, colour and tint, only the ones it says. */
 function fleetSettings(fleet: LenziSceneFleet): FleetSettings {
@@ -120,6 +123,7 @@ function fleetSettings(fleet: LenziSceneFleet): FleetSettings {
   if (fleet.colour) out.colour = fleet.colour;
   if (fleet.colours?.length) out.colours = [...fleet.colours];
   if (fleet.emitting) out.emitting = true;
+  if (fleet.shapes?.length) out.shapes = [...fleet.shapes];
   if (fleet.follow) out.follow = fleet.follow;
   return out;
 }

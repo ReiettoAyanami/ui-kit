@@ -99,7 +99,7 @@ contenente boidi, blob, boidi-blob").
 | function | `sceneLayout(scene)` | `LenziSceneLayout` | | the scene as the backgrounds take it |
 
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
-colours?, tint?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
+colours?, tint?, shapes?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
 wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
 tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 

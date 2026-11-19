@@ -8,7 +8,7 @@ import { Boids, BoidsArea, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS
 import { LinearRgb, PALETTE_STEP, displacedColors, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
-import { BLOB_SHAPES, knownShapes } from '../engine/shapes';
+import { BLOB_SHAPES, BlobShape, BlobShapeName, knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziSourceLamp } from '../glow/light-field';
 import { LenziGathers } from '../gather/gathers';
@@ -46,6 +46,11 @@ export interface LenziBlobFlock extends LenziFleetWays {
   transparency?: number;
   /** Glass that shines too, in its colour (a solid fleet that shines is of lamps). */
   emitting?: boolean;
+  /**
+   * Shapes its blob-boids take instead of drops (lenzi, 2026-11-19: "Riesci a farli a forma di fiore questi boidi? tipo
+   * cookie o sun o burst (anche randomici eh)"): each one of them, dealt at random, turned the way it flies. None: drops.
+   */
+  shapes?: readonly BlobShapeName[];
 }
 
 /**
@@ -164,6 +169,8 @@ interface BlobBoid {
   y: number;
   radius: number;
   material: LenziBlobMaterial;
+  /** Its shape when it is not a drop (its fleet's `shapes`). */
+  shape?: BlobShape;
   heading: number;
   /** How far it still is from its place in a zone (`Boids.away`): 0 there, 1 on its way. */
   away: number;
@@ -571,7 +578,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       const own = !palette && spec.colour && /^#[0-9a-f]{6}$/i.test(spec.colour) ? hexToLinear(spec.colour) : null;
       const emit = spec.material === 'glass' && spec.emitting === true;
       const colours = own && (spec.material === 'lamp' || emit) ? this.fleetColours({ count: boids.count, colour: spec.colour }, NO_COLOURS) : null;
+      const shapes = (spec.shapes ?? []).filter((name) => name in BLOB_SHAPES);
       for (let i = 0; i < boids.count; i++) {
+        // its shape, dealt at random among the fleet's (the same one for the same boid)
+        const shape = shapes.length ? BLOB_SHAPES[shapes[Math.floor((((i * 0.6180339887 + 0.37) % 1) + 1) % 1 * shapes.length)]!] : undefined;
         const colour: LinearRgb | undefined = palette
           ? this.shifting(palette, i * 0.618)
           : colours
@@ -587,6 +597,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
           away: boids.away[i] ?? 0,
           homed: boids.homed,
           layer,
+          ...(shape ? { shape } : {}),
           ...(colour ? { colour } : {}),
           ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
           ...(typeof spec.transparency === 'number' ? { clarity: spec.transparency } : {}),
@@ -711,13 +722,13 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         // partono"; "quando arrivano fai in modo che diventino un blob"). Not in a zone (away 0 with none): as before.
         merge: drop.homed ? drop.radius * (DROP_JOIN_SETTLED * (1 - drop.away) + DROP_JOIN_ON_WAY * drop.away) : Math.min(merge, drop.radius * 0.6),
         rotation: drop.heading,
-        from: BLOB_BOID_SHAPE,
-        to: BLOB_BOID_SHAPE,
+        from: drop.shape ?? BLOB_BOID_SHAPE,
+        to: drop.shape ?? BLOB_BOID_SHAPE,
         mix: 0,
         material: drop.material,
         tint: bright(drop.colour ?? tint(colour), drop.material),
         // settled, round (a blob is made of round drops: lenzi, "il blob con una forma più decente"); on its way, a drop
-        drop: !(drop.homed && drop.away < DROP_ROUND),
+        drop: !drop.shape && !(drop.homed && drop.away < DROP_ROUND),
         layer: drop.layer,
         ...(drop.colour ? { colour: drop.colour } : {}),
         ...(typeof drop.tintAmount === 'number' ? { tintAmount: drop.tintAmount } : {}),
