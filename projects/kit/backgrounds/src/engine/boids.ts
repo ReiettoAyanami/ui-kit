@@ -15,6 +15,29 @@ import { seeded } from './color';
 export type BoidsFollow = 'none' | 'near' | 'target' | 'flee';
 
 /** Something the boids are scared of: near it (inside `radius`, CSS px) they fly away from it, faster the nearer. */
+/** A box the boids keep to (a zone of the page: `lenziGather`), CSS px of their space. */
+export interface BoidsArea {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/**
+ * Out of the box they keep to, how many times its top speed a boid may fly to get back to it, at most (lenzi,
+ * 2026-11-19: "spostarsi al prossimo scroll velocemente verso la nuova zona di testo"), and how far out, px, it
+ * takes to reach that (nearer, it slows down to its own speed as it comes in).
+ */
+const HOME_RUSH = 4;
+const HOME_RUSH_REACH = 240;
+/** The places of a flock in its box: the plastic number's sequence (even in two dimensions), and how fast they drift. */
+const HOME_SPREAD_X = 0.7548776662466927;
+const HOME_SPREAD_Y = 0.5698402909980532;
+const HOME_DRIFT = 0.03;
+const fraction = (value: number) => value - Math.floor(value);
+/** From 0 to 1 and back, as the value goes on: a place that drifts along a box and back, never jumping across it. */
+const swing = (value: number) => 1 - Math.abs(2 * fraction(value) - 1);
+
 export interface BoidsScare {
   x: number;
   y: number;
@@ -189,6 +212,12 @@ export class Boids {
   private ay = new Float32Array(0);
   /** On its target: it may stop. */
   private arrived = new Uint8Array(0);
+  /** How many times its top speed a boid may fly now: more than 1 while it hurries back to its box. */
+  private rush = new Float32Array(0);
+  private home: BoidsArea | null = null;
+  /** Seconds kept to a box: its places drift along it with them. */
+  private homeTime = 0;
+  private homeWeight = 2;
 
   constructor(settings: Partial<BoidsSettings>, width: number, height: number, seed = 1) {
     this.settings = { ...DEFAULT_BOIDS, ...settings };
@@ -255,6 +284,17 @@ export class Boids {
    */
   setFlow(flow: ((x: number, y: number) => readonly [number, number]) | null): void {
     this.flow = flow;
+  }
+
+  /**
+   * The box the boids keep to now (it may move), or none, and how hard they keep to it (lenzi, 2026-11-19: "i boidi
+   * devono rimanere sulla zona di testo e spostarsi al prossimo scroll velocemente verso la nuova zona di testo e andare
+   * sotto tutta a quella zona di testo"). Out of it a boid hurries back, up to HOME_RUSH times its top speed; in it,
+   * near its edge, it turns back in; the flock's own rules (keep apart) spread it over the box.
+   */
+  setHome(area: BoidsArea | null, weight = 2): void {
+    this.home = area && area.right > area.left && area.bottom > area.top ? area : null;
+    this.homeWeight = Math.max(0, weight);
   }
 
   /** What the boids are scared of now (they may move), and how much (0: not at all). */
@@ -332,6 +372,7 @@ export class Boids {
     this.ax = new Float32Array(count);
     this.ay = new Float32Array(count);
     this.arrived = new Uint8Array(count);
+    this.rush = new Float32Array(count).fill(1);
     this.scaleKey = '';
     this.sizeUp();
   }
@@ -344,6 +385,7 @@ export class Boids {
     const { x, y, vx, vy, carriedX, carriedY, ax, ay, width, height } = this;
     const wrap = s.edges === 'wrap';
     const scales = this.scales;
+    if (this.home) this.homeTime += dt;
     // a boid's size sets how fast it flies and how far it sees its flock: the small ones a little slower,
     // following from a little farther, so the large ones (the leaders) end up ahead
     const sizeSpeed = Math.max(0, s.sizeSpeed ?? 0);
@@ -516,6 +558,30 @@ export class Boids {
           steer(tx, ty, s.followWeight * Math.min(1, distance / radius));
         }
       }
+      let rush = 1;
+      const home = this.homeWeight > 0 ? this.home : null;
+      if (home) {
+        // its box: back into it (the nearest way, out of it the faster the farther), and away from its edge inside it
+        const inset = Math.min(see * 0.5, (home.right - home.left) / 2, (home.bottom - home.top) / 2);
+        const tx = Math.min(home.right - inset, Math.max(home.left + inset, px)) - px;
+        const ty = Math.min(home.bottom - inset, Math.max(home.top + inset, py)) - py;
+        const distance = Math.hypot(tx, ty);
+        const out = Math.max(0, distance - inset);
+        if (out > 0) {
+          rush = 1 + (HOME_RUSH - 1) * Math.min(1, out / HOME_RUSH_REACH);
+          steer(tx, ty, this.homeWeight * 2, top * rush, s.maxForce * (2 + rush));
+        } else {
+          // in it: towards its own place in the box, a place that drifts slowly along it and back, the places of the flock
+          // spread evenly over all of it (the plastic number's sequence), so the flock lies under all of the box
+          const innerWidth = home.right - home.left - inset * 2;
+          const innerHeight = home.bottom - home.top - inset * 2;
+          const placeX = home.left + inset + swing(0.5 + HOME_SPREAD_X * i + this.homeTime * HOME_DRIFT) * innerWidth;
+          const placeY = home.top + inset + fraction(0.5 + HOME_SPREAD_Y * i) * innerHeight;
+          // more than the flock's own rules, so it spreads instead of gathering in one corner
+          steer(placeX - px, placeY - py, this.homeWeight * 1.5 * Math.min(1, Math.hypot(placeX - px, placeY - py) / 40));
+        }
+      }
+      this.rush[i] = rush;
       if (field) {
         // an obstacle near it: away from it, and along it the way it is already going, so it flows round
         const margin = Math.max(24, see * 0.8);
@@ -561,7 +627,7 @@ export class Boids {
     for (let i = 0; i < n; i++) {
       const carryX = (carriedX[i] = carriedX[i]! * slowing);
       const carryY = (carriedY[i] = carriedY[i]! * slowing);
-      const fastest = Math.max(1, s.maxSpeed) * speedOf(i);
+      const fastest = Math.max(1, s.maxSpeed) * speedOf(i) * this.rush[i]!;
       const slowest = Math.min(fastest, Math.max(0, s.minSpeed) * speedOf(i));
       let nvx = vx[i]! + ax[i]! * dt;
       let nvy = vy[i]! + ay[i]! * dt;

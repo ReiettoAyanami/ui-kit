@@ -1,9 +1,10 @@
-import { Component, DestroyRef, inject, input, numberAttribute } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, inject, input, numberAttribute } from '@angular/core';
 
 import { Boids, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_BOID_SIZES } from '../engine/boids';
 import { BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
+import { LenziGathers } from '../gather/gathers';
 import { LenziScares } from '../scare/scares';
 import { LenziSights } from '../sights/sights';
 
@@ -76,6 +77,10 @@ export class LenziFlockBackground extends LenziGlowBackground {
   private flock: Boids | null = null;
   private flockSeed = 1;
   private readonly scares = inject(LenziScares);
+  private readonly gathers = inject(LenziGathers);
+  private readonly view = inject(DOCUMENT).defaultView;
+  /** How hard the boids keep to the zone of the page they gather under (`lenziGather`); 0: they do not. */
+  readonly gather = input(2, { transform: numberAttribute });
 
   constructor() {
     super();
@@ -109,6 +114,9 @@ export class LenziFlockBackground extends LenziGlowBackground {
           this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius })),
           this.scare(),
         );
+        // the zone of the page they gather under (lenziGather), in the space
+        const area = this.gathers.area(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height);
+        flock.setHome(area && { left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y }, this.gather());
         // two steps for a slow frame, so the flock flies as far as the time that went by
         for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) flock.step(Math.min(left, LONGEST_STEP));
       },

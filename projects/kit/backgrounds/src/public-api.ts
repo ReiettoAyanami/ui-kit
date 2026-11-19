@@ -12,6 +12,8 @@ export * from './scene/scene';
 export * from './sights/sights';
 export * from './scare/scare';
 export * from './scare/scares';
+export * from './gather/gather';
+export * from './gather/gathers';
 export * from './ambient-light/ambient-light';
 export * from './ambient-light/lit';
 export * from './glow/glow';

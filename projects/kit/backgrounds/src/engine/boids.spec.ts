@@ -248,6 +248,37 @@ describe('a flock of boids', () => {
     expect(flock.carriedX[0]!).toBeLessThan(STRONGEST_CURRENT * 0.05);
   });
 
+  it('keeps to its box: out of it, it hurries in, faster than its top speed; then it stays in it', () => {
+    const flock = new Boids({ ...QUIET, count: 1, maxSpeed: 100 }, 3000, 3000);
+    place(flock, [[200, 1500, 0, -100]]);
+    flock.setHome({ left: 2000, top: 1400, right: 2600, bottom: 1600 });
+    run(flock, 0.5);
+    // 1800 px away: it flies at more than its own 100 px/s to get there
+    expect(Math.hypot(flock.vx[0]!, flock.vy[0]!)).toBeGreaterThan(250);
+    run(flock, 6);
+    for (let second = 0; second < 4; second++) {
+      run(flock, 1);
+      expect(flock.x[0]!).toBeGreaterThan(2000 - 10);
+      expect(flock.x[0]!).toBeLessThan(2600 + 10);
+      expect(flock.y[0]!).toBeGreaterThan(1400 - 10);
+      expect(flock.y[0]!).toBeLessThan(1600 + 10);
+    }
+    // in it, its own speed again
+    expect(Math.hypot(flock.vx[0]!, flock.vy[0]!)).toBeLessThanOrEqual(100.01);
+  });
+
+  it('spreads under its box: a flock kept to a wide box covers it, not one corner of it', () => {
+    const flock = new Boids({ count: 120, maxSpeed: 120 }, 2000, 2000, 5);
+    flock.setHome({ left: 400, top: 800, right: 1600, bottom: 1100 });
+    run(flock, 20);
+    const inside = Array.from({ length: 120 }, (_, i) => i).filter((i) => flock.x[i]! > 380 && flock.x[i]! < 1620 && flock.y[i]! > 780 && flock.y[i]! < 1120);
+    expect(inside.length).toBeGreaterThan(108);
+    // each third of the box holds some of them
+    for (const [from, to] of [[400, 800], [800, 1200], [1200, 1600]]) {
+      expect(inside.filter((i) => flock.x[i]! >= from && flock.x[i]! < to).length).toBeGreaterThan(10);
+    }
+  });
+
   it('a current carries a boid neither through an edge nor into an obstacle', () => {
     const edged = new Boids({ ...QUIET, count: 1, edges: 'avoid', maxSpeed: 100 }, 400, 400);
     place(edged, [[200, 200, 100, 0]]);

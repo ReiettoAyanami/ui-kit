@@ -72,6 +72,8 @@ contenente boidi, blob, boidi-blob").
   (`width`). Near a segment the boids are turned along it and carried by it, past their own top speed (about half
   the push, as px/s, on top of their flight; 2026-11-17, "a stronger push"), and the blobs drift with it (a blob that
   stays put not at all, a heavy one less); out on one side, back on the other.
+- **Zones of the page** (`lenziGather`): the fleets gather under the one the window shows most of (see
+  `gather/README.md`); nothing to say in the scene.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
   simulation"): no fleets, the blobs still on their places, nothing thrown, nothing carried by a current (a blob
   is drawn exactly where the scene puts it, whatever happened while it played; it plays on from there).

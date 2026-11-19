@@ -1,16 +1,17 @@
-import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
 
 import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobEdge, blobsAt, blobsBump, paletteOf, specSettings } from '../engine/blob-field';
 import { BlobMaterial, DROP, MaterialObject, MaterialScene } from '../engine/blob-materials';
 import { BlobThrow } from '../engine/blob-throw';
 import { BlobDrift, LenziCurrent, blobCarried, blobSink, currentsFlow } from '../engine/currents';
-import { Boids, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_BOID_SIZES, roundField } from '../engine/boids';
+import { Boids, BoidsArea, BoidsField, BoidsFollow, BoidsSettings, DEFAULT_BOIDS, DEFAULT_BOID_SIZES, roundField } from '../engine/boids';
 import { LinearRgb, PALETTE_STEP, displacedColors, hexToLinear, linearToHex, paletteAt } from '../engine/color';
 import { BOID_STRETCH, BoidShape, FlockScene } from '../engine/flock-scene';
 import { GlowEngine } from '../engine/glow-engine';
 import { BLOB_SHAPES, knownShapes } from '../engine/shapes';
 import { LenziGlowBackground, LenziGlowScene } from '../glow-background/glow-background';
 import { LenziSourceLamp } from '../glow/light-field';
+import { LenziGathers } from '../gather/gathers';
 import { LenziScares } from '../scare/scares';
 import { LenziSights } from '../sights/sights';
 
@@ -265,6 +266,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
    * indipendenti) che instrada i boidi e i blob"): near a segment, the boids and the blobs are pushed along it.
    */
   readonly currents = input<readonly LenziCurrent[] | null>(null);
+  /** How hard the boids keep to the zone of the page they gather under (`lenziGather`); 0: they do not. */
+  readonly gather = input(2, { transform: numberAttribute });
   /**
    * The boids as fleets, each its own flock with its leader's ways and its own count, colonies and size (a
    * scene's fleets); null: one flock of `boids` in `colonies`, as the inputs say.
@@ -280,9 +283,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly boidLayer = input(0, { transform: numberAttribute });
 
   private elapsed = 0;
+  private readonly view = inject(DOCUMENT).defaultView;
   private drawn: readonly BlobState[] = [];
   private readonly throws = new BlobThrow();
   private readonly scares = inject(LenziScares);
+  private readonly gathers = inject(LenziGathers);
   private flocks: BoidFleet[] = [];
   private fleets: Fleet[] = [];
   private flockSeed = Number.NaN;
@@ -366,10 +371,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         const scares = this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius }));
         // every flock is told where the pointer is; what it does with it is its own (`follow`, a fleet apart)
         const pointer = this.pointerInside();
+        const home = this.homeNow(origin);
         for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
           boids.setTarget(pointer);
           boids.setScares(scares, this.scare());
           boids.setFlow(flow);
+          boids.setHome(home, this.gather());
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
         }
       },
@@ -715,6 +722,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private sink(index: number): number {
     const spec = this.blobSpecs()?.[index];
     return blobSink(spec?.weight, spec?.fixed);
+  }
+
+  /** The zone of the page the boids gather under now (`lenziGather`), in the space's px; none. */
+  private homeNow(origin: { x: number; y: number }): BoidsArea | null {
+    const area = this.gathers.area(this.view?.innerWidth ?? this.width, this.view?.innerHeight ?? this.height);
+    return area && { left: area.left - origin.x, top: area.top - origin.y, right: area.right - origin.x, bottom: area.bottom - origin.y };
   }
 
   /** Whether some blob sinks or rises (its weight is not 1): then the blobs drift with no current too. */
