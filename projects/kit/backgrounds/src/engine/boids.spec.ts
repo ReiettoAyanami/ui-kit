@@ -323,15 +323,12 @@ describe('a flock of boids', () => {
     }
   });
 
-  it('moves with the page at once when shifted, in from the other side past an edge', () => {
-    const flock = new Boids({ ...QUIET, count: 2 }, 1000, 800);
-    place(flock, [
-      [500, 400, 0, 0],
-      [500, 50, 0, 0],
-    ]);
-    flock.shift(0, -100);
-    expect(flock.y[0]!).toBeCloseTo(300);
-    expect(flock.y[1]!).toBeCloseTo(750);
+  it('a space made larger keeps every boid where it was', () => {
+    const flock = new Boids({ ...QUIET, count: 1 }, 1000, 800);
+    place(flock, [[500, 400, 0, 0]]);
+    flock.setSize(1000, 4000);
+    expect(flock.x[0]!).toBe(500);
+    expect(flock.y[0]!).toBe(400);
   });
 
   it('settled at its place in its box it hardly moves, and says it is there (away 0); on its way, away 1', () => {

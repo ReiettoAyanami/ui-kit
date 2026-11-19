@@ -167,6 +167,8 @@ interface BlobBoid {
   heading: number;
   /** How far it still is from its place in a zone (`Boids.away`): 0 there, 1 on its way. */
   away: number;
+  /** Its flock keeps to a zone now (`Boids.homed`). */
+  homed: boolean;
   /** Its fleet's layer. */
   layer: number;
   /** Its fleet's own colour (a lamp's moved a little drop by drop), and how much of it glass takes. */
@@ -187,8 +189,9 @@ interface BlobBoid {
  * LenziGlowBackground's.
  */
 
-/** On its way to its place (`Boids.away` 1), how much less a drop melts into the others. */
-const DROP_APART = 0.85;
+/** How far a drop melts into the others, times its size: settled at its place in a zone, and on its way. */
+const DROP_JOIN_SETTLED = 1.8;
+const DROP_JOIN_ON_WAY = 0.1;
 @Component({
   selector: 'lenzi-blob-flock-background',
   imports: [],
@@ -274,11 +277,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   /** How hard the boids keep to the zone of the page they gather under (`lenziGather`); 0: they do not. */
   readonly gather = input(2, { transform: numberAttribute });
   /**
-   * How far the boids go with the page's scroll (lenzi, 2026-11-19: "lo scroll della pagina non deve influire sulla
-   * posizione dei boidi ... se scrollo i boidi devono rimanere ... e seguirmi"): 1, as far as the words, at once, as if
-   * they were on the page; 0, not at all (behind it, fixed). The boids and the blob-boids, not the blobs.
+   * Where the boids live (lenzi, 2026-11-19: "La posizione dei boidi non deve ignorare la pagina"): 'screen', the
+   * window (they stay put while the page scrolls under them); 'page', the whole page: a boid is somewhere on the page,
+   * scrolls away with it, and flies across it to where it goes; they never wrap round its edges. The boids and the
+   * blob-boids, not the blobs.
    */
-  readonly scroll = input(0, { transform: numberAttribute });
+  readonly space = input<'screen' | 'page'>('screen');
   /**
    * The boids as fleets, each its own flock with its leader's ways and its own count, colonies and size (a
    * scene's fleets); null: one flock of `boids` in `colonies`, as the inputs say.
@@ -295,8 +299,9 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
 
   private elapsed = 0;
   private readonly view = inject(DOCUMENT).defaultView;
-  /** The page's scroll at the last frame; null: not read yet. */
-  private scrolledTo: { x: number; y: number } | null = null;
+  private readonly page = inject(DOCUMENT);
+  /** Where the window is on the flocks' space, px: the page's scroll in the page's space, none in the screen's. */
+  private offset = { x: 0, y: 0 };
   private drawn: readonly BlobState[] = [];
   private readonly throws = new BlobThrow();
   private readonly scares = inject(LenziScares);
@@ -321,8 +326,9 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       let best: { x: number; y: number } | null = null;
       let least = Infinity;
       for (const flock of [...this.flocks.map((fleet) => fleet.boids), ...this.fleets.map((fleet) => fleet.boids)]) {
-        const boid = flock?.nearest(point.x - origin.x, point.y - origin.y);
-        if (!boid) continue;
+        const found = flock?.nearest(point.x - origin.x + this.offset.x, point.y - origin.y + this.offset.y);
+        if (!found) continue;
+        const boid = { x: found.x - this.offset.x, y: found.y - this.offset.y };
         const distance = Math.hypot(boid.x + origin.x - point.x, boid.y + origin.y - point.y);
         if (distance < least) {
           least = distance;
@@ -339,7 +345,9 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   }
 
   protected override resized(width: number, height: number): void {
-    for (const fleet of [...this.flocks, ...this.fleets]) fleet.boids.resize(width, height);
+    // on the page a boid keeps its place on it; on the screen, its place in proportion
+    if (this.space() === 'page') this.updateSpace();
+    else for (const fleet of [...this.flocks, ...this.fleets]) fleet.boids.resize(width, height);
   }
 
   /** The lamp blobs light the page's lit surfaces, as the blob background's do; glass and solid ones do not. */
@@ -377,20 +385,23 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         this.bump();
         const flocks = this.current();
         const fleets = this.currentFleets();
+        this.updateSpace();
         // the blobs where they are now, as drawn: what the flocks fly round (or melt into)
         this.drawn = this.blobsNow();
         this.obstacles(flocks, fleets);
         const origin = this.origin();
-        const scares = this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius }));
+        // what the boids are told, in their space: the window's place on the page added
+        const { x: ox, y: oy } = this.offset;
+        const scares = this.scares.circles().map((circle) => ({ x: circle.x - origin.x + ox, y: circle.y - origin.y + oy, radius: circle.radius }));
         // every flock is told where the pointer is; what it does with it is its own (`follow`, a fleet apart)
-        const pointer = this.pointerInside();
-        const home = this.homeNow(origin);
-        const [shiftX, shiftY] = this.scrolled();
+        const seen = this.pointerInside();
+        const pointer = seen && { x: seen.x + ox, y: seen.y + oy };
+        const home = this.homeNow({ x: origin.x - ox, y: origin.y - oy });
+        const carried = flow && (ox || oy) ? (x: number, y: number) => flow(x - ox, y - oy) : flow;
         for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
           boids.setTarget(pointer);
           boids.setScares(scares, this.scare());
-          boids.setFlow(flow);
-          boids.shift(shiftX, shiftY);
+          boids.setFlow(carried);
           boids.setHome(home, this.gather());
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
         }
@@ -407,7 +418,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         materials.drawLight(
           this.current().map((fleet) => ({
             layer: fleet.spec.layer ?? this.boidLayer(),
-            draw: () => flockScene.draw(fleet.boids, this.fleetColours(fleet.spec, colours), Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1),
+            draw: () => flockScene.draw(fleet.boids, this.fleetColours(fleet.spec, colours), Math.max(0.5, this.sizeOf(fleet.spec) / 2), this.shape(), 1, this.offset.x, this.offset.y),
           })),
         );
       },
@@ -546,12 +557,14 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
             ? [colours[i * 3]!, colours[i * 3 + 1]!, colours[i * 3 + 2]!]
             : (own ?? undefined);
         out.push({
-          x: boids.x[i]!,
-          y: boids.y[i]!,
+          // on the screen: where the window is on their space taken off
+          x: boids.x[i]! - this.offset.x,
+          y: boids.y[i]! - this.offset.y,
           radius: this.radiusOf(fleet, i),
           material: spec.material,
           heading: Math.atan2(boids.vy[i]!, boids.vx[i]!),
           away: boids.away[i] ?? 0,
+          homed: boids.homed,
           layer,
           ...(colour ? { colour } : {}),
           ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
@@ -589,7 +602,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     const fieldFor = (mover: LenziLayered): BoidsField | null => {
       const stopping = blobs.filter((thing) => stops(thing, mover)).map((thing) => thing.blob);
       const stoppingDrops = drops.filter((drop) => stops(drop, mover));
-      return union(stopping.length ? blobEdge(stopping, merge) : null, roundField(this.dropCircles(stoppingDrops)));
+      const field = union(stopping.length ? blobEdge(stopping, merge) : null, roundField(this.dropCircles(stoppingDrops)));
+      // drawn on the screen, met in the flocks' space
+      const { x: ox, y: oy } = this.offset;
+      return field && (ox || oy) ? (x: number, y: number) => field(x - ox, y - oy) : field;
     };
     // the boids: every blob and blob-boid on their layer (a fleet's own, or the boids'), each fleet kept out by its
     // own largest boid's length
@@ -668,10 +684,11 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         x: drop.x,
         y: drop.y,
         radius: drop.radius,
-        // on their way to a zone they melt hardly at all, so they are seen as many; near their places they melt into one
-        // (lenzi, 2026-11-19: "si veda proprio il fatto che siano tanti quindi magari dovrebbero unirsi solo quando sono
-        // più vicini")
-        merge: Math.min(merge, drop.radius * 0.6) * (1 - DROP_APART * drop.away),
+        // on their way to a zone they melt hardly at all, so they are seen as many; at their places, far more than drops
+        // do anywhere else, into one cover under the words (lenzi, 2026-11-19: "dovrebbero unirsi solo quando sono più
+        // vicini"; "l'unione dei boidi non funziona quando sono sul testo, magari alzala quando arrivano e abbassala quando
+        // partono"). Not in a zone (away 0 with none): as before.
+        merge: drop.homed ? drop.radius * (DROP_JOIN_SETTLED * (1 - drop.away) + DROP_JOIN_ON_WAY * drop.away) : Math.min(merge, drop.radius * 0.6),
         rotation: drop.heading,
         from: BLOB_BOID_SHAPE,
         to: BLOB_BOID_SHAPE,
@@ -743,16 +760,29 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
     return blobSink(spec?.weight, spec?.fixed);
   }
 
-  /** How far the boids go with what the page scrolled since the last frame, px (the words go up as it scrolls down). */
-  private scrolled(): readonly [number, number] {
+  /** The flocks' space now: the page, its scroll as their offset, or the screen; their size kept to it. */
+  private updateSpace(): void {
     const view = this.view;
-    if (!view) return [0, 0];
-    const now = { x: view.scrollX, y: view.scrollY };
-    const was = this.scrolledTo;
-    this.scrolledTo = now;
-    const share = this.scroll();
-    if (!was || share === 0) return [0, 0];
-    return [-(now.x - was.x) * share, -(now.y - was.y) * share];
+    this.offset = this.space() === 'page' && view ? { x: view.scrollX, y: view.scrollY } : { x: 0, y: 0 };
+    const [width, height] = this.spaceSize();
+    for (const fleet of [...this.flocks, ...this.fleets]) fleet.boids.setSize(width, height);
+  }
+
+  /** How large the flocks' space is, px: the window's, or the whole page's. */
+  private spaceSize(): [number, number] {
+    if (this.space() !== 'page') return [this.width, this.height];
+    const root = this.page.documentElement;
+    return [Math.max(this.width, root.scrollWidth), Math.max(this.height, root.scrollHeight)];
+  }
+
+  /** Born in the page's space: where the window is now, not anywhere on the page. */
+  private bornInView(boids: Boids): void {
+    if (this.space() !== 'page') return;
+    const [width, height] = this.spaceSize();
+    for (let i = 0; i < boids.count; i++) {
+      boids.x[i] = (boids.x[i]! / width) * this.width + this.offset.x;
+      boids.y[i] = (boids.y[i]! / height) * this.height + this.offset.y;
+    }
   }
 
   /** The lines of the zone of the page the boids gather under now (`lenziGather`), in the space's px; none. */
@@ -821,6 +851,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       leaderSize: this.leaderSize(),
       sizeSpeed: this.sizeSpeed(),
       sizeReach: this.sizeReach(),
+      // on the page they turn at its edges: none comes in from the other side
+      edges: this.space() === 'page' ? 'avoid' : DEFAULT_BOIDS.edges,
     };
   }
 
@@ -850,7 +882,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         return { spec, boids: old.boids };
       }
       // the first fleet keeps the seed the single flock had: the same boids as before scenes
-      const boids = new Boids(settings, this.width, this.height, f === 0 ? this.seed() : this.seed() * 17 + f);
+      const boids = new Boids(settings, ...this.spaceSize(), f === 0 ? this.seed() : this.seed() * 17 + f);
+      if (!settings.origin) this.bornInView(boids);
       born.push(boids);
       return { spec, boids };
     });
@@ -904,7 +937,8 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         old.boids.configure(settings);
         return { spec, boids: old.boids };
       }
-      const boids = new Boids(settings, this.width, this.height, this.seed() * 31 + f + 1);
+      const boids = new Boids(settings, ...this.spaceSize(), this.seed() * 31 + f + 1);
+      if (!settings.origin) this.bornInView(boids);
       // born already flying, unless born around a leader put somewhere
       if (!settings.origin) for (let time = 0; time < HEAD_START; time += LONGEST_STEP) boids.step(LONGEST_STEP);
       return { spec, boids };

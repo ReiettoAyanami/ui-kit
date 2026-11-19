@@ -115,7 +115,8 @@ export class FlockScene {
    * @param shape a dot, a dart pointing where it flies, or a drop (its round head ahead)
    * Each boid is as large as its own size says (`flock.scales`: a little different each, the leaders larger).
    */
-  draw(flock: Boids, colors: Float32Array, size: number, shape: BoidShape, brightness: number): void {
+  /** The flock, `offsetX`/`offsetY` px taken off its places (where the window is on its space). */
+  draw(flock: Boids, colors: Float32Array, size: number, shape: BoidShape, brightness: number, offsetX = 0, offsetY = 0): void {
     const { engine, program } = this;
     const gl = engine.gl;
     const count = Math.min(flock.count, Math.floor(colors.length / 3));
@@ -123,8 +124,8 @@ export class FlockScene {
     if (this.boidData.length !== count * 4) this.boidData = new Float32Array(count * 4);
     const data = this.boidData;
     for (let i = 0; i < count; i++) {
-      data[i * 4] = flock.x[i]!;
-      data[i * 4 + 1] = flock.y[i]!;
+      data[i * 4] = flock.x[i]! - offsetX;
+      data[i * 4 + 1] = flock.y[i]! - offsetY;
       data[i * 4 + 2] = flock.vx[i]!;
       data[i * 4 + 3] = flock.vy[i]!;
     }

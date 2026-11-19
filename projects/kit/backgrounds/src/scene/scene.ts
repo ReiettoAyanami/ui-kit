@@ -83,10 +83,10 @@ export interface LenziScene {
   /** The pointer throws the blobs about. */
   throwable?: boolean;
   /**
-   * How far the fleets go with the page's scroll (lenzi, 2026-11-19: "se scrollo i boidi devono rimanere ... e
-   * seguirmi"): 1, with the words, as if on the page; 0 or not said, fixed behind it.
+   * Where the fleets live (lenzi, 2026-11-19: "La posizione dei boidi non deve ignorare la pagina"): 'page', on the
+   * whole page, scrolling with it and flying across it; 'screen' or not said, the window, fixed behind the page.
    */
-  scroll?: number;
+  space?: 'screen' | 'page';
 }
 
 /** What the backgrounds are given for a scene. */
@@ -104,8 +104,8 @@ export interface LenziSceneLayout {
   /** What a fleet that does not say its own does with the pointer. */
   follow: BoidsFollow;
   throwable: boolean;
-  /** How far the fleets go with the page's scroll (1: with the words; 0: not at all). */
-  scroll: number;
+  /** Where the fleets live: the window, or the whole page. */
+  space: 'screen' | 'page';
 }
 
 type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean };
@@ -136,7 +136,7 @@ export function sceneLayout(scene: LenziScene): LenziSceneLayout {
     currents: scene.currents?.length ? scene.currents : null,
     follow: scene.follow ?? 'near',
     throwable: scene.throwable === true,
-    scroll: typeof scene.scroll === 'number' && Number.isFinite(scene.scroll) ? scene.scroll : 0,
+    space: scene.space === 'page' ? 'page' : 'screen',
   };
 }
 

@@ -72,8 +72,9 @@ contenente boidi, blob, boidi-blob").
   (`width`). Near a segment the boids are turned along it and carried by it, past their own top speed (about half
   the push, as px/s, on top of their flight; 2026-11-17, "a stronger push"), and the blobs drift with it (a blob that
   stays put not at all, a heavy one less); out on one side, back on the other.
-- **The page's scroll** (`scroll`; lenzi, 2026-11-19: "se scrollo i boidi devono rimanere ... e seguirmi"): 1, the
-  fleets go with the words as the page scrolls, as if on it; 0 or not said, fixed behind it. The blobs stay.
+- **Where the fleets live** (`space`; lenzi, 2026-11-19: "La posizione dei boidi non deve ignorare la pagina"):
+  `'page'`, on the whole page (they scroll with it and fly across it, turning at its edges); `'screen'` or not said,
+  the window. The blobs stay on the window.
 - **Zones of the page** (`lenziGather`): the fleets gather under the one the window shows most of (see
   `gather/README.md`); nothing to say in the scene.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
@@ -99,7 +100,7 @@ contenente boidi, blob, boidi-blob").
 
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
-wander?, follow?, x?, y?, layer? }[], follow?, throwable?, scroll? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
+wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
 tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 
 ## Example

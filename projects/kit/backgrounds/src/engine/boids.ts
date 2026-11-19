@@ -339,25 +339,15 @@ export class Boids {
     this.homeWeight = Math.max(0, weight);
   }
 
-  /**
-   * Moves every boid by this much, px, at once (the page scrolled and the flock goes with it: lenzi, 2026-11-19, "lo
-   * scroll della pagina non deve influire sulla posizione dei boidi ... se scrollo i boidi devono rimanere ... e
-   * seguirmi"); past an edge, in from the other side when the edges wrap.
-   */
-  shift(dx: number, dy: number): void {
-    if (dx === 0 && dy === 0) return;
-    const { x, y, width, height } = this;
-    const wrap = this.settings.edges === 'wrap';
-    for (let i = 0; i < this.count; i++) {
-      let nx = x[i]! + dx;
-      let ny = y[i]! + dy;
-      if (wrap) {
-        nx = ((nx % width) + width) % width;
-        ny = ((ny % height) + height) % height;
-      }
-      x[i] = nx;
-      y[i] = ny;
-    }
+  /** The space is this large now; the boids keep their places (a page that grew: they stay where they were on it). */
+  setSize(width: number, height: number): void {
+    this.width = Math.max(1, width);
+    this.height = Math.max(1, height);
+  }
+
+  /** They keep to boxes now (`setHome`). */
+  get homed(): boolean {
+    return this.homes.length > 0 && this.homeWeight > 0;
   }
 
   /** What the boids are scared of now (they may move), and how much (0: not at all). */

@@ -77,8 +77,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
 - **Zones they gather under** (`lenziGather` on an element of the page; `gather`, 2, how hard; lenzi, 2026-11-19): of
   the zones, the one the window shows most of; out of it they hurry there, in it they cover all of it. See
   `gather/README.md`.
-- **The page's scroll** (`scroll`, 0 by default): 1, the boids and blob-boids go with the words as the page scrolls
-  (`Boids.shift`), at once; 0, they stay fixed behind it.
+- **Where the boids live** (`space`, `'screen'` by default): `'page'`, the whole page; the boids and blob-boids scroll
+  with it and fly across it, turning at its edges (`edges` 'avoid'), born where the window is. The blobs stay on the
+  window.
 - **Small boids are a little slower and follow from a little farther** (`sizeSpeed`, `sizeReach`; "che
   naturalmente i piú grandi stanno in testa"): the large ones, the leaders, end up ahead.
 - **The lamp blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements
