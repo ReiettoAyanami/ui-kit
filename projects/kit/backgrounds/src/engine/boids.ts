@@ -257,20 +257,6 @@ export class Boids {
     this.flow = flow;
   }
 
-  /**
-   * Carries every boid by a velocity, px/s, on top of its own flight, as a current does (it slows down within a second
-   * or so; in all, a boid goes about half of it in px): the page's scroll pushing a flock (lenzi, 2026-11-19: "Lo stormo
-   * non si sposta allo scroll").
-   */
-  carry(vx: number, vy: number): void {
-    if (vx === 0 && vy === 0) return;
-    const { carriedX, carriedY } = this;
-    for (let i = 0; i < carriedX.length; i++) {
-      carriedX[i] = carriedX[i]! + vx;
-      carriedY[i] = carriedY[i]! + vy;
-    }
-  }
-
   /** What the boids are scared of now (they may move), and how much (0: not at all). */
   setScares(scares: readonly BoidsScare[], weight = 3): void {
     this.scares = scares;

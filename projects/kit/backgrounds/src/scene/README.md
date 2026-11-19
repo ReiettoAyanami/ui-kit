@@ -72,10 +72,6 @@ contenente boidi, blob, boidi-blob").
   (`width`). Near a segment the boids are turned along it and carried by it, past their own top speed (about half
   the push, as px/s, on top of their flight; 2026-11-17, "a stronger push"), and the blobs drift with it (a blob that
   stays put not at all, a heavy one less); out on one side, back on the other.
-- **The page's scroll carries the fleets** (`scroll`; lenzi, 2026-11-19: "Lo stormo non si sposta allo scroll"): a
-  share of what the page scrolled, with the words (`1`: as far as they go; `0.5`: half, as if farther away) or, below
-  0, against them. Each frame's scroll is a push, so the flock goes with a little lag and flies on as before. The boids
-  and the blob-boids, not the blobs. Not said: the scroll does nothing.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
   simulation"): no fleets, the blobs still on their places, nothing thrown, nothing carried by a current (a blob
   is drawn exactly where the scene puts it, whatever happened while it played; it plays on from there).
@@ -99,7 +95,7 @@ contenente boidi, blob, boidi-blob").
 
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
-wander?, follow?, x?, y?, layer? }[], follow?, throwable?, scroll? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
+wander?, follow?, x?, y?, layer? }[], follow?, throwable? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
 tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 
 ## Example

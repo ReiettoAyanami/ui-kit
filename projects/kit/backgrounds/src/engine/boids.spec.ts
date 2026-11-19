@@ -248,21 +248,6 @@ describe('a flock of boids', () => {
     expect(flock.carriedX[0]!).toBeLessThan(STRONGEST_CURRENT * 0.05);
   });
 
-  it('carried by a velocity once (the page scrolled), a boid goes about half of it and then flies on its own', () => {
-    const flock = new Boids({ ...QUIET, count: 2, maxSpeed: 100 }, 4000, 4000);
-    place(flock, [
-      [2000, 2000, 0, 0],
-      [1000, 1000, 0, 0],
-    ]);
-    flock.carry(0, -400);
-    run(flock, 3);
-    // 400 px/s carried, slowing down: about 200 px up, the same for every boid
-    expect(flock.y[0]!).toBeGreaterThan(2000 - 210);
-    expect(flock.y[0]!).toBeLessThan(2000 - 190);
-    expect(flock.y[1]! - 1000).toBeCloseTo(flock.y[0]! - 2000, 3);
-    expect(Math.abs(flock.carriedY[0]!)).toBeLessThan(2);
-  });
-
   it('a current carries a boid neither through an edge nor into an obstacle', () => {
     const edged = new Boids({ ...QUIET, count: 1, edges: 'avoid', maxSpeed: 100 }, 400, 400);
     place(edged, [[200, 200, 100, 0]]);
