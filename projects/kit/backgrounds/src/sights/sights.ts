@@ -11,12 +11,6 @@ export interface LenziCrowd extends LenziPoint {
   count: number;
 }
 
-/** A light on the screen: where, how large (px), its colour (CSS). */
-export interface LenziScreenLight extends LenziPoint {
-  radius: number;
-  colour: string;
-}
-
 /**
  * The things on the page worth looking at (lenzi, 2026-11-14: "If the mouse is not on the screen let the
  * cat follow the closest flock"): what moves by itself, a flock's boids. A background that has them says
@@ -29,7 +23,6 @@ export interface LenziScreenLight extends LenziPoint {
 export class LenziSights {
   private readonly sources = new Map<object, (point: LenziPoint) => LenziPoint | null>();
   private readonly crowds = new Map<object, (point: LenziPoint, radius: number) => LenziCrowd | null>();
-  private readonly glows = new Map<object, () => readonly LenziScreenLight[]>();
 
   /**
    * A source of sights: `nearest` says the nearest of its own to a point, both on the screen; `around`, when it can,
@@ -45,24 +38,7 @@ export class LenziSights {
     return () => {
       this.sources.delete(source);
       this.crowds.delete(source);
-      this.glows.delete(source);
     };
-  }
-
-  /**
-   * A source of lights: `lights` says where its lights are on the screen now (a flock's lamp drops, its lamp blobs).
-   * What draws light rays reads them (`<lenzi-light-rays>`). Gives back how to take it away.
-   */
-  addLights(source: object, lights: () => readonly LenziScreenLight[]): () => void {
-    this.glows.set(source, lights);
-    return () => {
-      this.glows.delete(source);
-    };
-  }
-
-  /** Every light on the screen now, of every source. */
-  lights(): LenziScreenLight[] {
-    return [...this.glows.values()].flatMap((lights) => lights());
   }
 
   /** The nearest sight to a point on the screen, of every source; null when there is none. */

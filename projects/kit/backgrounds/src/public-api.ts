@@ -20,8 +20,6 @@ export * from './glow/glow';
 export * from './glow/light-field';
 export * from './glow/solid';
 export * from './glow/solid-text';
-export * from './glow/light-blockers';
-export * from './glow/light-rays';
 
 // The numbers behind them: shapes, colours, the flock (for an app that draws its own).
 export * from './engine/color';

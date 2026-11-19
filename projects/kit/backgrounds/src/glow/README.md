@@ -37,22 +37,13 @@ elements that stop the light ("a faint hard shadow ... for if a solid component 
   element: the light is in its `::before` and `::after` (a card's own `::after`, a border for forced colours,
   gives way). With reduced motion the light switches on and off at once.
 
-## Solid text and light rays
+## Solid text
 
-lenzi, 2026-11-19: "io voglio vedere che ci sono dei fasci di luce che mi arrivano contro e che il testo è in ombra
-secondo questa cosa ... i boidi sono fatti di luce e il testo blocca luce. Boidi > Testo > Utente. Quindi io dovrei
-vedere che i boidi mi castano la luce verso di me e la tagliano come forma del testo".
-
-- **`lenziSolidText`** on a block of words: the letters are the page's surface (`--lenzi-solid-surface`), dark shapes
-  over a glowing background behind the page, and they stop its light (`LenziLightBlockers`): each word, where the
-  browser lays it out, is cut out of the light.
-- **`<lenzi-light-rays>`**, one a page: the light of the glowing background's lamps (its lamp drops and lamp blobs:
-  `LenziSights.lights`) coming through the page towards whoever looks. The lights are drawn soft on a small picture
-  (`resolution`, half the window), the words cut out of it, and the picture stretched out from the middle of the
-  lights step by step, fainter each step (`steps` 40, `decay` 0.94, `length` 0.3): a bright place becomes a beam,
-  a word a dark shaft of shadow in it. Added over the page (`strength` 0.35, screen blend), never in the way of a tap.
-- On the bare page the words are the page's colour, unseen; with no light, no beams.
-- Never `lenziSolid` on a block of such text (its box would be opaque and hide the glow).
+`lenziSolidText` (lenzi, 2026-11-19: "lettere scure sul bagliore"): the letters are the page's surface
+(`--lenzi-solid-surface`), so over a glowing background behind the page they are dark solid shapes over the glow, and
+on the bare page they are not seen. Only the letters: never `lenziSolid` on a block of such text (its box would be
+opaque and hide the glow). Light rays through the page, cut by these words, were tried and are kept on the kit's
+`light-rays` branch (lenzi: "forse un po' too much").
 
 ## Rules
 

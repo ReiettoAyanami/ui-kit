@@ -514,27 +514,11 @@ html {
   background-color: var(--lenzi-solid-surface, var(--mat-sys-surface));
 }
 
-/* Solid text over a glowing background (lenziSolidText; lenzi, 2026-11-19: "lettere scure sul bagliore", "i boidi sono
-   fatti di luce e il testo blocca luce"): the letters are the page's surface, so on the bare page they cannot be seen
-   and over the glow they block it; the light rays cut their shape out of the beams. No box: only the letters. */
+/* Solid text over a glowing background (lenziSolidText; lenzi, 2026-11-19: "lettere scure sul bagliore"): the letters
+   are the page's surface, so on the bare page they cannot be seen and over the glow they block it. No box: only the
+   letters. */
 .lenzi-solid-text {
   color: var(--lenzi-solid-surface, var(--mat-sys-surface));
-}
-
-/* The light coming through the page towards the viewer (<lenzi-light-rays>): over everything, added to it, never in
-   the way of a tap. */
-.lenzi-light-rays {
-  position: fixed;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
-
-.lenzi-light-rays-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 /* Every surface takes only its own light. Custom properties inherit, so a surface with none of its own would
