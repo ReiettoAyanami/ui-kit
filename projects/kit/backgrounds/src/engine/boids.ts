@@ -28,7 +28,7 @@ export interface BoidsArea {
  * 2026-11-19: "spostarsi al prossimo scroll velocemente verso la nuova zona di testo"), and how far out, px, it
  * takes to reach that (nearer, it slows down to its own speed as it comes in).
  */
-const HOME_RUSH = 4;
+const HOME_RUSH = 6;
 const HOME_RUSH_REACH = 240;
 /** The places of a flock in its box: the plastic number's sequence (even in two dimensions), and how fast they drift. */
 const HOME_SPREAD_X = 0.7548776662466927;
@@ -36,6 +36,13 @@ const HOME_SPREAD_Y = 0.5698402909980532;
 const HOME_DRIFT = 0.03;
 /** How much a flock kept to boxes holds together, times its cohesion. */
 const HOME_COHESION = 0.2;
+/** How much a flock kept to boxes heads the same way, times its alignment: not as one, so it spreads on the way. */
+const HOME_ALIGNMENT = 0.3;
+/** The points of a zone the boids are dealt round (its quarters), and how far inside a line's edge a place keeps, px. */
+const HOME_TARGETS = 4;
+/** On the way to a zone, how far aside from the way a boid aims at most, times how far it still has to go. */
+const HOME_FAN = 0.35;
+const HOME_INSET = 6;
 const fraction = (value: number) => value - Math.floor(value);
 /** From 0 to 1 and back, as the value goes on: a place that drifts along a box and back, never jumping across it. */
 const swing = (value: number) => 1 - Math.abs(2 * fraction(value) - 1);
@@ -219,6 +226,8 @@ export class Boids {
   /** The boxes the boids keep to, and where each starts and ends in their total area (shares, 0..1). */
   private homes: readonly BoidsArea[] = [];
   private homeShares: number[] = [];
+  /** The box round all of them. */
+  private homeBounds: BoidsArea | null = null;
   /** Seconds kept to a box: its places drift along it with them. */
   private homeTime = 0;
   private homeWeight = 2;
@@ -294,10 +303,13 @@ export class Boids {
    * The boxes the boids keep to now (they may move: the lines of a block of text), or none, and how hard they keep to
    * them (lenzi, 2026-11-19: "i boidi devono rimanere sulla zona di testo e spostarsi al prossimo scroll velocemente
    * verso la nuova zona di testo e andare sotto tutta a quella zona di testo"; "usa più zone nell'area di testo
-   * altrimenti i boidi si mettono solo su una parte della scritta"). The boids are shared among the boxes by their
-   * area; each boid keeps to its own place in its box, the places spread evenly and drifting slowly along it and back.
-   * Out of its box a boid hurries back, up to HOME_RUSH times its top speed. While they keep to boxes they hardly hold
-   * together and follow no leader, so they spread over all of them.
+   * altrimenti i boidi si mettono solo su una parte della scritta"; "usa 4 punti di target così che si spalmano meglio";
+   * "quando si muovono tra una zona e l'altra che si dividano un po' di più e tornino lì che si uniscono"). The boids
+   * are shared among the boxes by their area and dealt round the zone's quarters; each keeps to its own place in its
+   * quarter of its box, the places spread evenly and drifting slowly along it and back. Out of its box a boid hurries
+   * back, up to HOME_RUSH times its top speed: far off to its quarter's point, fanned out from the others (HOME_FAN)
+   * and holding to none of them, then into its place, where the flock comes together again. While they keep to boxes
+   * they hardly hold together and follow no leader, so they spread over all of them.
    */
   setHome(areas: BoidsArea | readonly BoidsArea[] | null, weight = 2): void {
     const all = areas === null ? [] : 'left' in areas ? [areas] : areas;
@@ -306,6 +318,14 @@ export class Boids {
     const total = sizes.reduce((sum, size) => sum + size, 0);
     let start = 0;
     this.homeShares = sizes.map((size) => (start += size / total));
+    this.homeBounds = this.homes.length
+      ? {
+          left: Math.min(...this.homes.map((area) => area.left)),
+          top: Math.min(...this.homes.map((area) => area.top)),
+          right: Math.max(...this.homes.map((area) => area.right)),
+          bottom: Math.max(...this.homes.map((area) => area.bottom)),
+        }
+      : null;
     this.homeWeight = Math.max(0, weight);
   }
 
@@ -522,9 +542,11 @@ export class Boids {
       };
       if (seen > 0) {
         steer(awayX, awayY, s.separation);
-        steer(headX, headY, s.alignment);
-        // kept to boxes, they hardly hold together: their places spread them
-        steer(centreX, centreY, keeping ? s.cohesion * HOME_COHESION : s.cohesion);
+        // kept to boxes, they hardly head the same way or hold together (their places spread them), and not at all on
+        // the way to them (rushing at the last step): the flock comes apart on the way and together in its box
+        const onTheWay = keeping && this.rush[i]! > 1;
+        steer(headX, headY, keeping ? (onTheWay ? 0 : s.alignment * HOME_ALIGNMENT) : s.alignment);
+        steer(centreX, centreY, keeping ? (onTheWay ? 0 : s.cohesion * HOME_COHESION) : s.cohesion);
       } else {
         steer(awayX, awayY, s.separation);
       }
@@ -574,31 +596,46 @@ export class Boids {
       }
       let rush = 1;
       if (keeping) {
-        // its box: the one its share of the total area falls in (the plastic number's sequence spreads the shares)
+        // its quarter of the zone (lenzi, 2026-11-19: "usa 4 punti di target così che si spalmano meglio sulla zona di
+        // testo"): the boids are dealt round the HOME_TARGETS quarters, so they go to the zone in as many streams
+        const quarter = i % HOME_TARGETS;
+        // its line: the one its share of the total area falls in (the plastic number's sequence spreads the shares)
         const share = fraction(0.5 + HOME_SPREAD_Y * i);
         let box = 0;
         while (box < this.homeShares.length - 1 && share >= this.homeShares[box]!) box++;
         const home = this.homes[box]!;
         const from = box === 0 ? 0 : this.homeShares[box - 1]!;
         const across = (share - from) / Math.max(1e-9, this.homeShares[box]! - from);
-        // back into it (the nearest way, out of it the faster the farther), and away from its edge inside it
-        const inset = Math.min(see * 0.5, (home.right - home.left) / 2, (home.bottom - home.top) / 2);
-        const tx = Math.min(home.right - inset, Math.max(home.left + inset, px)) - px;
-        const ty = Math.min(home.bottom - inset, Math.max(home.top + inset, py)) - py;
-        const distance = Math.hypot(tx, ty);
-        const out = Math.max(0, distance - inset);
+        // its own place: in its quarter of its line, drifting slowly along the quarter and back, at its height in the line
+        const inset = Math.min(HOME_INSET, (home.right - home.left) / 4, (home.bottom - home.top) / 4);
+        const innerWidth = home.right - home.left - inset * 2;
+        const innerHeight = home.bottom - home.top - inset * 2;
+        const placeX = home.left + inset + ((quarter + swing(0.5 + HOME_SPREAD_X * i + this.homeTime * HOME_DRIFT)) / HOME_TARGETS) * innerWidth;
+        const placeY = home.top + inset + across * innerHeight;
+        const toPlace = Math.hypot(placeX - px, placeY - py);
+        // out of its line: hurry, the faster the farther; far off, to its quarter's point of the zone, then to its place
+        const outX = Math.max(home.left - px, 0, px - home.right);
+        const outY = Math.max(home.top - py, 0, py - home.bottom);
+        const out = Math.hypot(outX, outY);
         if (out > 0) {
           rush = 1 + (HOME_RUSH - 1) * Math.min(1, out / HOME_RUSH_REACH);
-          steer(tx, ty, this.homeWeight * 2, top * rush, s.maxForce * (2 + rush));
+          const bounds = this.homeBounds!;
+          const far = out > HOME_RUSH_REACH;
+          let aimX = far ? bounds.left + ((quarter + 0.5) / HOME_TARGETS) * (bounds.right - bounds.left) : placeX;
+          let aimY = far ? (bounds.top + bounds.bottom) / 2 : placeY;
+          // fanned out: aside from the way to it, each boid its own side and how far, less and less as it comes in
+          const wayX = aimX - px;
+          const wayY = aimY - py;
+          const way = Math.hypot(wayX, wayY);
+          if (way > 1e-6) {
+            const aside = (fraction(0.5 + HOME_SPREAD_X * i * 3.1) * 2 - 1) * HOME_FAN * Math.min(way, HOME_RUSH_REACH * 2);
+            aimX += (-wayY / way) * aside;
+            aimY += (wayX / way) * aside;
+          }
+          steer(aimX - px, aimY - py, this.homeWeight * 2, top * rush, s.maxForce * (2 + rush));
         } else {
-          // in it: towards its own place in the box, a place that drifts slowly along it and back, the places of the flock
-          // spread evenly over all of it (the plastic number's sequence), so the flock lies under all of the box
-          const innerWidth = home.right - home.left - inset * 2;
-          const innerHeight = home.bottom - home.top - inset * 2;
-          const placeX = home.left + inset + swing(0.5 + HOME_SPREAD_X * i + this.homeTime * HOME_DRIFT) * innerWidth;
-          const placeY = home.top + inset + across * innerHeight;
-          // more than the flock's own rules, so it spreads instead of gathering in one corner
-          steer(placeX - px, placeY - py, this.homeWeight * 1.5 * Math.min(1, Math.hypot(placeX - px, placeY - py) / 40));
+          // in it: to its own place, more than the flock's own rules, so the flock spreads under every line
+          steer(placeX - px, placeY - py, this.homeWeight * 1.5 * Math.min(1, toPlace / 40));
         }
       }
       this.rush[i] = rush;

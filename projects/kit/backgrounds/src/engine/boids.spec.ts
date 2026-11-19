@@ -299,6 +299,27 @@ describe('a flock of boids', () => {
     expect(Array.from({ length: 90 }, (_, i) => i).filter((i) => near(i, lines[0]!) && flock.x[i]! > 1250).length).toBeGreaterThan(2);
   });
 
+  it('on the way to a far zone the flock comes apart in four streams, and comes together in it', () => {
+    const flock = new Boids({ count: 80, maxSpeed: 110, colonies: 4, leaderPull: 0.4 }, 2000, 3000, 9);
+    flock.setHome({ left: 900, top: 300, right: 1100, bottom: 400 });
+    run(flock, 6);
+    const width = () => {
+      const xs = Array.from(flock.x.slice(0, 80));
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    const together = width();
+    // the next zone: wide, far below
+    flock.setHome({ left: 200, top: 2200, right: 1800, bottom: 2300 });
+    run(flock, 1);
+    expect(width()).toBeGreaterThan(together * 2);
+    run(flock, 5);
+    // there: under all of it, all its quarters
+    for (let quarter = 0; quarter < 4; quarter++) {
+      const from = 200 + quarter * 400;
+      expect(Array.from({ length: 80 }, (_, i) => i).filter((i) => flock.x[i]! >= from && flock.x[i]! < from + 400 && flock.y[i]! > 2150 && flock.y[i]! < 2350).length).toBeGreaterThan(12);
+    }
+  });
+
   it('a current carries a boid neither through an edge nor into an obstacle', () => {
     const edged = new Boids({ ...QUIET, count: 1, edges: 'avoid', maxSpeed: 100 }, 400, 400);
     place(edged, [[200, 200, 100, 0]]);
