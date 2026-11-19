@@ -5,8 +5,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 import { KitDoc, Values } from '../../registry';
 import { DemoEvents, FrameMessage } from '../demo-events';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
-import { overBackground } from '../current-background';
+import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * Where a demo runs: a frame of the catalog itself (`/frame/<id>`), as wide as a phone (390 px) or
@@ -23,7 +22,7 @@ import { overBackground } from '../current-background';
 })
 export class DemoStage {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   readonly doc = input.required<KitDoc>();
   readonly values = input.required<Values>();

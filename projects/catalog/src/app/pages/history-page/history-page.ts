@@ -10,9 +10,7 @@ import { LenziConfirmData, LenziConfirmDialog, LenziDialogs, LenziFigure, LenziS
 import { KitSave, KitServer } from '../../shared/kit-server';
 import { LiveTokens, VariableChange } from '../../shared/live-tokens';
 import { TokenDef, TokensApi } from '../../shared/tokens-api';
-import { GlassPage } from '../../shared/glass-page/glass-page';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
-import { overBackground } from '../../shared/current-background';
+import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 const WHEN = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
 const SHOWN = 20;
@@ -32,13 +30,13 @@ interface Shown {
  */
 @Component({
   selector: 'app-history-page',
-  imports: [GlassPage, LenziFigure, LenziLit, LenziStatusMessage, MatButtonModule, MatIconModule],
+  imports: [LenziGlassPage, LenziFigure, LenziLit, LenziStatusMessage, MatButtonModule, MatIconModule],
   templateUrl: './history-page.html',
   styleUrl: './history-page.css',
 })
 export class HistoryPage {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   private readonly api = inject(TokensApi);
   private readonly dialogs = inject(LenziDialogs);

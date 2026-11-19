@@ -9,7 +9,7 @@ import { CurrentBackground } from '../current-background';
  * backgrounds of the pages"): one, behind the shell, the scene the admin chose for this page or the catalog's own
  * (PageBackgrounds, through CurrentBackground); on a phone the phone's, changing when the window does. One for every
  * page, so going from a page to another with the same scene keeps it flying. Nothing behind a frame or a page that is
- * a scene itself. The page puts a glass pane over it (GlassPage).
+ * a scene itself. The page puts a glass pane over it (`lenziGlassPage`, the kit).
  */
 @Component({
   selector: 'app-page-background',

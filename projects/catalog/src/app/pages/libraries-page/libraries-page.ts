@@ -11,9 +11,7 @@ import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { KitFiles } from '../../shared/kit-files';
 import { KitServer } from '../../shared/kit-server';
 import { SaveHint } from '../../shared/save-hint/save-hint';
-import { GlassPage } from '../../shared/glass-page/glass-page';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
-import { overBackground } from '../../shared/current-background';
+import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 interface Library {
   name: string;
@@ -36,13 +34,13 @@ interface Libraries {
  */
 @Component({
   selector: 'app-libraries-page',
-  imports: [CodeEditor, GlassPage, LenziFigure, LenziFigureGrid, LenziLit, LenziStatusMessage, MatButtonModule, MatExpansionModule, MatIconModule, SaveHint],
+  imports: [CodeEditor, LenziGlassPage, LenziFigure, LenziFigureGrid, LenziLit, LenziStatusMessage, MatButtonModule, MatExpansionModule, MatIconModule, SaveHint],
   templateUrl: './libraries-page.html',
   styleUrl: './libraries-page.css',
 })
 export class LibrariesPage {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   private readonly files = inject(KitFiles);
 

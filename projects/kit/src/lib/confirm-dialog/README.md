@@ -11,16 +11,15 @@ status).
 - **Signing out asks too** (lenzi, 2026-10-03), not destructive.
 - **The confirm button is disabled while the action runs** (no double submit).
 - **A failure keeps it open** with the reason: "Batch 8 is finished (409)".
-- **The back button closes it**: `LenziDialogs.open` gives every dialog its own history entry; closed any other
-  way, the entry is removed; a link in the dialog to another page takes its place (lenzi, 2026-10-03).
+- **The back button closes it**, as every dialog opened with `LenziDialogs` (`dialogs/README.md`).
 - The title is a question; the message says what confirming costs; the buttons are whole words.
 
 ## API
 
 `LenziConfirmData`: `{ title, message, confirm, cancel?, destructive? (default true), action: () => Observable | Promise }`.
 
-`LenziDialogs.open<C, D, R>(component, data, config?)`: `Promise<R | undefined>`, resolved once the dialog's
-history entry is gone. 560 px wide by default, never wider than the screen less 32 px.
+Opened with `LenziDialogs.open<LenziConfirmDialog, LenziConfirmData, true>(LenziConfirmDialog, data, config?)`
+(`dialogs/README.md`): `true` once the action succeeded, `undefined` otherwise.
 
 ## Example
 
@@ -36,4 +35,5 @@ if (deleted) this.reload();
 
 ## Origin
 
-substance-tracker and vtiger-reader `confirm-dialog` (identical), substance-tracker `history-dialogs.ts`.
+substance-tracker and vtiger-reader `confirm-dialog` (identical). `LenziDialogs`, from substance-tracker
+`history-dialogs.ts`, has its own page (`dialogs/README.md`).

@@ -31,6 +31,7 @@
       // order, before measuring (a selector "a >>> b" looks inside the frame a). Also {"key": "selector",
       // "name": "ArrowRight", "shift": true} (a key pressed on it) and {"press": "selector", "x": 0.5,
       // "y": 0.25, "to": [0.9, 0.1]} (a pointer pressed at that share of its box, dragged to `to`, released),
+      // {"back": true} (the browser's back, as a phone's back gesture: a dialog opened with LenziDialogs closes),
       // and {"scroll": "selector", "block": "end"} (brought into view: at the centre, or where `block` says).
       const actions = JSON.parse(params.get('do') || '[]');
       const pick = (selector) => {
@@ -49,6 +50,8 @@
             }
           } else if (action.click) {
             pick(action.click)?.click();
+          } else if (action.back) {
+            frame.contentWindow.history.back();
           } else if (action.move) {
             // {"move": [0.8, 0.25]}: the mouse over the page, at that share of the frame (what follows
             // the pointer through the window, like a background, sees it)

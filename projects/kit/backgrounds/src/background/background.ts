@@ -1,5 +1,6 @@
-import { Component, computed, input, numberAttribute } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute } from '@angular/core';
 
+import { LenziBackgroundPresence } from '../background-presence/background-presence';
 import { LenziBackgroundFill } from '../glow-background/glow-background';
 
 /** A CSS variable (`--mat-sys-surface`) as its `var()`, any other colour as it is. */
@@ -50,4 +51,13 @@ export class LenziBackground {
     const layers = [this.gradient().trim(), address ? `url("${address}")` : ''];
     return layers.filter(Boolean).join(', ') || null;
   });
+
+  constructor() {
+    // Behind the whole page with a picture, the page knows it has a background (its glass pane, its lit surfaces);
+    // a colour alone is only the page's colour.
+    const presence = inject(LenziBackgroundPresence);
+    effect((onCleanup) => {
+      if (this.fill() === 'page' && this.picture()) onCleanup(presence.add());
+    });
+  }
 }

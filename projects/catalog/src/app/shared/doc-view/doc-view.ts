@@ -11,8 +11,7 @@ import { KitFiles } from '../kit-files';
 import { KitServer } from '../kit-server';
 import { Markdown } from '../markdown/markdown';
 import { SaveHint } from '../save-hint/save-hint';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
-import { overBackground } from '../current-background';
+import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * A document of the kit (RULES.md, AI-RULES.md, a piece's README.md and AI.md), to read and, for the
@@ -28,7 +27,7 @@ import { overBackground } from '../current-background';
 })
 export class DocView {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   /** The file, relative to projects/kit. */
   readonly path = input.required<string>();

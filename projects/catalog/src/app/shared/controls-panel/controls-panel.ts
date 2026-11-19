@@ -10,8 +10,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { LenziColorPicker } from '@lenzi/ui-kit';
 
 import { Control, Values } from '../../registry';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
-import { overBackground } from '../current-background';
+import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * The GUI of a demo: one field per parameter (text, a slider, a switch, the choices as pills or a
@@ -25,7 +24,7 @@ import { overBackground } from '../current-background';
 })
 export class ControlsPanel {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   readonly controls = input.required<readonly Control[]>();
   readonly values = model.required<Values>();

@@ -1,0 +1,25 @@
+@switch (behind()) {
+  @case ('blobs') {
+    <lenzi-blob-background />
+  }
+  @case ('picture') {
+    <lenzi-background image="demo/hills.svg" />
+  }
+}
+
+<main class="page" lenziGlassPage>
+  <h1 class="title">A page</h1>
+  <p class="lead">Over a background it stands on a pane of glass, away from the edges; with nothing behind, it is as it was.</p>
+  <mat-card appearance="outlined" class="card" [lenziLit]="lit()">
+    <mat-card-content>
+      <p class="name">A card</p>
+      <p class="words">Lit over a background, solid without.</p>
+    </mat-card-content>
+  </mat-card>
+  <mat-card appearance="outlined" class="card" [lenziLit]="lit()">
+    <mat-card-content>
+      <p class="name">Another card</p>
+      <p class="words">The same signal: lenziOverBackground().</p>
+    </mat-card-content>
+  </mat-card>
+</main>

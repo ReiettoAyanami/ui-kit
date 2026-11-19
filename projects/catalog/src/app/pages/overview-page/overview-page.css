@@ -16,7 +16,7 @@
   padding: 8px 24px 32px;
 }
 
-/* The glass pane behind the page's elements is the one every page over a background has (GlassPage). */
+/* The glass pane behind the page's elements is the one every page over a background has (`lenziGlassPage`, the kit). */
 .page > * {
   position: relative;
 }

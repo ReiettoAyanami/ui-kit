@@ -1,4 +1,4 @@
-import { DOCUMENT, Injectable, Signal, computed, inject, signal } from '@angular/core';
+import { DOCUMENT, Injectable, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -7,9 +7,9 @@ import { PHONE_QUERY } from '../scenes';
 import { PageBackgrounds, backgroundKey } from './page-backgrounds';
 
 /**
- * What is behind the page that is open: its scene, on this window (a phone's or not), or none. One answer for the
- * background drawn behind the shell (PageBackground) and the glass pane a page puts over it (GlassPage), so the two
- * never disagree.
+ * What is behind the page that is open: its scene, on this window (a phone's or not), or none; the background drawn
+ * behind the shell (PageBackground). Whether the page is over a background is the kit's to know (its scene says so
+ * while it is there): the glass pane (`lenziGlassPage`) and the lit surfaces (`lenziOverBackground()`) ask the kit.
  */
 @Injectable({
   providedIn: 'root',
@@ -39,14 +39,4 @@ export class CurrentBackground {
     this.phone.set(media.matches);
     media.addEventListener('change', (event) => this.phone.set(event.matches));
   }
-}
-
-/**
- * Whether the open page has a scene behind it, for a component's surfaces (an injection context): lit over a
- * background, solid without one (lenzi, 2026-11-17: "wherever page we have a background cards or any elements over
- * the background should turn into lit elements"), `[lenziLit]="lit()"`.
- */
-export function overBackground(): Signal<boolean> {
-  const current = inject(CurrentBackground);
-  return computed(() => current.scene() !== null);
 }

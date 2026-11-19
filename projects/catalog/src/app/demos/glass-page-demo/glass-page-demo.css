@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+/* The page's own layout: the glass pane takes it away from the edges over a background. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+/* Straight on the pane: the page's own colour, readable over the brightest blob. */
+.lead {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.card {
+  width: min(100%, 360px);
+}
+
+.name {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.words {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

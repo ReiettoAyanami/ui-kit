@@ -7,7 +7,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 
 import { LenziCardMenu, LenziConfirmData, LenziConfirmDialog, LenziDialogs, LenziMenuAction, LenziPreviewCard, LenziStatusMessage, couldNotLoad } from '@lenzi/ui-kit';
-import { LenziLit, LenziScene } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassPage, LenziLit, lenziOverBackground, LenziScene } from '@lenzi/ui-kit/backgrounds';
 
 import { InView } from '../../shared/in-view';
 import { KitServer } from '../../shared/kit-server';
@@ -16,8 +16,6 @@ import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { sceneToCode } from '../../shared/scene-code';
 import { HOME_PHONE_SCENE, HOME_SCENE } from '../../scenes';
 import { SCENE_FRAME_READY, sceneFrameMessage } from '../scene-view-page/scene-view-page';
-import { GlassPage } from '../../shared/glass-page/glass-page';
-import { overBackground } from '../../shared/current-background';
 
 /** A scene's card in the gallery. */
 export interface SceneCard {
@@ -61,13 +59,13 @@ export function sceneHolds(scene: LenziScene): string {
  */
 @Component({
   selector: 'app-scenes-page',
-  imports: [GlassPage, InView, LenziCardMenu, LenziLit, LenziPreviewCard, LenziStatusMessage, MatButtonModule, MatIconModule, Miniature, NgTemplateOutlet, RouterLink],
+  imports: [LenziGlassPage, InView, LenziCardMenu, LenziLit, LenziPreviewCard, LenziStatusMessage, MatButtonModule, MatIconModule, Miniature, NgTemplateOutlet, RouterLink],
   templateUrl: './scenes-page.html',
   styleUrl: './scenes-page.css',
 })
 export class ScenesPage {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   protected readonly server = inject(KitServer);
   private readonly scenes = inject(SavedScenes);

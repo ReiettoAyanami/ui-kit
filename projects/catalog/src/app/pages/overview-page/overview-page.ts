@@ -4,15 +4,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
 import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { CATEGORIES, DOCS } from '../../registry';
 import { PHONE_QUERY } from '../../scenes';
 import { PublicPages } from '../../shared/public-pages';
-import { GlassPage } from '../../shared/glass-page/glass-page';
-import { overBackground } from '../../shared/current-background';
 
 /** The cat's width in the corner, px: never smaller, never larger. */
 const MASCOT_LEAST = 260;
@@ -24,13 +22,13 @@ const MASCOT_PHONE_MOST = 220;
 /** The first page: what the kit is, how an app takes it, and where everything is. */
 @Component({
   selector: 'app-overview-page',
-  imports: [CodeEditor, GlassPage, LenziCat, LenziFigure, LenziFigureGrid, LenziLit, MatButtonModule, MatIconModule, RouterLink],
+  imports: [CodeEditor, LenziGlassPage, LenziCat, LenziFigure, LenziFigureGrid, LenziLit, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './overview-page.html',
   styleUrl: './overview-page.css',
 })
 export class OverviewPage {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   private readonly publicPages = inject(PublicPages);
 

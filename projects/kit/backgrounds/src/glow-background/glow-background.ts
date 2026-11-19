@@ -1,6 +1,7 @@
-import { DOCUMENT, DestroyRef, Directive, ElementRef, OnChanges, afterNextRender, booleanAttribute, inject, input, numberAttribute, signal } from '@angular/core';
+import { DOCUMENT, DestroyRef, Directive, ElementRef, OnChanges, afterNextRender, booleanAttribute, effect, inject, input, numberAttribute, signal } from '@angular/core';
 
 import { LenziAmbientLight } from '../ambient-light/ambient-light';
+import { LenziBackgroundPresence } from '../background-presence/background-presence';
 import { DEFAULT_SPREAD, LinearRgb, displacedColors, linearToHex, luminance } from '../engine/color';
 import { GlowEngine, GlowLayers, LIGHT_HEIGHT, LIGHT_WIDTH } from '../engine/glow-engine';
 import { LenziLightField, LenziSourceLamp } from '../glow/light-field';
@@ -134,6 +135,11 @@ export abstract class LenziGlowBackground implements OnChanges {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    // Behind the whole page, the page knows it has a background (its glass pane, its lit surfaces).
+    const presence = inject(LenziBackgroundPresence);
+    effect((onCleanup) => {
+      if (this.fill() === 'page') onCleanup(presence.add());
+    });
     afterNextRender(() => {
       const view = this.document.defaultView;
       if (!view) return;

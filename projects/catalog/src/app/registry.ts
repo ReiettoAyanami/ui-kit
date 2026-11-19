@@ -1016,14 +1016,36 @@ usageLanguage: 'html',
   },
   // Dialogs --------------------------------------------------------------------------------------
   {
+    id: 'dialogs',
+    name: 'Dialogs',
+    category: 'Dialogs',
+    summary: 'Opens every dialog, forms too, with its own history entry: the back button closes it and the page stays.',
+    api: 'LenziDialogs.open(component, data, config?)',
+    entry: '@lenzi/ui-kit',
+    origin: 'substance-tracker history-dialogs',
+    files: ['src/lib/dialogs/dialogs.ts', 'src/lib/dialogs/dialogs.spec.ts'],
+    ...docs('src/lib/dialogs'),
+    demo: () => import('./demos/dialogs-demo/dialogs-demo').then((m) => m.DialogsDemo),
+    controls: [{ key: 'raised', label: 'A lighter window (lenzi-dialog-raised)', type: 'boolean', default: false, code: { match: /lenzi-dialog-raised/ } }],
+    usage: (v) => `const name = await this.dialogs.open<RenameDialog, { name: string }, string>(
+  RenameDialog,
+  { name: batch.name },${v['raised'] ? "\n  { panelClass: 'lenzi-dialog-raised' }," : ''}
+);
+if (name) this.rename(name);
+
+// the dialog: inject(MAT_DIALOG_DATA) for its data, inject(MatDialogRef).close(name) on Save`,
+    usageLanguage: 'typescript',
+    height: 360,
+  },
+  {
     id: 'confirm-dialog',
     name: 'Confirm dialog',
     category: 'Dialogs',
     summary: 'Asks before an action and runs it: closes on success, says why on a failure.',
     api: 'LenziDialogs.open(LenziConfirmDialog, …)',
     entry: '@lenzi/ui-kit',
-    origin: 'substance-tracker and vtiger-reader confirm-dialog, substance-tracker history-dialogs',
-    files: [...component('confirm-dialog'), 'src/lib/dialogs/dialogs.ts', 'src/lib/dialogs/dialogs.spec.ts'],
+    origin: 'substance-tracker and vtiger-reader confirm-dialog',
+    files: component('confirm-dialog'),
     ...docs('src/lib/confirm-dialog'),
     demo: () => import('./demos/confirm-dialog-demo/confirm-dialog-demo').then((m) => m.ConfirmDialogDemo),
     controls: [
@@ -1521,6 +1543,46 @@ readonly scene: LenziScene = { ...${v['scene']}, follow: '${v['follow']}', throw
 <lenzi-scene [scene]="scene" />`,
     usageLanguage: 'typescript',
     height: 560,
+  },
+  {
+    id: 'glass-page',
+    name: 'Glass page',
+    category: 'Backgrounds',
+    summary: 'A page over a background: a glass pane behind its elements and its cards lit, while the kit sees a background.',
+    api: '<main lenziGlassPage>, lenziOverBackground()',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: "the catalog's GlassPage and overBackground() (2026-11-17), moved into the kit on 2026-11-19",
+    files: [
+      ...BACKGROUND_FILES('glass-page'),
+      'backgrounds/src/background-presence/background-presence.ts',
+      'backgrounds/src/background-presence/background-presence.spec.ts',
+    ],
+    ...docs('backgrounds/src/glass-page'),
+    demo: () => import('./demos/glass-page-demo/glass-page-demo').then((m) => m.GlassPageDemo),
+    controls: [
+      {
+        key: 'behind',
+        label: 'Behind the page',
+        type: 'select',
+        default: 'blobs',
+        options: [
+          { value: 'blobs', label: 'blobs' },
+          { value: 'picture', label: 'a picture' },
+          { value: 'none', label: 'nothing (the page as it is)' },
+        ],
+        code: false,
+      },
+    ],
+    usage: (v) => `<!-- import { LenziBlobBackground, LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds'; -->
+<!-- app.html: a background of the kit behind the whole page; it tells the page itself -->
+${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['behind'] === 'picture' ? '<lenzi-background image="hills.svg" />' : '<lenzi-blob-background />'}
+
+<!-- a page: lit = lenziOverBackground() -->
+<main class="page" lenziGlassPage>
+  <mat-card appearance="outlined" [lenziLit]="lit()">…</mat-card>
+</main>`,
+    usageLanguage: 'html',
+    height: 520,
   },
   {
     id: 'lit-surface',

@@ -3,10 +3,10 @@
   position: relative;
 }
 
-/* Over a background: away from the screen's edges, as the overview (the class twice: over the page's own margins).
-   On a phone the page keeps its own: the pane is the whole screen there. */
+/* Over a background: away from the screen's edges (the class twice: over the page's own margins). On a phone the page
+   keeps its own: the pane is the whole screen there. */
 @media (min-width: 600px) {
-  :host(.app-glass-page.app-glass-page) {
+  :host(.lenzi-glass-page.lenzi-glass-page) {
     width: calc(100% - 32px);
     margin-top: 16px;
     margin-bottom: 48px;

@@ -87,7 +87,8 @@ contenente boidi, blob, boidi-blob").
 
 - One scene a page, like any background: behind it (`fill="page"`) or behind a box (`fill="box"` in a
   `.lenzi-backdrop`).
-- Surfaces over it are `lenziLit` or solid.
+- Surfaces over it are `lenziLit` or solid. A page over it is `<main lenziGlassPage>` (the glass pane behind its
+  elements); behind the page, the scene tells the page itself (`lenziOverBackground()`).
 - An app keeps its scenes as data (a constant, a file, the server), never as a template full of attributes.
 
 ## API

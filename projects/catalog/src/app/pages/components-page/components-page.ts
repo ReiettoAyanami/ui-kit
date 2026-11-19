@@ -6,9 +6,7 @@ import { LenziSearchBar, LenziShellSearch, LenziStatusMessage } from '@lenzi/ui-
 
 import { CATEGORIES, DOCS, KitDoc } from '../../registry';
 import { PublicPages } from '../../shared/public-pages';
-import { GlassPage } from '../../shared/glass-page/glass-page';
-import { LenziLit } from '@lenzi/ui-kit/backgrounds';
-import { overBackground } from '../../shared/current-background';
+import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * Every page of the kit, by category, with a search bar (RULES.md: the search is in the URL, `?q=`,
@@ -16,13 +14,13 @@ import { overBackground } from '../../shared/current-background';
  */
 @Component({
   selector: 'app-components-page',
-  imports: [GlassPage, LenziLit, LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
+  imports: [LenziGlassPage, LenziLit, LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
   templateUrl: './components-page.html',
   styleUrl: './components-page.css',
 })
 export class ComponentsPage {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
-  protected readonly lit = overBackground();
+  protected readonly lit = lenziOverBackground();
 
   /** The search, from the URL. */
   readonly q = input<string | undefined>(undefined);

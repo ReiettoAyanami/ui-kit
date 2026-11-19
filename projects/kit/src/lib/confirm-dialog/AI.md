@@ -1,6 +1,7 @@
 # AI notes: Confirm dialog
 
-- Every dialog of an app opens with `LenziDialogs.open` (forms too), never `MatDialog.open` directly.
+- Every dialog of an app opens with `LenziDialogs.open` (forms too), never `MatDialog.open` directly
+  (`dialogs/AI.md`).
 - `action` is the request itself; the dialog waits for it. Do not close the dialog yourself, do not show your
   own error.
 - After it resolves `true`, refresh what changed (the list, the item's page); navigate only after it resolves.

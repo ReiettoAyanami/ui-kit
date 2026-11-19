@@ -1,10 +1,10 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Observable, firstValueFrom, of, throwError } from 'rxjs';
 
 import { LenziConfirmData, LenziDialogs } from '@lenzi/ui-kit';
-import { LenziScene } from '@lenzi/ui-kit/backgrounds';
+import { LenziBackgroundPresence, LenziScene } from '@lenzi/ui-kit/backgrounds';
 
 import { KitServer } from '../../shared/kit-server';
 import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
@@ -12,7 +12,6 @@ import { sceneFromCode } from '../../shared/scene-code';
 import { SCENE_FRAME_READY } from '../scene-view-page/scene-view-page';
 import { GALLERY_STEP, ScenesPage, sceneHolds } from './scenes-page';
 import { HOME_SCENE } from '../../scenes';
-import { CurrentBackground } from '../../shared/current-background';
 
 const DUSK: LenziScene = { name: 'Dusk', blobs: [{ material: 'lamp', size: 0.2 }], fleets: [{ kind: 'boid', count: 80 }] };
 const kept = (id: string, scene: LenziScene, day = 15): SavedScene => ({
@@ -51,7 +50,7 @@ async function shown({ admin = true, scenes = [kept('dusk0001', DUSK), kept('non
       { provide: SavedScenes, useValue: server },
       { provide: LenziDialogs, useValue: dialogs },
       // what is behind the page: none unless a test puts one
-      { provide: CurrentBackground, useValue: { scene: background } },
+      { provide: LenziBackgroundPresence, useValue: { present: computed(() => background() !== null) } },
     ],
   });
   const fixture = TestBed.createComponent(ScenesPage);

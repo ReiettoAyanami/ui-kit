@@ -1,0 +1,13 @@
+<h2 mat-dialog-title>Rename</h2>
+<form (submit)="$event.preventDefault(); save()">
+  <mat-dialog-content>
+    <mat-form-field class="field">
+      <mat-label>Name</mat-label>
+      <input matInput [value]="name()" (input)="name.set($any($event.target).value)" cdkFocusInitial />
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving() || !name().trim()">Save</button>
+  </mat-dialog-actions>
+</form>
