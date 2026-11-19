@@ -30,6 +30,11 @@ zona di testo").
 - **With `space: 'page'`** on the background or the scene, the boids live on the page, not on the window ("La
   posizione dei boidi non deve ignorare la pagina"): scrolling, they go with their words; the next zone takes them
   across the page, from where they were. They turn at the page's edges, never coming in from the other side.
+- **The text, or the whole box** (`gatherTo`, `'text'` by default; lenzi, 2026-11-19: "voglio che i boidi siano sulla
+  forma delle finestra di vetro non del testo"): `'box'`, they spread under all of the element (a window of glass), not
+  only its lines.
+- **A little past it** (`gatherSpill`, px, 0 by default; "falli anche uscire un pochino"): the lines or the box grown by
+  that much on every side, so the flock spills over the edge.
 - How hard they keep to it is the background's `gather` (2; 0: they ignore the zones).
 - No zone on the screen: they fly as they would without any.
 

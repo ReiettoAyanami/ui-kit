@@ -1,5 +1,15 @@
 import { Injectable } from '@angular/core';
 
+/**
+ * How a zone takes the boids (lenzi, 2026-11-19: "voglio che i boidi siano sulla forma delle finestra di vetro non del
+ * testo. inoltre falli anche uscire un pochino"): under the lines of its text, or under its whole box; and how far, px,
+ * past them the boids may go.
+ */
+export interface LenziGatherOptions {
+  to: 'text' | 'box';
+  spill: number;
+}
+
 /** A zone of the page the boids gather under: a box, CSS px from the window's top left. */
 export interface LenziGatherArea {
   left: number;
@@ -60,11 +70,11 @@ function textRects(element: Element): LenziGatherArea[] {
   providedIn: 'root',
 })
 export class LenziGathers {
-  private readonly elements = new Set<Element>();
+  private readonly elements = new Map<Element, () => LenziGatherOptions>();
 
-  /** A zone the boids gather under. Gives back how to take it away. */
-  add(element: Element): () => void {
-    this.elements.add(element);
+  /** A zone the boids gather under, and how (read at every step). Gives back how to take it away. */
+  add(element: Element, options: () => LenziGatherOptions = () => ({ to: 'text', spill: 0 })): () => void {
+    this.elements.set(element, options);
     return () => {
       this.elements.delete(element);
     };
@@ -72,12 +82,13 @@ export class LenziGathers {
 
   /**
    * Where the boids go now: the zone the window (`width` × `height`, CSS px) shows most of, as the boxes of its lines
-   * of text (its whole box when it has no text); none when no zone is on the screen.
+   * of text (its whole box when it has no text, or when it says `to: 'box'`), each grown by its `spill`; none when no
+   * zone is on the screen.
    */
   areas(width: number, height: number): LenziGatherArea[] {
     let best: Element | null = null;
     let most = 0;
-    for (const element of this.elements) {
+    for (const element of this.elements.keys()) {
       const box = element.getBoundingClientRect();
       const shown = Math.max(0, Math.min(box.right, width) - Math.max(box.left, 0)) * Math.max(0, Math.min(box.bottom, height) - Math.max(box.top, 0));
       if (shown > most) {
@@ -86,9 +97,12 @@ export class LenziGathers {
       }
     }
     if (!best) return [];
-    const lines = linesOf(textRects(best));
-    if (lines.length) return lines;
+    const { to, spill } = this.elements.get(best)!();
+    const grow = Math.max(0, spill);
+    const grown = (area: LenziGatherArea): LenziGatherArea => ({ left: area.left - grow, top: area.top - grow, right: area.right + grow, bottom: area.bottom + grow });
+    const lines = to === 'text' ? linesOf(textRects(best)) : [];
+    if (lines.length) return lines.map(grown);
     const box = best.getBoundingClientRect();
-    return [{ left: box.left, top: box.top, right: box.right, bottom: box.bottom }];
+    return [grown({ left: box.left, top: box.top, right: box.right, bottom: box.bottom })];
   }
 }

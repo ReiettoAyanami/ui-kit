@@ -54,3 +54,13 @@ describe('linesOf', () => {
     ]);
   });
 });
+
+describe('LenziGathers, by box and spilling over', () => {
+  it("a zone that says so gives its whole box, grown by its spill on every side", () => {
+    const gathers = new LenziGathers();
+    const element = { getBoundingClientRect: () => ({ left: 100, top: 300, right: 900, bottom: 700, width: 800, height: 400 }) } as unknown as Element;
+    gathers.add(element, () => ({ to: 'box', spill: 20 }));
+    expect(gathers.areas(1000, 900)).toEqual([{ left: 80, top: 280, right: 920, bottom: 720 }]);
+  });
+});
+
