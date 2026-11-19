@@ -361,7 +361,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
       }
       return best;
     }, (point, radius) => {
-      // the boids round a point: their middle and how many (what lights solid text from behind)
+      // the boids round a point: their middle and how many (what lights a Liquid Glass rim)
       const origin = this.origin();
       const cx = point.x - origin.x + this.offset.x;
       const cy = point.y - origin.y + this.offset.y;

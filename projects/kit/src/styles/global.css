@@ -514,13 +514,6 @@ html {
   background-color: var(--lenzi-solid-surface, var(--mat-sys-surface));
 }
 
-/* Solid text over a glowing background (lenziSolidText; lenzi, 2026-11-19: "lettere scure sul bagliore"): the letters
-   are the page's surface, so on the bare page they cannot be seen and over the glow they block it. No box: only the
-   letters. */
-.lenzi-solid-text {
-  color: var(--lenzi-solid-surface, var(--mat-sys-surface));
-}
-
 /* Liquid Glass (lenziLiquidGlass; lenzi, 2026-11-19: "quasi come il liquid glass di IOS ... diverso dal classico
    vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo"): clear, no border, no fill. Chromium gets the bending
    filter from the directive (inline backdrop-filter); every other browser this blur and saturation only. */

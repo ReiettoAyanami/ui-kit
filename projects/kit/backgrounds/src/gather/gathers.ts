@@ -42,8 +42,7 @@ export function linesOf(rects: Iterable<LenziGatherArea>): LenziGatherArea[] {
 }
 
 /**
- * The boxes of the text an element shows, line by line: its text, not what is hidden from screen readers (the copies
- * of solid text's shadow, `lenziSolidText`).
+ * The boxes of the text an element shows, line by line: its text, not what is hidden from screen readers.
  */
 function textRects(element: Element): LenziGatherArea[] {
   const document = element.ownerDocument;

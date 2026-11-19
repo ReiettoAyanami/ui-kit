@@ -19,7 +19,6 @@ export * from './ambient-light/lit';
 export * from './glow/glow';
 export * from './glow/light-field';
 export * from './glow/solid';
-export * from './glow/solid-text';
 export * from './liquid-glass/liquid-glass';
 export * from './liquid-glass/liquid-glass-maps';
 
