@@ -1,4 +1,4 @@
-import { Component, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, booleanAttribute, inject, input, numberAttribute } from '@angular/core';
 
 import { BlobSettings, BlobState, DEFAULT_BLOBS, LenziBlobSpec, MAX_BLOBS, blobEdge, blobsAt, blobsBump, paletteOf, specSettings } from '../engine/blob-field';
 import { BlobMaterial, DROP, MaterialObject, MaterialScene } from '../engine/blob-materials';
@@ -266,6 +266,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
    */
   readonly currents = input<readonly LenziCurrent[] | null>(null);
   /**
+   * How far the page's scroll carries the flocks (lenzi, 2026-11-19: "Lo stormo non si sposta allo scroll"): a share
+   * of what the page scrolled, with the words (1: as far as they go, 0.5: half, as if farther away) or, below 0,
+   * against them. The boids and the blob-boids, not the blobs. 0: the scroll does nothing.
+   */
+  readonly scroll = input(0, { transform: numberAttribute });
+  /**
    * The boids as fleets, each its own flock with its leader's ways and its own count, colonies and size (a
    * scene's fleets); null: one flock of `boids` in `colonies`, as the inputs say.
    */
@@ -280,6 +286,10 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   readonly boidLayer = input(0, { transform: numberAttribute });
 
   private elapsed = 0;
+  private readonly view = inject(DOCUMENT).defaultView;
+  /** The page's scroll at the last frame; NaN: not read yet. */
+  private scrolledTo = Number.NaN;
+  private scrolledToX = 0;
   private drawn: readonly BlobState[] = [];
   private readonly throws = new BlobThrow();
   private readonly scares = inject(LenziScares);
@@ -366,10 +376,12 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         const scares = this.scares.circles().map((circle) => ({ x: circle.x - origin.x, y: circle.y - origin.y, radius: circle.radius }));
         // every flock is told where the pointer is; what it does with it is its own (`follow`, a fleet apart)
         const pointer = this.pointerInside();
+        const [carryX, carryY] = this.scrollCarry();
         for (const boids of [...flocks.map((fleet) => fleet.boids), ...fleets.map((fleet) => fleet.boids)]) {
           boids.setTarget(pointer);
           boids.setScares(scares, this.scare());
           boids.setFlow(flow);
+          boids.carry(carryX, carryY);
           for (let left = Math.min(delta, LONGEST_STEP * 2); left > 1e-5; left -= LONGEST_STEP) boids.step(Math.min(left, LONGEST_STEP));
         }
       },
@@ -715,6 +727,24 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
   private sink(index: number): number {
     const spec = this.blobSpecs()?.[index];
     return blobSink(spec?.weight, spec?.fixed);
+  }
+
+  /**
+   * What the page scrolled since the last frame carries the boids at, px/s: twice the share of it, as a carried boid
+   * goes about half of what it is carried at. The words go up as the page scrolls down: with them is up.
+   */
+  private scrollCarry(): readonly [number, number] {
+    const view = this.view;
+    if (!view) return [0, 0];
+    const x = view.scrollX;
+    const y = view.scrollY;
+    const was = this.scrolledTo;
+    const wasX = this.scrolledToX;
+    this.scrolledTo = y;
+    this.scrolledToX = x;
+    const share = this.scroll();
+    if (share === 0 || Number.isNaN(was)) return [0, 0];
+    return [-(x - wasX) * share * 2, -(y - was) * share * 2];
   }
 
   /** Whether some blob sinks or rises (its weight is not 1): then the blobs drift with no current too. */

@@ -11,6 +11,7 @@
     [currents]="making ? null : shown.currents"
     [follow]="shown.follow"
     [throwable]="shown.throwable && !making"
+    [scroll]="making ? 0 : shown.scroll"
   />
 } @else {
   <lenzi-blob-background

@@ -74,6 +74,9 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   `materialLayers` sets a material's layer (`MATERIAL_LAYERS`: lamp 0, glass 1, solid 0), `blobLayers` a
   blob's own, a fleet's `layer` its own, `boidLayer` the boids'. The layers say what stops what and what is
   drawn over what (a higher level over a lower one; within a level: lamps, boids, solid things, glass).
+- **The page's scroll carries the flocks** (`scroll`, 0 by default; lenzi, 2026-11-19: "Lo stormo non si sposta allo
+  scroll"): a share of what the page scrolled, with the words or (below 0) against them, as a push each frame
+  (`Boids.carry`). The boids and the blob-boids; the blobs stay where they are.
 - **Small boids are a little slower and follow from a little farther** (`sizeSpeed`, `sizeReach`; "che
   naturalmente i piú grandi stanno in testa"): the large ones, the leaders, end up ahead.
 - **The lamp blobs light** the page's lit surfaces (`lenziLit`), as the blob background's do; solid elements
