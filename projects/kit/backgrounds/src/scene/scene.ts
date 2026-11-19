@@ -1,5 +1,7 @@
 import { Component, booleanAttribute, computed, input, viewChild } from '@angular/core';
 
+import { lenziPhone } from '@lenzi/ui-kit';
+
 import { LenziBlobBackground } from '../blob-background/blob-background';
 import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWays } from '../blob-flock-background/blob-flock-background';
 import { BlobState, DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
@@ -165,6 +167,14 @@ export function sceneLayout(scene: LenziScene): LenziSceneLayout {
 })
 export class LenziSceneBackground {
   readonly scene = input.required<LenziScene>();
+  /**
+   * On a phone (`lenziPhone()`, a window under 600 px), this one instead: a lighter scene of its own (fewer blobs, no
+   * fleets); none, `scene` everywhere. It changes with the window (lenzi, 2026-11-20: "B: A, più la scena che sceglie
+   * da sola": the app writes no code to choose it).
+   */
+  readonly phoneScene = input<LenziScene | null>(null);
+  /** It changes the scene with the window. */
+  private readonly phone = lenziPhone();
   /** Behind the whole page (fixed) or behind the box it is in (`.lenzi-backdrop`). */
   readonly fill = input<LenziBackgroundFill>('page');
   /** It moves; off: a still frame. */
@@ -175,7 +185,9 @@ export class LenziSceneBackground {
    */
   readonly editing = input(false, { transform: booleanAttribute });
 
-  protected readonly layout = computed(() => sceneLayout(this.scene()));
+  /** The scene it draws: the phone's on a phone, when it has one. */
+  protected readonly drawn = computed(() => (this.phone() ? this.phoneScene() : null) ?? this.scene());
+  protected readonly layout = computed(() => sceneLayout(this.drawn()));
   /** No fleets, while it is being made (one list, so the background is not told something new every time). */
   protected readonly noFleets: readonly never[] = [];
   private readonly flocking = viewChild(LenziBlobFlockBackground);

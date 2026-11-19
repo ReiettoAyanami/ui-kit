@@ -52,3 +52,4 @@ export * from './lib/confirm-dialog/confirm-dialog';
 export * from './lib/util/preferences';
 export * from './lib/util/kept-value';
 export * from './lib/util/describe-error';
+export * from './lib/util/phone';

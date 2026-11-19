@@ -49,6 +49,3 @@ export const SCENES: readonly LenziScene[] = [HOME_SCENE, HOME_PHONE_SCENE];
  * here is a promise, renaming one leaves the pages that chose it with their own background again.
  */
 export const CODE_SCENES: Readonly<Record<string, LenziScene>> = { home: HOME_SCENE, 'home-phone': HOME_PHONE_SCENE };
-
-/** A phone, as the pages' styles say it. */
-export const PHONE_QUERY = '(max-width: 599px)';

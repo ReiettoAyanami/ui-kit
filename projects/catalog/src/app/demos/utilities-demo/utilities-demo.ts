@@ -1,13 +1,13 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
-import { LenziFigure, LenziFigureGrid, couldNotLoad, describeError, readPreference, writePreference } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid, couldNotLoad, describeError, lenziPhone, readPreference, writePreference } from '@lenzi/ui-kit';
 
 import { Values } from '../../registry';
 
 const KEY = 'kit-catalog.demo-per';
 
-/** describeError and couldNotLoad on the error of the parameters; a choice this browser remembers. */
+/** describeError and couldNotLoad on the error of the parameters; whether this frame is a phone; a choice this browser remembers. */
 @Component({
   selector: 'app-utilities-demo',
   imports: [LenziFigure, LenziFigureGrid, MatButtonToggleModule],
@@ -24,6 +24,8 @@ export class UtilitiesDemo {
   }));
   protected readonly described = computed(() => describeError(this.error()));
   protected readonly loadFailed = computed(() => couldNotLoad('the substances', this.error()));
+  /** The frame is as wide as the demo's box: a phone under 600 px (resize the window, or open it on a phone). */
+  protected readonly phone = lenziPhone();
 
   protected readonly per = signal(readPreference(KEY, (v) => (['day', 'week', 'month'].includes(v) ? v : null), 'week'));
 

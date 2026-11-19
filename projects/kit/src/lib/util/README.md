@@ -20,6 +20,17 @@ Small functions every app needs, the same way.
   invalid stored value, or a browser that keeps nothing, gives the fallback.
 - Keys start with the app's id: `'substance-tracker.card-measure'`.
 
+## lenziPhone() and LENZI_PHONE_QUERY
+
+- **A phone is a window under 600 px wide**, in the kit's styles (`@media (max-width: 599px)`) and in code: the
+  same line, so the page and what the code chooses turn to the phone together (lenzi, 2026-11-20).
+- **`lenziPhone()`**: a signal, true on a phone, changing when the window crosses the line (a window resized, a
+  phone turned). Call it where `inject()` works (a field, a constructor). One listener for the whole app
+  (`LenziPhone`, a root service), nothing to take away.
+- **`LENZI_PHONE_QUERY`**: the line itself, `'(max-width: 599px)'`, for what needs the query.
+- A scene that is lighter on a phone needs no code: `<lenzi-scene [phoneScene]>` (`backgrounds/src/scene`).
+
 ## Origin
 
-substance-tracker `ui/kept-value.ts`, `ui/preferences.ts`, its pages' failure lines.
+substance-tracker `ui/kept-value.ts`, `ui/preferences.ts`, its pages' failure lines. `lenziPhone()`: the catalog's
+`PHONE_QUERY`, which lenzi-dev had written again in its home page (2026-11-20).

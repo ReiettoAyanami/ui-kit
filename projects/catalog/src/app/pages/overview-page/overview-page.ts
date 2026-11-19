@@ -3,13 +3,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
-import { LenziFigure, LenziFigureGrid } from '@lenzi/ui-kit';
+import { LenziFigure, LenziFigureGrid, lenziPhone } from '@lenzi/ui-kit';
 import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 import { CAT_ASPECT, LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CodeEditor } from '../../shared/code-editor/code-editor';
 import { CATEGORIES, DOCS } from '../../registry';
-import { PHONE_QUERY } from '../../scenes';
 import { PublicPages } from '../../shared/public-pages';
 
 /** The cat's width in the corner, px: never smaller, never larger. */
@@ -38,18 +37,20 @@ export class OverviewPage {
    * its width, px, 42% of the window's, between 260 and 720 (on a phone 140 to 220, "on mobile make the cat
    * smaller"); a little over a third of it below the screen. The background is the page's (PageBackground): the home's scene, unless the admin chose another.
    */
-  protected readonly mascot = signal(MASCOT_LEAST);
+  protected readonly mascot = computed(() => {
+    const [least, most] = this.phone() ? [MASCOT_PHONE_LEAST, MASCOT_PHONE_MOST] : [MASCOT_LEAST, MASCOT_MOST];
+    return Math.round(Math.min(most, Math.max(least, this.width() * 0.42)));
+  });
   protected readonly aspect = CAT_ASPECT;
   /** How much of the cat is below the screen ("a bit more on top"). */
   protected readonly BELOW = 0.38;
+  private readonly phone = lenziPhone();
+  /** The window's width, px (0 where there is no window: the cat at its least). */
+  private readonly width = signal(0);
   constructor() {
     const view = inject(DOCUMENT).defaultView;
     if (!view) return;
-    const fit = () => {
-      const phone = view.matchMedia?.(PHONE_QUERY).matches ?? false;
-      const [least, most] = phone ? [MASCOT_PHONE_LEAST, MASCOT_PHONE_MOST] : [MASCOT_LEAST, MASCOT_MOST];
-      this.mascot.set(Math.round(Math.min(most, Math.max(least, view.innerWidth * 0.42))));
-    };
+    const fit = () => this.width.set(view.innerWidth);
     fit();
     view.addEventListener('resize', fit, { passive: true });
     inject(DestroyRef).onDestroy(() => view.removeEventListener('resize', fit));

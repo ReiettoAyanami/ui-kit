@@ -77,6 +77,9 @@ contenente boidi, blob, boidi-blob").
   the window. The blobs stay on the window.
 - **Its glass** (`glass`; lenzi, 2026-11-19): `'liquid'`, the glass blobs and blob-boids bend what is behind them near
   their edge (see the blob background's README); `'frosted'` or not said, the page's glass.
+- **A lighter scene on a phone** (`phoneScene`; lenzi, 2026-11-20: "B: A, più la scena che sceglie da sola"): on a
+  window under 600 px (`lenziPhone()`, the kit's line) it draws that one instead, and changes with the window. The
+  app writes no code to choose it. Not given: `scene` everywhere.
 - **Zones of the page** (`lenziGather`): the fleets gather under the one the window shows most of (see
   `gather/README.md`); nothing to say in the scene.
 - **Being made** (`editing`, a scene maker paused; "the fleet should only be visible when playing the
@@ -90,12 +93,14 @@ contenente boidi, blob, boidi-blob").
 - Surfaces over it are `lenziLit` or solid. A page over it is `<main lenziGlassPage>` (the glass pane behind its
   elements); behind the page, the scene tells the page itself (`lenziOverBackground()`).
 - An app keeps its scenes as data (a constant, a file, the server), never as a template full of attributes.
+- A phone gets a lighter scene of its own (fewer blobs, no fleets), as `phoneScene`.
 
 ## API
 
 | | Name | Type | Default | |
 | --- | --- | --- | --- | --- |
 | input | `scene` | `LenziScene` | required | what it draws |
+| input | `phoneScene` | `LenziScene \| null` | `null` | what it draws on a phone instead |
 | input | `fill` | `'page' \| 'box'` | `'page'` | behind the page, or behind its box |
 | input | `animate` | `boolean` | `true` | off: a still frame |
 | input | `editing` | `boolean` | `false` | being made: no fleets, the blobs still on their places |
@@ -114,8 +119,10 @@ readonly scene: LenziScene = {
   fleets: [{ kind: 'boid', count: 380, colonies: 4 }, { kind: 'blob-boid', material: 'glass', count: 42, colonies: 3 }],
   follow: 'flee',
 };
+/** On a phone: half the blobs, no fleets. */
+readonly phoneScene: LenziScene = { ...this.scene, blobs: this.scene.blobs.slice(0, 1), fleets: [] };
 ```
 
 ```html
-<lenzi-scene [scene]="scene" />
+<lenzi-scene [scene]="scene" [phoneScene]="phoneScene" />
 ```

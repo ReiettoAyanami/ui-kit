@@ -1,9 +1,10 @@
-import { DOCUMENT, Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
 
-import { PHONE_QUERY } from '../scenes';
+import { lenziPhone } from '@lenzi/ui-kit';
+
 import { PageBackgrounds, backgroundKey } from './page-backgrounds';
 
 /**
@@ -18,8 +19,8 @@ export class CurrentBackground {
   private readonly backgrounds = inject(PageBackgrounds);
   private readonly router = inject(Router);
 
-  /** The window is a phone's, changing when the window does. */
-  readonly phone = signal(false);
+  /** The window is a phone's, changing when the window does (the kit's: `lenziPhone()`). */
+  readonly phone = lenziPhone();
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -31,12 +32,4 @@ export class CurrentBackground {
 
   /** The scene behind the open page; null: none (or not known yet). */
   readonly scene = computed(() => this.backgrounds.sceneFor(backgroundKey(this.url()), this.phone()));
-
-  constructor() {
-    // a root service lives as long as the app: the listener with it
-    const media = inject(DOCUMENT).defaultView?.matchMedia?.(PHONE_QUERY);
-    if (!media) return;
-    this.phone.set(media.matches);
-    media.addEventListener('change', (event) => this.phone.set(event.matches));
-  }
 }

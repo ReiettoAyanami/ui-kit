@@ -1,6 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
+import { LenziPhone } from '@lenzi/ui-kit';
+
 import { LenziScene, LenziSceneBackground, sceneLayout } from './scene';
 
 const HOME: LenziScene = {
@@ -114,4 +116,34 @@ describe('LenziSceneBackground', () => {
     expect(element.querySelector('lenzi-blob-flock-background')).toBeNull();
     expect(element.querySelector('lenzi-blob-background')).not.toBeNull();
   });
+
+  it("on a phone draws its phone's scene, if it has one, and changes with the window", async () => {
+    const phone = signal(true);
+    TestBed.configureTestingModule({ providers: [{ provide: LenziPhone, useValue: { matches: phone } }] });
+    const fixture = TestBed.createComponent(PhoneHost);
+    const element = fixture.nativeElement as HTMLElement;
+    const drawn = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return element.querySelector('lenzi-blob-flock-background') ? 'whole' : element.querySelector('lenzi-blob-background') ? 'phone' : null;
+    };
+    // the phone's scene has no fleets: only the blob background
+    expect(await drawn()).toBe('phone');
+    phone.set(false);
+    expect(await drawn()).toBe('whole');
+    phone.set(true);
+    expect(await drawn()).toBe('phone');
+    // without a phone's scene, the scene everywhere
+    fixture.componentInstance.phoneScene.set(null);
+    expect(await drawn()).toBe('whole');
+  });
 });
+
+@Component({
+  imports: [LenziSceneBackground],
+  template: `<lenzi-scene [scene]="scene" [phoneScene]="phoneScene()" [animate]="false" />`,
+})
+class PhoneHost {
+  readonly scene = HOME;
+  readonly phoneScene = signal<LenziScene | null>({ ...HOME, blobs: HOME.blobs.slice(0, 2), fleets: [] });
+}

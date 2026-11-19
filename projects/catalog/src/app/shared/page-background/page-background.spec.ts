@@ -1,10 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
-import { CurrentBackground } from '../current-background';
+import { LenziPhone } from '@lenzi/ui-kit';
+
 import { EVERY_COMPONENT } from '../page-backgrounds';
 import { PageBackground } from './page-background';
 
@@ -19,6 +20,8 @@ class Empty {}
 
 describe('PageBackground', () => {
   async function open(pages: Record<string, unknown> = {}) {
+    // the window, as the kit says it (lenziPhone())
+    const phone = signal(false);
     TestBed.configureTestingModule({
       imports: [PageBackground],
       providers: [
@@ -30,6 +33,7 @@ describe('PageBackground', () => {
           { path: 'components/:id', component: Empty },
           { path: 'scenes/maker', component: Empty },
         ]),
+        { provide: LenziPhone, useValue: { matches: phone } },
       ],
     });
     // the scene is deferred (its own chunk)
@@ -44,7 +48,7 @@ describe('PageBackground', () => {
       fixture.detectChanges();
       await fixture.whenStable();
     };
-    return { fixture, page, go, phone: TestBed.inject(CurrentBackground).phone };
+    return { fixture, page, go, phone };
   }
 
   it("the overview has the home's whole scene, a phone the lighter one (only blobs); a page without one, nothing", async () => {

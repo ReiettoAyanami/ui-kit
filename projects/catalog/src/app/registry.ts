@@ -1139,11 +1139,11 @@ usageLanguage: 'typescript',
     id: 'utilities',
     name: 'Utilities',
     category: 'Services',
-    summary: 'describeError(), couldNotLoad(), keptValue(), readPreference() and writePreference().',
-    api: 'describeError(), keptValue(), readPreference()',
+    summary: 'describeError(), couldNotLoad(), keptValue(), readPreference(), writePreference() and lenziPhone().',
+    api: 'describeError(), keptValue(), readPreference(), lenziPhone()',
     entry: '@lenzi/ui-kit',
-    origin: 'substance-tracker ui/kept-value.ts, ui/preferences.ts',
-    files: ['src/lib/util/describe-error.ts', 'src/lib/util/kept-value.ts', 'src/lib/util/preferences.ts'],
+    origin: "substance-tracker ui/kept-value.ts, ui/preferences.ts; lenziPhone(), the catalog's PHONE_QUERY (2026-11-20)",
+    files: ['src/lib/util/describe-error.ts', 'src/lib/util/kept-value.ts', 'src/lib/util/preferences.ts', 'src/lib/util/phone.ts', 'src/lib/util/phone.spec.ts'],
     ...docs('src/lib/util'),
     demo: () => import('./demos/utilities-demo/utilities-demo').then((m) => m.UtilitiesDemo),
     controls: [
@@ -1158,7 +1158,10 @@ describeError({ status: ${v['status']}, title: '${v['title']}', detail: '${v['de
 readonly rows = keptValue(this.list, () => this.filter().substanceId);
 
 // a choice of this browser, remembered
-readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? v : null), 'week'));`,
+readonly per = signal(readPreference('my-app.per', (v) => (SCALES.includes(v) ? v : null), 'week'));
+
+// a phone (a window under 600 px, as the kit's styles say it), changing with the window
+readonly phone = lenziPhone();`,
 usageLanguage: 'typescript',
     height: 360,
   },
@@ -1540,7 +1543,10 @@ ${tag('lenzi-blob-flock-background', [
 // a scene is data: the app keeps it (here the catalog's, in scenes.ts) and the background draws it
 readonly scene: LenziScene = { ...${v['scene']}, follow: '${v['follow']}', throwable: ${v['throwable'] === true} };
 
-<lenzi-scene [scene]="scene" />`,
+<lenzi-scene [scene]="scene" />
+
+// on a phone a lighter one of its own, which the scene changes with the window (no code to choose it):
+// <lenzi-scene [scene]="scene" [phoneScene]="phoneScene" />`,
     usageLanguage: 'typescript',
     height: 560,
   },

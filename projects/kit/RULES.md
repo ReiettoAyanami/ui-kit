@@ -193,6 +193,8 @@ the rule says what, the variable says how much.
 
 ## Phones
 
+- **A phone is a window under 600 px wide** (`@media (max-width: 599px)`), in the styles and in code (`lenziPhone()`,
+  `LENZI_PHONE_QUERY`; lenzi, 2026-11-20): one line, never a width of an app's own.
 - **Comfortable at 390 px wide**, no horizontal scroll of the page anywhere.
 - **On a phone a panel's header keeps only its title** (lenzi, 2026-10-03: "su mobile non mostrino le
   informazioni dei toggle"); the rest is inside it.
@@ -235,7 +237,8 @@ the rule says what, the variable says how much.
   the glow, as `lenziSolid` (the same `--lenzi-shadow`). **Blobs melt only into blobs of their own material.**
 - **A background of blobs and fleets is a scene** (lenzi, 2026-11-14: "una Scena ... é tipo la scena che usiamo
   nel background della home"): data (`LenziScene`: blobs, fleets, the pointer), drawn by `<lenzi-scene>`. An app
-  keeps its scenes as data, and a phone gets a lighter scene of its own.
+  keeps its scenes as data, and a phone gets a lighter scene of its own (`[phoneScene]`: the scene changes it
+  with the window, the app writes no code for it; lenzi, 2026-11-20).
 - **What stops what is on one layer** (lenzi, 2026-11-14: "they're obstacles only to objects that are on the
   same z-level"): the lamps, the solid things and the boids share one; glass is above it, and the boids fly
   under the glass.
