@@ -30,6 +30,13 @@ describe('liquidProfile', () => {
   it('bends nothing with the index of air', () => {
     expect(liquidProfile({ ...LIQUID_GLASS, ior: 1 }).largest).toBeCloseTo(0, 6);
   });
+
+  it('is the first lens half as large again: the same shape, bending 1.5 times as far (lenzi, 2026-11-20)', () => {
+    const first = liquidProfile({ ...LIQUID_GLASS, bezel: 22, thickness: 48 });
+    const now = liquidProfile(LIQUID_GLASS);
+    expect(now.largest).toBeCloseTo(first.largest * 1.5, 3);
+    for (let i = 0; i <= LIQUID_STEPS; i++) expect(now.shifts[i]).toBeCloseTo(first.shifts[i]!, 4);
+  });
 });
 
 describe('liquidLookOf', () => {

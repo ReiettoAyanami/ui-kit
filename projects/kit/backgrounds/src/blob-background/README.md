@@ -31,8 +31,11 @@ change from one into another and melt into each other where they meet, glowing o
   as they turn, change shape and melt into one another: the blobs' field gives the distance from the edge and its
   normal at every place, and the bezel's bending is read there. It bends what the background draws (the glow, the
   boids, the other blobs), not the page over it; WebGL2, so every browser that draws the blobs (the directive bends
-  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 22 px, 48 px, 1.5, 1).
-  One kind of glass for all the glass blobs of a background.
+  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 33 px, 72 px, 1.5, 1;
+  1.5 times the first lens, lenzi 2026-11-20: "un 1.5x"). A part thinner than two bezels (a drop, a lobe) takes the
+  lens smaller, its bezel ending at its middle: the bending comes down to nothing there, with no line. What is seen
+  through it is more saturated (×1.4) only as far as a colour takes it: no channel is cut at white or black (a cut
+  drew a line through a drop over a lamp's light). One kind of glass for all the glass blobs of a background.
 - **Thrown** (`throwable`, off; lenzi, 2026-11-14: "kinda like throwing them around"): the pointer takes a
   blob (a hand shows over one) and throws it; it flies on, slows down, bounces off the edges and drifts back
   to its path. Pressing on the page's own things (a link, a button, a field) never takes a blob.

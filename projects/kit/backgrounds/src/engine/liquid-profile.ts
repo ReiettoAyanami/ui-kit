@@ -26,8 +26,13 @@ export interface LenziLiquidBlobGlass {
  */
 export type LenziGlassKind = 'frosted' | 'liquid';
 
-/** The liquid glass of the blobs, unless told otherwise: a little narrower than the directive's (blobs are small). */
-export const LIQUID_GLASS: LenziLiquidBlobGlass = { bezel: 22, thickness: 48, ior: 1.5, refraction: 1 };
+/**
+ * The liquid glass of the blobs, unless told otherwise. Was 22 and 48, a little narrower than the directive's (blobs are
+ * small); then the same lens half as large again, its bezel and its thickness (lenzi, 2026-11-20: "una forma
+ * leggermente più marcata in modo da mostrare leggermente di più l'effetto sui bordi ... un 1.5x"). A part thinner
+ * than two bezels (a drop) takes it smaller, to its middle.
+ */
+export const LIQUID_GLASS: LenziLiquidBlobGlass = { bezel: 33, thickness: 72, ior: 1.5, refraction: 1 };
 
 /** How many steps the profile has over the bezel (it has one more value: the edge and the bezel's inner end). */
 export const LIQUID_STEPS = 32;

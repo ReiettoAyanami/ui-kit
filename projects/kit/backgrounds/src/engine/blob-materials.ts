@@ -146,11 +146,22 @@ const SHADOW_SPREAD = 0.6;
 /** How much of the widest glow reaches a glass or solid surface from all around, and glass's frost (linear). */
 const AMBIENT = 4;
 const FROST = 0.012;
-/** Liquid glass: how saturated what is seen through it is (1: as it is; the directive's 1.5), how much of the veil it keeps, and how much it is seen through, unless a blob says (its own colour, the page's glass). */
+/**
+ * Liquid glass: how saturated what is seen through it is (1: as it is; the directive's 1.5), at most: only as much as
+ * a colour takes without a channel going past white or black (cut there, a lamp's light through a drop ended in a
+ * line, lenzi 2026-11-20 "sembra che siano tagliati sopra"; and a glass star turned half blue). How much of the veil
+ * it keeps, and how much it is seen through, unless a blob says (its own colour, the page's glass).
+ */
 const LIQUID_SATURATION = 1.4;
 const LIQUID_VEIL = 0.25;
-/** How far further in the edge's normal is looked at, a share of the bezel: where it turns round, the bending fades. */
-const LIQUID_LOOK_AHEAD = 0.35;
+/**
+ * Liquid glass: where its curved bezel ends. At its width, or nearer where the glass's middle is (a drop, a lobe, any
+ * part thinner than two bezels: there the edge's normal turns round) or where its field stops growing (deep inside:
+ * flat, no normal). The bending comes down to nothing there; it stopped at once instead, along a line (lenzi,
+ * 2026-11-20: the blob-boids "sembra che siano tagliati sopra"). Found walking in along the edge's normal, this many
+ * steps over the bezel, then halving the last step this many times.
+ */
+const LIQUID_MARCH = { steps: 6, halvings: 3 } as const;
 const LIQUID_CLARITY = { own: 0.85, page: 0.94 } as const;
 /** How far an object's share reaches, in its merges: beyond, e^-9 of it. */
 const REACH = 9;
@@ -490,12 +501,26 @@ uniform float profile[${LIQUID_STEPS + 1}];
 out vec4 color;
 ${SURFACE_LIGHT}
 
-// how far what is seen at a place inside the bezel comes from, inwards, device px (as lenziLiquidGlass bends)
-float bendAt(float inside) {
-  if (inside <= 0.0 || inside >= bezelPx) return 0.0;
-  float at = inside / bezelPx * ${LIQUID_STEPS.toFixed(1)};
+// how far what is seen at a place inside the bezel comes from, inwards, device px (as lenziLiquidGlass bends), over
+// a bezel that ends \`reach\` in: a narrower one is the same lens, smaller (its bending as much smaller)
+float bendAt(float inside, float reach) {
+  if (inside <= 0.0 || inside >= reach) return 0.0;
+  float at = inside / reach * ${LIQUID_STEPS.toFixed(1)};
   int i = min(int(at), ${LIQUID_STEPS - 1});
-  return mix(profile[i], profile[i + 1], at - float(i)) * liftPx;
+  return mix(profile[i], profile[i + 1], at - float(i)) * liftPx * reach / bezelPx;
+}
+
+// a colour more saturated, by \`amount\` at most: as much as it takes with every channel still between black and white,
+// so its hue is kept and nothing is cut (a cut channel drew a line where it began)
+vec3 saturated(vec3 c, float amount) {
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  vec3 away = c - l;
+  float most = amount;
+  for (int i = 0; i < 3; i++) {
+    if (away[i] > 1e-5) most = min(most, (1.0 - l) / away[i]);
+    else if (away[i] < -1e-5) most = min(most, l / -away[i]);
+  }
+  return l + away * max(1.0, most);
 }
 
 // the glass's edge normal at another place of its level
@@ -506,11 +531,35 @@ vec2 glassNormalAt(float layer, vec2 at) {
   return length(slope) > 1e-6 ? normalize(slope) : vec2(0.0);
 }
 
-// how much of the bending holds here: all of it while the edge's normal a little further in is the same; none where
-// it turns round, the middle of a blob thinner than its bezel (there the bezels of both sides met in a tear)
-float steadyAt(float layer, vec2 out_) {
-  vec2 further = glassNormalAt(layer, uv - out_ * bezelPx * ${LIQUID_LOOK_AHEAD.toFixed(2)} * pixel);
-  return smoothstep(0.0, 0.9, dot(out_, further));
+// whether the edge's normal this far further in (device px) is still this one: not past the glass's middle (where it
+// turns round), not deep inside (where the field is flat and has none)
+bool sameWay(float layer, vec2 out_, float further) {
+  return dot(out_, glassNormalAt(layer, uv - out_ * further * pixel)) > 0.5;
+}
+
+// how far in from the edge the curved bezel goes along this normal: its width, or less where the glass's middle or
+// its flat inside is nearer (walked to in steps, the last one halved: the bezel's end moves smoothly, no line)
+float bezelHere(float layer, vec2 out_, float inside) {
+  float room = bezelPx - inside;
+  float step = bezelPx / ${LIQUID_MARCH.steps.toFixed(1)};
+  float near = 0.0;
+  float far = -1.0;
+  for (int i = 1; i <= ${LIQUID_MARCH.steps}; i++) {
+    float further = min(step * float(i), room);
+    if (!sameWay(layer, out_, further)) {
+      far = further;
+      break;
+    }
+    near = further;
+    if (further >= room) break;
+  }
+  if (far < 0.0) return bezelPx;
+  for (int i = 0; i < ${LIQUID_MARCH.halvings}; i++) {
+    float middle = 0.5 * (near + far);
+    if (sameWay(layer, out_, middle)) near = middle;
+    else far = middle;
+  }
+  return inside + 0.5 * (near + far);
 }
 
 // one level over the picture so far: its solid things (in the picture already, drawn again over a lower level's
@@ -534,10 +583,10 @@ vec3 level(vec3 c, float layer, Near n, Light l) {
     // the edge's normal and its depth the distance from it, at every frame, whatever its shape)
     vec3 behind;
     if (liquid > 0.5) {
-      float bend = bendAt(glass.inside);
-      if (bend != 0.0) bend *= steadyAt(layer, out_);
+      float bend = 0.0;
+      if (glass.inside > 0.0 && glass.inside < bezelPx && length(out_) > 0.0) bend = bendAt(glass.inside, bezelHere(layer, out_, glass.inside));
       behind = decode(texture(picture, uv - out_ * bend * pixel).rgb);
-      behind = max(vec3(0.0), mix(vec3(dot(behind, vec3(0.2126, 0.7152, 0.0722))), behind, ${LIQUID_SATURATION.toFixed(2)}));
+      behind = saturated(clamp(behind, 0.0, 1.0), ${LIQUID_SATURATION.toFixed(2)});
     } else {
       behind = decode(texture(blurred, uv).rgb);
     }

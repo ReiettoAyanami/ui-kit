@@ -37,8 +37,10 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   as they turn, change shape and melt into one another: the blobs' field gives the distance from the edge and its
   normal at every place, and the bezel's bending is read there. It bends what the background draws (the glow, the
   boids, the other blobs), not the page over it; WebGL2, so every browser that draws the blobs (the directive bends
-  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 22 px, 48 px, 1.5, 1).
-  One kind of glass for all the glass blobs of a background.
+  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 33 px, 72 px, 1.5, 1;
+  1.5 times the first lens, lenzi 2026-11-20). A blob-boid, thinner than two bezels, takes the lens smaller, to its
+  middle; what is seen through it is more saturated only as far as a colour takes it (no line through a drop over a
+  lamp). One kind of glass for all the glass blobs of a background.
 - **Fleets of blob-boids** (`blobFlocks`: `{ material, count, colonies?, size? }`; "un tipo di boid che puó
   essere un blob di qualsiasi materiale"): boids that are blobs, drops as the boids are ("i blob boidi fai che
   siano gocce pure loro": a round head `size` px wide, 11 by default, narrowing to a round tail, pointing
