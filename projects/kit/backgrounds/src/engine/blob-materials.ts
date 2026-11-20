@@ -70,6 +70,21 @@ export interface MaterialObject {
 export const shines = (object: MaterialObject): boolean => object.material === 'lamp' || (object.material === 'glass' && object.emit === true);
 
 /**
+ * Which levels (by their place, the lowest first) can be in a shadow: a level with something solid on it or on a level
+ * above it. A solid thing shades its own level and the ones under it, never one above it (lenzi, 2026-11-20: glass over
+ * a solid thing was half in its shadow, "found this other bug"). One a channel of the shadow texture, four at most.
+ */
+export function shadowCasts(solidOnLevel: readonly boolean[]): [number, number, number, number] {
+  const casts: [number, number, number, number] = [0, 0, 0, 0];
+  let above = false;
+  for (let level = MAX_MATERIAL_LAYERS - 1; level >= 0; level--) {
+    above = above || solidOnLevel[level] === true;
+    casts[level] = above ? 1 : 0;
+  }
+  return casts;
+}
+
+/**
  * Light of the scene that is not a material object's (a fleet of boids), on a level: added over the lamps of its
  * level and of the levels under it; a lamp of a level above covers it.
  */
@@ -141,6 +156,14 @@ const FACE_HALVINGS = 4;
 const SHADOW_STEPS = 40;
 /** A shadow's edge: the field from this (a little outside a solid thing) up to its edge (1) stops part of the light. */
 const SHADOW_SOFT = 0.45;
+/**
+ * Only more of the solid field than at the place itself stops its light, and all of it once the way goes this many
+ * times more of it (e^0.8: 0.8 of a merge deeper, the same width as SHADOW_SOFT up to the edge). So a place on a solid
+ * thing is shaded on its far side as the place beside it is, and not on its lit side: no line along its edge (it was
+ * cut there, unshaded on it and shaded beside it, a quarter of the canvas wide: a staircase along a solid thing hidden
+ * under glass, lenzi 2026-11-20, "found this other bug").
+ */
+const SHADOW_DEEPER = 2.2255;
 /** How far to either side of a lamp's middle its shadow ways go, a share of its radius. */
 const SHADOW_SPREAD = 0.6;
 /** How much of the widest glow reaches a glass or solid surface from all around, and glass's frost (linear). */
@@ -365,7 +388,7 @@ uniform float veil;
 uniform float rim;
 uniform vec3 border;
 uniform float borderPx;   // device px
-uniform sampler2D shadow; // the share of the lamps' light a solid thing stops, at every place
+uniform sampler2D shadow; // the share of the lamps' light the solid things stop, at every place, on each level (r g b a)
 uniform float shaded;     // how much of it a shadow takes (0: no shadows)
 uniform sampler2D faceLight; // the light outside the solid things, blurred into them (a: how much is outside)
 uniform float lampSoft;   // how soft a lamp's edge is, device px
@@ -391,17 +414,22 @@ vec3 wide(vec2 at) {
 }
 float luminance(vec2 at) { return dot(texture(ambient, at).rgb, vec3(0.2126, 0.7152, 0.0722)); }
 
-// the light at this place: from all around (wide, so a lamp under a solid thing does not show through it), here
-// (with the glow right there), and the way it comes from (towards more light)
+// the light at this place, before any shadow: from all around (wide, so a lamp under a solid thing does not show
+// through it), here (with the glow right there), and the way it comes from (towards more light)
 struct Light { vec3 around; vec3 here; vec2 way; };
 Light lightHere() {
-  // in a solid thing's shadow, less of both
-  float lit = 1.0 - shaded * clamp(texture(shadow, uv).r, 0.0, 1.0);
-  vec3 around = wide(uv) * ${AMBIENT.toFixed(1)} * lightGain * lit;
-  vec3 here = texture(light, uv).rgb * lightGain * lit + around;
+  vec3 around = wide(uv) * ${AMBIENT.toFixed(1)} * lightGain;
+  vec3 here = texture(light, uv).rgb * lightGain + around;
   vec2 towards = vec2(luminance(uv + vec2(lightStep.x, 0.0)) - luminance(uv - vec2(lightStep.x, 0.0)),
                       luminance(uv + vec2(0.0, lightStep.y)) - luminance(uv - vec2(0.0, lightStep.y)));
   return Light(around, here, length(towards) > 1e-6 ? normalize(towards) : vec2(0.0));
+}
+// that light on a level: less of both in the shadow of the solid things of that level and of the levels above it. A
+// solid thing never shades a level above it (lenzi, 2026-11-20: glass over a solid thing was half in its shadow, cut
+// along the hidden solid's edge: "found this other bug", "di questo problema")
+Light lightOn(Light l, vec4 shadows, int layer) {
+  float lit = 1.0 - shaded * clamp(shadows[layer], 0.0, 1.0);
+  return Light(l.around * lit, l.here * lit, l.way);
 }
 
 // a field's edge here: how much of the place it fills, how far inside it is (device px), and its slope
@@ -466,6 +494,7 @@ void main() {
   vec3 shown = decode(texture(picture, uv).rgb);
   vec3 c = shown;
   Light l = lightHere();
+  vec4 shadows = texture(shadow, uv);
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
     if (i >= layers) break;
     float layer = float(i);
@@ -476,7 +505,7 @@ void main() {
     if (cover > 0.0) c = mix(c, shown + lampLift(layer), cover);
     Edge solid = edgeOf(w.g, slopeOf(n.east.g, n.west.g, n.north.g, n.south.g));
     vec3 albedo = texture(solidTints, vec3(uv, layer)).rgb / max(w.g, 1e-6);
-    if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, l), solid.fill);
+    if (solid.fill > 0.0) c = mix(c, solidLook(albedo, solid, lightOn(l, shadows, i)), solid.fill);
   }
   color = vec4(encode(c), 1.0);
 }`;
@@ -614,61 +643,68 @@ void main() {
   vec3 shown = decode(texture(picture, uv).rgb);
   vec3 c = shown;
   Light l = lightHere();
+  vec4 shadows = texture(shadow, uv);
   // the levels, the lowest first, each over the ones under it, never melted into them (lenzi, 2026-11-15: "the order
   // in which they render ... should also be depended on the z index"): its lamps over the glass of the levels under
   // it (the picture again there: all of it, so no line is left along the glass's edge; "under solid blobs you can see
-  // the boids still (only the outline for the blob boids)"), then its solid and glass things
+  // the boids still (only the outline for the blob boids)"), then its solid and glass things, in its own light
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
     if (i >= layers) break;
     float layer = float(i);
     Near n = nearAt(weights, layer);
     c = mix(c, shown, lampCover(n, lampSoft));
-    c = level(c, layer, n, l);
+    c = level(c, layer, n, lightOn(l, shadows, i));
   }
   color = vec4(encode(c), 1.0);
 }`;
 // the shadow follows the solid things' own shapes (melted where they meet): the way from a place to each lamp
-// is walked through the solid field, and a lamp whose way crosses it lights that place no more
+// is walked through the solid field, and a lamp whose way crosses it lights that place no more. One shadow a level
+// (red, green, blue, alpha: the levels from the lowest): a solid thing shades its own level and the ones under it,
+// never one above it (glass over it is not in its shadow). Red is also the picture's: every solid thing's
 const SHADOW = `#version 300 es
 precision highp float;
 uniform highp sampler2DArray field;    // each level's fields, a layer each: green is the solid one
 uniform int layers;
 uniform int lampCount;
 uniform vec4 lamps[${MAX_LAMPS}];      // x, y, radius, strength (CSS px)
+uniform vec4 casts;                    // 1 for a level that has solid things on it or above it
 uniform vec2 space;                    // CSS px
 uniform float height;                  // of the target, px
 uniform float scale;                   // target px in a CSS px
 out vec4 color;
 vec2 at(vec2 css) { return vec2(css.x / space.x, 1.0 - css.y / space.y); }
-// the solid field at a place: the most of any level's (every solid thing casts its shadow)
-float solidAt(vec2 uv) {
-  float s = 0.0;
-  for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
-    if (i >= layers) break;
-    s = max(s, texture(field, vec3(uv, float(i))).g);
+// the solid field at a place, for each level: the most of its own and of the levels above it
+vec4 solidsAt(vec2 uv) {
+  vec4 s = vec4(0.0);
+  float above = 0.0;
+  for (int i = ${MAX_MATERIAL_LAYERS - 1}; i >= 0; i--) {
+    if (i < layers) above = max(above, texture(field, vec3(uv, float(i))).g);
+    s[i] = above;
   }
   return s;
 }
-// how much of the way from p to a place a solid thing stops: its edge read softly (the field from a little outside
-// to its edge), so a step that lands near an edge stops part of it and a thin thing never flickers. Only more of the
-// field than here counts: a place just outside a solid thing, on its lit side, is not shaded by its own soft edge
-float stopped(vec2 p, vec2 to, float own) {
-  float from = max(${SHADOW_SOFT.toFixed(2)}, own);
-  float most = 0.0;
+// how much of the way from p to a place the solid things stop, for each level: their edge read softly (the field from
+// a little outside to inside), so a step that lands near an edge stops part of it and a thin thing never flickers.
+// Only more of the field than at p counts (from), all of it once the way goes SHADOW_DEEPER times more (full): no dark
+// ring round a solid thing on its lit side, and on it, shaded on its far side as beside it. Levels with nothing to
+// stop them start stopped (done), so the walk ends as soon as every other one is
+vec4 stopped(vec2 p, vec2 to, vec4 from, vec4 full, vec4 done) {
+  vec4 most = done;
   for (int s = 1; s <= ${SHADOW_STEPS}; s++) {
-    most = max(most, smoothstep(from, 1.0, solidAt(at(mix(p, to, float(s) / ${SHADOW_STEPS.toFixed(1)})))));
-    if (most >= 1.0) break;
+    most = max(most, smoothstep(from, full, solidsAt(at(mix(p, to, float(s) / ${SHADOW_STEPS.toFixed(1)})))));
+    if (all(greaterThanEqual(most, vec4(1.0)))) break;
   }
   return most;
 }
 
 void main() {
   vec2 p = vec2(gl_FragCoord.x, height - gl_FragCoord.y) / scale;
-  // under a solid thing (inside its edge, as it is drawn): it covers this place, no shadow of its own
-  float own = solidAt(at(p));
-  if (own >= 1.0) { color = vec4(0.0, 0.0, 0.0, 1.0); return; }
+  vec4 own = solidsAt(at(p));
+  vec4 from = max(vec4(${SHADOW_SOFT.toFixed(2)}), own);
+  vec4 full = max(vec4(1.0), own * ${SHADOW_DEEPER.toFixed(4)});
+  vec4 done = 1.0 - casts;
   float total = 0.0;
-  float blocked = 0.0;
+  vec4 blocked = vec4(0.0);
   for (int i = 0; i < ${MAX_LAMPS}; i++) {
     if (i >= lampCount) break;
     vec4 lamp = lamps[i];
@@ -682,11 +718,11 @@ void main() {
     // other not, half its light is missing: the shadow's soft edge, the wider the farther from what casts it
     vec2 across = vec2(-way.y, way.x) / far * lamp.z * ${SHADOW_SPREAD.toFixed(2)};
     float reach = 1.0 - lamp.z / far;
-    float left = stopped(p, p + (way + across) * reach, own);
-    float right = stopped(p, p + (way - across) * reach, own);
+    vec4 left = stopped(p, p + (way + across) * reach, from, full, done);
+    vec4 right = stopped(p, p + (way - across) * reach, from, full, done);
     blocked += here * 0.5 * (left + right);
   }
-  color = vec4(total > 1e-5 ? blocked / total : 0.0, 0.0, 0.0, 1.0);
+  color = total > 1e-5 ? blocked / total * casts : vec4(0.0);
 }`;
 
 // the light outside the solid things, for their faces to take (blurred into them next): the glow and the wide light,
@@ -1133,6 +1169,7 @@ export class MaterialScene {
     gl.uniform1i(engine.uniform(this.shadow, 'layers'), this.levels.length);
     gl.uniform1i(engine.uniform(this.shadow, 'lampCount'), lamps.length);
     gl.uniform4fv(engine.uniform(this.shadow, 'lamps'), lampData);
+    gl.uniform4fv(engine.uniform(this.shadow, 'casts'), shadowCasts(this.levels.map((objects) => objects.some((object) => object.material === 'solid'))));
     gl.uniform2f(engine.uniform(this.shadow, 'space'), engine.cssWidth, engine.cssHeight);
     gl.uniform1f(engine.uniform(this.shadow, 'height'), target.height);
     gl.uniform1f(engine.uniform(this.shadow, 'scale'), target.width / engine.cssWidth);
