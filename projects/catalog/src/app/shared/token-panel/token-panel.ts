@@ -16,6 +16,7 @@ import { SaveHint } from '../save-hint/save-hint';
 import { tokensToCss } from '../token-css';
 import { TokenEditor } from '../token-editor/token-editor';
 import { TokenDef, TokenGroup, TokensApi } from '../tokens-api';
+import { slid } from '../slid';
 import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /** The easing curves offered by name; any other is kept as written (and editable as text). */
@@ -52,6 +53,8 @@ function split(value: string): { number: number; unit: string } {
 export class TokenPanel {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
   protected readonly lit = lenziOverBackground();
+  /** A slider's number while it is dragged: the value follows the thumb (lenzi, 2026-11-21). */
+  protected readonly slid = slid;
 
   readonly groups = input.required<readonly TokenGroup[]>();
   /** What the editor is called, for a screen reader. */

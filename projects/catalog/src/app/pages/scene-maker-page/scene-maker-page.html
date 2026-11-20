@@ -252,7 +252,7 @@
                 <p class="label">{{ field.label }}</p>
                 <div class="number">
                   <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
-                    <input matSliderThumb [value]="liquidValue(field.key)" [attr.aria-label]="field.label" (valueChange)="setLiquidNumber(field.key, $event)" />
+                    <input matSliderThumb [value]="liquidValue(field.key)" [attr.aria-label]="field.label" (input)="setLiquidNumber(field.key, slid($event))" (valueChange)="setLiquidNumber(field.key, $event)" />
                   </mat-slider>
                   <span class="value">{{ shown(liquidValue(field.key)) }}</span>
                 </div>
@@ -284,7 +284,7 @@
               <p class="label">Size (share of the screen)</p>
               <div class="number">
                 <mat-slider min="0.02" max="0.5" step="0.005">
-                  <input matSliderThumb [value]="blob.size" aria-label="Size" (valueChange)="setBlob({ size: $event })" />
+                  <input matSliderThumb [value]="blob.size" aria-label="Size" (input)="setBlob({ size: slid($event) })" (valueChange)="setBlob({ size: $event })" />
                 </mat-slider>
                 <span class="value">{{ (blob.size * 100).toFixed(1) }}%</span>
               </div>
@@ -303,7 +303,7 @@
               <p class="label">Weight (heavier: it turns slower, sinks, and currents carry it less; lighter than 1: it rises)</p>
               <div class="number">
                 <mat-slider [min]="weights[0]" [max]="weights[1]" step="0.05">
-                  <input matSliderThumb [value]="blob.weight ?? 1" aria-label="Weight" (valueChange)="setBlob({ weight: $event })" />
+                  <input matSliderThumb [value]="blob.weight ?? 1" aria-label="Weight" (input)="setBlob({ weight: slid($event) })" (valueChange)="setBlob({ weight: $event })" />
                 </mat-slider>
                 <span class="value">{{ shown(blob.weight ?? 1) }}</span>
               </div>
@@ -322,7 +322,7 @@
               <p class="label">Reach (share of the screen, each side of its line)</p>
               <div class="number">
                 <mat-slider min="0.02" max="0.3" step="0.01">
-                  <input matSliderThumb [value]="current.width ?? defaultCurrent.width" aria-label="Reach" (valueChange)="setCurrentWidth($event)" />
+                  <input matSliderThumb [value]="current.width ?? defaultCurrent.width" aria-label="Reach" (input)="setCurrentWidth(slid($event))" (valueChange)="setCurrentWidth($event)" />
                 </mat-slider>
                 <span class="value">{{ shown(current.width ?? defaultCurrent.width) }}</span>
               </div>
@@ -331,7 +331,7 @@
                 <p class="label">Segment {{ segment.index + 1 }}</p>
                 <div class="number">
                   <mat-slider min="0" [max]="strongestCurrent" step="10">
-                    <input matSliderThumb [value]="strengthOf(current, segment.index)" [attr.aria-label]="'Segment ' + (segment.index + 1) + ' push'" (valueChange)="setStrength(segment.index, $event)" />
+                    <input matSliderThumb [value]="strengthOf(current, segment.index)" [attr.aria-label]="'Segment ' + (segment.index + 1) + ' push'" (input)="setStrength(segment.index, slid($event))" (valueChange)="setStrength(segment.index, $event)" />
                   </mat-slider>
                   <span class="value">{{ strengthOf(current, segment.index) }}</span>
                 </div>
@@ -380,7 +380,7 @@
                 <p class="label">{{ field.label }}</p>
                 <div class="number">
                   <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
-                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (valueChange)="setFleetNumber(field.key, $event)" />
+                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (input)="setFleetNumber(field.key, slid($event))" (valueChange)="setFleetNumber(field.key, $event)" />
                   </mat-slider>
                   <span class="value">{{ shown(fleetValue(fleet, field.key)) }}</span>
                 </div>
@@ -399,7 +399,7 @@
                 <p class="label">{{ field.label }}</p>
                 <div class="number">
                   <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
-                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (valueChange)="setFleetNumber(field.key, $event)" />
+                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (input)="setFleetNumber(field.key, slid($event))" (valueChange)="setFleetNumber(field.key, $event)" />
                   </mat-slider>
                   <span class="value">{{ shown(fleetValue(fleet, field.key)) }}</span>
                 </div>
@@ -435,14 +435,14 @@
     <p class="label">Tint (how much its colour colours what is seen through it)</p>
     <div class="number">
       <mat-slider min="0" max="1" step="0.05">
-        <input matSliderThumb [value]="thing.tint ?? glassDefaults(thing).tint" aria-label="Tint" (valueChange)="setTint($event)" />
+        <input matSliderThumb [value]="thing.tint ?? glassDefaults(thing).tint" aria-label="Tint" (input)="setTint(slid($event))" (valueChange)="setTint($event)" />
       </mat-slider>
       <span class="value">{{ shown(thing.tint ?? glassDefaults(thing).tint) }}</span>
     </div>
     <p class="label">Transparency (how much of what is behind it shows through)</p>
     <div class="number">
       <mat-slider min="0" max="1" step="0.05">
-        <input matSliderThumb [value]="thing.transparency ?? glassDefaults(thing).transparency" aria-label="Transparency" (valueChange)="setTransparency($event)" />
+        <input matSliderThumb [value]="thing.transparency ?? glassDefaults(thing).transparency" aria-label="Transparency" (input)="setTransparency(slid($event))" (valueChange)="setTransparency($event)" />
       </mat-slider>
       <span class="value">{{ shown(thing.transparency ?? glassDefaults(thing).transparency) }}</span>
     </div>

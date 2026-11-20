@@ -54,7 +54,7 @@
           @if (isNumeric(token)) {
             <div class="number">
               <mat-slider [min]="token.min ?? 0" [max]="token.max ?? 100" [step]="token.step ?? 1" [disabled]="!canEdit()">
-                <input matSliderThumb [value]="numberOf(token)" [attr.aria-label]="token.label" (valueChange)="setNumber(token, $event)" />
+                <input matSliderThumb [value]="numberOf(token)" [attr.aria-label]="token.label" (input)="setNumber(token, slid($event))" (valueChange)="setNumber(token, $event)" />
               </mat-slider>
               <span class="value">{{ value(token) }}</span>
             </div>

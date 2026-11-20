@@ -32,4 +32,18 @@ describe('ControlsPanel', () => {
     expect(kind('long')).toBe('select');
     expect(kind('many')).toBe('select');
   });
+
+  it('follows a slider while it is dragged, before it is let go (lenzi, 2026-11-21: a video of the sliders)', async () => {
+    const fixture = TestBed.createComponent(ControlsPanel);
+    fixture.componentRef.setInput('controls', [{ key: 'bezel', label: 'Bezel', type: 'number', default: 28, min: 4, max: 90, step: 1 } satisfies Control]);
+    fixture.componentRef.setInput('values', { bezel: 28 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const thumb = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('input[matSliderThumb]')!;
+    // the thumb's own input moves while it is dragged: its "input" events, no "change" yet
+    thumb.value = '60';
+    thumb.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.values()['bezel']).toBe(60);
+  });
 });

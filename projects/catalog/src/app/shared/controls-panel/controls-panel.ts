@@ -10,6 +10,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { LenziColorPicker } from '@lenzi/ui-kit';
 
 import { Control, Values } from '../../registry';
+import { slid } from '../slid';
 import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /** The pills' room on one line of the panel, px, and what a pill takes: a character of its label, and its own padding. */
@@ -30,6 +31,8 @@ const PILL_PADDING = 32;
 export class ControlsPanel {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
   protected readonly lit = lenziOverBackground();
+  /** A slider's number while it is dragged: the value follows the thumb (lenzi, 2026-11-21). */
+  protected readonly slid = slid;
 
   readonly controls = input.required<readonly Control[]>();
   readonly values = model.required<Values>();

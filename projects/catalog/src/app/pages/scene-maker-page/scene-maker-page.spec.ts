@@ -263,6 +263,21 @@ describe('SceneMakerPage', () => {
     expect('glass' in maker.scene()).toBe(false);
   });
 
+  it('a slider changes the scene while it is dragged, not only once it is let go (2026-11-21, a video of the sliders)', async () => {
+    const { page, maker, fixture } = await open();
+    const glass = maker.scene().blobs.findIndex((blob) => blob.material === 'glass');
+    maker.chosen.set({ type: 'blob', index: glass });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const tint = page.querySelector<HTMLInputElement>('.window input[aria-label="Tint"]')!;
+    // the thumb's own input moves while it is dragged: its "input" events, no "change" yet
+    tint.value = '0.35';
+    tint.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(maker.scene().blobs[glass]!.tint).toBe(0.35);
+    expect(tint.closest('.number')?.querySelector('.value')?.textContent?.trim()).toBe('0.35');
+  });
+
   it("the liquid glass's settings open in a window of their own, beside its toggle; the scene keeps only what differs (2026-11-20)", async () => {
     // lenzi, 2026-11-20: "metti una sezione per il liquidglass nella sezione interna ... per regolare le varie proprietá"
     const { page, maker, fixture } = await open();

@@ -47,6 +47,7 @@ import { KitServer } from '../../shared/kit-server';
 import { SavedScenes } from '../../shared/saved-scenes';
 import { SCENE_LAYERS, SCENE_LIMITS, SCENE_WEIGHTS, cleanScene, sceneFromCode, sceneToCode } from '../../shared/scene-code';
 import { randomScene } from '../../shared/scene-random';
+import { slid } from '../../shared/slid';
 
 /**
  * A scene with every object put somewhere: a blob without a place where the background would have it (its
@@ -293,6 +294,8 @@ export class SceneMakerPage {
   protected readonly liquidSurfaces = LIQUID_SURFACES;
   /** The liquid glass's window, as an object to choose. */
   protected readonly liquidObject: SceneObject = { type: 'liquid' };
+  /** A slider's number while it is dragged: the value follows the thumb (lenzi, 2026-11-21). */
+  protected readonly slid = slid;
 
   protected readonly layers = Array.from({ length: SCENE_LAYERS[1] - SCENE_LAYERS[0] + 1 }, (_, i) => SCENE_LAYERS[0] + i);
 
