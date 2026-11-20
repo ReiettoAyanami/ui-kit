@@ -185,6 +185,11 @@ const LIQUID_MARCH = { steps: 6, halvings: 3 } as const;
 const LIQUID_CLARITY = { own: 0.85, page: 0.94 } as const;
 /** How far an object's share reaches, in its merges: beyond, e^-9 of it. */
 const REACH = 9;
+/**
+ * Glass's hue as a filter is its colour over its strongest channel; a colour darker than this (linear, about #070707) a
+ * darker filter, black none: the filter darkens smoothly towards black instead of jumping there.
+ */
+const HUE_FLOOR = 0.002;
 const FLOATS = 28;
 
 const FIELD_VERTEX = `#version 300 es
@@ -219,8 +224,8 @@ void main() {
   vTint = tint;
 }`;
 
-const FIELD_FRAGMENT = `#version 300 es
-precision highp float;
+// what the field passes share: an object's quad, its shape, and how far inside its edge a place is
+const FIELD_SHAPE = `
 in vec2 offset;
 flat in vec4 vPlace;
 flat in vec4 vTurn;
@@ -229,10 +234,6 @@ flat in vec4 vLobesA;
 flat in vec4 vSuperB;
 flat in vec4 vLobesB;
 flat in vec4 vTint;     // a lamp's colour; glass's colour and how much of it; solid's colour
-layout(location = 0) out vec4 weights;  // glass, solid, the glass that shines, the lamps
-layout(location = 1) out vec4 colours;  // the lamps' colours by share (a little brighter towards its middle), their shares
-layout(location = 2) out vec4 glassTint;  // glass: its colour by share and amount, and its amount by share
-layout(location = 3) out vec4 solidTint;  // solid: its colour by share, and its share
 
 // shapes.ts's shapeRadius: the superformula's rounded polygon times the scallop of the lobes
 float shapeRadius(vec4 s, vec3 l, float angle) {
@@ -257,10 +258,8 @@ float unevenCapsule(vec2 p, float r1, float r2, float h) {
   return dot(p, vec2(a, b)) - r1;
 }
 
-void main() {
-  float far = length(offset);
-  // how far inside its edge, px
-  float edge;
+// how far inside its edge this place is, px
+float edgeHere() {
   if (vTurn.w > 0.5) {
     // a drop: into its own frame, ahead along x; its head, then its tail behind
     float c = cos(vTurn.x);
@@ -268,13 +267,27 @@ void main() {
     vec2 q = vec2(c * offset.x + s * offset.y, -s * offset.x + c * offset.y);
     float r = vPlace.z;
     float head = ${DROP.head.toFixed(2)} * r;
-    edge = -unevenCapsule(vec2(q.y, head - q.x), r, ${DROP.tailRadius.toFixed(2)} * r, head - ${DROP.tail.toFixed(2)} * r);
-  } else {
-    float angle = atan(offset.y, offset.x) + vTurn.x;
-    edge = mix(shapeRadius(vSuperA, vLobesA.xyz, angle), shapeRadius(vSuperB, vLobesB.xyz, angle), vTurn.y) * vPlace.z - far;
+    return -unevenCapsule(vec2(q.y, head - q.x), r, ${DROP.tailRadius.toFixed(2)} * r, head - ${DROP.tail.toFixed(2)} * r);
   }
-  // its share: e^(how far inside its edge, in merges); 1 on its edge. Kept under e^8: half floats add them up
-  float inside = min(edge / max(vPlace.w, 0.5), 8.0);
+  float angle = atan(offset.y, offset.x) + vTurn.x;
+  return mix(shapeRadius(vSuperA, vLobesA.xyz, angle), shapeRadius(vSuperB, vLobesB.xyz, angle), vTurn.y) * vPlace.z - length(offset);
+}
+
+// its share's exponent: how far inside its edge, in merges (its share e^this, 1 on its edge). Kept under 8: half floats
+// add the shares up
+float insideOf(float edge) { return min(edge / max(vPlace.w, 0.5), 8.0); }`;
+
+const FIELD_FRAGMENT = `#version 300 es
+precision highp float;
+${FIELD_SHAPE}
+layout(location = 0) out vec4 weights;  // glass, solid, the glass that shines, the lamps
+layout(location = 1) out vec4 colours;  // the lamps' colours by share (a little brighter towards its middle), their shares
+layout(location = 2) out vec4 glassTint;  // glass: its colour by share and amount, and its amount by share
+layout(location = 3) out vec4 solidTint;  // solid: its colour by share, and its share
+
+void main() {
+  float edge = edgeHere();
+  float inside = insideOf(edge);
   if (inside < -${REACH.toFixed(1)}) discard;
   float w = exp(inside);
   // a colour's share reaches farther than an edge's (a quarter as steep): it fades to nothing before the reach, where
@@ -308,6 +321,25 @@ void main() {
     glassTint = vec4(0.0);
     solidTint = vec4(vTint.rgb * w, 0.0);
   }
+}`;
+
+// Glass's hue as a filter, each glass's own, by its share (lenzi, 2026-11-20: "REPLICATO BUG BANDA BLU"): its colour at
+// full strength (its hue, not its darkness: the darkest colours a darker filter, black none of it). The hues mix where
+// glass meets glass, and a glass's far reach adds only a trace of its hue. Its colour's hue, taken after the colours were
+// mixed, was the trace's alone in a black glass: a black star beside a blue glass took the blue whole, a band of it
+// over the light behind
+const GLASS_HUE_FRAGMENT = `#version 300 es
+precision highp float;
+${FIELD_SHAPE}
+out vec4 hue;
+
+void main() {
+  // glass only
+  if (vTurn.z < 0.5 || vTurn.z > 1.5) discard;
+  float inside = insideOf(edgeHere());
+  if (inside < -${REACH.toFixed(1)}) discard;
+  float most = max(vTint.r, max(vTint.g, vTint.b));
+  hue = vec4(vTint.rgb / max(most, ${HUE_FLOOR.toFixed(4)}) * exp(inside), 0.0);
 }`;
 
 // a level's weights here and one device px to each side: a field's slope is read from them, not from a derivative.
@@ -514,11 +546,12 @@ in vec2 uv;
 uniform sampler2D picture;
 uniform sampler2D blurred;
 // each level's fields, a layer each, the lowest first: the weights, glass's colour and tint, solid's colour (and
-// glass's clarity)
+// glass's clarity), glass's hue as a filter
 uniform int layers;
 uniform sampler2DArray weights;
 uniform sampler2DArray glassTints;
 uniform sampler2DArray solidTints;
+uniform sampler2DArray glassHues;
 // liquid glass (1) or frosted (0); its bezel and largest shift, device px; the shift over the bezel, from the edge in;
 // how saturated what is seen through it is, and how blurred (device px)
 uniform float liquid;
@@ -636,9 +669,10 @@ vec3 level(vec3 c, float layer, Near n, Light l) {
     } else {
       behind = decode(texture(blurred, uv).rgb);
     }
-    // through its colour as a filter (its hue, not its darkness)
-    float most = max(colour.r, max(colour.g, colour.b));
-    vec3 through = behind * mix(vec3(1.0), colour / max(most, 1e-4), tint);
+    // through its colour as a filter (its hue, not its darkness): every glass's own hue, mixed where they meet (the hue
+    // of the mixed colours took a black glass's whole filter from a trace of a blue glass nearby: a blue band)
+    vec3 hue = texture(glassHues, vec3(uv, layer)).rgb / share;
+    vec3 through = behind * mix(vec3(1.0), hue, tint);
     // its own body lit as a surface is (frosted glass takes the light round it): dark where it is dark, so it sits in
     // the scene instead of on it
     vec3 body = colour * (${GLASS_FLOOR.toFixed(3)} + (1.0 - exp(-l.around * ${SOLID_LIGHT.toFixed(2)})));
@@ -798,6 +832,7 @@ void main() {
 
 export class MaterialScene {
   private readonly field: WebGLProgram;
+  private readonly glassHue: WebGLProgram;
   private readonly lamps: WebGLProgram;
   private readonly surfaces: WebGLProgram;
   private readonly solidPass: WebGLProgram;
@@ -834,6 +869,7 @@ export class MaterialScene {
     if (!engine.hasFloat) throw new Error('No half-float targets: the blob materials need them');
     const gl = engine.gl;
     this.field = engine.program(FIELD_FRAGMENT, FIELD_VERTEX);
+    this.glassHue = engine.program(GLASS_HUE_FRAGMENT, FIELD_VERTEX);
     this.lamps = engine.program(LAMPS);
     this.surfaces = engine.program(SURFACES);
     this.solidPass = engine.program(SOLIDS);
@@ -882,9 +918,11 @@ export class MaterialScene {
     gl.uniform2f(engine.uniform(this.field, 'space'), engine.cssWidth, engine.cssHeight);
     const fields = this.fields!;
     this.levels.forEach((objects, slot) => {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fields.framebuffers[slot]!);
       gl.viewport(0, 0, fields.width, fields.height);
       gl.clearColor(0, 0, 0, 0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fields.hueFramebuffers[slot]!);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fields.framebuffers[slot]!);
       gl.clear(gl.COLOR_BUFFER_BIT);
       const count = objects.length;
       if (count === 0) return;
@@ -923,6 +961,13 @@ export class MaterialScene {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, count * FLOATS), gl.DYNAMIC_DRAW);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+      // the glass of the level again: each one's hue as a filter, by its share, into a texture of their own
+      if (objects.some((object) => object.material === 'glass')) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fields.hueFramebuffers[slot]!);
+        gl.useProgram(this.glassHue);
+        gl.uniform2f(engine.uniform(this.glassHue, 'space'), engine.cssWidth, engine.cssHeight);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+      }
       gl.bindVertexArray(null);
       gl.disable(gl.BLEND);
     });
@@ -1100,6 +1145,7 @@ export class MaterialScene {
     this.useLayers(program, 'weights', fields.weights, 4);
     this.useLayers(program, 'glassTints', fields.glass, 5);
     this.useLayers(program, 'solidTints', fields.solid, 6);
+    this.useLayers(program, 'glassHues', fields.hues, 9);
     gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
     this.lightUniforms(program, inputs, look, 7);
     this.liquidUniforms(program, look);
@@ -1217,17 +1263,26 @@ export class MaterialScene {
       gl.drawBuffers(textures.map((_, i) => gl.COLOR_ATTACHMENT0 + i));
       return framebuffer;
     });
+    // glass's hues: a texture of their own, drawn by a pass of their own (four outputs are all WebGL2 promises at once)
+    const hues = layered();
+    const hueFramebuffers = Array.from({ length: MAX_MATERIAL_LAYERS }, (_, layer) => {
+      const framebuffer = gl.createFramebuffer()!;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, hues, 0, layer);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+      return framebuffer;
+    });
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
-    return { width, height, weights: textures[0]!, colours: textures[1]!, glass: textures[2]!, solid: textures[3]!, framebuffers };
+    return { width, height, weights: textures[0]!, colours: textures[1]!, glass: textures[2]!, solid: textures[3]!, hues, framebuffers, hueFramebuffers };
   }
 
   private freeFields(): void {
     const fields = this.fields;
     if (!fields) return;
     const gl = this.engine.gl;
-    for (const framebuffer of fields.framebuffers) gl.deleteFramebuffer(framebuffer);
-    for (const texture of [fields.weights, fields.colours, fields.glass, fields.solid]) gl.deleteTexture(texture);
+    for (const framebuffer of [...fields.framebuffers, ...fields.hueFramebuffers]) gl.deleteFramebuffer(framebuffer);
+    for (const texture of [fields.weights, fields.colours, fields.glass, fields.solid, fields.hues]) gl.deleteTexture(texture);
     this.fields = null;
   }
 
@@ -1240,7 +1295,7 @@ export class MaterialScene {
   }
 }
 
-/** The fields of every level: four textures of a layer a level, a framebuffer a level. */
+/** The fields of every level: four textures of a layer a level, a framebuffer a level; glass's hues and theirs. */
 interface LayeredFields {
   width: number;
   height: number;
@@ -1248,5 +1303,8 @@ interface LayeredFields {
   colours: WebGLTexture;
   glass: WebGLTexture;
   solid: WebGLTexture;
+  /** Glass's hue as a filter, by share (rgb). */
+  hues: WebGLTexture;
   framebuffers: WebGLFramebuffer[];
+  hueFramebuffers: WebGLFramebuffer[];
 }
