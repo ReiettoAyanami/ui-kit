@@ -15,7 +15,7 @@ import { LinearRgb } from './color';
 import { BlobShape } from './shapes';
 import { shapeUniforms } from './blob-field';
 import { GlowEngine, GlowSurfaceInputs, GlowTarget } from './glow-engine';
-import { LIQUID_STEPS, LenziLiquidBlobGlass, LiquidProfile, liquidProfile } from './liquid-profile';
+import { LIQUID_GLASS, LIQUID_STEPS, LenziLiquidBlobGlass, LiquidProfile, liquidProfile } from './liquid-profile';
 
 /** What a blob is made of: a lamp (the glowing blobs), glass, or something solid. */
 export type BlobMaterial = 'lamp' | 'glass' | 'solid';
@@ -170,12 +170,9 @@ const SHADOW_SPREAD = 0.6;
 const AMBIENT = 4;
 const FROST = 0.012;
 /**
- * Liquid glass: how saturated what is seen through it is (1: as it is; the directive's 1.5), at most: only as much as
- * a colour takes without a channel going past white or black (cut there, a lamp's light through a drop ended in a
- * line, lenzi 2026-11-20 "sembra che siano tagliati sopra"; and a glass star turned half blue). How much of the veil
- * it keeps, and how much it is seen through, unless a blob says (its own colour, the page's glass).
+ * Liquid glass: how much of the veil it keeps, and how much it is seen through, unless a blob says (its own colour, the
+ * page's glass). How saturated what is seen through it is, and how blurred, are its look's (`LenziLiquidBlobGlass`).
  */
-const LIQUID_SATURATION = 1.4;
 const LIQUID_VEIL = 0.25;
 /**
  * Liquid glass: where its curved bezel ends. At its width, or nearer where the glass's middle is (a drop, a lobe, any
@@ -522,13 +519,29 @@ uniform int layers;
 uniform sampler2DArray weights;
 uniform sampler2DArray glassTints;
 uniform sampler2DArray solidTints;
-// liquid glass (1) or frosted (0); its bezel and largest shift, device px; the shift over the bezel, from the edge in
+// liquid glass (1) or frosted (0); its bezel and largest shift, device px; the shift over the bezel, from the edge in;
+// how saturated what is seen through it is, and how blurred (device px)
 uniform float liquid;
 uniform float bezelPx;
 uniform float liftPx;
 uniform float profile[${LIQUID_STEPS + 1}];
+uniform float liquidSaturation;
+uniform float liquidBlurPx;
 out vec4 color;
 ${SURFACE_LIGHT}
+
+// what is seen through liquid glass at a place: the picture there, or (blurred) a ring of it round the place and the
+// place itself, the place twice: soft as a small blur is, for nine readings
+vec3 seenAt(vec2 at) {
+  vec3 here = decode(texture(picture, at).rgb);
+  if (liquidBlurPx < 0.25) return here;
+  vec3 sum = here * 2.0;
+  for (int i = 0; i < 8; i++) {
+    float a = float(i) * 0.7853982;
+    sum += decode(texture(picture, at + vec2(cos(a), sin(a)) * liquidBlurPx * pixel).rgb);
+  }
+  return sum / 10.0;
+}
 
 // how far what is seen at a place inside the bezel comes from, inwards, device px (as lenziLiquidGlass bends), over
 // a bezel that ends \`reach\` in: a narrower one is the same lens, smaller (its bending as much smaller)
@@ -540,10 +553,12 @@ float bendAt(float inside, float reach) {
 }
 
 // a colour more saturated, by \`amount\` at most: as much as it takes with every channel still between black and white,
-// so its hue is kept and nothing is cut (a cut channel drew a line where it began)
+// so its hue is kept and nothing is cut (a cut channel drew a line where it began). Under 1, less saturated: towards
+// its grey, which never leaves the channels' bounds
 vec3 saturated(vec3 c, float amount) {
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   vec3 away = c - l;
+  if (amount < 1.0) return l + away * max(amount, 0.0);
   float most = amount;
   for (int i = 0; i < 3; i++) {
     if (away[i] > 1e-5) most = min(most, (1.0 - l) / away[i]);
@@ -614,8 +629,10 @@ vec3 level(vec3 c, float layer, Near n, Light l) {
     if (liquid > 0.5) {
       float bend = 0.0;
       if (glass.inside > 0.0 && glass.inside < bezelPx && length(out_) > 0.0) bend = bendAt(glass.inside, bezelHere(layer, out_, glass.inside));
-      behind = decode(texture(picture, uv - out_ * bend * pixel).rgb);
-      behind = saturated(clamp(behind, 0.0, 1.0), ${LIQUID_SATURATION.toFixed(2)});
+      behind = seenAt(uv - out_ * bend * pixel);
+      // more saturated only as far as a colour takes it, never past white or black (cut there, a lamp's light through a
+      // drop ended in a line, lenzi 2026-11-20 "sembra che siano tagliati sopra"); less saturated, towards grey
+      behind = saturated(clamp(behind, 0.0, 1.0), liquidSaturation);
     } else {
       behind = decode(texture(blurred, uv).rgb);
     }
@@ -1097,7 +1114,7 @@ export class MaterialScene {
     const liquid = look.liquid ?? null;
     gl.uniform1f(engine.uniform(program, 'liquid'), liquid ? 1 : 0);
     if (!liquid) return;
-    const key = `${liquid.bezel}|${liquid.thickness}|${liquid.ior}|${liquid.refraction}`;
+    const key = `${liquid.bezel}|${liquid.thickness}|${liquid.ior}|${liquid.refraction}|${liquid.surface}`;
     if (key !== this.profileKey || !this.profile) {
       this.profileKey = key;
       this.profile = liquidProfile(liquid);
@@ -1105,6 +1122,8 @@ export class MaterialScene {
     gl.uniform1f(engine.uniform(program, 'bezelPx'), Math.max(1, liquid.bezel) * engine.scale);
     gl.uniform1f(engine.uniform(program, 'liftPx'), this.profile.largest * engine.scale);
     gl.uniform1fv(engine.uniform(program, 'profile'), this.profile.shifts);
+    gl.uniform1f(engine.uniform(program, 'liquidSaturation'), Math.max(0, liquid.saturation ?? LIQUID_GLASS.saturation));
+    gl.uniform1f(engine.uniform(program, 'liquidBlurPx'), Math.max(0, liquid.blur ?? LIQUID_GLASS.blur) * engine.scale);
   }
 
   dispose(): void {

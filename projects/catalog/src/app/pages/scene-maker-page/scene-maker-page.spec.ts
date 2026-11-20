@@ -263,6 +263,63 @@ describe('SceneMakerPage', () => {
     expect('glass' in maker.scene()).toBe(false);
   });
 
+  it("the liquid glass's settings open in a window of their own, beside its toggle; the scene keeps only what differs (2026-11-20)", async () => {
+    // lenzi, 2026-11-20: "metti una sezione per il liquidglass nella sezione interna ... per regolare le varie proprietá"
+    const { page, maker, fixture } = await open();
+    const settings = page.querySelector<HTMLButtonElement>('.objects .toggle-row button[aria-label="Liquid glass settings"]');
+    expect(settings).not.toBeNull();
+    settings!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const window = () => page.querySelector<HTMLElement>('.window')!;
+    expect(maker.chosen()).toEqual({ type: 'liquid' });
+    expect(window().querySelector('.window-title')?.textContent?.trim()).toBe('Liquid glass');
+    // frosted: only its toggle, no settings
+    expect(window().querySelectorAll('mat-slider').length).toBe(0);
+    window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().glass).toBe('liquid');
+    // liquid: its profile and its six numbers, at the kit's values
+    expect(window().querySelectorAll('mat-button-toggle').length).toBe(3);
+    expect([...window().querySelectorAll('mat-slider input')].map((input) => input.getAttribute('aria-label'))).toEqual([
+      'Bezel width: how far in from the edge it bends (px)',
+      'Thickness: the thicker, the more it bends (px)',
+      'Refractive index (air is 1)',
+      'Refraction: how much of the bending shows',
+      'Saturation of what is behind it (1: as it is)',
+      'Blur of what is behind it (px)',
+    ]);
+    expect(window().querySelector('.value')?.textContent?.trim()).toBe('33');
+
+    const setter = maker as unknown as { setLiquidNumber(key: string, value: number): void; setLiquidSurface(surface: string): void };
+    setter.setLiquidNumber('bezel', 20);
+    setter.setLiquidNumber('blur', 99);
+    setter.setLiquidSurface('lip');
+    fixture.detectChanges();
+    expect(maker.scene().liquid).toEqual({ bezel: 20, blur: 8, surface: 'lip' });
+    // back to the kit's value: not kept
+    setter.setLiquidNumber('bezel', 33);
+    expect(maker.scene().liquid).toEqual({ blur: 8, surface: 'lip' });
+    // frosted and liquid again: its settings are still there
+    maker.chosen.set({ type: 'liquid' });
+    fixture.detectChanges();
+    window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(maker.scene().glass).toBeUndefined();
+    expect(maker.scene().liquid).toEqual({ blur: 8, surface: 'lip' });
+    window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    // back to the default: the scene says nothing of it
+    [...window().querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('Back to the default'))!.click();
+    fixture.detectChanges();
+    expect('liquid' in maker.scene()).toBe(false);
+    // the window has nothing to take out of the scene
+    expect([...window().querySelectorAll('button')].some((button) => button.textContent?.includes('Remove'))).toBe(false);
+  });
+
   it('throwing is always at hand in the main panel, whatever window is open; the scene row says whether it throws', async () => {
     // 2026-11-17: "after toggling it stays put i can't interact with any object during play" (the scene threw nothing),
     // then "fai in modo che sia sempre configurabile, dal pannello generale"

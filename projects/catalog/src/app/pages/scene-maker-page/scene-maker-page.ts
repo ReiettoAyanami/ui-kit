@@ -35,6 +35,11 @@ import {
   LenziCurrent,
   STRONGEST_CURRENT,
   blobOutline,
+  LIQUID_GLASS,
+  LIQUID_GLASS_LIMITS,
+  LIQUID_GLASS_SURFACES,
+  LenziGlassSurface,
+  LenziLiquidGlassNumber,
 } from '@lenzi/ui-kit/backgrounds';
 
 import { HOME_SCENE } from '../../scenes';
@@ -89,14 +94,43 @@ export function layerOf(object: { material?: BlobMaterial; layer?: number }, kin
   return object.layer ?? (kind === 'boid' ? 0 : MATERIAL_LAYERS[object.material ?? 'lamp']);
 }
 
-/** What the window on the left shows: the scene's own settings, a blob, or a fleet's leader. */
+/** What the window on the left shows: the scene's own settings, its liquid glass, a blob, or a fleet's leader. */
 export type SceneObject =
   | { type: 'scene' }
+  /** The scene's liquid glass (lenzi, 2026-11-20: "una sezione per il liquidglass ... per regolare le varie proprietá"). */
+  | { type: 'liquid' }
   | { type: 'blob'; index: number }
   | { type: 'fleet'; index: number }
   | { type: 'current'; index: number }
   /** A current's point: moved by the pointer, its current's window open. */
   | { type: 'point'; current: number; point: number };
+
+/** A number of the scene's liquid glass the window changes, with its bounds (the kit's). */
+interface LiquidField {
+  key: LenziLiquidGlassNumber;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+}
+
+/** The liquid glass's numbers, in the window's order: its lens, then what is seen through it. */
+const LIQUID_FIELDS: readonly LiquidField[] = (
+  [
+    ['bezel', 'Bezel width: how far in from the edge it bends (px)'],
+    ['thickness', 'Thickness: the thicker, the more it bends (px)'],
+    ['ior', 'Refractive index (air is 1)'],
+    ['refraction', 'Refraction: how much of the bending shows'],
+    ['saturation', 'Saturation of what is behind it (1: as it is)'],
+    ['blur', 'Blur of what is behind it (px)'],
+  ] as const
+).map(([key, label]) => ({ key, label, ...LIQUID_GLASS_LIMITS[key] }));
+
+/** The bezel's profiles, as the window names them. */
+const LIQUID_SURFACES: readonly { value: LenziGlassSurface; label: string }[] = LIQUID_GLASS_SURFACES.map((value) => ({
+  value,
+  label: value === 'squircle' ? 'Squircle' : value === 'circle' ? 'Round' : 'Lip',
+}));
 
 /** One key for an object, to tell whether two are the same. */
 const keyOf = (object: SceneObject | null): string =>
@@ -255,6 +289,10 @@ export class SceneMakerPage {
   protected readonly emitsOf = emitsOf;
   protected readonly weights = SCENE_WEIGHTS;
   protected readonly materials: readonly BlobMaterial[] = ['lamp', 'glass', 'solid'];
+  protected readonly liquidFields = LIQUID_FIELDS;
+  protected readonly liquidSurfaces = LIQUID_SURFACES;
+  /** The liquid glass's window, as an object to choose. */
+  protected readonly liquidObject: SceneObject = { type: 'liquid' };
 
   protected readonly layers = Array.from({ length: SCENE_LAYERS[1] - SCENE_LAYERS[0] + 1 }, (_, i) => SCENE_LAYERS[0] + i);
 
@@ -684,7 +722,7 @@ export class SceneMakerPage {
    * the snackbar offers to put it back.
    */
   protected remove(object: SceneObject | null = this.chosen()): void {
-    if (!object || object.type === 'scene' || object.type === 'point') return;
+    if (!object || object.type === 'scene' || object.type === 'liquid' || object.type === 'point') return;
     const { type, index } = object;
     const scene = this.scene();
     const blob = type === 'blob' ? scene.blobs[index] : undefined;
@@ -739,9 +777,44 @@ export class SceneMakerPage {
     this.scene.update((scene) => ({ ...scene, throwable }));
   }
 
-  /** The glass of the scene: liquid, or the page's frosted glass (not said). */
+  /**
+   * The glass of the scene: liquid, or the page's frosted glass (not said). Its liquid settings stay while it is frosted,
+   * for the next time it is liquid (a link carries them only with liquid glass).
+   */
   protected setLiquid(liquid: boolean): void {
     this.scene.update(({ glass: _, ...scene }) => (liquid ? { ...scene, glass: 'liquid' } : scene));
+  }
+
+  /** A number of the scene's liquid glass: its own, or the kit's (`LIQUID_GLASS`). */
+  protected liquidValue(key: LenziLiquidGlassNumber): number {
+    return this.scene().liquid?.[key] ?? LIQUID_GLASS[key];
+  }
+
+  /** The bezel's profile of the scene's liquid glass. */
+  protected liquidSurface(): LenziGlassSurface {
+    return this.scene().liquid?.surface ?? LIQUID_GLASS.surface;
+  }
+
+  /** A setting of the liquid glass: only what differs from the kit's is kept in the scene. */
+  private setLiquidSetting<K extends keyof typeof LIQUID_GLASS>(key: K, value: (typeof LIQUID_GLASS)[K]): void {
+    this.scene.update(({ liquid, ...scene }) => {
+      const { [key]: _old, ...rest } = liquid ?? {};
+      const next = value === LIQUID_GLASS[key] ? rest : { ...rest, [key]: value };
+      return Object.keys(next).length ? { ...scene, liquid: next } : scene;
+    });
+  }
+
+  protected setLiquidNumber(key: LenziLiquidGlassNumber, value: number): void {
+    if (Number.isFinite(value)) this.setLiquidSetting(key, Math.min(LIQUID_GLASS_LIMITS[key].max, Math.max(LIQUID_GLASS_LIMITS[key].min, value)));
+  }
+
+  protected setLiquidSurface(surface: LenziGlassSurface): void {
+    if (LIQUID_GLASS_SURFACES.includes(surface)) this.setLiquidSetting('surface', surface);
+  }
+
+  /** The kit's liquid glass again. */
+  protected resetLiquid(): void {
+    this.scene.update(({ liquid: _, ...scene }) => scene);
   }
 
   /** A shape the blob keeps, or none ('': it changes from one into another). */

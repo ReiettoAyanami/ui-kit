@@ -40,6 +40,12 @@ describe('sceneLayout', () => {
     expect(sceneLayout({ ...HOME, glass: 'liquid' }).glass).toBe('liquid');
   });
 
+  it('gives the liquid glass its settings, within bounds, only when its glass is liquid (lenzi, 2026-11-20)', () => {
+    expect(sceneLayout({ ...HOME, glass: 'liquid', liquid: { bezel: 20, surface: 'circle', blur: 99 } }).liquid).toEqual({ bezel: 20, surface: 'circle', blur: 8 });
+    expect(sceneLayout({ ...HOME, glass: 'liquid' }).liquid).toBeNull();
+    expect(sceneLayout({ ...HOME, liquid: { bezel: 20 } }).liquid).toBeNull();
+  });
+
   it("each fleet keeps its leader's ways, its size and its sizes' variety; a fleet without boids is left out", () => {
     const layout = sceneLayout({
       blobs: [],

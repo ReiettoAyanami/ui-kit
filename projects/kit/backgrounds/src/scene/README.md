@@ -58,7 +58,9 @@ contenente boidi, blob, boidi-blob").
   objects (the one on top) lets light get through still", "the shadows too"); dark far from light, coloured by it,
   their edge lit on the light's side. They are drawn into the picture before glass blurs it, so glass on their level
   or above (shining or not) shows them; opaque always. Their shadow takes all the glow behind them, with a soft edge
-  (a lamp is wide: the edge is wider the farther from what casts it), and falls on solid things and glass too. A
+  (a lamp is wide: the edge is wider the farther from what casts it), and falls on solid things and glass too, on its
+  own level and the ones under it, never on one above it (lenzi, 2026-11-20: a glass star over a solid blob was half
+  in its shadow, "found this other bug"; by default glass is a level above, so out of the solid things' shadows). A
   solid that shines (a lamp) is far brighter: its light is `LAMP_SHINE` (2.6) times what glass that shines has (lenzi,
   2026-11-17: "fai in modo che gli oggetti solidi ed emittenti ... siano piú luminosi"; it was 1, and the lamps looked
   dull beside shining glass; the words on lit glass over a lamp are a little less clear for it). Its body shows its own
@@ -76,7 +78,11 @@ contenente boidi, blob, boidi-blob").
   `'page'`, on the whole page (they scroll with it and fly across it, turning at its edges); `'screen'` or not said,
   the window. The blobs stay on the window.
 - **Its glass** (`glass`; lenzi, 2026-11-19): `'liquid'`, the glass blobs and blob-boids bend what is behind them near
-  their edge (see the blob background's README); `'frosted'` or not said, the page's glass.
+  their edge (see the blob background's README); `'frosted'` or not said, the page's glass. **Its liquid glass**
+  (`liquid`; lenzi, 2026-11-20: "una sezione per il liquidglass ... per regolare le varie proprietá dello stesso"): only
+  what differs from `LIQUID_GLASS` (`bezel`, `thickness`, `ior`, `refraction`, `surface`, `saturation`, `blur`), kept
+  within `LIQUID_GLASS_LIMITS`; it counts only with liquid glass. The catalog's scene maker sets it in the window of
+  its liquid glass (the button beside its switch).
 - **A lighter scene on a phone** (`phoneScene`; lenzi, 2026-11-20: "B: A, più la scena che sceglie da sola"): on a
   window under 600 px (`lenziPhone()`, the kit's line) it draws that one instead, and changes with the window. The
   app writes no code to choose it. Not given: `scene` everywhere.
@@ -108,7 +114,7 @@ contenente boidi, blob, boidi-blob").
 
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, shapes?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
-wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space?, glass? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
+wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space?, glass?, liquid? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
 tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
 
 ## Example

@@ -27,7 +27,8 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
 - **Blobs of a material** (`materials`, each blob's in order, round again; lenzi, 2026-11-14: blobs "di vetro
   o solidi"): `lamp` (the glowing blobs), `glass` (it blurs what is behind it and takes the light around it,
   on its face and along its edge, as the page's glass), `solid` (the page's surface, its edge lit on the side
-  of the light, and a hard shadow on the glow behind it, the shadow following its shape). Blobs melt only
+  of the light, and a hard shadow on the glow behind it, the shadow following its shape, on its own level and the
+  ones under it, never on one above it: glass over it is not in its shadow, lenzi 2026-11-20). Blobs melt only
   into blobs of their own material. `blobSizes` gives each blob its own size ("un blob grande, un/due blob
   piccoli dello stesso materiale").
 - **Liquid glass** (`glass="liquid"`; lenzi, 2026-11-19: "capire se questa tecnica per il rendering del vetro si
@@ -37,10 +38,12 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   as they turn, change shape and melt into one another: the blobs' field gives the distance from the edge and its
   normal at every place, and the bezel's bending is read there. It bends what the background draws (the glow, the
   boids, the other blobs), not the page over it; WebGL2, so every browser that draws the blobs (the directive bends
-  only in Chromium). `liquid` tunes it: `{ bezel, thickness, ior, refraction }` (`LIQUID_GLASS`: 33 px, 72 px, 1.5, 1;
-  1.5 times the first lens, lenzi 2026-11-20). A blob-boid, thinner than two bezels, takes the lens smaller, to its
-  middle; what is seen through it is more saturated only as far as a colour takes it (no line through a drop over a
-  lamp). One kind of glass for all the glass blobs of a background.
+  only in Chromium). `liquid` tunes it with the directive's optics (lenzi, 2026-11-20: "per regolare le varie proprietá
+  dello stesso"): `{ bezel, thickness, ior, refraction, surface, saturation, blur }`, only what differs from
+  `LIQUID_GLASS` (33 px, 72 px, 1.5, 1, `squircle`, 1.4, 0 px), each within `LIQUID_GLASS_LIMITS`. A blob-boid, thinner
+  than two bezels, takes the lens smaller, to its middle; what is seen through it is more saturated only as far as a
+  colour takes it (no line through a drop over a lamp), greyer under 1, softened by `blur`. One kind of glass for all
+  the glass blobs of a background.
 - **Fleets of blob-boids** (`blobFlocks`: `{ material, count, colonies?, size? }`; "un tipo di boid che puó
   essere un blob di qualsiasi materiale"): boids that are blobs, drops as the boids are ("i blob boidi fai che
   siano gocce pure loro": a round head `size` px wide, 11 by default, narrowing to a round tail, pointing

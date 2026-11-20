@@ -1640,6 +1640,86 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
     height: 480,
   },
   {
+    id: 'liquid-glass',
+    name: 'Liquid glass',
+    category: 'Light',
+    summary: 'Clear glass that bends what is behind it near its curved edge, with no border: only a rim of light when boids come near.',
+    api: '[lenziLiquidGlass]',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-19 ("quasi come il liquid glass di IOS"); its page 2026-11-20 ("per regolare le varie proprietá dello stesso")',
+    files: [
+      'backgrounds/src/liquid-glass/liquid-glass.ts',
+      'backgrounds/src/liquid-glass/liquid-glass-maps.ts',
+      'backgrounds/src/liquid-glass/liquid-glass-maps.spec.ts',
+      'backgrounds/src/engine/liquid-profile.ts',
+    ],
+    ...docs('backgrounds/src/liquid-glass'),
+    demo: () => import('./demos/liquid-glass-demo/liquid-glass-demo').then((m) => m.LiquidGlassDemo),
+    controls: [
+      {
+        key: 'behind',
+        label: 'Behind it',
+        type: 'select',
+        default: 'scene',
+        options: [
+          { value: 'scene', label: 'the home’s scene: blobs and boids' },
+          { value: 'blobs', label: 'blobs' },
+          { value: 'flock', label: 'a flock' },
+          { value: 'picture', label: 'a picture (its lines show the bending best)' },
+        ],
+        code: false,
+      },
+      { key: 'bezel', label: 'Bezel width: how far in from the edge it bends (px)', type: 'number', default: 28, min: 4, max: 90, step: 1 },
+      { key: 'thickness', label: 'Thickness: the thicker, the more it bends (px)', type: 'number', default: 56, min: 0, max: 200, step: 1 },
+      { key: 'ior', label: 'Refractive index (air is 1)', type: 'number', default: 1.5, min: 1, max: 3, step: 0.05 },
+      { key: 'refraction', label: 'Refraction: how much of the bending shows', type: 'number', default: 1, min: 0, max: 3, step: 0.05 },
+      {
+        key: 'surface',
+        label: 'The bezel’s profile',
+        type: 'select',
+        default: 'squircle',
+        options: [
+          { value: 'squircle', label: 'squircle (Apple’s, convex)' },
+          { value: 'circle', label: 'round: it bends more at once' },
+          { value: 'lip', label: 'lip: convex, then concave' },
+        ],
+      },
+      { key: 'blur', label: 'Blur of what is behind it (px)', type: 'number', default: 1.5, min: 0, max: 12, step: 0.25 },
+      { key: 'saturation', label: 'Saturation of what is behind it (1: as it is)', type: 'number', default: 1.5, min: 0, max: 3, step: 0.05 },
+      { key: 'rim', label: 'Rim light, at most (0 to 1)', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05 },
+      { key: 'lightAngle', label: 'The rim’s light comes from (degrees, -90 the top)', type: 'number', default: -60, min: -180, max: 180, step: 5 },
+      { key: 'rimBoids', label: 'Boids near it for its whole rim', type: 'number', default: 60, min: 1, max: 300, step: 1 },
+      { key: 'radius', label: 'The window’s corners (px)', type: 'number', default: 28, min: 0, max: 80, step: 1, code: { match: /border-radius:\s*(\d+)px/ } },
+    ],
+    usage: (v) => `<!-- import { LenziLiquidGlass } from '@lenzi/ui-kit/backgrounds'; -->
+<!-- over a background: clear glass needs something behind it to bend (a scene, a picture) -->
+<lenzi-scene [scene]="scene" />
+
+${tag('section', [
+  'class="window"',
+  'lenziLiquidGlass',
+  bound('bezel', v['bezel'], 28),
+  bound('thickness', v['thickness'], 56),
+  bound('ior', v['ior'], 1.5),
+  bound('refraction', v['refraction'], 1),
+  plain('surface', v['surface'], 'squircle'),
+  bound('blur', v['blur'], 1.5),
+  bound('saturation', v['saturation'], 1.5),
+  bound('rim', v['rim'], 0.5),
+  bound('lightAngle', v['lightAngle'], -60),
+  bound('rimBoids', v['rimBoids'], 60),
+]).replace(/\/>$/, '>…</section>')}
+
+<!-- its corners and padding, nothing else: no border, background, shadow or backdrop-filter of its own -->
+<style>
+  .window { border-radius: ${v['radius']}px; padding: 24px 32px; }
+</style>
+
+<!-- the blobs' own liquid glass is a background's (glass="liquid", [liquid]) and a scene's (glass: 'liquid', liquid) -->`,
+    usageLanguage: 'html',
+    height: 560,
+  },
+  {
     id: 'glow',
     name: 'Glowing elements',
     category: 'Light',

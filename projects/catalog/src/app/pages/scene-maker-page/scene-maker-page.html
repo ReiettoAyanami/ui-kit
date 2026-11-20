@@ -181,8 +181,23 @@
            2026-11-17: "fai in modo che sia sempre configurabile, dal pannello generale non solo quando non c'é", then
            "dev'essere nel pannello generale, non in quello dei blob", an arrow at the panel's foot) -->
       <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
-      <!-- how its glass looks, under it (lenzi, 2026-11-19: "un'altra scelta nel kit"): the page's frosted glass, or liquid -->
-      <mat-slide-toggle class="toggle" [checked]="scene().glass === 'liquid'" (change)="setLiquid($event.checked)">Liquid glass: it bends what is behind it</mat-slide-toggle>
+      <!-- how its glass looks, under it (lenzi, 2026-11-19: "un'altra scelta nel kit"): the page's frosted glass, or liquid;
+           beside it, its settings in a window of their own (2026-11-20: "una sezione per il liquidglass ... per regolare le
+           varie proprietá dello stesso") -->
+      <div class="toggle-row">
+        <mat-slide-toggle class="toggle" [checked]="scene().glass === 'liquid'" (change)="setLiquid($event.checked)">Liquid glass: it bends what is behind it</mat-slide-toggle>
+        <button
+          mat-icon-button
+          type="button"
+          class="settings"
+          aria-label="Liquid glass settings"
+          matTooltip="Its settings"
+          [attr.aria-pressed]="isChosen(liquidObject)"
+          (click)="choose(liquidObject)"
+        >
+          <mat-icon>tune</mat-icon>
+        </button>
+      </div>
     </mat-card-content>
   </mat-card>
 
@@ -205,6 +220,9 @@
               @case ('current') {
                 A current
               }
+              @case ('liquid') {
+                Liquid glass
+              }
             }
           </h2>
           <button mat-icon-button type="button" aria-label="Close" (click)="chosen.set(null)">
@@ -218,6 +236,34 @@
               <mat-label>Name</mat-label>
               <input matInput [value]="scene().name ?? ''" [attr.maxlength]="limits.name" (input)="setName($any($event.target).value)" />
             </mat-form-field>
+          }
+          @case ('liquid') {
+            <!-- every glass blob and blob-boid of the scene: one liquid glass for all of them, as lenziLiquidGlass's optics -->
+            <p class="hint">Every glass blob and blob-boid of the scene: clear, and bent near its edge by a curved bezel.</p>
+            <mat-slide-toggle class="toggle" [checked]="scene().glass === 'liquid'" (change)="setLiquid($event.checked)">Liquid glass: it bends what is behind it</mat-slide-toggle>
+            @if (scene().glass === 'liquid') {
+              <p class="label">The bezel's profile</p>
+              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The bezel's profile" [value]="liquidSurface()" (change)="setLiquidSurface($event.value)">
+                @for (surface of liquidSurfaces; track surface.value) {
+                  <mat-button-toggle [value]="surface.value">{{ surface.label }}</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+              @for (field of liquidFields; track field.key) {
+                <p class="label">{{ field.label }}</p>
+                <div class="number">
+                  <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
+                    <input matSliderThumb [value]="liquidValue(field.key)" [attr.aria-label]="field.label" (valueChange)="setLiquidNumber(field.key, $event)" />
+                  </mat-slider>
+                  <span class="value">{{ shown(liquidValue(field.key)) }}</span>
+                </div>
+              }
+              @if (scene().liquid) {
+                <button mat-stroked-button type="button" class="remove" (click)="resetLiquid()">
+                  <mat-icon>restart_alt</mat-icon>
+                  Back to the default
+                </button>
+              }
+            }
           }
           @case ('blob') {
             @if (chosenBlob(); as blob) {

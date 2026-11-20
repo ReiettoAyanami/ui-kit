@@ -6,7 +6,7 @@ import { LenziBlobBackground } from '../blob-background/blob-background';
 import { LenziBlobFlock, LenziBlobFlockBackground, LenziBoidFlock, LenziFleetWays } from '../blob-flock-background/blob-flock-background';
 import { BlobState, DEFAULT_BLOBS, LenziBlobSpec } from '../engine/blob-field';
 import { BlobMaterial } from '../engine/blob-materials';
-import { LenziGlassKind } from '../engine/liquid-profile';
+import { LenziGlassKind, LenziLiquidBlobGlass, cleanLiquidGlass } from '../engine/liquid-profile';
 import { BoidsFollow } from '../engine/boids';
 import { BlobShapeName } from '../engine/shapes';
 import { LenziCurrent } from '../engine/currents';
@@ -98,6 +98,12 @@ export interface LenziScene {
    * bends what is behind it near its edge (`LenziBlobBackground.glass`).
    */
   glass?: LenziGlassKind;
+  /**
+   * Its liquid glass, when `glass` is 'liquid' (lenzi, 2026-11-20: "una sezione per il liquidglass ... per regolare le
+   * varie proprietá dello stesso"): only what it says differently from `LIQUID_GLASS` (the bezel, its profile, the
+   * thickness, the refractive index, the refraction, the saturation, the blur).
+   */
+  liquid?: Partial<LenziLiquidBlobGlass>;
 }
 
 /** What the backgrounds are given for a scene. */
@@ -119,6 +125,8 @@ export interface LenziSceneLayout {
   space: 'screen' | 'page';
   /** How the glass blobs look. */
   glass: LenziGlassKind;
+  /** Their liquid glass, what it says (liquid only); null: `LIQUID_GLASS`. */
+  liquid: Partial<LenziLiquidBlobGlass> | null;
 }
 
 type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean; shapes?: BlobShapeName[] };
@@ -151,6 +159,7 @@ export function sceneLayout(scene: LenziScene): LenziSceneLayout {
     follow: scene.follow ?? 'near',
     throwable: scene.throwable === true,
     glass: scene.glass === 'liquid' ? 'liquid' : 'frosted',
+    liquid: scene.glass === 'liquid' ? cleanLiquidGlass(scene.liquid) : null,
     space: scene.space === 'page' ? 'page' : 'screen',
   };
 }

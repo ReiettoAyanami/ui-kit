@@ -13,6 +13,7 @@
     [throwable]="shown.throwable && !making"
     [space]="making ? 'screen' : shown.space"
     [glass]="shown.glass"
+    [liquid]="shown.liquid"
   />
 } @else {
   <lenzi-blob-background
@@ -24,5 +25,6 @@
     [throwable]="shown.throwable && !making"
     [pull]="0"
     [glass]="shown.glass"
+    [liquid]="shown.liquid"
   />
 }

@@ -1,0 +1,60 @@
+@switch (behind()) {
+  @case ('blobs') {
+    <lenzi-blob-background />
+  }
+  @case ('flock') {
+    <lenzi-flock-background [count]="500" [trails]="0.5" />
+  }
+  @case ('picture') {
+    <lenzi-background image="demo/hills.svg" />
+  }
+  @default {
+    <lenzi-scene [scene]="scene" />
+  }
+}
+
+<!-- Two pieces of Liquid Glass, each dragged anywhere in the frame: what is behind bends near their edge. -->
+<div class="field">
+  @for (corner of radius(); track corner) {
+    <section
+      class="window"
+      cdkDrag
+      cdkDragBoundary=".field"
+      lenziLiquidGlass
+      [style.border-radius.px]="corner"
+      [bezel]="bezel()"
+      [thickness]="thickness()"
+      [ior]="ior()"
+      [refraction]="refraction()"
+      [surface]="surface()"
+      [blur]="blur()"
+      [saturation]="saturation()"
+      [rim]="rim()"
+      [lightAngle]="lightAngle()"
+      [rimBoids]="rimBoids()"
+    >
+      <h2 class="title">Liquid glass</h2>
+      <p class="words">Drag it about: what is behind it bends near its edge, and its rim lights up as the boids come near.</p>
+    </section>
+  }
+
+  <div
+    class="pill"
+    cdkDrag
+    cdkDragBoundary=".field"
+    lenziLiquidGlass
+    [bezel]="bezel()"
+    [thickness]="thickness()"
+    [ior]="ior()"
+    [refraction]="refraction()"
+    [surface]="surface()"
+    [blur]="blur()"
+    [saturation]="saturation()"
+    [rim]="rim()"
+    [lightAngle]="lightAngle()"
+    [rimBoids]="rimBoids()"
+  >
+    <mat-icon aria-hidden="true">water_drop</mat-icon>
+    <span>A pill of it</span>
+  </div>
+</div>

@@ -64,6 +64,15 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 .window { border-radius: 28px; padding: 24px 32px; }
 ```
 
+## The blobs' liquid glass
+
+The glass blobs of a background (`glass="liquid"`, `[liquid]`) and of a scene (`glass: 'liquid'`, `liquid`) take the
+same optics, drawn by WebGL instead of an SVG filter: `bezel`, `thickness`, `ior`, `refraction`, `surface`,
+`saturation`, `blur` (`LenziLiquidBlobGlass`, `LIQUID_GLASS`; no rim of their own: their edge takes the scene's light).
+See the blob background's README.
+
 ## Origin
 
-New in the kit (2026-11-19), for lenzi-dev.
+New in the kit (2026-11-19), for lenzi-dev. Its page in the catalog, every setting a parameter over a scene, blobs, a
+flock or a picture (2026-11-20: "nella pagina del liquid glass nei components per regolare le varie proprietá dello
+stesso").

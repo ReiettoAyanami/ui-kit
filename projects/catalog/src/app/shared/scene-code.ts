@@ -1,7 +1,18 @@
 // A scene in a link and back (lenzi, 2026-11-14: "Voglio che peró una scena sia ricreabile tramite un link
 // (corto) condivisibile e iframe"): the scene's JSON, deflated, in base64url; read back, everything in it is
 // checked and kept within bounds (a link comes from anyone). A plain module (no schematic makes one).
-import { BLOB_SHAPE_NAMES, BlobMaterial, BlobShapeName, BoidsFollow, LenziCurrent, LenziScene, LenziSceneBlob, LenziSceneFleet, STRONGEST_CURRENT } from '@lenzi/ui-kit/backgrounds';
+import {
+  BLOB_SHAPE_NAMES,
+  BlobMaterial,
+  BlobShapeName,
+  BoidsFollow,
+  LenziCurrent,
+  LenziScene,
+  LenziSceneBlob,
+  LenziSceneFleet,
+  STRONGEST_CURRENT,
+  cleanLiquidGlass,
+} from '@lenzi/ui-kit/backgrounds';
 
 /** How much a scene may hold: what a phone and a page can carry. */
 export const SCENE_LIMITS = { blobs: 16, fleets: 8, perFleet: 1000, name: 60, colours: 6, currents: 4, points: 12 } as const;
@@ -110,7 +121,12 @@ export function cleanScene(raw: unknown): LenziScene | null {
   if (typeof scene['name'] === 'string' && scene['name'].trim()) out.name = scene['name'].trim().slice(0, SCENE_LIMITS.name);
   if (FOLLOWS.includes(scene['follow'] as BoidsFollow)) out.follow = scene['follow'] as BoidsFollow;
   if (scene['throwable'] === true) out.throwable = true;
-  if (scene['glass'] === 'liquid') out.glass = 'liquid';
+  if (scene['glass'] === 'liquid') {
+    out.glass = 'liquid';
+    // its liquid glass, as far as it says it (lenzi, 2026-11-20: "per regolare le varie proprietá"), within bounds
+    const liquid = cleanLiquidGlass(scene['liquid']);
+    if (liquid) out.liquid = liquid;
+  }
   return out;
 }
 

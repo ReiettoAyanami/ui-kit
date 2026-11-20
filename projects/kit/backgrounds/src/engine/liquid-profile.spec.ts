@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { bezelShift } from '../liquid-glass/liquid-glass-maps';
-import { LIQUID_GLASS, LIQUID_STEPS, liquidLookOf, liquidProfile } from './liquid-profile';
+import { LIQUID_GLASS, LIQUID_GLASS_LIMITS, LIQUID_GLASS_SURFACES, LIQUID_STEPS, cleanLiquidGlass, liquidLookOf, liquidProfile } from './liquid-profile';
 
 describe('liquidProfile', () => {
   it('is the directive’s bending over the bezel, a share of the largest', () => {
@@ -45,5 +45,46 @@ describe('liquidLookOf', () => {
     expect(liquidLookOf(null)).toBeNull();
     expect(liquidLookOf('liquid')).toEqual(LIQUID_GLASS);
     expect(liquidLookOf('liquid', { bezel: 10 })).toEqual({ ...LIQUID_GLASS, bezel: 10 });
+  });
+
+  it('takes a setting said as undefined as not said', () => {
+    expect(liquidLookOf('liquid', { bezel: undefined, blur: 2 })).toEqual({ ...LIQUID_GLASS, blur: 2 });
+  });
+});
+
+describe('the blobs’ liquid glass settings (lenzi, 2026-11-20: "per regolare le varie proprietá")', () => {
+  it('bends by the bezel’s profile it says: a round one bends more at once than the squircle', () => {
+    const squircle = liquidProfile(LIQUID_GLASS);
+    const circle = liquidProfile({ ...LIQUID_GLASS, surface: 'circle' });
+    expect(Array.from(circle.shifts)).not.toEqual(Array.from(squircle.shifts));
+    expect(liquidProfile({ ...LIQUID_GLASS, surface: undefined }).shifts).toEqual(squircle.shifts);
+  });
+
+  it('is sharp and a little more saturated than the picture unless told', () => {
+    expect(LIQUID_GLASS.surface).toBe('squircle');
+    expect(LIQUID_GLASS.saturation).toBe(1.4);
+    expect(LIQUID_GLASS.blur).toBe(0);
+  });
+
+  it('keeps from a link only its settings, each within its bounds', () => {
+    expect(cleanLiquidGlass({ bezel: 1000, thickness: -5, ior: 2, surface: 'lip', blur: 3, colour: '#fff', saturation: Number.NaN })).toEqual({
+      bezel: LIQUID_GLASS_LIMITS.bezel.max,
+      thickness: LIQUID_GLASS_LIMITS.thickness.min,
+      ior: 2,
+      surface: 'lip',
+      blur: 3,
+    });
+    expect(cleanLiquidGlass({ surface: 'wavy' })).toBeNull();
+    expect(cleanLiquidGlass('liquid')).toBeNull();
+    expect(cleanLiquidGlass(null)).toBeNull();
+  });
+
+  it('has every default inside its bounds, and every profile as a choice', () => {
+    for (const [key, limits] of Object.entries(LIQUID_GLASS_LIMITS)) {
+      const value = LIQUID_GLASS[key as keyof typeof LIQUID_GLASS_LIMITS];
+      expect(value).toBeGreaterThanOrEqual(limits.min);
+      expect(value).toBeLessThanOrEqual(limits.max);
+    }
+    expect(LIQUID_GLASS_SURFACES).toEqual(['squircle', 'circle', 'lip']);
   });
 });
