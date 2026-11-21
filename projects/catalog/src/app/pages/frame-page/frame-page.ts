@@ -1,5 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import { Component, DOCUMENT, DestroyRef, Type, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, Type, computed, effect, inject, input, signal, untracked } from '@angular/core';
 
 import { LenziStatusMessage } from '@lenzi/ui-kit';
 
@@ -30,12 +30,14 @@ export class FramePage {
   protected readonly inputs = computed(() => ({ values: this.values() }));
 
   constructor() {
+    // The address's values when the frame starts with its demo, and only then: a link followed inside the demo (its
+    // navigation list's) leaves them out of the address, and the demo keeps the ones the page sent since.
     effect(() => {
       const doc = this.doc();
       if (!doc) return;
       let start: Values = defaults(doc);
       try {
-        start = { ...start, ...(JSON.parse(this.v() ?? '{}') as Values) };
+        start = { ...start, ...(JSON.parse(untracked(() => this.v()) ?? '{}') as Values) };
       } catch {
         // a broken address: the defaults
       }
