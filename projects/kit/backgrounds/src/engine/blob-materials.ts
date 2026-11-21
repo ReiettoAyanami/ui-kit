@@ -372,6 +372,26 @@ void main() {
   hue = vec4(own * w, vExtra.x * w);
 }`;
 
+/**
+ * A fragment shader whose reads are at level 0, said so (`textureLod`): with no derivative to take, a read inside a
+ * branch or a loop leaves the compiler free to skip it. Chrome on Windows turns WebGL into Direct3D 11 (ANGLE), which
+ * flattened them instead: the glass's loops (its blur's rings, the walk to its bezel's end) ran for every place of the
+ * screen, glass or not, and a scene with glass doubled its GPU time on an integrated GPU (lenzi, 2026-11-21: "quante
+ * risorse servono per la home"). The textures have no other level.
+ */
+function levelZero(source: string): string {
+  const reads = `
+vec4 tex(sampler2D s, vec2 p) { return textureLod(s, p, 0.0); }
+vec4 tex(highp sampler2DArray s, vec3 p) { return textureLod(s, p, 0.0); }
+`;
+  const lines = source.replace(/\btexture\(/g, 'tex(').split('\n');
+  // after the version and the precisions, before anything reads
+  let at = 0;
+  while (at + 1 < lines.length && /^(#version|precision)\b/.test(lines[at + 1]!.trim())) at++;
+  lines.splice(at + 1, 0, reads);
+  return lines.join('\n');
+}
+
 // a level's weights here and one device px to each side: a field's slope is read from them, not from a derivative.
 // Where the levels are walked in a loop a derivative is not to be trusted (on some GPUs it is nothing): every solid
 // and glass edge was a staircase, with no border and no lit rim (lenzi, 2026-11-15, "something is buggy")
@@ -913,11 +933,11 @@ export class MaterialScene {
     const gl = engine.gl;
     this.field = engine.program(FIELD_FRAGMENT, FIELD_VERTEX);
     this.glassHue = engine.program(GLASS_HUE_FRAGMENT, FIELD_VERTEX);
-    this.lamps = engine.program(LAMPS);
-    this.surfaces = engine.program(SURFACES);
-    this.solidPass = engine.program(SOLIDS);
-    this.shadow = engine.program(SHADOW);
-    this.face = engine.program(FACE);
+    this.lamps = engine.program(levelZero(LAMPS));
+    this.surfaces = engine.program(levelZero(SURFACES));
+    this.solidPass = engine.program(levelZero(SOLIDS));
+    this.shadow = engine.program(levelZero(SHADOW));
+    this.face = engine.program(levelZero(FACE));
     this.faceDown = engine.program(FACE_DOWN);
     this.faceUp = engine.program(FACE_UP);
     this.vertexArray = gl.createVertexArray()!;
