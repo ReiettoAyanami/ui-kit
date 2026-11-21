@@ -10,8 +10,9 @@ import { LenziGlassSurface, bezelShift } from '../liquid-glass/liquid-glass-maps
 
 /**
  * Glass that bends what is behind it instead of frosting it. CSS px. Its optics are the directive's (`lenziLiquidGlass`):
- * the bezel, its profile, the thickness, the refractive index, how much of the bending, the saturation and the blur of
- * what is seen through it (lenzi, 2026-11-20: "per regolare le varie proprietà dello stesso").
+ * the bezel, its profile, the thickness, the refractive index, how much of the bending and the saturation of what is seen
+ * through it (lenzi, 2026-11-20: "per regolare le varie proprietà dello stesso"). Its blur is each glass's own (`blur` of a
+ * blob or a fleet; lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro"), not one for all of them.
  */
 export interface LenziLiquidBlobGlass {
   /** How wide the curved bezel round the edge is. */
@@ -26,8 +27,6 @@ export interface LenziLiquidBlobGlass {
   surface: LenziGlassSurface;
   /** How saturated what is seen through it is (1: as it is), at most: only as much as a colour takes. */
   saturation: number;
-  /** How much what is seen through it is blurred, px (0: sharp). */
-  blur: number;
 }
 
 /**
@@ -40,9 +39,9 @@ export type LenziGlassKind = 'frosted' | 'liquid';
  * The liquid glass of the blobs, unless told otherwise. Was 22 and 48, a little narrower than the directive's (blobs are
  * small); then the same lens half as large again, its bezel and its thickness (lenzi, 2026-11-20: "una forma
  * leggermente più marcata in modo da mostrare leggermente di più l'effetto sui bordi ... un 1.5x"). A part thinner
- * than two bezels (a drop) takes it smaller, to its middle. Sharp, a little more saturated than the picture.
+ * than two bezels (a drop) takes it smaller, to its middle. A little more saturated than the picture.
  */
-export const LIQUID_GLASS: LenziLiquidBlobGlass = { bezel: 33, thickness: 72, ior: 1.5, refraction: 1, surface: 'squircle', saturation: 1.4, blur: 0 };
+export const LIQUID_GLASS: LenziLiquidBlobGlass = { bezel: 33, thickness: 72, ior: 1.5, refraction: 1, surface: 'squircle', saturation: 1.4 };
 
 /** The bezel's profiles there are, in the order a choice shows them. */
 export const LIQUID_GLASS_SURFACES: readonly LenziGlassSurface[] = ['squircle', 'circle', 'lip'];
@@ -54,7 +53,6 @@ export const LIQUID_GLASS_LIMITS = {
   ior: { min: 1, max: 3, step: 0.05 },
   refraction: { min: 0, max: 3, step: 0.05 },
   saturation: { min: 0, max: 3, step: 0.05 },
-  blur: { min: 0, max: 8, step: 0.25 },
 } as const satisfies Record<Exclude<keyof LenziLiquidBlobGlass, 'surface'>, { min: number; max: number; step: number }>;
 
 /** The numbers of the blobs' liquid glass, in the order a maker shows them. */

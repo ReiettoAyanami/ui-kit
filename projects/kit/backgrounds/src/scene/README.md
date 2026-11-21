@@ -66,8 +66,12 @@ contenente boidi, blob, boidi-blob").
   dull beside shining glass; the words on lit glass over a lamp are a little less clear for it). Its body shows its own
   colour all but full, a little more towards its middle (`LAMP_BODY`; lenzi, 2026-11-17: "sono ancora colorate troppo
   scure ... devono essere piú vibrant, cosí sono proprio spente"): its light alone, through the picture's curve, left it
-  at about 70% of its colour. Only its body: the light it sheds round it stays `LAMP_SHINE`'s. Glass has a `tint` (how much its colour filters what is seen through it) and a
-  `transparency` (how much shows through against its own body, itself lit). Within a level: lamps, solids, glass.
+  at about 70% of its colour. Only its body: the light it sheds round it stays `LAMP_SHINE`'s. Glass has three settings of its own, each doing one thing
+  (lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro"): its `tint`, how much its colour's hue colours what is
+  seen through it (black and greys have no hue: they colour nothing); its `transparency`, how much of what is behind
+  shows through against its own body, itself lit (so a dark glass is a dark colour with little transparency); its `blur`,
+  how much what is seen through it is blurred, 0 (sharp) to `GLASS_BLUR` (24 px, the page's frosted glass; not said:
+  frosted 24, liquid 0). Within a level: lamps, solids, glass.
 - **Currents** (`currents`; lenzi, 2026-11-14: "una corrente (definita da una serie di segmenti, con ognuno le sue
   forze indipendenti) che instrada i boidi e i blob verso la direzione del segmento (tipo una corrente marina)"):
   points (shares of the space), each segment's push (`strengths`, px/s², up to `STRONGEST_CURRENT`, 2000), a reach
@@ -115,7 +119,8 @@ contenente boidi, blob, boidi-blob").
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, shapes?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
 wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space?, glass?, liquid? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
-tint?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`.
+tint?, transparency?, blur?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`; a glass fleet takes `tint?`, `transparency?`,
+`blur?` too.
 
 ## Example
 

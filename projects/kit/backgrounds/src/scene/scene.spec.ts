@@ -41,9 +41,19 @@ describe('sceneLayout', () => {
   });
 
   it('gives the liquid glass its settings, within bounds, only when its glass is liquid (lenzi, 2026-11-20)', () => {
-    expect(sceneLayout({ ...HOME, glass: 'liquid', liquid: { bezel: 20, surface: 'circle', blur: 99 } }).liquid).toEqual({ bezel: 20, surface: 'circle', blur: 8 });
+    expect(sceneLayout({ ...HOME, glass: 'liquid', liquid: { bezel: 20, surface: 'circle', saturation: 99 } }).liquid).toEqual({ bezel: 20, surface: 'circle', saturation: 3 });
     expect(sceneLayout({ ...HOME, glass: 'liquid' }).liquid).toBeNull();
     expect(sceneLayout({ ...HOME, liquid: { bezel: 20 } }).liquid).toBeNull();
+  });
+
+  it('gives each glass blob and glass fleet its own blur (lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro")', () => {
+    const layout = sceneLayout({
+      ...HOME,
+      blobs: [{ material: 'glass', size: 0.1, blur: 4 }],
+      fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, blur: 6 }],
+    });
+    expect(layout.blobs[0]!.blur).toBe(4);
+    expect(layout.blobFlocks[0]!.blur).toBe(6);
   });
 
   it("each fleet keeps its leader's ways, its size and its sizes' variety; a fleet without boids is left out", () => {

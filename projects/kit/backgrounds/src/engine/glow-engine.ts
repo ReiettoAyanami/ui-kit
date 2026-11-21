@@ -93,8 +93,11 @@ export interface GlowFrame {
   shadow?: number;
 }
 
-/** How wide the glass's blur is, CSS px: about the page's glass (`--lenzi-glass-filter`). */
-const GLASS_BLUR = 24;
+/**
+ * How wide the glass's blur is, CSS px: about the page's glass (`--lenzi-glass-filter`). The frosted glass blobs' unless
+ * they say their own, and the most a glass blob blurs (its picture is made once a frame, this blurred).
+ */
+export const GLASS_BLUR = 24;
 /** The glow's halving that is the light reaching a surface from all around (1/16 of the canvas). */
 const AMBIENT_LEVEL = 3;
 

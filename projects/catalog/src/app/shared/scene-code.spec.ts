@@ -18,11 +18,24 @@ describe('a scene in a link', () => {
   });
 
   it("keeps its liquid glass's settings, within bounds, only with liquid glass (2026-11-20)", async () => {
-    const tuned = { ...HOME_SCENE, glass: 'liquid' as const, liquid: { bezel: 20, surface: 'lip' as const, saturation: 1, blur: 2 } };
-    expect((await sceneFromCode(await sceneToCode(tuned)))?.liquid).toEqual({ bezel: 20, surface: 'lip', saturation: 1, blur: 2 });
+    const tuned = { ...HOME_SCENE, glass: 'liquid' as const, liquid: { bezel: 20, surface: 'lip' as const, saturation: 1 } };
+    expect((await sceneFromCode(await sceneToCode(tuned)))?.liquid).toEqual({ bezel: 20, surface: 'lip', saturation: 1 });
     expect(cleanScene({ blobs: [], fleets: [], glass: 'liquid', liquid: { bezel: -3, thickness: 'thick', what: 1 } })?.liquid).toEqual({ bezel: 4 });
     expect(cleanScene({ blobs: [], fleets: [], liquid: { bezel: 20 } })?.liquid).toBeUndefined();
     expect(cleanScene({ blobs: [], fleets: [], glass: 'liquid', liquid: {} })?.liquid).toBeUndefined();
+  });
+
+  it("keeps a glass blob's and a glass fleet's own blur, within sharp and the page glass's; nobody else's (2026-11-21)", () => {
+    const scene = cleanScene({
+      blobs: [
+        { material: 'glass', size: 0.1, blur: 6 },
+        { material: 'glass', size: 0.1, blur: 99 },
+        { material: 'solid', size: 0.1, blur: 6 },
+      ],
+      fleets: [{ kind: 'blob-boid', material: 'glass', count: 4, blur: 3 }],
+    })!;
+    expect(scene.blobs.map((blob) => blob.blur)).toEqual([6, 24, undefined]);
+    expect(scene.fleets[0]!.blur).toBe(3);
   });
 
   it('a code that is not a scene is none', async () => {

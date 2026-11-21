@@ -59,6 +59,8 @@ export interface LenziSceneFleet extends LenziFleetWays, LenziScenePlace {
   /** Glass blob-boids: how much their colour colours what is seen through them, and how much shows through, 0 to 1. */
   tint?: number;
   transparency?: number;
+  /** Glass blob-boids: how much what is seen through them is blurred, CSS px (0 to 24); none: their glass's. */
+  blur?: number;
   /** Glass blob-boids that shine too (solid ones that shine are of lamps). */
   emitting?: boolean;
   /** Blob-boids: the shapes they take instead of drops, each one of them at random ("a forma di fiore ... anche randomici"). */
@@ -129,12 +131,12 @@ export interface LenziSceneLayout {
   liquid: Partial<LenziLiquidBlobGlass> | null;
 }
 
-type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean; shapes?: BlobShapeName[] };
+type FleetSettings = LenziFleetWays & LenziScenePlace & { colonies?: number; size?: number; colour?: string; colours?: string[]; tint?: number; transparency?: number; blur?: number; emitting?: boolean; shapes?: BlobShapeName[] };
 
 /** A fleet's ways, sizes, place, level, colour and tint, only the ones it says. */
 function fleetSettings(fleet: LenziSceneFleet): FleetSettings {
   const out: FleetSettings = {};
-  for (const key of ['colonies', 'size', 'maxSpeed', 'minSpeed', 'separation', 'alignment', 'cohesion', 'wander', 'sizeVariety', 'x', 'y', 'layer', 'tint', 'transparency'] as const) {
+  for (const key of ['colonies', 'size', 'maxSpeed', 'minSpeed', 'separation', 'alignment', 'cohesion', 'wander', 'sizeVariety', 'x', 'y', 'layer', 'tint', 'transparency', 'blur'] as const) {
     const value = fleet[key];
     if (typeof value === 'number' && Number.isFinite(value)) out[key] = value;
   }

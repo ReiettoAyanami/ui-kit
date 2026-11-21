@@ -35,7 +35,9 @@ import {
   LenziCurrent,
   STRONGEST_CURRENT,
   blobOutline,
+  GLASS_BLUR,
   LIQUID_GLASS,
+  glassBlurOf,
   LIQUID_GLASS_LIMITS,
   LIQUID_GLASS_SURFACES,
   LenziGlassSurface,
@@ -123,7 +125,6 @@ const LIQUID_FIELDS: readonly LiquidField[] = (
     ['ior', 'Refractive index (air is 1)'],
     ['refraction', 'Refraction: how much of the bending shows'],
     ['saturation', 'Saturation of what is behind it (1: as it is)'],
-    ['blur', 'Blur of what is behind it (px)'],
   ] as const
 ).map(([key, label]) => ({ key, label, ...LIQUID_GLASS_LIMITS[key] }));
 
@@ -291,6 +292,8 @@ export class SceneMakerPage {
   protected readonly weights = SCENE_WEIGHTS;
   protected readonly materials: readonly BlobMaterial[] = ['lamp', 'glass', 'solid'];
   protected readonly liquidFields = LIQUID_FIELDS;
+  /** The most a glass blurs, px: the page's frosted glass. */
+  protected readonly glassBlur = GLASS_BLUR;
   protected readonly liquidSurfaces = LIQUID_SURFACES;
   /** The liquid glass's window, as an object to choose. */
   protected readonly liquidObject: SceneObject = { type: 'liquid' };
@@ -903,9 +906,30 @@ export class SceneMakerPage {
     if (Number.isFinite(transparency)) this.changeChosen((thing) => ({ ...thing, transparency }));
   }
 
-  /** Glass's tint and transparency when it does not say (the renderer's): with a colour of its own, or the page's glass. */
-  protected glassDefaults(thing: { colour?: string; colours?: string[]; emitting?: boolean }): { tint: number; transparency: number } {
-    return thing.colour || (thing.colours?.length ?? 0) >= 2 || thing.emitting ? { tint: 0.5, transparency: 0.7 } : { tint: 0, transparency: 0.45 };
+  /** Glass only: how much what is seen through it is blurred, its own (lenzi, 2026-11-21: "tre proprietà indipendenti"). */
+  protected setBlur(blur: number): void {
+    if (Number.isFinite(blur)) this.changeChosen((thing) => ({ ...thing, blur: Math.min(GLASS_BLUR, Math.max(0, blur)) }));
+  }
+
+  /**
+   * Glass's tint, transparency and blur when it does not say (the renderer's): with a colour of its own, or the page's
+   * glass; its blur, its glass's (frosted the page glass's, liquid sharp).
+   */
+  protected glassDefaults(thing: { colour?: string; colours?: string[]; emitting?: boolean }): { tint: number; transparency: number; blur: number } {
+    const blur = glassBlurOf({}, this.scene().glass === 'liquid');
+    return thing.colour || (thing.colours?.length ?? 0) >= 2 || thing.emitting ? { tint: 0.5, transparency: 0.7, blur } : { tint: 0, transparency: 0.45, blur };
+  }
+
+  /**
+   * Whether its colour has a hue the tint can colour with: black and greys have none (lenzi, 2026-11-21), so the tint
+   * does nothing to them and its darkness is its transparency's.
+   */
+  protected hasHue(thing: { material?: BlobMaterial; emitting?: boolean; colour?: string; colours?: string[]; kind?: string }): boolean {
+    const colours = this.isMulti(thing) ? (thing.colours ?? []) : [this.colourOf(thing)];
+    return colours.some((colour) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(colour.slice(i, i + 2), 16));
+      return Math.max(r!, g!, b!) - Math.min(r!, g!, b!) > 6;
+    });
   }
 
   /** The chosen blob or fleet, changed. */

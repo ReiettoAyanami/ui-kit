@@ -45,6 +45,12 @@ export interface LenziBlobFlock extends LenziFleetWays {
   tint?: number;
   /** Glass: how much of what is behind it shows through, 0 to 1. */
   transparency?: number;
+  /**
+   * Glass: how much what is seen through it is blurred, CSS px, 0 (sharp) to `GLASS_BLUR` (24, the page's frosted glass); none:
+   * its glass's (frosted 24, liquid 0). Its own, as its tint and its transparency (lenzi, 2026-11-21: "tre proprietà
+   * indipendenti per ogni vetro").
+   */
+  blur?: number;
   /** Glass that shines too, in its colour (a solid fleet that shines is of lamps). */
   emitting?: boolean;
   /**
@@ -189,6 +195,8 @@ interface BlobBoid {
   colour?: LinearRgb;
   tintAmount?: number;
   clarity?: number;
+  /** Glass: its blur, CSS px. */
+  blur?: number;
   /** Glass that shines. */
   emit?: boolean;
 }
@@ -617,6 +625,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
           ...(colour ? { colour } : {}),
           ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
           ...(typeof spec.transparency === 'number' ? { clarity: spec.transparency } : {}),
+          ...(typeof spec.blur === 'number' ? { blur: spec.blur } : {}),
           ...(emit ? { emit } : {}),
         });
       }
@@ -716,6 +725,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         ...(spec?.colour || paletteOf(spec?.colours) ? { colour: own } : {}),
         ...(typeof spec?.tint === 'number' ? { tintAmount: spec.tint } : {}),
         ...(typeof spec?.transparency === 'number' ? { clarity: spec.transparency } : {}),
+        ...(typeof spec?.blur === 'number' ? { blur: spec.blur } : {}),
         ...(spec?.emitting ? { emit: true } : {}),
       };
     });
@@ -750,6 +760,7 @@ export class LenziBlobFlockBackground extends LenziGlowBackground {
         ...(drop.colour ? { colour: drop.colour } : {}),
         ...(typeof drop.tintAmount === 'number' ? { tintAmount: drop.tintAmount } : {}),
         ...(typeof drop.clarity === 'number' ? { clarity: drop.clarity } : {}),
+        ...(typeof drop.blur === 'number' ? { blur: drop.blur } : {}),
         ...(drop.emit ? { emit: true } : {}),
       });
       colour++;

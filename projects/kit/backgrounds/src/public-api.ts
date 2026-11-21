@@ -32,7 +32,8 @@ export * from './engine/blob-field';
 export * from './engine/blob-throw';
 export * from './engine/currents';
 export { BOID_STRETCH, type BoidShape } from './engine/flock-scene';
-export { BLOB_MATERIALS, type BlobMaterial } from './engine/blob-materials';
+export { BLOB_MATERIALS, glassBlurOf, type BlobMaterial } from './engine/blob-materials';
+export { GLASS_BLUR } from './engine/glow-engine';
 export {
   LIQUID_GLASS,
   LIQUID_GLASS_LIMITS,

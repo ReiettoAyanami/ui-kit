@@ -48,7 +48,7 @@ describe('liquidLookOf', () => {
   });
 
   it('takes a setting said as undefined as not said', () => {
-    expect(liquidLookOf('liquid', { bezel: undefined, blur: 2 })).toEqual({ ...LIQUID_GLASS, blur: 2 });
+    expect(liquidLookOf('liquid', { bezel: undefined, saturation: 2 })).toEqual({ ...LIQUID_GLASS, saturation: 2 });
   });
 });
 
@@ -60,10 +60,10 @@ describe('the blobs’ liquid glass settings (lenzi, 2026-11-20: "per regolare l
     expect(liquidProfile({ ...LIQUID_GLASS, surface: undefined }).shifts).toEqual(squircle.shifts);
   });
 
-  it('is sharp and a little more saturated than the picture unless told', () => {
+  it("is a little more saturated than the picture unless told; its blur is each glass's own, not the liquid glass's", () => {
     expect(LIQUID_GLASS.surface).toBe('squircle');
     expect(LIQUID_GLASS.saturation).toBe(1.4);
-    expect(LIQUID_GLASS.blur).toBe(0);
+    expect('blur' in LIQUID_GLASS).toBe(false);
   });
 
   it('keeps from a link only its settings, each within its bounds', () => {
@@ -72,7 +72,6 @@ describe('the blobs’ liquid glass settings (lenzi, 2026-11-20: "per regolare l
       thickness: LIQUID_GLASS_LIMITS.thickness.min,
       ior: 2,
       surface: 'lip',
-      blur: 3,
     });
     expect(cleanLiquidGlass({ surface: 'wavy' })).toBeNull();
     expect(cleanLiquidGlass('liquid')).toBeNull();

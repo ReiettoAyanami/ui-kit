@@ -72,6 +72,12 @@ export interface LenziBlobSpec {
   tint?: number;
   /** Glass: how much of what is behind it shows through, 0 to 1. */
   transparency?: number;
+  /**
+   * Glass: how much what is seen through it is blurred, CSS px, 0 (sharp) to `GLASS_BLUR` (24, the page's frosted glass); none:
+   * its glass's (frosted 24, liquid 0). Its own, as its tint and its transparency (lenzi, 2026-11-21: "tre proprietà
+   * indipendenti per ogni vetro").
+   */
+  blur?: number;
   fixed?: boolean;
   weight?: number;
   /** Glass that shines too, in its colour (a solid thing that shines is a lamp: `material: 'lamp'`). */

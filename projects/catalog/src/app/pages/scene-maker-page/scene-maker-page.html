@@ -432,19 +432,31 @@
   </mat-button-toggle-group>
   <ng-container [ngTemplateOutlet]="paint" [ngTemplateOutletContext]="{ $implicit: thing, noun: noun }" />
   @if (bodyOf(thing.material ?? 'lamp') === 'glass') {
-    <p class="label">Tint (how much its colour colours what is seen through it)</p>
+    <!-- three properties of its own, each doing one thing (lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro"):
+         the hue of what is seen through it, how much is seen through it, how blurred -->
+    <p class="label">Tint (how much its colour's hue colours what is seen through it)</p>
     <div class="number">
       <mat-slider min="0" max="1" step="0.05">
         <input matSliderThumb [value]="thing.tint ?? glassDefaults(thing).tint" aria-label="Tint" (input)="setTint(slid($event))" (valueChange)="setTint($event)" />
       </mat-slider>
       <span class="value">{{ shown(thing.tint ?? glassDefaults(thing).tint) }}</span>
     </div>
+    @if (!hasHue(thing)) {
+      <p class="hint">Black and greys have no hue: the tint colours nothing. Make it darker with less transparency.</p>
+    }
     <p class="label">Transparency (how much of what is behind it shows through)</p>
     <div class="number">
       <mat-slider min="0" max="1" step="0.05">
         <input matSliderThumb [value]="thing.transparency ?? glassDefaults(thing).transparency" aria-label="Transparency" (input)="setTransparency(slid($event))" (valueChange)="setTransparency($event)" />
       </mat-slider>
       <span class="value">{{ shown(thing.transparency ?? glassDefaults(thing).transparency) }}</span>
+    </div>
+    <p class="label">Blur (of what is seen through it, px: 0 sharp, {{ glassBlur }} frosted)</p>
+    <div class="number">
+      <mat-slider min="0" [max]="glassBlur" step="0.5">
+        <input matSliderThumb [value]="thing.blur ?? glassDefaults(thing).blur" aria-label="Blur" (input)="setBlur(slid($event))" (valueChange)="setBlur($event)" />
+      </mat-slider>
+      <span class="value">{{ shown(thing.blur ?? glassDefaults(thing).blur) }}</span>
     </div>
   }
 </ng-template>

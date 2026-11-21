@@ -21,7 +21,8 @@ change from one into another and melt into each other where they meet, glowing o
   (`lenziSolid`) cast shadows from it.
 - **Decoration**: hidden from screen readers, never takes a click; the pointer is read from the window.
 - **Materials** (`materials`; lenzi, 2026-11-14: blobs "di vetro o solidi"): a lamp (glows, lights the page's
-  lit surfaces), glass (blurs what is behind it, takes the light around it, as the page's glass), solid (the
+  lit surfaces), glass (blurs what is behind it, takes the light around it, as the page's glass; its own `tint`, of its
+  colour's hue only, `transparency` and `blur`, from a blob's spec: see the scene's README), solid (the
   page's surface, its edge lit on the side of the light, a hard shadow on the glow behind it, following its
   shape). Blobs melt only into blobs of their own material. A solid blob's shadow falls on its own level and the ones
   under it, never on one above it (lenzi, 2026-11-20: glass over a solid blob was half in its shadow, cut along the
@@ -34,12 +35,13 @@ change from one into another and melt into each other where they meet, glowing o
   normal at every place, and the bezel's bending is read there. It bends what the background draws (the glow, the
   boids, the other blobs), not the page over it; WebGL2, so every browser that draws the blobs (the directive bends
   only in Chromium). `liquid` tunes it with the directive's optics (lenzi, 2026-11-20: "per regolare le varie proprietá
-  dello stesso"): `{ bezel, thickness, ior, refraction, surface, saturation, blur }`, only what differs from
-  `LIQUID_GLASS` (33 px, 72 px, 1.5, 1, `squircle`, 1.4, 0 px: 1.5 times the first lens, lenzi 2026-11-20: "un 1.5x"),
+  dello stesso"): `{ bezel, thickness, ior, refraction, surface, saturation }`, only what differs from
+  `LIQUID_GLASS` (33 px, 72 px, 1.5, 1, `squircle`, 1.4: 1.5 times the first lens, lenzi 2026-11-20: "un 1.5x"),
   each within `LIQUID_GLASS_LIMITS`. A part thinner than two bezels (a drop, a lobe) takes the lens smaller, its bezel
   ending at its middle: the bending comes down to nothing there, with no line. What is seen through it is more
   saturated (`saturation`; under 1, greyer) only as far as a colour takes it: no channel is cut at white or black (a cut
-  drew a line through a drop over a lamp's light); `blur` softens it, a few px. One kind of glass for all the glass
+  drew a line through a drop over a lamp's light). Sharp, unless a glass says its own `blur` (each glass its own,
+  2026-11-21). One kind of glass for all the glass
   blobs of a background.
 - **Thrown** (`throwable`, off; lenzi, 2026-11-14: "kinda like throwing them around"): the pointer takes a
   blob (a hand shows over one) and throws it; it flies on, slows down, bounces off the edges and drifts back
@@ -71,7 +73,7 @@ change from one into another and melt into each other where they meet, glowing o
 | input | `materials` | `('lamp' \| 'glass' \| 'solid')[]`, each blob's, round again | `['lamp']` |
 | input | `blobSizes` | `number[] \| null`, each blob's size (a share of the smaller side), round again | `null` |
 | input | `glass` | `'frosted' \| 'liquid'` (`LenziGlassKind`), how the glass blobs look | `'frosted'` |
-| input | `liquid` | `Partial<LenziLiquidBlobGlass> \| null`: `bezel`, `thickness` (px), `ior`, `refraction`, `surface`, `saturation`, `blur` (px) | `null` (`LIQUID_GLASS`) |
+| input | `liquid` | `Partial<LenziLiquidBlobGlass> \| null`: `bezel`, `thickness` (px), `ior`, `refraction`, `surface`, `saturation` | `null` (`LIQUID_GLASS`) |
 | input | `fill`, `accent`, `base`, `spread`, `seed`, `brightness`, `glow`, `halo`, `blur`, `speed`, `animate`, `pointer`, `resolution`, `lights` | every glowing background's | see Flock background |
 
 ## Example

@@ -10,6 +10,7 @@ import {
   LenziScene,
   LenziSceneBlob,
   LenziSceneFleet,
+  GLASS_BLUR,
   STRONGEST_CURRENT,
   cleanLiquidGlass,
 } from '@lenzi/ui-kit/backgrounds';
@@ -41,9 +42,9 @@ const record = (value: unknown): Record<string, unknown> | null => (value && typ
 export const SCENE_LAYERS = [0, 3] as const;
 export const SCENE_WEIGHTS = [0.25, 4] as const;
 
-/** An object's colour (a `#rrggbb`), glass's tint and whether glass shines, as far as the link says them. */
-function lookOf(raw: Record<string, unknown>, material: unknown): { colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean } {
-  const look: { colour?: string; colours?: string[]; tint?: number; transparency?: number; emitting?: boolean } = {};
+/** An object's colour (a `#rrggbb`), glass's tint, transparency and blur and whether glass shines, as far as the link says them. */
+function lookOf(raw: Record<string, unknown>, material: unknown): { colour?: string; colours?: string[]; tint?: number; transparency?: number; blur?: number; emitting?: boolean } {
+  const look: { colour?: string; colours?: string[]; tint?: number; transparency?: number; blur?: number; emitting?: boolean } = {};
   if (typeof raw['colour'] === 'string' && /^#[0-9a-f]{6}$/i.test(raw['colour'])) look.colour = raw['colour'].toLowerCase();
   // a few colours to shift among: two to six
   const colours = Array.isArray(raw['colours']) ? raw['colours'].filter((colour): colour is string => typeof colour === 'string' && /^#[0-9a-f]{6}$/i.test(colour)).slice(0, SCENE_LIMITS.colours) : [];
@@ -51,6 +52,8 @@ function lookOf(raw: Record<string, unknown>, material: unknown): { colour?: str
   if (isNumber(raw['tint'])) look.tint = clamp(raw['tint'], [0, 1]);
   // glass only: a solid thing is always opaque (2026-11-15: "solid should alway be locked at 100")
   if (material === 'glass' && isNumber(raw['transparency'])) look.transparency = clamp(raw['transparency'], [0, 1]);
+  // glass only, its own (2026-11-21: "tre proprietà indipendenti per ogni vetro"): sharp to the page glass's blur
+  if (material === 'glass' && isNumber(raw['blur'])) look.blur = clamp(raw['blur'], [0, GLASS_BLUR]);
   if (material === 'glass' && raw['emitting'] === true) look.emitting = true;
   return look;
 }

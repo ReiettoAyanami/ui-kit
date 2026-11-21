@@ -14,7 +14,7 @@
 import { LinearRgb } from './color';
 import { BlobShape } from './shapes';
 import { shapeUniforms } from './blob-field';
-import { GlowEngine, GlowSurfaceInputs, GlowTarget } from './glow-engine';
+import { GLASS_BLUR, GlowEngine, GlowSurfaceInputs, GlowTarget } from './glow-engine';
 import { LIQUID_GLASS, LIQUID_STEPS, LenziLiquidBlobGlass, LiquidProfile, liquidProfile } from './liquid-profile';
 
 /** What a blob is made of: a lamp (the glowing blobs), glass, or something solid. */
@@ -60,6 +60,12 @@ export interface MaterialObject {
    */
   clarity?: number;
   /**
+   * Glass: how much what is seen through it is blurred, CSS px, 0 (sharp) to `GLASS_BLUR` (the page's frosted glass),
+   * its own (lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro", the blur one of them); none: its glass's,
+   * frosted `GLASS_BLUR`, liquid 0.
+   */
+  blur?: number;
+  /**
    * Glass that shines too (lenzi, 2026-11-15: "it should be solid/glass and emitting/not emitting"): its light is
    * drawn as a lamp's, in its colour, and the glass over it. (A solid thing that shines is a lamp.)
    */
@@ -68,6 +74,16 @@ export interface MaterialObject {
 
 /** Whether an object sheds light: a lamp, or glass that shines. */
 export const shines = (object: MaterialObject): boolean => object.material === 'lamp' || (object.material === 'glass' && object.emit === true);
+
+/**
+ * How much a glass object blurs what is seen through it, CSS px: its own, within 0 and `GLASS_BLUR`; not said, its
+ * glass's (frosted, the page's glass blur; liquid, sharp).
+ */
+export function glassBlurOf(object: Pick<MaterialObject, 'blur'>, liquid: boolean): number {
+  const own = object.blur;
+  if (typeof own === 'number' && Number.isFinite(own)) return Math.min(GLASS_BLUR, Math.max(0, own));
+  return liquid ? 0 : GLASS_BLUR;
+}
 
 /**
  * Which levels (by their place, the lowest first) can be in a shadow: a level with something solid on it or on a level
@@ -186,11 +202,17 @@ const LIQUID_CLARITY = { own: 0.85, page: 0.94 } as const;
 /** How far an object's share reaches, in its merges: beyond, e^-9 of it. */
 const REACH = 9;
 /**
- * Glass's hue as a filter is its colour over its strongest channel; a colour darker than this (linear, about #070707) a
- * darker filter, black none: the filter darkens smoothly towards black instead of jumping there.
+ * A glass's blur up to this, CSS px, is two rings of the picture round each place; past it, those fade into the frosted
+ * picture (`GLASS_BLUR`), all of it at that width.
+ */
+const GLASS_RING_BLUR = 6;
+/**
+ * Glass's hue as a filter is its colour over its strongest channel; a colour darker than this (linear, about #070707)
+ * has less and less of one, black none: neutral, as a grey (a very dark blue is still blue, and nothing jumps).
  */
 const HUE_FLOOR = 0.002;
-const FLOATS = 28;
+/** One object's floats: eight vec4 (place, turn, two shapes and their lobes, tint, and glass's blur). */
+const FLOATS = 32;
 
 const FIELD_VERTEX = `#version 300 es
 layout(location = 0) in vec4 place;   // x, y, radius, merge (CSS px)
@@ -200,6 +222,7 @@ layout(location = 3) in vec4 lobesA;  // lobes, depth, sharp
 layout(location = 4) in vec4 superB;
 layout(location = 5) in vec4 lobesB;
 layout(location = 6) in vec4 tint;
+layout(location = 7) in vec4 extra;   // glass: its blur (CSS px)
 uniform vec2 space;
 out vec2 offset;
 flat out vec4 vPlace;
@@ -209,6 +232,7 @@ flat out vec4 vLobesA;
 flat out vec4 vSuperB;
 flat out vec4 vLobesB;
 flat out vec4 vTint;
+flat out vec4 vExtra;
 void main() {
   vec2 corner = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1)) * 2.0 - 1.0;
   // a drop is longer than it is wide
@@ -222,6 +246,7 @@ void main() {
   vSuperB = superB;
   vLobesB = lobesB;
   vTint = tint;
+  vExtra = extra;
 }`;
 
 // what the field passes share: an object's quad, its shape, and how far inside its edge a place is
@@ -234,6 +259,7 @@ flat in vec4 vLobesA;
 flat in vec4 vSuperB;
 flat in vec4 vLobesB;
 flat in vec4 vTint;     // a lamp's colour; glass's colour and how much of it; solid's colour
+flat in vec4 vExtra;    // glass: its blur (CSS px)
 
 // shapes.ts's shapeRadius: the superformula's rounded polygon times the scallop of the lobes
 float shapeRadius(vec4 s, vec3 l, float angle) {
@@ -324,10 +350,11 @@ void main() {
 }`;
 
 // Glass's hue as a filter, each glass's own, by its share (lenzi, 2026-11-20: "REPLICATO BUG BANDA BLU"): its colour at
-// full strength (its hue, not its darkness: the darkest colours a darker filter, black none of it). The hues mix where
-// glass meets glass, and a glass's far reach adds only a trace of its hue. Its colour's hue, taken after the colours were
-// mixed, was the trace's alone in a black glass: a black star beside a blue glass took the blue whole, a band of it
-// over the light behind
+// full strength, its hue and not its darkness. Black and greys have none: they colour nothing, so the tint takes nothing
+// away and its darkness is its body's, as much as it is not transparent (2026-11-21, "tre proprietà indipendenti per
+// ogni vetro": black at a full tint let nothing through, and the transparency did nothing more). The hues mix where
+// glass meets glass, and a glass's far reach adds only a trace of its hue (taken after the colours were mixed, a trace's
+// hue was the whole filter of a black glass: a band of blue). Its blur (CSS px) by its share too, in the alpha
 const GLASS_HUE_FRAGMENT = `#version 300 es
 precision highp float;
 ${FIELD_SHAPE}
@@ -338,8 +365,11 @@ void main() {
   if (vTurn.z < 0.5 || vTurn.z > 1.5) discard;
   float inside = insideOf(edgeHere());
   if (inside < -${REACH.toFixed(1)}) discard;
+  float w = exp(inside);
   float most = max(vTint.r, max(vTint.g, vTint.b));
-  hue = vec4(vTint.rgb / max(most, ${HUE_FLOOR.toFixed(4)}) * exp(inside), 0.0);
+  // a colour darker than the floor fades to no hue at all: black is neutral, as a grey is
+  vec3 own = mix(vec3(1.0), vTint.rgb / max(most, 1e-6), smoothstep(0.0, ${HUE_FLOOR.toFixed(4)}, most));
+  hue = vec4(own * w, vExtra.x * w);
 }`;
 
 // a level's weights here and one device px to each side: a field's slope is read from them, not from a derivative.
@@ -553,27 +583,40 @@ uniform sampler2DArray glassTints;
 uniform sampler2DArray solidTints;
 uniform sampler2DArray glassHues;
 // liquid glass (1) or frosted (0); its bezel and largest shift, device px; the shift over the bezel, from the edge in;
-// how saturated what is seen through it is, and how blurred (device px)
+// how saturated what is seen through it is
 uniform float liquid;
 uniform float bezelPx;
 uniform float liftPx;
 uniform float profile[${LIQUID_STEPS + 1}];
 uniform float liquidSaturation;
-uniform float liquidBlurPx;
+// a glass's blur: device px in a CSS px; the most two rings of the picture blur (device px), and the frosted picture's
+uniform float blurScale;
+uniform float ringPx;
+uniform float frostedPx;
 out vec4 color;
 ${SURFACE_LIGHT}
 
-// what is seen through liquid glass at a place: the picture there, or (blurred) a ring of it round the place and the
-// place itself, the place twice: soft as a small blur is, for nine readings
-vec3 seenAt(vec2 at) {
+// what is seen through glass at a place, blurred by this many device px (each glass its own, lenzi 2026-11-21): the
+// picture itself; a small blur, two rings of it round the place and the place (fifteen readings); a larger one, from
+// those towards the frosted picture (the page's glass blur, made once a frame), all of it at its width
+vec3 seenThrough(vec2 at, float px) {
+  // as blurred as the frosted picture: that alone (the frosted glass, as ever, one reading)
+  if (px >= frostedPx - 0.25) return decode(texture(blurred, at).rgb);
   vec3 here = decode(texture(picture, at).rgb);
-  if (liquidBlurPx < 0.25) return here;
+  if (px < 0.25) return here;
+  float r = min(px, ringPx);
   vec3 sum = here * 2.0;
   for (int i = 0; i < 8; i++) {
     float a = float(i) * 0.7853982;
-    sum += decode(texture(picture, at + vec2(cos(a), sin(a)) * liquidBlurPx * pixel).rgb);
+    sum += decode(texture(picture, at + vec2(cos(a), sin(a)) * r * pixel).rgb);
   }
-  return sum / 10.0;
+  for (int i = 0; i < 5; i++) {
+    float a = float(i) * 1.2566371 + 0.3926991;
+    sum += decode(texture(picture, at + vec2(cos(a), sin(a)) * r * 0.5 * pixel).rgb);
+  }
+  vec3 soft = sum / 15.0;
+  if (px <= ringPx) return soft;
+  return mix(soft, decode(texture(blurred, at).rgb), clamp((px - ringPx) / max(frostedPx - ringPx, 1.0), 0.0, 1.0));
 }
 
 // how far what is seen at a place inside the bezel comes from, inwards, device px (as lenziLiquidGlass bends), over
@@ -656,23 +699,23 @@ vec3 level(vec3 c, float layer, Near n, Light l) {
     float tint = clamp(t.a / share, 0.0, 1.0);
     float clarity = clamp(solidTint.a / share, 0.0, 1.0);
     vec2 out_ = length(glass.slope) > 1e-6 ? normalize(glass.slope) : vec2(0.0);
-    // what is behind it: blurred (frosted); or bent near its edge, from inwards, and clear (liquid: the field's slope is
-    // the edge's normal and its depth the distance from it, at every frame, whatever its shape)
-    vec3 behind;
-    if (liquid > 0.5) {
-      float bend = 0.0;
-      if (glass.inside > 0.0 && glass.inside < bezelPx && length(out_) > 0.0) bend = bendAt(glass.inside, bezelHere(layer, out_, glass.inside));
-      behind = seenAt(uv - out_ * bend * pixel);
-      // more saturated only as far as a colour takes it, never past white or black (cut there, a lamp's light through a
-      // drop ended in a line, lenzi 2026-11-20 "sembra che siano tagliati sopra"); less saturated, towards grey
-      behind = saturated(clamp(behind, 0.0, 1.0), liquidSaturation);
-    } else {
-      behind = decode(texture(blurred, uv).rgb);
+    // every glass's own hue as a filter, and its own blur (CSS px), mixed where they meet
+    vec4 h = texture(glassHues, vec3(uv, layer));
+    // what is behind it, blurred as much as the glass says (lenzi, 2026-11-21: "tre proprietà indipendenti per ogni
+    // vetro": tint, transparency, blur; the blur was its kind's, one for the whole scene): liquid, bent near its edge, from
+    // inwards (the field's slope is the edge's normal and its depth the distance from it, at every frame, whatever its shape)
+    vec2 at = uv;
+    if (liquid > 0.5 && glass.inside > 0.0 && glass.inside < bezelPx && length(out_) > 0.0) {
+      at = uv - out_ * bendAt(glass.inside, bezelHere(layer, out_, glass.inside)) * pixel;
     }
-    // through its colour as a filter (its hue, not its darkness): every glass's own hue, mixed where they meet (the hue
-    // of the mixed colours took a black glass's whole filter from a trace of a blue glass nearby: a blue band)
-    vec3 hue = texture(glassHues, vec3(uv, layer)).rgb / share;
-    vec3 through = behind * mix(vec3(1.0), hue, tint);
+    vec3 behind = seenThrough(at, h.a / share * blurScale);
+    // liquid: more saturated only as far as a colour takes it, never past white or black (cut there, a lamp's light
+    // through a drop ended in a line, lenzi 2026-11-20 "sembra che siano tagliati sopra"); less saturated, towards grey
+    if (liquid > 0.5) behind = saturated(clamp(behind, 0.0, 1.0), liquidSaturation);
+    // through its colour as a filter, its hue and not its darkness (black and greys colour nothing): every glass's own
+    // hue, mixed where they meet (the hue of the mixed colours took a black glass's whole filter from a trace of a blue
+    // glass nearby: a blue band)
+    vec3 through = behind * mix(vec3(1.0), h.rgb / share, tint);
     // its own body lit as a surface is (frosted glass takes the light round it): dark where it is dark, so it sits in
     // the scene instead of on it
     vec3 body = colour * (${GLASS_FLOOR.toFixed(3)} + (1.0 - exp(-l.around * ${SOLID_LIGHT.toFixed(2)})));
@@ -953,6 +996,8 @@ export class MaterialScene {
         // the free place after the second shape's lobes: glass's clarity
         data.set([b[0], b[1], b[2], b[3], b[4], b[5], b[6], object.material === 'glass' ? clarity : 0], at + 16);
         data.set(tint, at + 24);
+        // glass: its blur, its own or its glass's
+        data.set([object.material === 'glass' ? glassBlurOf(object, !!look?.liquid) : 0, 0, 0, 0], at + 28);
       });
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE);
@@ -1149,6 +1194,10 @@ export class MaterialScene {
     gl.uniform1i(engine.uniform(program, 'layers'), this.levels.length);
     this.lightUniforms(program, inputs, look, 7);
     this.liquidUniforms(program, look);
+    // each glass's blur: CSS px into device px, the rings' reach, and the frosted picture's (the engine's, once a frame)
+    gl.uniform1f(engine.uniform(program, 'blurScale'), engine.scale);
+    gl.uniform1f(engine.uniform(program, 'ringPx'), GLASS_RING_BLUR * engine.scale);
+    gl.uniform1f(engine.uniform(program, 'frostedPx'), GLASS_BLUR * engine.scale);
     engine.fullscreen();
     return true;
   }
@@ -1169,7 +1218,6 @@ export class MaterialScene {
     gl.uniform1f(engine.uniform(program, 'liftPx'), this.profile.largest * engine.scale);
     gl.uniform1fv(engine.uniform(program, 'profile'), this.profile.shifts);
     gl.uniform1f(engine.uniform(program, 'liquidSaturation'), Math.max(0, liquid.saturation ?? LIQUID_GLASS.saturation));
-    gl.uniform1f(engine.uniform(program, 'liquidBlurPx'), Math.max(0, liquid.blur ?? LIQUID_GLASS.blur) * engine.scale);
   }
 
   dispose(): void {

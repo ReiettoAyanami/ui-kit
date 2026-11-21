@@ -68,8 +68,9 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 
 The glass blobs of a background (`glass="liquid"`, `[liquid]`) and of a scene (`glass: 'liquid'`, `liquid`) take the
 same optics, drawn by WebGL instead of an SVG filter: `bezel`, `thickness`, `ior`, `refraction`, `surface`,
-`saturation`, `blur` (`LenziLiquidBlobGlass`, `LIQUID_GLASS`; no rim of their own: their edge takes the scene's light).
-See the blob background's README.
+`saturation` (`LenziLiquidBlobGlass`, `LIQUID_GLASS`; no rim of their own: their edge takes the scene's light). Their
+blur is each glass's own (`blur` of a blob or a fleet, with its `tint` and `transparency`; 2026-11-21). See the blob
+background's README.
 
 ## Origin
 

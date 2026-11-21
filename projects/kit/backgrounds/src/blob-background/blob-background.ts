@@ -224,7 +224,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
   }
 
   /** A blob's level, glass and solid colour and glass's tint, as far as it says them. */
-  private ownLook(index: number, tints: Float32Array): Pick<MaterialObject, 'layer' | 'colour' | 'tintAmount' | 'clarity' | 'emit'> {
+  private ownLook(index: number, tints: Float32Array): Pick<MaterialObject, 'layer' | 'colour' | 'tintAmount' | 'clarity' | 'blur' | 'emit'> {
     const spec = this.blobSpecs()?.[index];
     if (!spec) return {};
     return {
@@ -232,6 +232,7 @@ export class LenziBlobBackground extends LenziGlowBackground {
       ...(spec.colour || paletteOf(spec.colours) ? { colour: this.blobTint(index, tints) } : {}),
       ...(typeof spec.tint === 'number' ? { tintAmount: spec.tint } : {}),
       ...(typeof spec.transparency === 'number' ? { clarity: spec.transparency } : {}),
+      ...(typeof spec.blur === 'number' ? { blur: spec.blur } : {}),
       ...(spec.emitting ? { emit: true } : {}),
     };
   }

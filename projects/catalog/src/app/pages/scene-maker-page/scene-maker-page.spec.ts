@@ -263,6 +263,44 @@ describe('SceneMakerPage', () => {
     expect('glass' in maker.scene()).toBe(false);
   });
 
+  it("a glass blob has its own blur beside its tint and transparency, its glass kind's until it says one (2026-11-21)", async () => {
+    // lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro", then "mi piace, vai"
+    const { page, maker, fixture } = await open();
+    const glass = maker.scene().blobs.findIndex((blob) => blob.material === 'glass');
+    maker.chosen.set({ type: 'blob', index: glass });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const blur = () => page.querySelector<HTMLInputElement>('.window input[aria-label="Blur"]')!;
+    const shownBlur = () => blur().closest('.number')?.querySelector('.value')?.textContent?.trim();
+    // frosted: the page glass's blur; liquid: sharp
+    expect(shownBlur()).toBe('24');
+    (maker as unknown as { setLiquid(on: boolean): void }).setLiquid(true);
+    fixture.detectChanges();
+    expect(shownBlur()).toBe('0');
+    blur().value = '6';
+    blur().dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(maker.scene().blobs[glass]!.blur).toBe(6);
+    expect(shownBlur()).toBe('6');
+  });
+
+  it('says that black and greys have no hue for the tint to colour with (2026-11-21)', async () => {
+    const { page, maker, fixture } = await open();
+    const glass = maker.scene().blobs.findIndex((blob) => blob.material === 'glass');
+    const paint = async (colour: string) => {
+      maker.scene.update((scene) => ({ ...scene, blobs: scene.blobs.map((blob, i) => (i === glass ? { ...blob, colour } : blob)) }));
+      maker.chosen.set({ type: 'blob', index: glass });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      return page.querySelector('.window')!.textContent!.includes('Black and greys have no hue');
+    };
+    expect(await paint('#000000')).toBe(true);
+    expect(await paint('#6b6b6b')).toBe(true);
+    // a grey a little blue has a hue, however faint: the tint colours it
+    expect(await paint('#6b6b72')).toBe(false);
+    expect(await paint('#3a3ad8')).toBe(false);
+  });
+
   it('a slider changes the scene while it is dragged, not only once it is let go (2026-11-21, a video of the sliders)', async () => {
     const { page, maker, fixture } = await open();
     const glass = maker.scene().blobs.findIndex((blob) => blob.material === 'glass');
@@ -303,19 +341,18 @@ describe('SceneMakerPage', () => {
       'Refractive index (air is 1)',
       'Refraction: how much of the bending shows',
       'Saturation of what is behind it (1: as it is)',
-      'Blur of what is behind it (px)',
     ]);
     expect(window().querySelector('.value')?.textContent?.trim()).toBe('33');
 
     const setter = maker as unknown as { setLiquidNumber(key: string, value: number): void; setLiquidSurface(surface: string): void };
     setter.setLiquidNumber('bezel', 20);
-    setter.setLiquidNumber('blur', 99);
+    setter.setLiquidNumber('saturation', 99);
     setter.setLiquidSurface('lip');
     fixture.detectChanges();
-    expect(maker.scene().liquid).toEqual({ bezel: 20, blur: 8, surface: 'lip' });
+    expect(maker.scene().liquid).toEqual({ bezel: 20, saturation: 3, surface: 'lip' });
     // back to the kit's value: not kept
     setter.setLiquidNumber('bezel', 33);
-    expect(maker.scene().liquid).toEqual({ blur: 8, surface: 'lip' });
+    expect(maker.scene().liquid).toEqual({ saturation: 3, surface: 'lip' });
     // frosted and liquid again: its settings are still there
     maker.chosen.set({ type: 'liquid' });
     fixture.detectChanges();
@@ -323,7 +360,7 @@ describe('SceneMakerPage', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(maker.scene().glass).toBeUndefined();
-    expect(maker.scene().liquid).toEqual({ blur: 8, surface: 'lip' });
+    expect(maker.scene().liquid).toEqual({ saturation: 3, surface: 'lip' });
     window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
