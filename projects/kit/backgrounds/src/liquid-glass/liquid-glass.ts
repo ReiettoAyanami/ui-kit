@@ -5,6 +5,8 @@ import { LenziGlassSurface, RIM_ANGLES, liquidGlassMaps, liquidGlassOutlineMaps 
 
 let made = 0;
 const SVG = 'http://www.w3.org/2000/svg';
+/** How many frames apart the glass looks at its corners again (about half a second). */
+const RADIUS_FRAMES = 30;
 
 /** Whether this browser draws an SVG filter as a backdrop-filter (only Chromium does). */
 function refracts(view: Window | null): boolean {
@@ -62,6 +64,9 @@ export class LenziLiquidGlass {
   private readonly sights = inject(LenziSights);
   private svg: SVGSVGElement | null = null;
   private size = '';
+  /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
+  private radius = 0;
+  private framesSinceRadius = 0;
   /** The rim pictures (data URLs) by side, the last from all round; which is shown, and how bright. */
   private rims: string[] = [];
   private shownRim = -1;
@@ -110,7 +115,8 @@ export class LenziLiquidGlass {
     const width = Math.round(box.width);
     const height = Math.round(box.height);
     if (width < 2 || height < 2) return;
-    const radius = parseFloat(this.document.defaultView?.getComputedStyle(this.element).borderTopLeftRadius ?? '0') || 0;
+    const radius = this.cornerRadius();
+    this.radius = radius;
     const path = this.glassPath();
     const key = `${width}x${height}|${radius}|${this.bezel()}|${this.thickness()}|${this.ior()}|${this.surface()}|${this.lightAngle()}|${this.refraction()}|${this.blur()}|${this.saturation()}|${this.rim()}|${this.glassViewBox()}|${path ?? ''}`;
     if (key === this.size) return;
@@ -154,6 +160,11 @@ export class LenziLiquidGlass {
     this.element.style.setProperty('backdrop-filter', `url(#${this.id})`);
   }
 
+  /** The element's corners' radius now, px (its top left one: the glass's corners are one radius). */
+  private cornerRadius(): number {
+    return parseFloat(this.document.defaultView?.getComputedStyle(this.element).borderTopLeftRadius ?? '0') || 0;
+  }
+
   /** What the path covers at this size, one alpha a pixel (0 out, 255 in); null when it cannot be drawn. */
   private outline(path: string, width: number, height: number): Uint8ClampedArray | null {
     const [minX = 0, minY = 0, boxWidth = 100, boxHeight = 100] = this.glassViewBox().trim().split(/[\s,]+/).map(Number);
@@ -176,6 +187,13 @@ export class LenziLiquidGlass {
   private light(): void {
     const svg = this.svg;
     if (!svg || this.rims.length === 0) return;
+    // its corners, about twice a second: changed by the app's CSS (a class, a variable), the filter is drawn again for
+    // them (lenzi, 2026-11-21: "tanti input non si aggiornano automaticamente"; read only when its size or a setting
+    // changed, a new radius went unseen)
+    if (++this.framesSinceRadius >= RADIUS_FRAMES) {
+      this.framesSinceRadius = 0;
+      if (this.cornerRadius() !== this.radius) this.rebuild?.();
+    }
     const box = this.element.getBoundingClientRect();
     const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
     const crowd = this.sights.around(middle, Math.max(box.width, box.height) * 0.8);

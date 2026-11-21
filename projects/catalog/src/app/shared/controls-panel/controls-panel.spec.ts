@@ -110,5 +110,16 @@ describe('ControlsPanel', () => {
       expect(bezel()).toBe(90);
       expect(field.value).toBe('90');
     });
+
+    it('emptied, or left half typed, goes back to the number it had (not the least of the range)', async () => {
+      const { field, bezel, type, settle } = await numberField();
+      await type('60');
+      for (const text of ['', '-']) {
+        await type(text);
+        await settle();
+        expect(bezel()).toBe(60);
+        expect(field.value).toBe('60');
+      }
+    });
   });
 });

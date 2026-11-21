@@ -34,11 +34,8 @@ export class LiquidGlassDemo {
   protected readonly rim = computed(() => this.num('rim', 0.5));
   protected readonly lightAngle = computed(() => this.num('lightAngle', -60));
   protected readonly rimBoids = computed(() => this.num('rimBoids', 60));
-  /**
-   * The window's corners. The directive reads them when it draws its maps (on its size or a setting changing), so a new
-   * radius is a new window: listed once, by its radius.
-   */
-  protected readonly radius = computed(() => [this.num('radius', 28)]);
+  /** The window's corners: the directive follows them (it looks at them about twice a second). */
+  protected readonly radius = computed(() => this.num('radius', 28));
 
   private num(key: string, otherwise: number): number {
     const value = Number(this.values()[key] ?? otherwise);

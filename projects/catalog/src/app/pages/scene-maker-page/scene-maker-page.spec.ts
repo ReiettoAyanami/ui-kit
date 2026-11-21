@@ -204,6 +204,44 @@ describe('SceneMakerPage', () => {
     expect(lookFor('glass', false)).toEqual({ material: 'glass' });
   });
 
+  it('a colour follows its selector while it moves, before it closes (lenzi, 2026-11-21: "tanti input non si aggiornano automaticamente")', async () => {
+    const { page, click, maker, fixture } = await open();
+    const settle = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+    const key = async (element: Element, name: string) => {
+      element.dispatchEvent(new KeyboardEvent('keydown', { key: name, keyCode: name === 'Escape' ? 27 : 0, shiftKey: true, bubbles: true }));
+      await settle();
+    };
+    const selector = () => document.querySelector('[role="dialog"]');
+    const swatch = (index: number) => page.querySelectorAll<HTMLButtonElement>('.window lenzi-color-picker button.swatch')[index]!;
+    /** Opens a swatch of the window and makes the selector's shade brighter (a grey moves too): the colour it shows, the selector still open. */
+    const move = async (index: number) => {
+      const shown = () => swatch(index).getAttribute('aria-label')!.split(': ').at(-1);
+      const before = shown();
+      swatch(index).click();
+      await settle();
+      await key(selector()!.querySelector('.area')!, 'ArrowUp');
+      expect(selector()).not.toBeNull();
+      expect(shown()).not.toBe(before);
+      return shown();
+    };
+    await click('Glass blob');
+    const moved = await move(0);
+    expect(maker.scene().blobs[1]!.colour).toBe(moved);
+    await key(selector()!, 'Escape');
+
+    // many colours: each of them the same
+    const press = [...page.querySelectorAll<HTMLButtonElement>('.window [aria-label="Colour"] button')].find((b) => b.textContent?.trim() === 'Many, shifting')!;
+    press.click();
+    await settle();
+    const second = maker.scene().blobs[1]!.colours![1];
+    const first = await move(0);
+    expect(maker.scene().blobs[1]!.colours).toEqual([first, second]);
+  });
+
   it("a blob's window: body and light, its colour (one, or many shifting), glass's tint, staying put, its weight", async () => {
     const { page, click, maker, fixture } = await open();
     const press = async (label: string, value: string) => {

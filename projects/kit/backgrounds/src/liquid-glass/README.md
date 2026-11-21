@@ -20,7 +20,8 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   brighter the more there are (whole at `rimBoids`, 60; `rim` 0.5 at most), lit on the side they come from (eight
   sides), all round once they are under the glass (`LenziSights.around`, at every frame; the nine rims drawn once).
 - **One filter per glass, made for its size**, again when it changes size or a setting (the maps are as large as it
-  is).
+  is), or its corners (`border-radius`, from any CSS: looked at about twice a second; lenzi, 2026-11-21, "tanti input non
+  si aggiornano automaticamente").
 - **Any shape** (lenzi, 2026-11-19: Liquid Glass on the cat): `glassPath`, an SVG path stretched over the element as
   `glassViewBox` says, and the bezel follows its outline: the path is drawn into pixels and each pixel's distance from
   the outline found (an exact distance transform, softened a little). The element still takes the shape's mask

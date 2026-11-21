@@ -71,14 +71,18 @@ export class ControlsPanel {
    * often the one already applied while it was typed (90 of "900"), and then nothing writes the field again.
    */
   protected settle(field: HTMLInputElement, control: Control): void {
-    const value = this.number(field.value, control);
+    const value = this.number(field.value, control, Number(this.values()[control.key] ?? control.default));
     this.set(control.key, value);
     field.value = String(value);
   }
 
-  protected number(text: string, control: Control): number {
-    const value = Number(text);
-    if (Number.isNaN(value)) return Number(control.default);
+  /**
+   * A field's number within the range; empty or not a number, the one it had (`Number('')` is 0: an emptied field became
+   * the range's least, 2026-11-21).
+   */
+  protected number(text: string, control: Control, had: number): number {
+    const value = text.trim() === '' ? Number.NaN : Number(text);
+    if (!Number.isFinite(value)) return had;
     return Math.min(control.max ?? value, Math.max(control.min ?? value, value));
   }
 }

@@ -473,7 +473,7 @@
     @if (isMulti(thing)) {
       @for (colour of thing.colours; track $index) {
         <span class="swatch">
-          <lenzi-color-picker [value]="colour" [label]="'The ' + noun + '’s colour ' + ($index + 1)" (picked)="setPaletteColour($index, $event)" />
+          <lenzi-color-picker [value]="colour" [label]="'The ' + noun + '’s colour ' + ($index + 1)" (valueChange)="setPaletteColour($index, $event)" />
           @if (thing.colours.length > 2) {
             <button mat-icon-button type="button" [attr.aria-label]="'Take colour ' + ($index + 1) + ' out'" (click)="removePaletteColour($index)">
               <mat-icon>close</mat-icon>
@@ -488,7 +488,7 @@
         </button>
       }
     } @else {
-      <lenzi-color-picker [value]="colourOf(thing)" [label]="'The ' + noun + '’s colour'" (picked)="setColour($event)" />
+      <lenzi-color-picker [value]="colourOf(thing)" [label]="'The ' + noun + '’s colour'" (valueChange)="setColour($event)" />
       @if (thing.colour) {
         <button mat-button type="button" (click)="setColour(null)">Back to the default</button>
       }
