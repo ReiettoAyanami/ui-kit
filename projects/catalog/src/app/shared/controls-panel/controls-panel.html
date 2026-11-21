@@ -27,7 +27,8 @@
               [step]="control.step ?? 1"
               [value]="value"
               [attr.aria-label]="control.label"
-              (change)="set(control.key, number($any($event.target).value, control))"
+              (input)="typed($any($event.target), control)"
+              (change)="settle($any($event.target), control)"
             />
           </div>
         }

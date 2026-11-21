@@ -52,6 +52,30 @@ export class ControlsPanel {
     return options.length <= 3 && width <= PILLS_ROOM;
   }
 
+  /**
+   * A number typed in its field applies as it is typed (lenzi, 2026-11-21: "tanti input non si aggiornano
+   * automaticamente"), once the field holds one the parameter takes. Not while it is half typed ("1.", "-": the field
+   * says nothing), out of the range (it may be the start of one: the "1" of "15"), or written another way than the
+   * number reads ("-0", ".5", "05"): the field shows the parameter, and would be written over under the typing.
+   * Enter or leaving the field settles it.
+   */
+  protected typed(field: HTMLInputElement, control: Control): void {
+    const value = field.valueAsNumber;
+    if (field.value === '' || !Number.isFinite(value) || String(value) !== field.value) return;
+    if (value < (control.min ?? -Infinity) || value > (control.max ?? Infinity)) return;
+    this.set(control.key, value);
+  }
+
+  /**
+   * Enter, or the field left: its number within the range, and the field shows it. Written here too: the number is
+   * often the one already applied while it was typed (90 of "900"), and then nothing writes the field again.
+   */
+  protected settle(field: HTMLInputElement, control: Control): void {
+    const value = this.number(field.value, control);
+    this.set(control.key, value);
+    field.value = String(value);
+  }
+
   protected number(text: string, control: Control): number {
     const value = Number(text);
     if (Number.isNaN(value)) return Number(control.default);
