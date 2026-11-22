@@ -14,7 +14,7 @@
 import { LinearRgb } from './color';
 import { BlobShape } from './shapes';
 import { shapeUniforms } from './blob-field';
-import { GLASS_BLUR, GlowEngine, GlowSurfaceInputs, GlowTarget } from './glow-engine';
+import { GLASS_BLUR, GlowEngine, GlowSurfaceInputs, GlowTarget, LAMP_SHARE } from './glow-engine';
 import { LIQUID_GLASS, LIQUID_STEPS, LenziLiquidBlobGlass, LiquidProfile, liquidProfile } from './liquid-profile';
 
 /** What a blob is made of: a lamp (the glowing blobs), glass, or something solid. */
@@ -435,13 +435,16 @@ uniform float layer;
 uniform float level;
 uniform float soft;   // device px over the edge
 uniform float covering;
-out vec4 color;
+layout(location = 0) out vec4 color;
+// the same light again, as the lamps' alone (its r + g + b in red): what a shadow takes from (GlowEngine.lampLight)
+layout(location = 1) out vec4 lampsAlone;
 ${FIELD_NEAR}
 void main() {
   Near n = nearAt(weights, layer);
   float lamps = lampCover(n, soft);
   if (covering > 0.5) {
     color = vec4(0.0, 0.0, 0.0, lamps);
+    lampsAlone = color;
     return;
   }
   // the lamps: their own shape, their own colours
@@ -453,6 +456,7 @@ void main() {
   float shining = fillOf(glass, slopeOf(n.east.r, n.west.r, n.north.r, n.south.r), soft) * clamp(n.here.b / max(glass, 1e-6), 0.0, 1.0);
   vec3 glow = texture(glassTints, vec3(uv, layer)).rgb / max(glass, 1e-6) * shining * level * 0.9;
   color = vec4(light + glow * (1.0 - lamps), 1.0 - (1.0 - lamps) * (1.0 - shining));
+  lampsAlone = vec4(color.r + color.g + color.b, 0.0, 0.0, color.a);
 }`;
 
 // what the solid and the glass surfaces share: the light that reaches them, and how a solid thing looks in it
@@ -481,34 +485,42 @@ vec3 shine(vec3 l) {
   float most = max(l.r, max(l.g, l.b));
   return l / max(most, 1e-4) * (1.0 - exp(-most));
 }
-// the wide light is a small picture: read softly, from a ring round the place, so its pixels never show
-vec3 wide(vec2 at) {
+// the wide light is a small picture: read softly, from a ring round the place, so its pixels never show (alpha: the
+// lamps' light in it)
+vec4 wide(vec2 at) {
   vec2 r = ambientTexel * 1.5;
-  vec3 sum = texture(ambient, at).rgb * 2.0;
+  vec4 sum = texture(ambient, at) * 2.0;
   for (int i = 0; i < 8; i++) {
     float a = float(i) * 0.7853982;
-    sum += texture(ambient, at + vec2(cos(a), sin(a)) * r).rgb;
+    sum += texture(ambient, at + vec2(cos(a), sin(a)) * r);
   }
   return sum / 10.0;
 }
 float luminance(vec2 at) { return dot(texture(ambient, at).rgb, vec3(0.2126, 0.7152, 0.0722)); }
+${LAMP_SHARE}
 
 // the light at this place, before any shadow: from all around (wide, so a lamp under a solid thing does not show
-// through it), here (with the glow right there), and the way it comes from (towards more light)
-struct Light { vec3 around; vec3 here; vec2 way; };
+// through it), here (with the glow right there), the way it comes from (towards more light), and how much of each is
+// the lamps' light (a shadow takes only that: the boids' light is their own)
+struct Light { vec3 around; vec3 here; vec2 way; float lampsAround; float lampsHere; };
 Light lightHere() {
-  vec3 around = wide(uv) * ${AMBIENT.toFixed(1)} * lightGain;
-  vec3 here = texture(light, uv).rgb * lightGain + around;
+  vec4 wideLight = wide(uv);
+  vec4 nearLight = texture(light, uv);
+  vec3 around = wideLight.rgb * ${AMBIENT.toFixed(1)} * lightGain;
+  vec3 here = nearLight.rgb * lightGain + around;
   vec2 towards = vec2(luminance(uv + vec2(lightStep.x, 0.0)) - luminance(uv - vec2(lightStep.x, 0.0)),
                       luminance(uv + vec2(0.0, lightStep.y)) - luminance(uv - vec2(0.0, lightStep.y)));
-  return Light(around, here, length(towards) > 1e-6 ? normalize(towards) : vec2(0.0));
+  return Light(around, here, length(towards) > 1e-6 ? normalize(towards) : vec2(0.0), lampShare(wideLight), lampShare(nearLight));
 }
-// that light on a level: less of both in the shadow of the solid things of that level and of the levels above it. A
-// solid thing never shades a level above it (lenzi, 2026-11-20: glass over a solid thing was half in its shadow, cut
-// along the hidden solid's edge: "found this other bug", "di questo problema")
+// that light on a level: less of the lamps' part of both in the shadow of the solid things of that level and of the
+// levels above it. A solid thing never shades a level above it (lenzi, 2026-11-20: glass over a solid thing was half in
+// its shadow, cut along the hidden solid's edge: "found this other bug", "di questo problema"); the boids' light is
+// never in a shadow (2026-11-22: "normal boids stop producing light when in shadow")
 Light lightOn(Light l, vec4 shadows, int layer) {
-  float lit = 1.0 - shaded * clamp(shadows[layer], 0.0, 1.0);
-  return Light(l.around * lit, l.here * lit, l.way);
+  float stopped = shaded * clamp(shadows[layer], 0.0, 1.0);
+  vec3 around = l.around * (1.0 - stopped * l.lampsAround);
+  vec3 here = (l.here - l.around) * (1.0 - stopped * l.lampsHere) + around;
+  return Light(around, here, l.way, l.lampsAround, l.lampsHere);
 }
 
 // a field's edge here: how much of the place it fills, how far inside it is (device px), and its slope
@@ -853,6 +865,7 @@ uniform float lightGain;
 uniform int layers;
 uniform sampler2DArray weights;
 out vec4 color;
+${LAMP_SHARE}
 void main() {
   float solid = 0.0;
   for (int i = 0; i < ${MAX_MATERIAL_LAYERS}; i++) {
@@ -860,8 +873,12 @@ void main() {
     solid = max(solid, texture(weights, vec3(uv, float(i))).g);
   }
   float out_ = 1.0 - smoothstep(${FACE_SOFT.toFixed(2)}, 1.0, solid);
-  vec3 l = (texture(light, uv).rgb * 0.5 + texture(ambient, uv).rgb * ${AMBIENT.toFixed(1)}) * lightGain;
-  l *= 1.0 - shaded * clamp(texture(shadow, uv).r, 0.0, 1.0);
+  // a shadow takes the lamps' part of the light, never the boids' own (lenzi, 2026-11-22)
+  vec4 nearLight = texture(light, uv);
+  vec4 wideLight = texture(ambient, uv);
+  float stopped = shaded * clamp(texture(shadow, uv).r, 0.0, 1.0);
+  vec3 l = (nearLight.rgb * 0.5 * (1.0 - stopped * lampShare(nearLight))
+    + wideLight.rgb * ${AMBIENT.toFixed(1)} * (1.0 - stopped * lampShare(wideLight))) * lightGain;
   color = vec4(l * out_, out_);
 }`;
 
@@ -1074,6 +1091,8 @@ export class MaterialScene {
         this.useLayers(program, 'colours', fields.colours, 1);
         this.useLayers(program, 'glassTints', fields.glass, 2);
         gl.uniform1f(engine.uniform(program, 'layer'), slot);
+        // the lamps' light, the light a shadow takes from: the boids' (others) is their own
+        engine.lampLight(true);
         if (under && objects.some((object) => object.material === 'lamp')) {
           gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
           gl.uniform1f(engine.uniform(program, 'covering'), 1);
@@ -1082,6 +1101,7 @@ export class MaterialScene {
         gl.blendFunc(gl.ONE, gl.ONE);
         gl.uniform1f(engine.uniform(program, 'covering'), 0);
         engine.fullscreen();
+        engine.lampLight(false);
         under = true;
       });
     }

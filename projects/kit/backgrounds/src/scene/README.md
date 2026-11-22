@@ -57,7 +57,9 @@ contenente boidi, blob, boidi-blob").
   it, a lamp under it does not show through, one in another's shadow is dark; lenzi, 2026-11-15, "solid non emitting
   objects (the one on top) lets light get through still", "the shadows too"); dark far from light, coloured by it,
   their edge lit on the light's side. They are drawn into the picture before glass blurs it, so glass on their level
-  or above (shining or not) shows them; opaque always. Their shadow takes all the glow behind them, with a soft edge
+  or above (shining or not) shows them; opaque always. Their shadow takes all the lamps' glow behind them (the boids'
+  own glow is theirs: a boid in a shadow still glows and lights what is near it; lenzi, 2026-11-22, "normal boids stop
+  producing light when in shadow"), with a soft edge
   (a lamp is wide: the edge is wider the farther from what casts it), and falls on solid things and glass too, on its
   own level and the ones under it, never on one above it (lenzi, 2026-11-20: a glass star over a solid blob was half
   in its shadow, "found this other bug"; by default glass is a level above, so out of the solid things' shadows). A

@@ -56,11 +56,15 @@ export interface GlowSurfaceInputs {
 export interface GlowLayers {
   /** Before the light: the scene's own targets (fields, shadows), drawn with `into`. */
   prepare?(): void;
-  /** The scene's light, added (blending on, ONE ONE) into the scene target. */
+  /**
+   * The scene's light, added (blending on, ONE ONE) into the scene target. A lamp's light, the light a shadow takes
+   * from, is drawn between `lampLight(true)` and `lampLight(false)` by a shader with a second output; the rest (the
+   * boids') is their own, and no shadow takes it.
+   */
   draw(): void;
-  /** Where the light is stopped: a texture whose red is the share of the glow stopped there (0..1), or null. */
+  /** Where the lamps' light is stopped: a texture whose red is the share of it stopped there (0..1), or null. */
   shadow?(): WebGLTexture | null;
-  /** How much of the glow a shadow takes away, 0..1; not said: the frame's (the page's `--lenzi-shadow`). */
+  /** How much of the lamps' glow a shadow takes away, 0..1; not said: the frame's (the page's `--lenzi-shadow`). */
   shadowAmount?: number;
   /**
    * Solid things into the finished picture, before glass blurs it (so glass shows them): one fullscreen pass that
@@ -132,6 +136,43 @@ void main() {
     + texture(source, uv + vec2(o.x, -o.y)) + texture(source, uv - vec2(o.x, -o.y))) / 8.0;
 }`;
 
+/**
+ * GLSL: how much of the glow at a place is the lamps' light, 0..1. The glow carries it in its alpha (the lamps' light
+ * alone, its r + g + b, spread as the light is): a shadow takes from that, never from the rest (lenzi, 2026-11-22:
+ * "normal boids stop producing light when in shadow").
+ */
+export const LAMP_SHARE = `
+float lampShare(vec4 spread) { return clamp(spread.a / max(spread.r + spread.g + spread.b, 1e-5), 0.0, 1.0); }`;
+
+// the glow's first halving: the light, and in alpha the lamps' light alone (the scene target's second texture)
+const DOWN_LAMPS = `#version 300 es
+precision highp float;
+in vec2 uv;
+uniform sampler2D source;
+uniform sampler2D lamps;
+uniform vec2 halfTexel;
+uniform float spread;
+out vec4 color;
+vec4 tap(vec2 at) { return vec4(texture(source, at).rgb, texture(lamps, at).r); }
+void main() {
+  vec2 o = halfTexel * spread;
+  color = (tap(uv) * 4.0 + tap(uv - o) + tap(uv + o) + tap(uv + vec2(o.x, -o.y)) + tap(uv - vec2(o.x, -o.y))) / 8.0;
+}`;
+
+// what stays of the last frame (trails): its light, and its lamps' light alone
+const TRAIL = `#version 300 es
+precision highp float;
+in vec2 uv;
+uniform sampler2D source;
+uniform sampler2D lamps;
+uniform float gain;
+layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 lampsAlone;
+void main() {
+  color = texture(source, uv) * gain;
+  lampsAlone = texture(lamps, uv) * gain;
+}`;
+
 const UP = `#version 300 es
 precision highp float;
 in vec2 uv;
@@ -168,13 +209,16 @@ vec3 encode(vec3 c) {
   return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
 }
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+${LAMP_SHARE}
 void main() {
   vec4 object = texture(scene, uv);
+  vec4 spread = max(texture(bloom, uv), 0.0);
   // the glow is around the objects, not over them (their alpha says where they are): an object is as
   // bright as "core" says, whatever its size, and a large one is not washed out by its own glow
-  // behind a solid thing, away from a light, part of that light's glow is missing (its shadow)
-  float shaded = 1.0 - shadowAmount * clamp(texture(shadow, uv).r, 0.0, 1.0);
-  vec3 l = max(object.rgb, 0.0) * core + max(texture(bloom, uv).rgb, 0.0) * glow * shaded * (1.0 - outside * clamp(object.a, 0.0, 1.0));
+  // behind a solid thing, away from a lamp, part of that lamp's glow is missing (its shadow): of the lamps' glow only,
+  // the boids' own stays (lenzi, 2026-11-22: "normal boids stop producing light when in shadow")
+  float shaded = 1.0 - shadowAmount * clamp(texture(shadow, uv).r, 0.0, 1.0) * lampShare(spread);
+  vec3 l = max(object.rgb, 0.0) * core + spread.rgb * glow * shaded * (1.0 - outside * clamp(object.a, 0.0, 1.0));
   float most = max(l.r, max(l.g, l.b));
   vec3 own = l / max(most, 1e-4);
   // dark: light added onto the base. More light is more of the object's own colour, never white: the
@@ -209,8 +253,12 @@ export class GlowEngine {
   private readonly vertexArray: WebGLVertexArrayObject;
   private readonly copy: WebGLProgram;
   private readonly down: WebGLProgram;
+  private readonly downLamps: WebGLProgram;
+  private readonly trailCopy: WebGLProgram;
   private readonly up: WebGLProgram;
   private readonly composite: WebGLProgram;
+  /** Whether the GPU draws into one channel of half floats (the lamps' light alone needs no more). */
+  private readonly redFloat: boolean;
   private disposed = false;
 
   /** null where there is no WebGL2 (the background then shows a still picture in CSS). */
@@ -234,10 +282,13 @@ export class GlowEngine {
     private readonly canvas: HTMLCanvasElement,
   ) {
     // light adds up beyond 1 before it is brought to the screen: half floats where the GPU draws into them
-    this.float = !!gl.getExtension('EXT_color_buffer_float') || !!gl.getExtension('EXT_color_buffer_half_float');
+    this.redFloat = !!gl.getExtension('EXT_color_buffer_float');
+    this.float = this.redFloat || !!gl.getExtension('EXT_color_buffer_half_float');
     this.vertexArray = gl.createVertexArray()!;
     this.copy = this.program(COPY);
     this.down = this.program(DOWN);
+    this.downLamps = this.program(DOWN_LAMPS);
+    this.trailCopy = this.program(TRAIL);
     this.up = this.program(UP);
     this.composite = this.program(COMPOSITE);
     this.noShadow = gl.createTexture()!;
@@ -336,6 +387,17 @@ export class GlowEngine {
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
   }
 
+  /**
+   * While a scene draws its light (`draw`): whether what it draws now is a lamp's light, the light a shadow takes from.
+   * On, a shader writes it twice: as light (location 0) and as the lamps' light alone (location 1: its r + g + b in red,
+   * and its alpha, so a lamp that covers what is under it covers both). Off again after: the rest of the light (the
+   * boids') is their own, and no shadow takes it (lenzi, 2026-11-22: "normal boids stop producing light when in shadow").
+   */
+  lampLight(on: boolean): void {
+    const gl = this.gl;
+    gl.drawBuffers(on ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0]);
+  }
+
   /** The canvas's size in CSS px, and how many device px one of them is: the targets follow. */
   resize(cssWidth: number, cssHeight: number, scale: number): void {
     const width = Math.max(2, Math.round(cssWidth * scale));
@@ -347,7 +409,7 @@ export class GlowEngine {
     this.canvas.width = width;
     this.canvas.height = height;
     this.freeTargets();
-    this.scene = [this.target(width, height, this.float), this.target(width, height, this.float)];
+    this.scene = [this.sceneTarget(width, height), this.sceneTarget(width, height)];
     for (let level = 1; level <= BLOOM_LEVELS; level++) {
       const w = width >> level;
       const h = height >> level;
@@ -383,23 +445,29 @@ export class GlowEngine {
       gl.disable(gl.BLEND);
     }
 
-    // 1. the scene's light
+    // 1. the scene's light, and beside it the lamps' light alone (what a shadow takes from): both cleared, both with
+    // what stays of the last frame
     this.into(current);
     gl.disable(gl.BLEND);
+    this.lampLight(true);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    if (frame.trail > 0) this.blit(this.copy, previous, frame.trail);
+    if (frame.trail > 0) this.trail(previous, frame.trail);
+    this.lampLight(false);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE);
     layers.draw();
+    this.lampLight(false);
     gl.disable(gl.BLEND);
     this.scene = [current, previous];
 
-    // 2. the glow: halved again and again, then added back on the way up
+    // 2. the glow: halved again and again, then added back on the way up. The first halving puts the lamps' light alone
+    // in alpha: from there on it spreads as the light does
     let source = current;
     for (const level of this.bloom) {
       this.into(level);
-      this.kawase(this.down, source, 1, 1);
+      if (source === current) this.kawase(this.downLamps, source, 1, 1, current.textures[1]);
+      else this.kawase(this.down, source, 1, 1);
       source = level;
     }
     gl.enable(gl.BLEND);
@@ -493,10 +561,23 @@ export class GlowEngine {
     this.fullscreen();
   }
 
-  private kawase(program: WebGLProgram, source: Target, spread: number, gain: number): void {
+  /** What stays of the last frame, into the scene target: its light and its lamps' light alone. */
+  private trail(previous: Target, gain: number): void {
+    const gl = this.gl;
+    const program = this.trailCopy;
+    gl.useProgram(program);
+    this.bind(program, 'source', previous, 0);
+    this.useTexture(program, 'lamps', previous.textures[1] ?? previous.texture, 1);
+    gl.uniform1f(this.uniform(program, 'gain'), gain);
+    this.fullscreen();
+  }
+
+  /** One step of the glow's blur; `lamps`: the scene's lamps' light alone, for the first halving. */
+  private kawase(program: WebGLProgram, source: Target, spread: number, gain: number, lamps?: WebGLTexture): void {
     const gl = this.gl;
     gl.useProgram(program);
     this.bind(program, 'source', source, 0);
+    if (lamps) this.useTexture(program, 'lamps', lamps, 1);
     gl.uniform2f(this.uniform(program, 'halfTexel'), 0.5 / source.width, 0.5 / source.height);
     gl.uniform1f(this.uniform(program, 'spread'), spread);
     gl.uniform1f(this.uniform(program, 'gain'), gain);
@@ -554,6 +635,36 @@ export class GlowEngine {
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     return { framebuffer, texture, textures: [texture], width, height };
+  }
+
+  /**
+   * A target for the scene's light (rgb: light; a: how much of the place things cover), and beside it the lamps' light
+   * alone (red: its r + g + b), what a shadow takes from. One channel where the GPU draws into one, else as the light.
+   * What is drawn goes into the light alone unless it says it is a lamp's (`lampLight`).
+   */
+  private sceneTarget(width: number, height: number): Target {
+    const gl = this.gl;
+    const target = this.target(width, height, this.float);
+    const attach = (format: number, layout: number, type: number): WebGLTexture => {
+      const texture = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, layout, type, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, texture, 0);
+      return texture;
+    };
+    const asTheLight = () => (this.float ? attach(gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT) : attach(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE));
+    let lamps = this.redFloat ? attach(gl.R16F, gl.RED, gl.HALF_FLOAT) : this.float ? asTheLight() : attach(gl.R8, gl.RED, gl.UNSIGNED_BYTE);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+      gl.deleteTexture(lamps);
+      lamps = asTheLight();
+    }
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+    target.textures.push(lamps);
+    return target;
   }
 
   private freeTargets(): void {

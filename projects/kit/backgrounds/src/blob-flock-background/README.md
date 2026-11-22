@@ -28,7 +28,8 @@ combination of flocks and blobs the latter being a obstacle for the flocks").
   o solidi"): `lamp` (the glowing blobs), `glass` (it blurs what is behind it, as much as its own `blur` says, and takes
   the light around it, on its face and along its edge, as the page's glass), `solid` (the page's surface, its edge lit on the side
   of the light, and a hard shadow on the glow behind it, the shadow following its shape, on its own level and the
-  ones under it, never on one above it: glass over it is not in its shadow, lenzi 2026-11-20). Blobs melt only
+  ones under it, never on one above it: glass over it is not in its shadow, lenzi 2026-11-20; it takes the lamps' light,
+  never the boids' own: a boid in it still glows and lights what is near it, lenzi 2026-11-22). Blobs melt only
   into blobs of their own material. `blobSizes` gives each blob its own size ("un blob grande, un/due blob
   piccoli dello stesso materiale").
 - **Liquid glass** (`glass="liquid"`; lenzi, 2026-11-19: "capire se questa tecnica per il rendering del vetro si
