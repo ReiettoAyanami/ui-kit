@@ -18,7 +18,7 @@ describe('a random scene', () => {
     for (let seed = 1; seed <= 200; seed++) {
       const scene = randomScene(seeded(seed));
       expect(cleanScene(scene)).toEqual(scene);
-      // many things (2026-11-21: "aggiungi più entità nelle scene randomiche"): six to twelve blobs, two to five fleets
+      // many things (2026-11-22: "aggiungi più entità nelle scene randomiche"): six to twelve blobs, two to five fleets
       expect(scene.blobs.length).toBeGreaterThanOrEqual(6);
       expect(scene.blobs.length).toBeLessThanOrEqual(12);
       expect(scene.blobs.some((blob) => blob.material === 'lamp' || blob.emitting)).toBe(true);
@@ -51,7 +51,7 @@ describe('a random scene', () => {
     expect(scenes.some((scene) => scene.currents?.length)).toBe(true);
     expect(scenes.some((scene) => scene.currents?.length === 2)).toBe(true);
     expect(scenes.some((scene) => !scene.currents)).toBe(true);
-    // the glass's own blur, and liquid glass, now and then (2026-11-21)
+    // the glass's own blur, and liquid glass, now and then (2026-11-22)
     expect(blobs.some((blob) => typeof blob.blur === 'number')).toBe(true);
     expect(scenes.some((scene) => scene.glass === 'liquid')).toBe(true);
     expect(scenes.some((scene) => !scene.glass)).toBe(true);

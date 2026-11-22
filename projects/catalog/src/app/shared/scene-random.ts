@@ -1,5 +1,5 @@
 // A scene made by chance (lenzi, 2026-11-15: "put a random gen button"): many blobs of every look, two to five fleets,
-// often a current or two, in a few colours that go together (2026-11-21: "aggiungi più entità nelle scene randomiche";
+// often a current or two, in a few colours that go together (2026-11-22: "aggiungi più entità nelle scene randomiche";
 // it was three to seven blobs, one to three fleets, now and then one current). Within the bounds a link keeps
 // (SCENE_LIMITS). Pure: the chance is given (Math.random when not said), so a test can repeat one. A plain module
 // (no schematic makes one).
@@ -52,7 +52,7 @@ export function randomScene(random: () => number = Math.random): LenziScene {
           ...(chance(0.3) ? { blur: whole(0, 24) } : {}),
         };
   // most things on their material's own level (glass above the rest); some on the other of those two. Never a level more:
-  // every level is the whole picture's work once more (2026-11-21, on an integrated GPU a scene of many things on four
+  // every level is the whole picture's work once more (2026-11-22, on an integrated GPU a scene of many things on four
   // levels ran at 24 frames a second, on two at 40)
   const level = (): { layer?: number } => (chance(0.3) ? { layer: whole(0, 1) } : {});
 
