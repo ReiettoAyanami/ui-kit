@@ -1,6 +1,7 @@
-// A scene made by chance (lenzi, 2026-11-15: "put a random gen button"): a few blobs of every look, a fleet or three,
-// now and then a current, in a few colours that go together. Within the bounds a link keeps (SCENE_LIMITS), and light
-// enough for a phone. Pure: the chance is given (Math.random when not said), so a test can repeat one. A plain module
+// A scene made by chance (lenzi, 2026-11-15: "put a random gen button"): many blobs of every look, two to five fleets,
+// often a current or two, in a few colours that go together (2026-11-21: "aggiungi più entità nelle scene randomiche";
+// it was three to seven blobs, one to three fleets, now and then one current). Within the bounds a link keeps
+// (SCENE_LIMITS). Pure: the chance is given (Math.random when not said), so a test can repeat one. A plain module
 // (no schematic makes one).
 import { BLOB_SHAPE_NAMES, BlobMaterial, BoidsFollow, LenziCurrent, LenziScene, LenziSceneBlob, LenziSceneFleet } from '@lenzi/ui-kit/backgrounds';
 
@@ -42,18 +43,25 @@ export function randomScene(random: () => number = Math.random): LenziScene {
     if (roll < 0.85) return { material: 'solid' };
     return { material: 'glass', emitting: true };
   };
-  // glass now and then says how much it tints and shows through
-  const glassy = (thing: Look): { tint?: number; transparency?: number } =>
-    thing.material === 'glass' && chance(0.35) ? { tint: round(between(0.2, 0.8), 2), transparency: round(between(0.4, 0.9), 2) } : {};
-  // most things on their material's own level (glass above the rest); some on one chosen
-  const level = (): { layer?: number } => (chance(0.3) ? { layer: whole(0, 3) } : {});
+  // glass now and then says how much it tints and shows through, and how much it blurs (each glass its own, 2026-11-21)
+  const glassy = (thing: Look): { tint?: number; transparency?: number; blur?: number } =>
+    thing.material !== 'glass'
+      ? {}
+      : {
+          ...(chance(0.35) ? { tint: round(between(0.2, 0.8), 2), transparency: round(between(0.4, 0.9), 2) } : {}),
+          ...(chance(0.3) ? { blur: whole(0, 24) } : {}),
+        };
+  // most things on their material's own level (glass above the rest); some on the other of those two. Never a level more:
+  // every level is the whole picture's work once more (2026-11-21, on an integrated GPU a scene of many things on four
+  // levels ran at 24 frames a second, on two at 40)
+  const level = (): { layer?: number } => (chance(0.3) ? { layer: whole(0, 1) } : {});
 
-  const blobs = Array.from({ length: whole(3, 7) }, (_, index): LenziSceneBlob => {
+  const blobs = Array.from({ length: whole(6, 12) }, (_, index): LenziSceneBlob => {
     const thing = look();
     return {
       ...thing,
-      // one large, the rest mostly small
-      size: round(index === 0 ? between(0.14, 0.22) : 0.05 + 0.13 * random() ** 2),
+      // one large, the rest mostly small (many of them: smaller than when they were few)
+      size: round(index === 0 ? between(0.14, 0.22) : 0.04 + 0.11 * random() ** 2),
       x: round(between(0.1, 0.9)),
       y: round(between(0.12, 0.88)),
       ...level(),
@@ -77,23 +85,23 @@ export function randomScene(random: () => number = Math.random): LenziScene {
     const roll = random();
     return roll < 0.4 ? 'flee' : roll < 0.7 ? 'near' : roll < 0.85 ? 'target' : 'none';
   };
-  const fleets = Array.from({ length: whole(1, 3) }, (_, index): LenziSceneFleet => {
+  const fleets = Array.from({ length: whole(2, 5) }, (_, index): LenziSceneFleet => {
     const place = { x: round(between(0.15, 0.85)), y: round(between(0.15, 0.85)), ...level(), follow: pointer() };
     // now and then a leader with ways of its own
     const ways = chance(0.35)
       ? { maxSpeed: whole(10, 24) * 10, separation: round(between(0.8, 2.2), 1), alignment: round(between(0.6, 1.8), 1), cohesion: round(between(0.6, 1.8), 1), wander: round(between(0, 0.6), 2) }
       : {};
     // the first fleet is boids: the many; then boids or blob-boids, fewer
-    if (index === 0 || chance(0.5)) {
-      return { kind: 'boid', count: index === 0 ? whole(12, 38) * 10 : whole(6, 20) * 10, colonies: whole(2, 5), ...place, ...paint(), ...ways };
+    if (index === 0 || chance(0.45)) {
+      return { kind: 'boid', count: index === 0 ? whole(15, 40) * 10 : whole(5, 18) * 10, colonies: whole(2, 5), ...place, ...paint(), ...ways };
     }
     const thing = look();
-    return { kind: 'blob-boid', ...thing, count: whole(15, 50), colonies: whole(1, 3), size: whole(8, 16), ...place, ...paint(), ...glassy(thing), ...ways };
+    return { kind: 'blob-boid', ...thing, count: whole(20, 70), colonies: whole(1, 3), size: whole(8, 16), ...place, ...paint(), ...glassy(thing), ...ways };
   });
 
-  // now and then a current, from one side across to the other, bending on its way
+  // often a current, now and then two, each from one side across to the other, bending on its way
   const currents: LenziCurrent[] = [];
-  if (chance(0.35)) {
+  for (let count = chance(0.5) ? (chance(0.4) ? 2 : 1) : 0; currents.length < count; ) {
     const points = whole(3, 4);
     const leftToRight = chance(0.5);
     const strength = whole(10, 30) * 10;
@@ -113,5 +121,7 @@ export function randomScene(random: () => number = Math.random): LenziScene {
     fleets,
     ...(currents.length ? { currents } : {}),
     throwable: true,
+    // now and then its glass liquid
+    ...(chance(0.3) ? { glass: 'liquid' as const } : {}),
   };
 }
