@@ -1,0 +1,9 @@
+<lenzi-schedule-grid
+  nameHeader="Person"
+  label="Shifts of January"
+  [days]="days"
+  [rows]="rows"
+  [highlight]="me()"
+  [editable]="editable()"
+  (picked)="change($event)"
+/>

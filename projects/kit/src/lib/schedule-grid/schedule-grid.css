@@ -1,0 +1,205 @@
+:host {
+  display: block;
+}
+
+/* The grid scrolls inside its box, never the page; rounded, with the border of every surface (RULES.md,
+   "Borders"). Its sticky header and names stay inside it (isolation), under a window opened over the page. */
+.grid-scroll {
+  isolation: isolate;
+  overflow: auto;
+  max-height: inherit;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-panel-radius);
+  background-color: var(--mat-sys-surface);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface);
+}
+
+tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+/* The days: the number on top, bold; the weekday under it. They stay at the top while it scrolls down. */
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.day {
+  min-width: 48px;
+  padding: 8px 2px 6px;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.day-label,
+.day-caption {
+  display: block;
+}
+
+.day-label {
+  font: var(--mat-sys-title-small);
+  font-weight: 700;
+}
+
+.day-caption {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* The names stay at the left while it scrolls sideways; the corner stays over both. */
+.name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding: 0 12px;
+  text-align: left;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+thead .name {
+  z-index: 3;
+  font: var(--mat-sys-title-small);
+  font-weight: 700;
+  vertical-align: bottom;
+  padding-bottom: 6px;
+}
+
+.name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name-text {
+  font-weight: 700;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  flex: none;
+  width: var(--lenzi-dot-size);
+  height: var(--lenzi-dot-size);
+  border-radius: 50%;
+  /* a circle stays a circle, round or squircle corners alike */
+  corner-shape: round;
+}
+
+/* Days off: the column a shade lighter, header and cells. */
+th.off,
+td.off {
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+/* Today: its header in the accent. */
+th.today {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+th.today .day-caption {
+  color: inherit;
+}
+
+td.today {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 10%, var(--mat-sys-surface));
+}
+
+/* The row of the person looking stands out: their name in the accent, the row a little tinted. */
+tr.highlight > .name {
+  color: var(--mat-sys-primary);
+}
+
+tr.highlight > td:not(.today) {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, var(--mat-sys-surface));
+}
+
+tr.highlight > td.off:not(.today) {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, var(--mat-sys-surface-container-high));
+}
+
+/* A cell: its tag, or room for one. */
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 4px 3px;
+  box-sizing: border-box;
+}
+
+button.slot {
+  border: none;
+  margin: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.slot:hover,
+button.slot:focus-visible {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+  outline: none;
+}
+
+button.slot:focus-visible {
+  box-shadow: inset 0 0 0 var(--lenzi-border-focus) var(--mat-sys-primary);
+}
+
+/* The tag: the code bold, the second fact under it; tinted with its identity colour, its border in it. */
+.tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  max-width: 64px;
+  min-height: 36px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-option-radius);
+  background-color: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface);
+}
+
+.tag.toned {
+  border-color: var(--lenzi-schedule-tone);
+  background-color: color-mix(in oklab, var(--lenzi-schedule-tone) 30%, var(--mat-sys-surface));
+}
+
+.tag-text,
+.tag-detail {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-text {
+  font: var(--mat-sys-label-medium);
+  font-weight: 700;
+}
+
+.tag-detail {
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}

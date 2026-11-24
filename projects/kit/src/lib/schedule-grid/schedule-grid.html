@@ -1,0 +1,66 @@
+<!-- The grid scrolls sideways inside its box; the names and the days stay in place. -->
+<div class="grid-scroll">
+  <table [attr.aria-label]="label()">
+    <thead>
+      <tr>
+        <th scope="col" class="name">{{ nameHeader() }}</th>
+        @for (day of days(); track day.key) {
+          <th
+            scope="col"
+            class="day"
+            [attr.data-day]="day.key"
+            [class.off]="day.off"
+            [class.today]="day.today"
+            [attr.title]="day.title ?? null"
+            [attr.aria-label]="day.title ?? null"
+          >
+            <span class="day-label">{{ day.label }}</span>
+            @if (day.caption) {
+              <span class="day-caption">{{ day.caption }}</span>
+            }
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.id) {
+        <tr [class.highlight]="row.id === highlight()">
+          <th scope="row" class="name">
+            <span class="name-line">
+              @if (row.color) {
+                <span class="dot" [style.background-color]="row.color"></span>
+              }
+              <span class="name-text">{{ row.name }}</span>
+            </span>
+          </th>
+          @for (day of days(); track day.key) {
+            @let cell = cellOf(row, day);
+            <td [class.off]="day.off" [class.today]="day.today">
+              @if (editable()) {
+                <button type="button" class="slot" [attr.aria-label]="labelOf(row, day)" [attr.title]="cell?.label ?? null" (click)="pick(row, day)">
+                  @if (cell) {
+                    <span class="tag" [class.toned]="!!cell.color" [style.--lenzi-schedule-tone]="cell.color ?? null">
+                      <span class="tag-text">{{ cell.text }}</span>
+                      @if (cell.detail) {
+                        <span class="tag-detail">{{ cell.detail }}</span>
+                      }
+                    </span>
+                  }
+                </button>
+              } @else if (cell) {
+                <span class="slot" [attr.title]="cell.label ?? null" [attr.aria-label]="labelOf(row, day)">
+                  <span class="tag" [class.toned]="!!cell.color" [style.--lenzi-schedule-tone]="cell.color ?? null">
+                    <span class="tag-text">{{ cell.text }}</span>
+                    @if (cell.detail) {
+                      <span class="tag-detail">{{ cell.detail }}</span>
+                    }
+                  </span>
+                </span>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
