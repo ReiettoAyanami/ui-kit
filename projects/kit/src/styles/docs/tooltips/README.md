@@ -1,6 +1,6 @@
 # Tooltips
 
-Material's tooltips, drawn by the kit as dark glass with a 2 px border, not Material's light box.
+Material's tooltips, drawn by the kit as dark glass with a 1 px border, not Material's light box.
 
 ## Rules
 

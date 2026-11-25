@@ -1,5 +1,5 @@
 <main class="page" lenziGlassPage>
-  <lenzi-search-bar class="search" lenziShellSearch placeholder="Search the components" [value]="q() ?? ''" (search)="search($event)" />
+  <lenzi-search-bar class="search" placeholder="Search the components" [value]="q() ?? ''" (search)="search($event)" />
 
   @for (group of groups(); track group.category) {
     <section class="group">

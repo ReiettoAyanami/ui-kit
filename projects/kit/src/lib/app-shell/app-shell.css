@@ -121,62 +121,10 @@
   transition: visibility 0s linear var(--lenzi-standard-duration);
 }
 
-/* A page with a search bar (LenziShellSearch) closes the bar onto the button and the search bar (lenzi,
-   2026-11-14: "if there's a search bar make it slide there ... and incorporate it into the top bar", "wait for
-   the top bar to catch to the right of the search bar, then incorporate it, keep it slide until it gets all the
-   way to the right of the icon covering the text"). Closed, the search bar sits just after the button and the
-   bar ends with the same gap on its right as above and under it: the button's square and the search bar's width,
-   or (a search bar the page puts further left than that: a phone) the search bar's right end. The directive
-   moves the search bar on the bar's edge while it closes. */
-.lenzi-shell-compact.lenzi-shell-with-search .lenzi-shell-bar.mat-toolbar {
-  width: max(
-    var(--lenzi-shell-bar-height),
-    calc(
-      min(
-        var(--lenzi-shell-search-right, 0px) - var(--lenzi-float-gap) - env(safe-area-inset-left, 0px),
-        var(--lenzi-shell-search-right, 0px) - var(--lenzi-shell-search-left, 0px) + var(--lenzi-shell-bar-height)
-      ) + (var(--lenzi-shell-bar-height) - var(--lenzi-search-height)) / 2
-    )
-  );
-}
-
-/* The search bar sticks at the top, level with the bar's middle: under the bar while it is whole, over it while it
-   rides on the edge and once it is in. */
-.lenzi-shell-search {
-  position: sticky;
-  top: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px) + (var(--lenzi-shell-bar-height) - var(--lenzi-search-height)) / 2);
-  z-index: 4;
-  box-sizing: border-box;
-  transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-accelerate-easing);
-}
-
-.lenzi-shell-search-in-bar,
-.lenzi-shell-compact .lenzi-shell-search {
-  z-index: 6;
-}
-
-/* In the bar it is filled, so it covers the title it slides over ("covering the text"). */
-.lenzi-shell-search .mat-mdc-text-field-wrapper {
-  border-radius: calc(var(--lenzi-search-height) / 2);
-  transition: background-color var(--lenzi-standard-duration) var(--lenzi-standard-easing);
-}
-
-.lenzi-shell-search-in-bar .mat-mdc-text-field-wrapper,
-.lenzi-shell-compact .lenzi-shell-search .mat-mdc-text-field-wrapper {
-  background-color: var(--mat-sys-surface-container-high);
-}
-
-/* A search bar the page puts left of where the button ends (a phone): its left end moves after the button. */
-.lenzi-shell-compact .lenzi-shell-search {
-  padding-inline-start: max(0px, calc(env(safe-area-inset-left, 0px) + var(--lenzi-float-gap) + var(--lenzi-shell-bar-height) - var(--lenzi-shell-search-left, 0px)));
-  transition: padding-inline-start var(--lenzi-standard-duration) var(--lenzi-standard-easing);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .lenzi-shell-bar.mat-toolbar,
   .lenzi-shell-menu,
-  .lenzi-shell-bar [lenziShellActions],
-  .lenzi-shell-search {
+  .lenzi-shell-bar [lenziShellActions] {
     transition: none;
   }
 }
@@ -243,4 +191,23 @@
 
 .lenzi-shell-bare > .lenzi-shell-content > .lenzi-shell-tabs {
   display: none;
+}
+
+/* Wider than a phone, with navigation 'bar': the bar upright on the left, in place of the drawer (lenzi, 2026-11-25:
+   "mettimela anche su pc al posto di quella che abbiamo adesso ma in verticale a sinistra"), floating in the middle of
+   the screen's height; the page (the top bar too) starts after it, and nothing needs to keep clear of its bottom. */
+:root:has(.lenzi-shell-tabs-upright:not(.lenzi-shell-bare)) {
+  --lenzi-shell-tabs-clearance: 0px;
+}
+
+.lenzi-shell-tabs-upright > .lenzi-shell-content > .lenzi-shell-tabs {
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+
+.lenzi-shell-tabs-upright > .lenzi-shell-content.mat-drawer-content {
+  padding-bottom: 0;
+  padding-left: calc(var(--lenzi-tab-rail-width, 56px) + var(--lenzi-float-gap) + env(safe-area-inset-left, 0px));
 }

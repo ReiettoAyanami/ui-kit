@@ -20,10 +20,9 @@ drawer that opens from it on every screen; and the page.
   pagina", "the top bar should slide in from right to left and close on the icon"): as wide as it is high.
   The title stays put and the moving edge covers it, and reveals it opening ("the text should reveal as the
   bar closes/open"). Back to whole above it. Its height never changes, so the page does not move.
-- **A page's search bar goes into the closed bar** ("if there's a search bar make it slide there ... and
-  incorporate it into the top bar", "make the search bar slide with the top bar to the right of the icon"):
-  `lenziShellSearch` on it. The bar stops where the search bar ends; the search bar rides in on the closing
-  edge (its right end on it, same time, same curve) and stays just after the button, inside the bar's glass.
+- **A page's search bar stays in the page** (lenzi, 2026-11-25: "Da rimuovere l'animazione che abbiamo fatto per la
+  barra di ricerca perchè non mi piace tanto"): it went into the closed bar from 2026-11-14 (`lenziShellSearch`),
+  no more.
 - **The document scrolls, not the shell**, so a page window can stop it scrolling under itself.
 - **Opened, the drawer focuses the current page's entry**, not the first one (lenzi, 2026-10-03).
 - **Edge to edge** (Android): the shell keeps its bars inside the safe-area insets.
@@ -34,7 +33,7 @@ drawer that opens from it on every screen; and the page.
 | Attribute | Where | For |
 | --- | --- | --- |
 | `lenziShellNav` | the drawer | a `LenziNavList` |
-| `lenziShellTabs` | a bar at the bottom, floating (`navigation` `'bar'`, or `'auto'` on a phone) | a `LenziGlassTabBar` with the same entries |
+| `lenziShellTabs` | a bar of pages, floating: at the bottom on a phone, upright on the left wider (`navigation` `'bar'`; `'auto'`: at the bottom on a phone only) | a `LenziGlassTabBar` with the same entries |
 | `lenziShellActions` | the end of the top bar | a `LenziNotificationBell`, an icon button |
 | `lenziShellBanner` | a bar above the top bar, sticky | "Viewing as" (`LenziInfoBar`, tone tertiary) |
 | `lenziShellBelow` | under the top bar | "Offline", "A new version" (`LenziInfoBar`), `LenziPullToRefresh` |
@@ -47,10 +46,10 @@ drawer that opens from it on every screen; and the page.
 | input | `title` | `string \| null` | `null` | null: the deepest route's title |
 | input | `bare` | `boolean \| 'route'` | `'route'` | the page alone: `'route'` follows route data `bare: true`; `true` / `false` always / never |
 | input | `menuLabel` | `string` | `'Menu'` | the menu button's accessible name |
-| input | `navigation` | `'drawer' \| 'bar' \| 'auto'` | `'drawer'` | the drawer; the bar of `lenziShellTabs` at the bottom (no menu button, the top bar stays whole, the page and the "+" clear of it); the bar under 600 px and the drawer wider (2026-11-25) |
+| input | `navigation` | `'drawer' \| 'bar' \| 'auto'` | `'drawer'` | the drawer; the bar of `lenziShellTabs` (no menu button, the top bar stays whole): at the bottom on a phone (the page and the "+" clear of it), upright on the left wider, in place of the drawer (the page after it); `'auto'`: the bar at the bottom on a phone, the drawer wider (2026-11-25) |
 | method | `openNav(click?)` / `closeNav()` | | | `LenziNavList` closes it after a link |
 | signal | `compact` | `boolean` | | scrolled past the bar: it has shrunk to its menu button |
-| directive | `lenziShellSearch` | | | on a page's `LenziSearchBar`, a child of the page's column: it rides beside the shrunk bar |
+| signal | `tabsUpright` | `boolean` | | the bar of pages is upright on the left (LenziGlassTabBar follows it) |
 
 ## Example
 
@@ -66,7 +65,7 @@ drawer that opens from it on every screen; and the page.
 ## Variables
 
 `--lenzi-float-gap`, `--lenzi-bar-radius`, `--lenzi-drawer-width`, `--lenzi-glass-bar`, `--lenzi-glass-filter`,
-`--lenzi-search-height`, `--lenzi-standard-duration`, `--lenzi-standard-easing`.
+`--lenzi-standard-duration`, `--lenzi-standard-easing`.
 
 ## Origin
 

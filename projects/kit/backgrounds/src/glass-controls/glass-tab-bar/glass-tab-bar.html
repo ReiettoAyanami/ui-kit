@@ -6,14 +6,18 @@
       aria-hidden="true"
       [class.shown]="pill() !== null"
       [class.placed]="placed()"
-      [style.left.px]="pill()?.left ?? 0"
-      [style.width.px]="pill()?.width ?? 0"
+      [style.left.px]="upright() ? null : (pill()?.left ?? 0)"
+      [style.width.px]="upright() ? null : (pill()?.width ?? 0)"
+      [style.top.px]="upright() ? (pill()?.top ?? 0) : null"
+      [style.height.px]="upright() ? (pill()?.height ?? 0) : null"
     ></span>
     @for (entry of pages(); track key(entry); let i = $index) {
       @if (entry.link !== undefined) {
         <a
           #tab
           class="tab"
+          [matTooltip]="upright() ? entry.label : ''"
+          matTooltipPosition="right"
           [class.current]="i === active()"
           [routerLink]="entry.link"
           routerLinkActive
@@ -26,7 +30,7 @@
           <span class="name">{{ entry.label }}</span>
         </a>
       } @else {
-        <button #tab type="button" class="tab" (click)="press(entry)">
+        <button #tab type="button" class="tab" [matTooltip]="upright() ? entry.label : ''" matTooltipPosition="right" (click)="press(entry)">
           <mat-icon class="icon" aria-hidden="true">{{ entry.icon }}</mat-icon>
           <span class="name">{{ entry.label }}</span>
         </button>
@@ -41,6 +45,8 @@
         @if (entry.link !== undefined) {
           <a
             class="tab"
+          [matTooltip]="upright() ? entry.label : ''"
+          matTooltipPosition="right"
             [routerLink]="entry.link"
             routerLinkActive="current"
             ariaCurrentWhenActive="page"
@@ -51,7 +57,7 @@
             <span class="name">{{ entry.label }}</span>
           </a>
         } @else {
-          <button type="button" class="tab" (click)="press(entry)">
+          <button type="button" class="tab" [matTooltip]="upright() ? entry.label : ''" matTooltipPosition="right" (click)="press(entry)">
             <mat-icon class="icon" aria-hidden="true">{{ entry.icon }}</mat-icon>
             <span class="name">{{ entry.label }}</span>
           </button>

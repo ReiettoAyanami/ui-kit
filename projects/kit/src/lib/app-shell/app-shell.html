@@ -4,9 +4,7 @@
   [class.lenzi-shell-bare]="isBare()"
   [class.lenzi-shell-compact]="compact()"
   [class.lenzi-shell-with-tabs]="tabs()"
-  [class.lenzi-shell-with-search]="search() !== null"
-  [style.--lenzi-shell-search-left.px]="search()?.left ?? null"
-  [style.--lenzi-shell-search-right.px]="search()?.right ?? null"
+  [class.lenzi-shell-tabs-upright]="tabsUpright()"
 >
   <!-- Opened, the focus goes to the current page's entry, not to the first one: a focused entry is
        drawn highlighted, and the first page looked selected on every page (lenzi, 2026-10-03). -->

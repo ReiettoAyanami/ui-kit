@@ -1,5 +1,6 @@
-import { Component, ElementRef, afterRenderEffect, effect, inject, input, output, signal, untracked, viewChild, viewChildren } from '@angular/core';
+import { Component, ElementRef, afterRenderEffect, computed, effect, inject, input, output, signal, untracked, viewChild, viewChildren } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { IsActiveMatchOptions, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { LenziAppShell, LenziNavEntry } from '@lenzi/ui-kit';
@@ -25,7 +26,8 @@ const SETTLE = 420;
  */
 @Component({
   selector: 'lenzi-glass-tab-bar',
-  imports: [MatIconModule, RouterLink, RouterLinkActive],
+  imports: [MatIconModule, MatTooltipModule, RouterLink, RouterLinkActive],
+  host: { '[class.upright]': 'upright()' },
   templateUrl: './glass-tab-bar.html',
   styleUrl: './glass-tab-bar.css',
 })
@@ -36,6 +38,11 @@ export class LenziGlassTabBar {
   readonly bottom = input<readonly LenziNavEntry[]>([]);
   /** The navigation's accessible name. */
   readonly label = input('Pages');
+  /**
+   * Lying at the bottom or upright on the left: 'auto' (the default) follows the shell (upright on a computer with
+   * navigation 'bar'), lying elsewhere.
+   */
+  readonly orientation = input<'auto' | 'horizontal' | 'vertical'>('auto');
 
   /** A link was tapped. */
   readonly navigated = output<LenziNavEntry>();
@@ -45,7 +52,7 @@ export class LenziGlassTabBar {
   /** The current page's tab, -1 when the current page is none of them. */
   protected readonly active = signal(-1);
   /** Where the current page's capsule is in the bar, px. */
-  protected readonly pill = signal<{ left: number; width: number } | null>(null);
+  protected readonly pill = signal<{ left: number; top: number; width: number; height: number } | null>(null);
   /** The capsule has been drawn where it is once: from then on it slides (the first time it is just there). */
   protected readonly placed = signal(false);
   /** On its way to another tab: the capsule is glass. */
@@ -59,6 +66,8 @@ export class LenziGlassTabBar {
   /** The last tab that was the current one. */
   private last = -1;
   private readonly shell = inject(LenziAppShell, { optional: true });
+  /** Upright: a column of tabs on the left, the capsule sliding up and down. */
+  protected readonly upright = computed(() => this.orientation() === 'vertical' || (this.orientation() === 'auto' && !!this.shell?.tabsUpright()));
 
   constructor() {
     const glass = glassLens(() => this.lens().nativeElement);
@@ -66,10 +75,11 @@ export class LenziGlassTabBar {
     // the capsule under the current tab, measured after the tabs are drawn (their widths are their words')
     afterRenderEffect(() => {
       this.resized();
+      this.upright();
       const tab = this.tabs()[this.active()]?.nativeElement;
-      const box = tab ? { left: tab.offsetLeft, width: tab.offsetWidth } : null;
+      const box = tab ? { left: tab.offsetLeft, top: tab.offsetTop, width: tab.offsetWidth, height: tab.offsetHeight } : null;
       const now = untracked(this.pill);
-      if (box?.left !== now?.left || box?.width !== now?.width) this.pill.set(box);
+      if (box?.left !== now?.left || box?.top !== now?.top || box?.width !== now?.width || box?.height !== now?.height) this.pill.set(box);
       if (box && !untracked(this.placed)) setTimeout(() => this.placed.set(true), 50);
     });
     afterRenderEffect(() => {

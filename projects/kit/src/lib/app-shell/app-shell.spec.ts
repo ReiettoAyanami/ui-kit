@@ -111,6 +111,8 @@ describe('LenziAppShell', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.lenzi-shell-menu')).toBeNull();
     expect(element.querySelector('.lenzi-shell.lenzi-shell-with-tabs .lenzi-shell-tabs .tabs')).not.toBeNull();
+    // wider than a phone (the test's window): upright on the left
+    expect(element.querySelector('.lenzi-shell.lenzi-shell-tabs-upright')).not.toBeNull();
     const drawer = TestBed.createComponent(Host);
     drawer.detectChanges();
     await drawer.whenStable();

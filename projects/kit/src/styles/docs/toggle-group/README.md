@@ -20,7 +20,7 @@ little more room at each side of a label.
 - **Less tall never means less round** (lenzi: "il raggio di bordo era godevole").
 - **Whole words**: "average", never "avg" (lenzi, 2026-09-30).
 - No check mark on the chosen one: `hideSingleSelectionIndicator`.
-- Its border is 2 px, like every rounded border.
+- Its border is 1 px, like every border (2026-11-25: halved).
 - What it chooses is remembered in the browser when it is a display preference (`writePreference`), never
   in the database.
 

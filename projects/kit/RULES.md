@@ -110,10 +110,10 @@ the rule says what, the variable says how much.
   dialogs, page windows, the drawer, tables.
 - **The top bar and the drawer float** 8 px from the screen's edges, rounded 16 px on every side
   (lenzi, 2026-10-02: "la barra in cima deve avere bordi arrotondati in entrambe le versioni"). **Scrolled
-  past its height it closes from the right onto its menu button**, the edge covering the title, and a page's
-  search bar slides into it with the edge (lenzi, 2026-11-14: "the top bar should slide in from right to left
-  and close on the icon, if there's a search bar make it slide there ... and incorporate it into the top
-  bar"; `LenziAppShell`, `lenziShellSearch`).
+  past its height it closes from the right onto its menu button**, the edge covering the title (lenzi,
+  2026-11-14: "the top bar should slide in from right to left and close on the icon"). A page's search bar stays in
+  the page: it no longer rides into the closed bar (lenzi, 2026-11-25: "Da rimuovere l'animazione che abbiamo fatto
+  per la barra di ricerca perchè non mi piace tanto"; `lenziShellSearch` is gone).
 - **Menus, selects and autocomplete panels are rounded on every side** (12 px), a few px away from
   their field; **the chosen option is a pill** inside them (lenzi, 2026-10-02).
 
@@ -126,7 +126,9 @@ the rule says what, the variable says how much.
   the current one highlighted (also on its child routes), the rest at the bottom (settings, sign out).
 - **Or a bar of pages at the bottom** (lenzi, 2026-11-25: "una barra orizzontale (magari da usare su mobile invece che
   su web, ma in realtà anche su web deve funzionare e può essere un'alternativa)"): `LenziGlassTabBar` in
-  `lenziShellTabs`, `navigation="bar"` always or `"auto"` (the bar on a phone, the drawer wider). Apple's tab bar: it
+  `lenziShellTabs`, `navigation="bar"` (at the bottom on a phone, **upright on the left on a computer**, in place of the
+  drawer: lenzi, 2026-11-25, "mettimela anche su pc al posto di quella che abbiamo adesso ma in verticale a sinistra")
+  or `"auto"` (the bar at the bottom on a phone, the drawer wider). Apple's tab bar: it
   floats over the page, its tabs are pages only (no actions), a word each, five at most, never hidden or disabled; the
   current one on a capsule that slides there as glass; the rest (Admin, Sign out) in a capsule of its own at the end.
   With the bar the top bar has no menu button and stays whole; the page and the "+" keep clear of it.

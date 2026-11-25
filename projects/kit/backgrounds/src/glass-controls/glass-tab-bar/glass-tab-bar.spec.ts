@@ -60,4 +60,17 @@ describe('LenziGlassTabBar', () => {
     element.querySelector<HTMLButtonElement>('.rest button')!.click();
     expect(pressed).toEqual(['sign-out']);
   });
+
+  it('upright: a column, the capsule placed by its top and height (2026-11-25)', async () => {
+    const { fixture, element } = await make();
+    expect(element.classList.contains('upright')).toBe(false);
+    fixture.componentRef.setInput('orientation', 'vertical');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(element.classList.contains('upright')).toBe(true);
+    const pill = element.querySelector<HTMLElement>('.pill')!;
+    expect(pill.style.left).toBe('');
+    expect(pill.style.top).not.toBe('');
+  });
 });

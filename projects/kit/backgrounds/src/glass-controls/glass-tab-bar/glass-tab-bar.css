@@ -5,6 +5,9 @@
 :host {
   display: block;
   --lenzi-tab-bar-height: 60px;
+  /* upright: how wide its column is, and the gap round and between its round tabs */
+  --lenzi-tab-rail-width: 56px;
+  --lenzi-tab-rail-gap: 4px;
   --lenzi-glass-pill: color-mix(in srgb, var(--mat-sys-on-surface) 16%, var(--mat-sys-surface-container-high));
 }
 
@@ -83,21 +86,21 @@
   font-size: 24px;
 }
 
-/* Wider than a phone: the icon beside the name, the bar as wide as its tabs. */
+/* Wider than a phone, lying: the icon beside the name, the bar as wide as its tabs. */
 @media (min-width: 600px) {
-  :host {
+  :host(:not(.upright)) {
     --lenzi-tab-bar-height: 52px;
   }
 
-  .bar {
+  :host(:not(.upright)) .bar {
     justify-content: center;
   }
 
-  .pages {
+  :host(:not(.upright)) .pages {
     flex: none;
   }
 
-  .tab {
+  :host(:not(.upright)) .tab {
     flex: 1 1 auto;
     flex-direction: row;
     gap: 8px;
@@ -128,6 +131,8 @@
   transition:
     left 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
     width 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    top 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    height 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
     transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
     background-color 160ms ease,
     opacity 160ms ease;
@@ -152,4 +157,60 @@
   .tab {
     transition: none;
   }
+}
+
+/* Upright on the left, in place of the drawer (lenzi, 2026-11-25: "in verticale a sinistra", then "meno tozza ... troppo
+   larga e sembra cicciona"; visionOS's tab bar: "always vertical, floating ... A tab's symbol is always visible"): a
+   slim column of round tabs, icons only, the name in a tooltip on the right (and for a screen reader); the current
+   page's round capsule slides up and down; the rest in a capsule of its own under it, the same gap all round. */
+:host(.upright) .bar {
+  flex-direction: column;
+  gap: var(--lenzi-tab-rail-gap);
+  width: var(--lenzi-tab-rail-width);
+}
+
+:host(.upright) .capsule {
+  flex-direction: column;
+  gap: var(--lenzi-tab-rail-gap);
+  width: var(--lenzi-tab-rail-width);
+  height: auto;
+  padding: var(--lenzi-tab-rail-gap);
+  border-radius: calc(var(--lenzi-tab-rail-width) / 2);
+}
+
+:host(.upright) .pages {
+  flex: none;
+  max-height: calc(100dvh - 160px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+:host(.upright) .tab {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  height: auto;
+  padding: 0;
+  border-radius: 50%;
+  corner-shape: round;
+}
+
+/* the name stays for a screen reader */
+:host(.upright) .name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:host(.upright) .pill {
+  top: auto;
+  right: var(--lenzi-tab-rail-gap);
+  bottom: auto;
+  left: var(--lenzi-tab-rail-gap);
+  border-radius: 50%;
+  corner-shape: round;
 }

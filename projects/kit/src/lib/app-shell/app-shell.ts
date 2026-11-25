@@ -62,8 +62,10 @@ export class LenziAppShell {
   /** The menu button's accessible name. */
   readonly menuLabel = input('Menu');
   /**
-   * How one goes between the pages: 'drawer' (the default: the menu button opens `lenziShellNav`), 'bar' (always the
-   * bar of `lenziShellTabs` at the bottom), 'auto' (the bar on a phone, under 600 px; the drawer wider).
+   * How one goes between the pages: 'drawer' (the default: the menu button opens `lenziShellNav`), 'bar' (the bar of
+   * `lenziShellTabs`: at the bottom on a phone, under 600 px; wider, upright on the left, in place of the drawer: lenzi,
+   * 2026-11-25, "mettimela anche su pc al posto di quella che abbiamo adesso ma in verticale a sinistra"), 'auto' (the
+   * bar at the bottom on a phone, the drawer wider).
    */
   readonly navigation = input<'drawer' | 'bar' | 'auto'>('drawer');
 
@@ -71,6 +73,8 @@ export class LenziAppShell {
   private readonly narrow = signal(false);
   /** The bar at the bottom instead of the drawer. */
   protected readonly tabs = computed(() => this.navigation() === 'bar' || (this.navigation() === 'auto' && this.narrow()));
+  /** The bar upright on the left (navigation 'bar', wider than a phone). LenziGlassTabBar follows it. */
+  readonly tabsUpright = computed(() => this.tabs() && !this.narrow());
 
   private readonly drawer = viewChild.required(MatSidenav);
   private readonly router = inject(Router);
@@ -92,26 +96,9 @@ export class LenziAppShell {
   /**
    * Scrolled past the top bar: it has shrunk to its menu button, without the title (lenzi, 2026-11-14:
    * "quando scendi oltre la sua altezza dovrebbe compattarsi con un animazione verso l'icona di
-   * apertura/chiusura, non mostrando il titolo della pagina"); a `LenziShellSearch` moves beside it.
+   * apertura/chiusura, non mostrando il titolo della pagina").
    */
   readonly compact = signal(false);
-
-  /**
-   * Where the page lays its search bar out (`LenziShellSearch` says it), px; null: the page has none. Closed, the
-   * bar holds the button and the search bar, and ends where the search bar does (lenzi, 2026-11-14: "if there's
-   * a search bar make it slide there ... and incorporate it into the top bar").
-   */
-  protected readonly search = signal<{ left: number; right: number } | null>(null);
-
-  /** A page's search bar tells where the page lays it out (null when it leaves). For LenziShellSearch. */
-  searchAt(edges: { left: number; right: number } | null): void {
-    this.search.set(edges);
-  }
-
-  /** The top bar's box on the screen now, while it opens and closes too. For LenziShellSearch. */
-  barBox(): DOMRect | null {
-    return this.host.querySelector<HTMLElement>(':scope > .mat-drawer-container > .mat-drawer-content > .lenzi-shell-bar')?.getBoundingClientRect() ?? null;
-  }
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 

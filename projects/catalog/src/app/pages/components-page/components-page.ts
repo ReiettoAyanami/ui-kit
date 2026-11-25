@@ -2,7 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 
-import { LenziSearchBar, LenziShellSearch, LenziStatusMessage } from '@lenzi/ui-kit';
+import { LenziSearchBar, LenziStatusMessage } from '@lenzi/ui-kit';
 
 import { CATEGORIES, DOCS, KitDoc } from '../../registry';
 import { PublicPages } from '../../shared/public-pages';
@@ -14,7 +14,7 @@ import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/bac
  */
 @Component({
   selector: 'app-components-page',
-  imports: [LenziGlassPage, LenziLit, LenziSearchBar, LenziShellSearch, LenziStatusMessage, MatIconModule, RouterLink],
+  imports: [LenziGlassPage, LenziLit, LenziSearchBar, LenziStatusMessage, MatIconModule, RouterLink],
   templateUrl: './components-page.html',
   styleUrl: './components-page.css',
 })
