@@ -41,7 +41,7 @@ export interface LenziSurfaceLook {
 const PAGE_TAKES = 'a, button, input, select, textarea, label, summary, [role="button"], [role="link"], [role="tab"], [contenteditable=""], [contenteditable="true"], .mat-mdc-form-field, .cdk-drag';
 
 /** How often the light goes to the page's lit surfaces, in ms. */
-const LIGHT_EVERY = 80;
+const LIGHT_EVERY = 160;
 /** How often the theme's colours are read again while it moves, in ms (the catalog changes them live). */
 const COLOURS_EVERY = 500;
 
@@ -86,6 +86,19 @@ export abstract class LenziGlowBackground implements OnChanges {
   readonly pointer = input(true, { transform: booleanAttribute });
   /** Device px drawn for one CSS px, never more than the screen has: lower is cheaper and softer. */
   readonly resolution = input(1, { transform: numberAttribute });
+  /**
+   * Pictures a second while it moves, at most (lenzi, 2026-11-25: "l'animazione dietro è troppo pesante sul mio pc ...
+   * sta consumando tutta la cpu e gpu sul mio i5"): 30 by default, half a screen's; every picture also makes the
+   * browser blur again every glass over it. 0: as many as the screen shows.
+   */
+  readonly fps = input(30, { transform: numberAttribute });
+  /**
+   * When the computer cannot keep up (its pictures come late for two seconds), it draws fewer px: three quarters of
+   * them each time, down to two fifths. false: always `resolution`.
+   */
+  readonly adapt = input(true, { transform: booleanAttribute });
+  /** Still while the window is not the one in use (another app in front): a still picture, moving again on focus. */
+  readonly pauseUnfocused = input(true, { transform: booleanAttribute });
   /** It lights the page's lit surfaces (`lenziLit`). */
   readonly lights = input(true, { transform: booleanAttribute });
 
@@ -102,6 +115,15 @@ export abstract class LenziGlowBackground implements OnChanges {
   private frameId: number | null = null;
   private stillId: number | null = null;
   private visible = true;
+  /** The window is the one in use. */
+  private focused = true;
+  /** The share of `resolution` it draws now (adapt lowers it). */
+  private quality = 1;
+  /** When the pictures of the last two seconds were drawn, to know whether they come late. */
+  private late = { since: 0, frames: 0 };
+  private lastDrawn = 0;
+  /** Where the space's top left is in the window, until the page scrolls or changes size. */
+  private originAt: { x: number; y: number } | null = null;
   private reducedMotion = false;
   private last = 0;
   private lastLight = 0;
@@ -179,6 +201,27 @@ export abstract class LenziGlowBackground implements OnChanges {
       seen.observe(this.host);
       const onVisibility = () => this.loop();
       this.document.addEventListener('visibilitychange', onVisibility);
+      const moved = () => (this.originAt = null);
+      this.document.addEventListener('scroll', moved, { capture: true, passive: true });
+      view.addEventListener('resize', moved, { passive: true });
+      // the window in use: the top one's focus (a demo's frame is not focused while its page is)
+      let top: Window = view;
+      try {
+        if (view.top && view.top.document) top = view.top;
+      } catch {
+        /* another site's frame: its own window */
+      }
+      this.focused = top.document.hasFocus?.() ?? true;
+      const onFocus = () => {
+        this.focused = true;
+        this.loop();
+      };
+      const onBlur = () => {
+        this.focused = false;
+        this.loop();
+      };
+      top.addEventListener('focus', onFocus);
+      top.addEventListener('blur', onBlur);
 
       // the background is behind the page and takes no pointer: the window says where it is
       const root = this.document.documentElement;
@@ -238,6 +281,10 @@ export abstract class LenziGlowBackground implements OnChanges {
         seen.disconnect();
         motion?.removeEventListener?.('change', onMotion);
         this.document.removeEventListener('visibilitychange', onVisibility);
+        this.document.removeEventListener('scroll', moved, { capture: true });
+        view.removeEventListener('resize', moved);
+        top.removeEventListener('focus', onFocus);
+        top.removeEventListener('blur', onBlur);
         view.removeEventListener('pointermove', onPointer);
         view.removeEventListener('pointerdown', onDown);
         if (dragging) root.style.removeProperty('user-select');
@@ -297,8 +344,13 @@ export abstract class LenziGlowBackground implements OnChanges {
 
   /** Where the space is on the screen (its top left, CSS px from the window's). */
   protected origin(): { x: number; y: number } {
-    const box = this.host.getBoundingClientRect();
-    return { x: box.left, y: box.top };
+    // kept until the page scrolls or changes size: read at every picture, it made the browser lay the page out
+    // again every time (a profile, 2026-11-25)
+    if (!this.originAt) {
+      const box = this.host.getBoundingClientRect();
+      this.originAt = { x: box.left, y: box.top };
+    }
+    return this.originAt;
   }
 
   /** Where the pointer is in that space, or null (not there, or not followed). */
@@ -403,13 +455,14 @@ export abstract class LenziGlowBackground implements OnChanges {
     const width = this.host.clientWidth;
     const height = this.host.clientHeight;
     if (width === 0 || height === 0) return;
-    const scale = Math.min(view.devicePixelRatio || 1, Math.max(0.25, this.resolution()));
+    const scale = Math.min(view.devicePixelRatio || 1, Math.max(0.25, this.resolution() * this.quality));
     engine.resize(width, height, scale);
     this.resized(width, height);
   }
 
   /** The box changed size: drawn again at once (a canvas that changes size is emptied). */
   private resize(): void {
+    this.originAt = null;
     this.fit();
     this.draw();
   }
@@ -487,11 +540,11 @@ export abstract class LenziGlowBackground implements OnChanges {
     if (!this.ambient.wanted || (!always && now - this.lastLight < LIGHT_EVERY)) return;
     this.lastLight = now;
     this.shining = true;
-    this.ambient.shine(this, engine.readLight(), LIGHT_WIDTH, LIGHT_HEIGHT, () => this.host.getBoundingClientRect(), luminance(this.baseColour) > 0.4, !!lamps);
+    this.ambient.shine(this, engine.readLight(always), LIGHT_WIDTH, LIGHT_HEIGHT, () => this.host.getBoundingClientRect(), luminance(this.baseColour) > 0.4, !!lamps);
   }
 
   private moving(): boolean {
-    return !!this.engine && this.animate() && this.visible && !this.reducedMotion && !this.document.hidden;
+    return !!this.engine && this.animate() && this.visible && !this.reducedMotion && !this.document.hidden && (this.focused || !this.pauseUnfocused());
   }
 
   /** Starts the frame loop when it should run, stops it when it should not (then: one still picture). */
@@ -505,12 +558,21 @@ export abstract class LenziGlowBackground implements OnChanges {
     }
     if (this.frameId !== null) return;
     this.last = view.performance.now();
+    this.late = { since: this.last, frames: 0 };
     const tick = (now: number) => {
       if (!this.moving()) {
         this.frameId = null;
         this.drawSoon();
         return;
       }
+      // at most fps pictures a second: a frame in between waits (a little early is on time)
+      const every = this.fps() > 0 ? 1000 / this.fps() : 0;
+      if (every && now - this.lastDrawn < every - 4) {
+        this.frameId = view.requestAnimationFrame(tick);
+        return;
+      }
+      this.lastDrawn = now;
+      this.keepUp(now, every || 1000 / 60);
       const delta = Math.min(0.1, Math.max(0, (now - this.last) / 1000)) * Math.max(0, this.speed());
       this.last = now;
       if (now - this.lastColours > COLOURS_EVERY) {
@@ -523,6 +585,22 @@ export abstract class LenziGlowBackground implements OnChanges {
       this.frameId = view.requestAnimationFrame(tick);
     };
     this.frameId = view.requestAnimationFrame(tick);
+  }
+
+  /**
+   * Counts the pictures of the last two seconds: fewer than two thirds of those asked for, the computer cannot keep up,
+   * and it draws fewer px from then on (never more again while the page is open: going up and down would flicker).
+   */
+  private keepUp(now: number, every: number): void {
+    this.late.frames++;
+    const span = now - this.late.since;
+    if (span < 2000) return;
+    const asked = span / every;
+    if (this.adapt() && this.late.frames < asked * 0.66 && this.quality > 0.4) {
+      this.quality = Math.max(0.4, this.quality * 0.75);
+      this.fit();
+    }
+    this.late = { since: now, frames: 0 };
   }
 
   private stop(): void {

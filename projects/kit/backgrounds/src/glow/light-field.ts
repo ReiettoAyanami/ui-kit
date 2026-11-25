@@ -38,6 +38,8 @@ export type LenziOutline = readonly (readonly [number, number])[];
 export const MOST_LAMPS = 6;
 
 /** How long a lamp takes to switch on or off, seconds (none with reduced motion). */
+/** The least time between two updates of the surfaces' light, ms (30 a second). */
+const UPDATE_EVERY = 1000 / 30;
 const FADE = 0.16;
 
 /** How much of its own light a lamp lays over what it holds (a toggle's chosen segment, a list's rows). */
@@ -307,9 +309,15 @@ export class LenziLightField {
 
   private tick(now: number): void {
     this.frame = null;
+    const view = this.document.defaultView;
+    // at most 30 times a second (lenzi, 2026-11-25: "troppo pesante sul mio pc"): every update measures every lit
+    // surface and writes its light, and the browser paints them again
+    if (view && now - this.last < UPDATE_EVERY - 4) {
+      this.frame = view.requestAnimationFrame((next) => this.tick(next));
+      return;
+    }
     const delta = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
-    const view = this.document.defaultView;
     // a hidden tab: nothing to see; the frames start again when it is seen
     if (this.document.hidden) {
       this.document.addEventListener('visibilitychange', () => this.wake(), { once: true });

@@ -91,7 +91,8 @@ export class LenziAmbientLight {
       const canvas = this.document.createElement('canvas');
       let context: CanvasRenderingContext2D | null = null;
       try {
-        context = canvas.getContext('2d');
+        // a canvas of the CPU's: encoding it never waits for the GPU (a profile, 2026-11-25: a third of the page's time)
+        context = canvas.getContext('2d', { willReadFrequently: true });
       } catch {
         context = null;
       }

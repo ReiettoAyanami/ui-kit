@@ -584,10 +584,14 @@ export class Boids {
     const cosHalfView = s.viewAngle >= 360 ? -2 : Math.cos((Math.max(0, s.viewAngle) * Math.PI) / 360);
     const colonies = Math.max(1, Math.floor(s.colonies ?? 1));
     const field = this.avoid > 0 ? this.field : null;
-    /** Which way is out of the obstacles at a point: the field's slope, of length 1. */
-    const outward = (fx: number, fy: number): [number, number] => {
-      const gx = field!(fx + 1, fy) - field!(fx - 1, fy);
-      const gy = field!(fx, fy + 1) - field!(fx, fy - 1);
+    /**
+     * Which way is out of the obstacles at a point: the field's slope, of length 1. `here`: the field at the point,
+     * already known (two more readings then, not four: a profile, 2026-11-25, "troppo pesante sul mio pc").
+     */
+    const outward = (fx: number, fy: number, here?: number): [number, number] => {
+      const centre = here ?? field!(fx, fy);
+      const gx = field!(fx + 1, fy) - centre;
+      const gy = field!(fx, fy + 1) - centre;
       const length = Math.hypot(gx, gy);
       return length > 1e-6 ? [gx / length, gy / length] : [1, 0];
     };
@@ -809,7 +813,7 @@ export class Boids {
         const gap = field(px, py) - this.pad;
         if (gap < margin) {
           const near = Math.min(2, 1 - gap / margin);
-          const [nx, ny] = outward(px, py);
+          const [nx, ny] = outward(px, py, gap + this.pad);
           // along it: the side of the tangent its heading is on
           const side = -ny * hx + nx * hy >= 0 ? 1 : -1;
           // mostly along it, out more the closer it is: it flows round instead of turning back
@@ -894,7 +898,7 @@ export class Boids {
         for (let tries = 0; tries < 3; tries++) {
           const gap = field(nx, ny) - this.pad;
           if (gap >= 0) break;
-          const [ux, uy] = outward(nx, ny);
+          const [ux, uy] = outward(nx, ny, gap + this.pad);
           nx -= ux * (gap - 0.5);
           ny -= uy * (gap - 0.5);
           const inward = vx[i]! * ux + vy[i]! * uy;

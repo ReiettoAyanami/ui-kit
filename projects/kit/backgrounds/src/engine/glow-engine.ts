@@ -249,6 +249,9 @@ export class GlowEngine {
   private blurs: Target[] = [];
   private lightTarget: Target | null = null;
   private readonly lightPixels = new Uint8Array(LIGHT_WIDTH * LIGHT_HEIGHT * 4);
+  /** Where the GPU copies the light without the page waiting for it, and the sign that the copy is done. */
+  private lightBuffer: WebGLBuffer | null = null;
+  private lightFence: WebGLSync | null = null;
   private readonly programs = new Map<WebGLProgram, Map<string, WebGLUniformLocation | null>>();
   private readonly vertexArray: WebGLVertexArrayObject;
   private readonly copy: WebGLProgram;
@@ -522,22 +525,62 @@ export class GlowEngine {
     this.compose(deepest, deepest, frame, frame.core, frame.glow * 1.2, 0, 0, null, 0);
   }
 
-  /** The finished light, very small: LIGHT_WIDTH × LIGHT_HEIGHT pixels (r, g, b, a), the top row first. */
-  readLight(): Uint8Array {
+  /**
+   * The finished light, very small: LIGHT_WIDTH × LIGHT_HEIGHT pixels (r, g, b, a), the top row first. While it moves
+   * (`wait` false) the page never waits for the GPU (lenzi, 2026-11-25: "troppo pesante sul mio pc"; a profile: a
+   * waiting read was a fifth of the page's time): it gives the light of the copy asked for last time, if the GPU has
+   * finished it, and asks for the next one. `wait`: the light now (a still picture, drawn once).
+   */
+  readLight(wait = false): Uint8Array {
     const gl = this.gl;
     if (this.disposed || !this.lightTarget) return this.lightPixels;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightTarget.framebuffer);
-    const rows = new Uint8Array(LIGHT_WIDTH * LIGHT_HEIGHT * 4);
-    gl.readPixels(0, 0, LIGHT_WIDTH, LIGHT_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, rows);
+    const size = LIGHT_WIDTH * LIGHT_HEIGHT * 4;
+    const rows = new Uint8Array(size);
     // WebGL's first row is the bottom one
-    const row = LIGHT_WIDTH * 4;
-    for (let y = 0; y < LIGHT_HEIGHT; y++) this.lightPixels.set(rows.subarray((LIGHT_HEIGHT - 1 - y) * row, (LIGHT_HEIGHT - y) * row), y * row);
+    const flip = () => {
+      const row = LIGHT_WIDTH * 4;
+      for (let y = 0; y < LIGHT_HEIGHT; y++) this.lightPixels.set(rows.subarray((LIGHT_HEIGHT - 1 - y) * row, (LIGHT_HEIGHT - y) * row), y * row);
+    };
+    if (wait || typeof gl.fenceSync !== 'function') {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightTarget.framebuffer);
+      gl.readPixels(0, 0, LIGHT_WIDTH, LIGHT_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, rows);
+      flip();
+      return this.lightPixels;
+    }
+    // the copy asked for last time: taken when the GPU is done with it, else the light before it
+    if (this.lightFence) {
+      const state = gl.clientWaitSync(this.lightFence, 0, 0);
+      if (state === gl.TIMEOUT_EXPIRED) return this.lightPixels;
+      gl.deleteSync(this.lightFence);
+      this.lightFence = null;
+      if (state !== gl.WAIT_FAILED) {
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this.lightBuffer);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, rows);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        flip();
+      }
+    }
+    // the next copy, into a buffer of the GPU's: nothing waits
+    if (!this.lightBuffer) {
+      this.lightBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this.lightBuffer);
+      gl.bufferData(gl.PIXEL_PACK_BUFFER, size, gl.STREAM_READ);
+    } else {
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this.lightBuffer);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightTarget.framebuffer);
+    gl.readPixels(0, 0, LIGHT_WIDTH, LIGHT_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    this.lightFence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gl.flush();
     return this.lightPixels;
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    if (this.lightFence) this.gl.deleteSync(this.lightFence);
+    if (this.lightBuffer) this.gl.deleteBuffer(this.lightBuffer);
     this.freeTargets();
     this.gl.deleteTexture(this.noShadow);
     for (const program of this.programs.keys()) this.gl.deleteProgram(program);
