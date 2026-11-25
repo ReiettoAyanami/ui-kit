@@ -70,6 +70,21 @@ describe('LenziScheduleGrid', () => {
     ]);
   });
 
+  it('marks a cell that breaks a rule and says the rule; shows the second fact with its own colour', () => {
+    const broken: LenziScheduleRow[] = [
+      { id: 'anna', name: 'Anna', cells: { '2026-01-02': { text: 'T1', detail: 'RS', color: 'blue', detailColor: 'orange', label: 'Shift T1, on call RS', problem: 'RS with T1' } } },
+    ];
+    const { element } = grid({ rows: broken, editable: true });
+    const cell = element.querySelector('tbody td')!;
+    expect(cell.classList.contains('problem')).toBe(true);
+    expect(cell.querySelector('.problem-mark')?.textContent).toBe('!');
+    expect((cell.querySelector('.detail-dot') as HTMLElement).style.backgroundColor).toBe('orange');
+    const button = cell.querySelector('button')!;
+    expect(button.getAttribute('aria-label')).toBe('Anna, Fri 2: Shift T1, on call RS. RS with T1');
+    expect(button.getAttribute('title')).toBe('Shift T1, on call RS\nRS with T1');
+    expect(element.querySelectorAll('.problem-mark').length).toBe(1);
+  });
+
   it('makes the row of the person looking stand out', () => {
     const { element } = grid({ highlight: 'bruno' });
     const highlighted = Array.from(element.querySelectorAll('tbody tr')).map((tr) => tr.classList.contains('highlight'));

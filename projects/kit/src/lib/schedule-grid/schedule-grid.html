@@ -35,26 +35,14 @@
           </th>
           @for (day of days(); track day.key) {
             @let cell = cellOf(row, day);
-            <td [class.off]="day.off" [class.today]="day.today">
+            <td [class.off]="day.off" [class.today]="day.today" [class.problem]="!!cell?.problem">
               @if (editable()) {
-                <button type="button" class="slot" [attr.aria-label]="labelOf(row, day)" [attr.title]="cell?.label ?? null" (click)="pick(row, day)">
-                  @if (cell) {
-                    <span class="tag" [class.toned]="!!cell.color" [style.--lenzi-schedule-tone]="cell.color ?? null">
-                      <span class="tag-text">{{ cell.text }}</span>
-                      @if (cell.detail) {
-                        <span class="tag-detail">{{ cell.detail }}</span>
-                      }
-                    </span>
-                  }
+                <button type="button" class="slot" [attr.aria-label]="labelOf(row, day)" [attr.title]="titleOf(cell)" (click)="pick(row, day)">
+                  <ng-container [ngTemplateOutlet]="tag" [ngTemplateOutletContext]="{ $implicit: cell }" />
                 </button>
               } @else if (cell) {
-                <span class="slot" [attr.title]="cell.label ?? null" [attr.aria-label]="labelOf(row, day)">
-                  <span class="tag" [class.toned]="!!cell.color" [style.--lenzi-schedule-tone]="cell.color ?? null">
-                    <span class="tag-text">{{ cell.text }}</span>
-                    @if (cell.detail) {
-                      <span class="tag-detail">{{ cell.detail }}</span>
-                    }
-                  </span>
+                <span class="slot" [attr.title]="titleOf(cell)" [attr.aria-label]="labelOf(row, day)">
+                  <ng-container [ngTemplateOutlet]="tag" [ngTemplateOutletContext]="{ $implicit: cell }" />
                 </span>
               }
             </td>
@@ -64,3 +52,23 @@
     </tbody>
   </table>
 </div>
+
+<!-- A cell's tag: the code on top, the second fact under it with its own colour's dot; a mark when it breaks a rule. -->
+<ng-template #tag let-cell>
+  @if (cell?.text) {
+    <span class="tag" [class.toned]="!!cell.color" [style.--lenzi-schedule-tone]="cell.color ?? null">
+      <span class="tag-text">{{ cell.text }}</span>
+      @if (cell.detail) {
+        <span class="tag-detail">
+          @if (cell.detailColor) {
+            <span class="detail-dot" [style.background-color]="cell.detailColor"></span>
+          }
+          {{ cell.detail }}
+        </span>
+      }
+    </span>
+  }
+  @if (cell?.problem) {
+    <span class="problem-mark" aria-hidden="true">!</span>
+  }
+</ng-template>

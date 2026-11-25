@@ -9,7 +9,7 @@ const PEOPLE = ['Anna', 'Bruno', 'Carla', 'Dario', 'Elena'];
 const CODES = ['T1', 'T2', 'T3', 'T4', 'RW'];
 const WEEKDAYS = ['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed'];
 
-/** A month of shifts: weekends shaded, today the 14th, codes in their identity colours; a tap on a cell says which. */
+/** A month of shifts: weekends shaded, today the 14th, codes in their identity colours, one day breaking a rule; a tap on a cell says which. */
 @Component({
   selector: 'app-schedule-grid-demo',
   imports: [LenziScheduleGrid],
@@ -42,7 +42,9 @@ export class ScheduleGridDemo {
         .map((day, d) => {
           const c = (d + p * 2) % 4;
           const onCall = (d + p) % 5 === 0;
-          return [day.key, { text: CODES[c]!, detail: onCall ? 'RS' : null, color: identityColor(c + 1), label: `Shift ${CODES[c]}${onCall ? ', on call RS' : ''}` }];
+          // One day breaks a rule, to show the mark.
+          const problem = p === 0 && d === 4 ? 'No T3 after T2' : null;
+          return [day.key, { text: CODES[c]!, detail: onCall ? 'RS' : null, color: identityColor(c + 1), detailColor: onCall ? identityColor(7) : null, label: `Shift ${CODES[c]}${onCall ? ', on call RS' : ''}`, problem }];
         }),
     ),
   }));

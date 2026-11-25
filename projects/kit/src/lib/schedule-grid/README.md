@@ -15,8 +15,15 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
 - **A day is its number on top, bold, its weekday under it** (RULES.md, "Figures": name on top, value under).
 - **One fact a line in a cell**: the code on top, bold; a second fact under it, smaller. Never "T1 / RS" or
   "T1 · RS" on one line.
-- **A cell's colour is the identity colour of what it says** (`identityColor` of the code's id), never a status
-  colour, never a colour by hand: the same shift is the same colour in every month.
+- **A cell's colour is the colour of what it says**, the same in every month: its identity colour
+  (`identityColor` of the code's id), or the colour the user chose for it when the app lets them (lenzi,
+  2026-11-25: "I colori dei turni devono essere più diversificati e controllabili": the shifts app lets the manager
+  pick each shift's colour with `LenziColorPicker`). Never a status colour, never a colour written in the code.
+- **A second fact has its own colour's dot** before it (`detailColor`), when it is a thing with a colour (an
+  on-call).
+- **A cell that breaks a rule is marked** (lenzi, 2026-11-25: "fai apparire gli errori nella scheda della griglia"):
+  its tag outlined in `--lenzi-status-bad`, a "!" at its corner, the rule in its tooltip and in what a screen reader
+  hears. The page lists the same errors under the grid, in words.
 - **Days off are shaded** (weekends, holidays), **today is in the accent**, and the grid opens scrolled to today.
 - **It scrolls inside its own box**, sideways and down, the header and the names in place; never the page. A phone
   scrolls it: do not hide days to make it fit.
@@ -36,7 +43,8 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
 | input | `emptyLabel` | `string` | `'Empty'` (what a screen reader hears for an empty cell) |
 | output | `picked` | `LenziSchedulePick` (`{ row, day, cell }`) | |
 
-`LenziScheduleCell`: `{ text, detail?, color?, label? }`; `label` is what a screen reader hears and the tooltip.
+`LenziScheduleCell`: `{ text, detail?, color?, detailColor?, label?, problem? }`; `label` is what a screen reader hears
+and the tooltip; `problem` the rule it breaks, in words.
 
 ## Example
 
@@ -54,7 +62,7 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
 
 ## Variables
 
-`--lenzi-border`, `--lenzi-panel-radius`, `--lenzi-option-radius`, `--lenzi-dot-size`, `--lenzi-border-focus`.
+`--lenzi-status-bad`, `--lenzi-border`, `--lenzi-panel-radius`, `--lenzi-option-radius`, `--lenzi-dot-size`, `--lenzi-border-focus`.
 
 ## Origin
 

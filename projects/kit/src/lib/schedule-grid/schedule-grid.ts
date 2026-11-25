@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, ElementRef, afterRenderEffect, booleanAttribute, computed, inject, input, output } from '@angular/core';
 
 /** One column: a day (or any slot) of the span shown. */
@@ -22,8 +23,12 @@ export interface LenziScheduleCell {
   text: string;
   /** A second fact under it, smaller: an on-call. */
   detail?: string | null;
-  /** The colour of the cell: the identity colour of what it says; none: a neutral cell. */
+  /** The colour of the cell: the colour of what it says (its identity colour, or the one the user chose for it); none: a neutral cell. */
   color?: string | null;
+  /** The colour of the second fact, as a dot before it; none: no dot. */
+  detailColor?: string | null;
+  /** A rule the cell breaks, in words: the cell is marked in the status colour and says it. */
+  problem?: string | null;
   /** What a screen reader hears, and the tooltip: "Shift T1, on call RS". */
   label?: string;
 }
@@ -55,7 +60,7 @@ export interface LenziSchedulePick {
  */
 @Component({
   selector: 'lenzi-schedule-grid',
-  imports: [],
+  imports: [NgTemplateOutlet],
   templateUrl: './schedule-grid.html',
   styleUrl: './schedule-grid.css',
 })
@@ -98,8 +103,13 @@ export class LenziScheduleGrid {
 
   protected labelOf(row: LenziScheduleRow, day: LenziScheduleDay): string {
     const cell = this.cellOf(row, day);
-    const what = cell ? (cell.label ?? [cell.text, cell.detail].filter(Boolean).join(', ')) : this.emptyLabel();
-    return `${row.name}, ${day.title ?? [day.caption, day.label].filter(Boolean).join(' ')}: ${what}`;
+    const what = cell?.text ? (cell.label ?? [cell.text, cell.detail].filter(Boolean).join(', ')) : this.emptyLabel();
+    return [`${row.name}, ${day.title ?? [day.caption, day.label].filter(Boolean).join(' ')}: ${what}`, cell?.problem].filter(Boolean).join('. ');
+  }
+
+  /** The tooltip: what the cell says, then the rule it breaks. */
+  protected titleOf(cell: LenziScheduleCell | null): string | null {
+    return [cell?.label, cell?.problem].filter(Boolean).join('\n') || null;
   }
 
   protected pick(row: LenziScheduleRow, day: LenziScheduleDay): void {

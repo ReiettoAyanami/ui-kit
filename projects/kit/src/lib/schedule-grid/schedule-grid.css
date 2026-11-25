@@ -136,6 +136,7 @@ tr.highlight > td.off:not(.today) {
 
 /* A cell: its tag, or room for one. */
 .slot {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,4 +203,41 @@ button.slot:focus-visible {
 .tag-detail {
   font: var(--mat-sys-label-small);
   color: var(--mat-sys-on-surface-variant);
+}
+
+.tag-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.detail-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+}
+
+/* A cell that breaks a rule: its tag outlined in the status colour, a "!" at its corner. */
+td.problem .tag {
+  outline: var(--lenzi-border) solid var(--lenzi-status-bad);
+  outline-offset: 2px;
+}
+
+.problem-mark {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  corner-shape: round;
+  background-color: var(--lenzi-status-bad);
+  color: var(--mat-sys-surface);
+  font: var(--mat-sys-label-small);
+  font-weight: 700;
+  line-height: 1;
 }
