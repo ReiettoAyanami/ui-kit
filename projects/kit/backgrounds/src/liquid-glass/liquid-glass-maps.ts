@@ -255,41 +255,64 @@ function mapsOf(field: DistanceField, bezel: number, optics: Optics): LenziLiqui
   const specular = new Uint8ClampedArray(width * height * 4);
   const directions = [...RIM_ANGLES.map((angle) => ({ angle: angle as number | null, x: Math.cos((angle * Math.PI) / 180), y: Math.sin((angle * Math.PI) / 180) })), { angle: null, x: 0, y: 0 }];
   const rims = directions.map((direction) => ({ angle: direction.angle, data: new Uint8ClampedArray(width * height * 4) }));
+  /** One point of the glass: its shift (a vector, -1 to 1 of the largest), its light and its rims' (0 to 1); null outside. */
+  const sample = (px: number, py: number) => {
+    const d = -distance(px, py);
+    if (d <= 0 || d >= bezel) return null;
+    // the outward normal of the edge here: the distance's slope
+    let nx = distance(px + step, py) - distance(px - step, py);
+    let ny = distance(px, py + step) - distance(px, py - step);
+    const length = Math.hypot(nx, ny) || 1;
+    nx /= length;
+    ny /= length;
+    // a convex bezel shows what is farther in: the point here takes from inwards (against the outward normal)
+    const shift = shiftAt(d) / largest;
+    // the rim: light only on the very edge, strongest where the edge faces the light (and a little opposite)
+    const facing = nx * lx + ny * ly;
+    const rim = Math.pow(Math.max(0, 1 - d / Math.min(bezel, 6)), 2);
+    const glance = Math.max(0, facing) + 0.35 * Math.max(0, -facing);
+    return {
+      sx: -nx * shift,
+      sy: -ny * shift,
+      specular: rim * glance,
+      rims: directions.map((direction) => {
+        // from one side: lit where the edge faces it; from all round (null): the whole rim, evenly
+        const toward = nx * direction.x + ny * direction.y;
+        return rim * (direction.angle === null ? 0.7 : Math.max(0, toward) + 0.25 * Math.max(0, -toward));
+      }),
+    };
+  };
+  // A pixel the outline crosses is four points averaged (lenzi, 2026-11-25: "attiva antialiasing"): its rim and its
+  // bending fade with how much of it is glass, instead of a staircase round the corners.
+  const SUB = [-0.25, 0.25];
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const px = x + 0.5;
       const py = y + 0.5;
-      const d = -distance(px, py);
       const at = (y * width + x) * 4;
       displacement[at + 2] = 128;
       displacement[at + 3] = 255;
       specular[at] = specular[at + 1] = specular[at + 2] = 255;
       for (const rim of rims) rim.data[at] = rim.data[at + 1] = rim.data[at + 2] = 255;
-      if (d <= 0 || d >= bezel) {
-        displacement[at] = displacement[at + 1] = 128;
-        continue;
+      const d = -distance(px, py);
+      const edge = Math.abs(d) < 1;
+      const points = edge ? SUB.flatMap((oy) => SUB.map((ox) => sample(px + ox, py + oy))) : [sample(px, py)];
+      let sx = 0;
+      let sy = 0;
+      let lit = 0;
+      const rimLight = new Array<number>(rims.length).fill(0);
+      for (const point of points) {
+        if (!point) continue;
+        sx += point.sx;
+        sy += point.sy;
+        lit += point.specular;
+        point.rims.forEach((value, k) => (rimLight[k]! += value));
       }
-      // the outward normal of the edge here: the distance's slope
-      let nx = distance(px + step, py) - distance(px - step, py);
-      let ny = distance(px, py + step) - distance(px, py - step);
-      const length = Math.hypot(nx, ny) || 1;
-      nx /= length;
-      ny /= length;
-      // a convex bezel shows what is farther in: the pixel here takes from inwards (against the outward normal)
-      const shift = shiftAt(d) / largest;
-      displacement[at] = Math.round(128 - nx * shift * 127);
-      displacement[at + 1] = Math.round(128 - ny * shift * 127);
-      // the rim: light only on the very edge, strongest where the edge faces the light (and a little opposite)
-      const facing = nx * lx + ny * ly;
-      const rim = Math.pow(Math.max(0, 1 - d / Math.min(bezel, 6)), 2);
-      const glance = Math.max(0, facing) + 0.35 * Math.max(0, -facing);
-      specular[at + 3] = Math.round(255 * rim * glance);
-      directions.forEach((direction, k) => {
-        // from one side: lit where the edge faces it; from all round (null): the whole rim, evenly
-        const toward = nx * direction.x + ny * direction.y;
-        const lit = direction.angle === null ? 0.7 : Math.max(0, toward) + 0.25 * Math.max(0, -toward);
-        rims[k]!.data[at + 3] = Math.round(255 * rim * lit);
-      });
+      const n = points.length;
+      displacement[at] = Math.round(128 + (sx / n) * 127);
+      displacement[at + 1] = Math.round(128 + (sy / n) * 127);
+      specular[at + 3] = Math.round((255 * lit) / n);
+      rimLight.forEach((value, k) => (rims[k]!.data[at + 3] = Math.round((255 * value) / n)));
     }
   }
   return { width, height, displacement, scale: largest, specular, rims };

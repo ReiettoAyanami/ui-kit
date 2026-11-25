@@ -38,6 +38,16 @@ describe('liquidGlassMaps', () => {
     expect(alpha(100, 10)).toBe(0);
   });
 
+  it('fades its rim across the pixels the round corners cross, no staircase (antialiased)', () => {
+    const maps = liquidGlassMaps({ width: 40, height: 40, radius: 14, bezel: 10, thickness: 20, ior: 1.5, surface: 'squircle', lightAngle: -135 });
+    const all = maps.rims.at(-1)!.data;
+    // along the corner's arc, on its second row: from nothing outside, through some, to the full rim inside
+    const row = Array.from({ length: 14 }, (_, x) => all[(1 * 40 + x) * 4 + 3]!);
+    const full = Math.max(...row);
+    expect(row[0]).toBe(0);
+    expect(row.some((alpha) => alpha > 0 && alpha < full * 0.6)).toBe(true);
+  });
+
   it('has a rim for each side the light may come from and one all round, none lit in the middle', () => {
     const maps = liquidGlassMaps(SHAPE);
     expect(maps.rims.length).toBe(9);

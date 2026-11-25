@@ -14,6 +14,8 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   ray from behind meets the bezel's slope and bends by Snell's law (air 1, glass `ior` 1.5); crossing the glass it
   moves sideways. That shift, at each distance from the edge, along the edge's normal (round corners too), is drawn
   into a displacement map (red and green, 128 none) and given to `feDisplacementMap`, its scale the largest shift.
+- **Antialiased** (lenzi, 2026-11-25: "attiva antialiasing"): a pixel the outline crosses is four points of the maps
+  averaged, so the rim and the bending fade across the round corners instead of stepping with the pixels.
 - **A little blur and saturation** of what is behind (`blur` 1.5 px, `saturation` 1.5).
 - **No border**: only a rim of light on the very edge (a few px), and only when the boids of a flock behind come near
   (lenzi, 2026-11-19: "quelli devono esserci solo quando i boidi ci si avvicinano"): dark while none is near,
