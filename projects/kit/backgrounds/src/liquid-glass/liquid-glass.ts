@@ -30,9 +30,13 @@ export class LenziLiquidGlass {
   /** The bezel's profile. */
   readonly surface = input<LenziGlassSurface>('squircle');
   /** Blur of what is behind, px. */
-  readonly blur = input(1.5, { transform: numberAttribute });
+  readonly blur = input(0.2, { transform: numberAttribute });
   /** Saturation of what is behind (1: as it is). */
-  readonly saturation = input(1.5, { transform: numberAttribute });
+  readonly saturation = input(1, { transform: numberAttribute });
+  /** The white highlight on the edge, 0 to 1. */
+  readonly specularOpacity = input(0.5, { transform: numberAttribute });
+  /** How saturated the copy of what is behind is on the edge: the edge takes its colour. */
+  readonly specularSaturation = input(6, { transform: numberAttribute });
   /** How bright the rim is, 0 to 1. */
   readonly rim = input(0.5, { transform: numberAttribute });
   /** Where the rim's light comes from with no flock to light it, degrees (-90: from the top). */
@@ -60,6 +64,8 @@ export class LenziLiquidGlass {
     surface: this.surface(),
     blur: this.blur(),
     saturation: this.saturation(),
+    specularOpacity: this.specularOpacity(),
+    specularSaturation: this.specularSaturation(),
     rim: this.rim(),
     lightAngle: this.lightAngle(),
     rimBoids: this.rimBoids(),
@@ -74,7 +80,7 @@ export class LenziLiquidGlass {
     const destroyRef = inject(DestroyRef);
     // a setting changed: the filter again (its key says whether anything it is made of changed)
     effect(() => {
-      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.rim(), this.lightAngle(), this.glassPath(), this.glassViewBox()];
+      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.rim(), this.lightAngle(), this.glassPath(), this.glassViewBox()];
       untracked(() => this.rebuild?.());
     });
     afterNextRender(() => {

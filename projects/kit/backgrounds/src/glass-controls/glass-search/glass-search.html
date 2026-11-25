@@ -1,0 +1,9 @@
+<label #field class="field lenzi-liquid-glass">
+  <mat-icon class="magnifier" aria-hidden="true">search</mat-icon>
+  <input #box type="search" [placeholder]="placeholder()" [attr.aria-label]="placeholder()" [value]="value()" (input)="typed(box.value)" />
+  @if (value()) {
+    <button type="button" class="clear" aria-label="Clear" (click)="clear(box)">
+      <mat-icon aria-hidden="true">close</mat-icon>
+    </button>
+  }
+</label>

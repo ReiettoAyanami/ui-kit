@@ -25,6 +25,11 @@ export * from './liquid-glass/liquid-glass';
 export * from './liquid-glass/liquid-glass-maps';
 export * from './liquid-glass/liquid-surface';
 export * from './liquid-glass/liquid-everywhere';
+export * from './glass-controls/lens';
+export * from './glass-controls/glass-switch/glass-switch';
+export * from './glass-controls/glass-segmented/glass-segmented';
+export * from './glass-controls/glass-slider/glass-slider';
+export * from './glass-controls/glass-search/glass-search';
 
 // The numbers behind them: shapes, colours, the flock (for an app that draws its own).
 export * from './engine/color';

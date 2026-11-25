@@ -270,7 +270,8 @@ function mapsOf(field: DistanceField, bezel: number, optics: Optics): LenziLiqui
     // the rim: light only on the very edge, strongest where the edge faces the light (and a little opposite)
     const facing = nx * lx + ny * ly;
     const rim = Math.pow(Math.max(0, 1 - d / Math.min(bezel, 6)), 2);
-    const glance = Math.max(0, facing) + 0.35 * Math.max(0, -facing);
+    // the whole edge a little, most where it faces the light, much on the other side too (kube.io's, Apple's)
+    const glance = 0.3 + 0.7 * Math.max(0, facing) + 0.45 * Math.max(0, -facing);
     return {
       sx: -nx * shift,
       sy: -ny * shift,

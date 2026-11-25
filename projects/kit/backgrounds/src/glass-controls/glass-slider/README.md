@@ -1,0 +1,36 @@
+# Glass slider
+
+`<lenzi-glass-slider>`: a value between two ends, the way Apple's slider is (`@lenzi/ui-kit/backgrounds`).
+
+## Rules
+
+- **A thin capsule rail**, the accent up to the value; **a light capsule thumb**.
+- **Dragged, the thumb is Liquid Glass**, larger, magnifying the rail under it, and settles solid (lenzi, 2026-11-25:
+  "come quelli di apple").
+- A tap on the rail jumps there; the arrow keys step, Page Up/Down ten steps, Home and End the ends; always on a step,
+  inside the ends. A `role="slider"` with its ends, value and `aria-valuetext`.
+
+## API
+
+| | Name | Type | Default |
+| --- | --- | --- | --- |
+| model | `value` | `number` | `0` |
+| input | `min`, `max`, `step` | `number` | `0`, `100`, `1` |
+| input | `label` | `string` | required |
+| input | `valueText` | `string \| null` | `null` (how the value reads aloud: "40 %") |
+| input | `disabled` | `boolean` | `false` |
+
+## Example
+
+```html
+<lenzi-glass-slider label="Volume" [(value)]="volume" [step]="5" />
+```
+
+## Variables
+
+`--mat-sys-primary`, `--mat-sys-inverse-surface`, `--lenzi-border-focus`; the glass: `LENS_SETTINGS` (`glass-controls/lens.ts`:
+a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6).
+
+## Origin
+
+New in the kit, 2026-11-25, after Apple's controls and kube.io's demonstrations.

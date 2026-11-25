@@ -1,0 +1,22 @@
+<button
+  #track
+  type="button"
+  role="switch"
+  class="track"
+  [class.on]="checked()"
+  [class.active]="active()"
+  [class.dragging]="dragAt() !== null"
+  [style.--lenzi-switch-at]="position()"
+  [attr.aria-checked]="checked()"
+  [attr.aria-label]="label()"
+  [disabled]="disabled()"
+  (pointerdown)="down($event)"
+  (pointermove)="move($event)"
+  (pointerup)="up()"
+  (pointercancel)="cancel()"
+  (keydown)="key($event)"
+  (click)="$event.preventDefault()"
+>
+  <span class="knob" aria-hidden="true"></span>
+  <span #lens class="lens lenzi-liquid-glass" aria-hidden="true"></span>
+</button>

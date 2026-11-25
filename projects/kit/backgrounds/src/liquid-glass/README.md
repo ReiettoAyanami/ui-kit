@@ -50,8 +50,10 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `ior` | refractive index | `1.5` |
 | input | `refraction` | how much of the bending, 0 to 1 and beyond | `1` |
 | input | `surface` | `'squircle' \| 'circle' \| 'lip'` | `'squircle'` |
-| input | `blur` | px | `1.5` |
-| input | `saturation` | 1: as it is | `1.5` |
+| input | `blur` | px | `0.2` |
+| input | `saturation` | 1: as it is | `1` |
+| input | `specularOpacity` | 0 to 1: the white highlight on the edge | `0.5` |
+| input | `specularSaturation` | the edge's copy of what is behind, saturated | `6` |
 | input | `rim` | 0 to 1 | `0.5` |
 | input | `lightAngle` | degrees | `-60` |
 | input | `glassPath` | an SVG path (even-odd): the glass's own shape | `null` (its box) |
@@ -83,10 +85,12 @@ come in modo ottimale"; the Human Interface Guidelines, Materials and Color, rea
 - **Never the content** ("Don't use Liquid Glass in the content layer"): cards, tables, grids, a page's panels stay solid
   (`{ pages: true }` would make them glass too: only for a page that is itself a picture).
 - **Sparingly** ("Use Liquid Glass effects sparingly"): what it bends is the content scrolling under it.
-- **The regular variant**: it "blurs and adjusts the luminosity of background content to maintain legibility": a tint
-  of the page's colour (`--lenzi-liquid-tint`, 60%) and 5 px of blur (`LIQUID_EVERYWHERE_SETTINGS`; lenzi: "più scura e
-  leggermente più blurrata"). **Larger glass more opaque** ("more opaque in larger elements like sidebars"): the drawer
-  and the windows, `--lenzi-liquid-tint-large` (75%). Apple's clear variant is for what floats over photos and videos,
+- **The default optics, the edge in the colours under it** (lenzi, 2026-11-25: "guarda come i bordi prendono il colore
+  di quello che sta sotto"; "per il vetro tieni i valori dafault di apple per ora"): kube.io's filter chain: what is
+  behind blurred a little (0.2) and bent (refraction 1); on the edge, where the specular map says, a much more saturated
+  copy of it (`specularSaturation` 6) and over it a white highlight (`specularOpacity` 0.5); a light tint of the page's
+  colour to read on (`--lenzi-liquid-tint`, 30%). **Larger glass more opaque** ("more opaque in larger elements like
+  sidebars"): the drawer and the windows, `--lenzi-liquid-tint-large` (50%). Apple's clear variant is for what floats over photos and videos,
   with a 35% dark layer: not used by the kit's surfaces.
 - **No colour of its own**; the primary action alone is coloured glass ("For primary actions, color the background"):
   the "+" keeps its accent.

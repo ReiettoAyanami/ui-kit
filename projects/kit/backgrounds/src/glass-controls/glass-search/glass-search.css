@@ -1,0 +1,65 @@
+/* Apple's search field in its new design: a capsule of Liquid Glass, a magnifier, the text, an ✕. */
+:host {
+  display: block;
+  --lenzi-glass-search-height: 48px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--lenzi-glass-search-height);
+  padding: 0 8px 0 16px;
+  box-sizing: border-box;
+  border-radius: calc(var(--lenzi-glass-search-height) / 2);
+  background-color: color-mix(in srgb, var(--mat-sys-surface) 30%, transparent);
+  cursor: text;
+}
+
+.field:focus-within {
+  box-shadow: 0 0 0 var(--lenzi-border-focus) var(--mat-sys-primary);
+}
+
+.magnifier {
+  flex: none;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+  outline: none;
+}
+
+input::placeholder {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  corner-shape: round;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 14%, transparent);
+  color: var(--mat-sys-on-surface);
+  cursor: pointer;
+}
+
+.clear mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}

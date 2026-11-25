@@ -18,6 +18,10 @@ export interface LenziLiquidGlassSettings {
   surface: LenziGlassSurface;
   blur: number;
   saturation: number;
+  /** How much of the white highlight lies on the edge, 0 to 1 (kube.io's "specular opacity"). */
+  specularOpacity: number;
+  /** How saturated the copy of what is behind is, on the edge (kube.io's "specular saturation"): the edge takes its colour. */
+  specularSaturation: number;
   rim: number;
   lightAngle: number;
   rimBoids: number;
@@ -33,8 +37,10 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
   ior: 1.5,
   refraction: 1,
   surface: 'squircle',
-  blur: 1.5,
-  saturation: 1.5,
+  blur: 0.2,
+  saturation: 1,
+  specularOpacity: 0.5,
+  specularSaturation: 6,
   rim: 0.5,
   lightAngle: -60,
   rimBoids: 60,
@@ -93,14 +99,15 @@ export class LenziLiquidSurface {
   /** The filter for the glass's size now: its maps drawn, its SVG in the page, then the glass pointed at it. */
   build(): void {
     const s = this.settings();
+    // its own size, not its box on the screen: a glass that is scaled by an animation keeps the maps of its size
     const box = this.element.getBoundingClientRect();
-    const width = Math.round(box.width);
-    const height = Math.round(box.height);
+    const width = Math.round(this.element.offsetWidth || box.width);
+    const height = Math.round(this.element.offsetHeight || box.height);
     if (width < 2 || height < 2) return;
     const radius = this.cornerRadius();
     this.radius = radius;
     const path = s.glassPath;
-    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.lightAngle}|${s.refraction}|${s.blur}|${s.saturation}|${s.rim}|${s.glassViewBox}|${path ?? ''}`;
+    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.lightAngle}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${s.rim}|${s.glassViewBox}|${path ?? ''}`;
     if (key === this.size) return;
     this.size = key;
     // A bezel wider than half the glass would bend the whole of it: never more than a third of its smaller side.
@@ -127,11 +134,20 @@ export class LenziLiquidSurface {
     svg.style.pointerEvents = 'none';
     const scale = (maps.scale * Math.max(0, s.refraction)).toFixed(2);
     const saturation = Math.max(0, s.saturation);
+    // kube.io's chain (lenzi, 2026-11-25: "guarda come i bordi prendono il colore di quello che sta sotto"): what is behind,
+    // softened and bent; on the edge a much more saturated copy of it, where the specular map says (so the edge takes the
+    // colour of what is under it), and a white highlight over that at `specularOpacity`; then the moving light (rims).
     svg.innerHTML = `<filter id="${this.id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0, s.blur)}" result="soft"/>
   <feImage href="${picture(maps.displacement)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="map"/>
-  <feDisplacementMap in="SourceGraphic" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
-  <feGaussianBlur in="bent" stdDeviation="${Math.max(0, s.blur)}" result="soft"/>
-  <feColorMatrix in="soft" type="saturate" values="${saturation}" result="glass"/>
+  <feDisplacementMap in="soft" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+  <feColorMatrix in="bent" type="saturate" values="${saturation}" result="refracted"/>
+  <feColorMatrix in="bent" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
+  <feImage href="${picture(maps.specular)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="specular"/>
+  <feComposite in="vivid" in2="specular" operator="in" result="edge"/>
+  <feComponentTransfer in="specular" result="highlight"><feFuncA type="linear" slope="${Math.max(0, s.specularOpacity)}"/></feComponentTransfer>
+  <feBlend in="edge" in2="refracted" mode="normal" result="coloured"/>
+  <feBlend in="highlight" in2="coloured" mode="normal" result="glass"/>
   <feImage class="lenzi-liquid-glass-rim" href="${this.rims[this.rims.length - 1]}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="light"/>
   <feComponentTransfer in="light" result="rim"><feFuncA class="lenzi-liquid-glass-rim-light" type="linear" slope="0"/></feComponentTransfer>
   <feBlend in="rim" in2="glass" mode="screen"/>

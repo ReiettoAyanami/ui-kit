@@ -63,6 +63,17 @@
             const target = pick(action.key);
             const view = target?.ownerDocument.defaultView;
             target?.dispatchEvent(new view.KeyboardEvent('keydown', { key: action.name, keyCode: action.name === 'Escape' ? 27 : 0, shiftKey: !!action.shift, bubbles: true, cancelable: true }));
+          } else if (action.hold) {
+            // {"hold": "selector", "x": 0.2, "to": [0.6, 0.5]}: a pointer pressed (and moved), not let go: what a held
+            // control shows (a glass thumb)
+            const target = pick(action.hold);
+            if (target) {
+              const view = target.ownerDocument.defaultView;
+              const box = target.getBoundingClientRect();
+              const at = (x, y) => ({ clientX: box.left + box.width * x, clientY: box.top + box.height * y, button: 0, pointerId: 7, bubbles: true, cancelable: true });
+              target.dispatchEvent(new view.PointerEvent('pointerdown', at(action.x ?? 0.5, action.y ?? 0.5)));
+              if (action.to) target.dispatchEvent(new view.PointerEvent('pointermove', at(action.to[0], action.to[1])));
+            }
           } else if (action.press) {
             const target = pick(action.press);
             if (target) {

@@ -1,0 +1,25 @@
+<div
+  #track
+  class="track"
+  role="slider"
+  [attr.tabindex]="disabled() ? -1 : 0"
+  [class.active]="active()"
+  [class.dragging]="dragging()"
+  [class.disabled]="disabled()"
+  [style.--lenzi-slider-at]="fraction()"
+  [attr.aria-label]="label()"
+  [attr.aria-valuemin]="min()"
+  [attr.aria-valuemax]="max()"
+  [attr.aria-valuenow]="value()"
+  [attr.aria-valuetext]="valueText()"
+  [attr.aria-disabled]="disabled() || null"
+  (pointerdown)="down($event)"
+  (pointermove)="move($event)"
+  (pointerup)="up()"
+  (pointercancel)="up()"
+  (keydown)="key($event)"
+>
+  <span class="rail" aria-hidden="true"><span class="fill"></span></span>
+  <span class="knob" aria-hidden="true"></span>
+  <span #lens class="lens lenzi-liquid-glass" aria-hidden="true"></span>
+</div>

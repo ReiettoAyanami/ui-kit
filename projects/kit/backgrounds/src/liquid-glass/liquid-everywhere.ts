@@ -37,9 +37,10 @@ export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '
 /**
  * The optics of the app's glass: Apple's "regular" variant, which "blurs and adjusts the luminosity of background
  * content to maintain legibility" (the clear one is only for what floats over photos and videos): a narrower bezel than
- * a single window's, more blur (lenzi, 2026-11-25: "più scura e leggermente più blurrata").
+ * a single window's; the optics are the defaults (lenzi, 2026-11-25: "per il vetro tieni i valori default di apple per
+ * ora": kube.io's: refraction 1, blur 0.2, specular opacity 0.5, specular saturation 6).
  */
-export const LIQUID_EVERYWHERE_SETTINGS: LenziLiquidGlassSettings = { ...LIQUID_GLASS_SETTINGS, bezel: 18, thickness: 40, blur: 5 };
+export const LIQUID_EVERYWHERE_SETTINGS: LenziLiquidGlassSettings = { ...LIQUID_GLASS_SETTINGS, bezel: 18, thickness: 40 };
 
 export interface LenziLiquidGlassOptions {
   /** The surfaces to turn into glass; what floats over the page by default. */

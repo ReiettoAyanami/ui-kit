@@ -69,9 +69,12 @@ the rule says what, the variable says how much.
     controls and navigation elements"): the top bar, the drawer, windows, menus and select panels, the "+", a bar of
     actions (`.lenzi-floating`). **Never the content** ("Don't use Liquid Glass in the content layer"): cards, tables,
     grids, a page's panels stay solid. **Sparingly** ("Use Liquid Glass effects sparingly").
-  - **The regular variant**, which blurs and darkens what is behind to read on (`--lenzi-liquid-tint` 60%, blur 5 px);
-    **larger glass more opaque** (the drawer, windows: `--lenzi-liquid-tint-large`, 75%). The clear variant only over
-    photos and videos, with a 35% dark layer.
+  - **The default optics** (lenzi, 2026-11-25: "per il vetro tieni i valori dafault di apple per ora"; kube.io's: refraction
+    1, blur 0.2, specular opacity 0.5, specular saturation 6): **its edge takes the colour of what is under it** (a
+    saturated copy of it, kube.io's way: "guarda come i bordi prendono il colore di quello che sta sotto"), with a light
+    tint to read on (`--lenzi-liquid-tint` 30%; larger glass more opaque, `--lenzi-liquid-tint-large` 50%).
+  - **Controls of glass, Apple's** (`@lenzi/ui-kit/backgrounds`): `LenziGlassSwitch`, `LenziGlassSegmented`,
+    `LenziGlassSlider`, `LenziGlassSearch`: a solid thumb that becomes glass while held, larger, and settles solid.
   - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
   - **Its rim lives**: lit near the pointer, and by a flock's boids behind it; pressed, all of it, brighter.
   - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
