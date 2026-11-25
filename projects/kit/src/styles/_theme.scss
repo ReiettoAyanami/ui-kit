@@ -1,10 +1,16 @@
 // The kit's Material 3 theme (RULES.md, "Theme"): dark only, Material's violet palette for the
-// accents and cyan for the tertiary, one font (Roboto Mono) with bold labels and titles. The colours
+// accents and cyan for the tertiary, one font (Apple's, the system's elsewhere) with bold labels and titles. The colours
 // people pick are global variables too (tokens.css: "Accents" with the palette's own values, and the
 // neutral "Surfaces"), so the catalog's Variables page changes them; this palette is where the other
 // roles come from. Use it through kit.scss, which also sets the page's colours.
 @use 'sass:list';
 @use '@angular/material' as mat;
+
+/// The interface's font (lenzi, 2026-11-25: "proviamo ad usare i font di apple per l'interfaccia"; before, Roboto Mono
+/// for everything). Apple's SF where it is: on Apple's devices the browser's own (`-apple-system`), elsewhere when it is
+/// installed (by its names). Never bundled: Apple's licence lets it be used only for Apple's platforms. Without it, the
+/// system's own (Segoe UI on Windows, Roboto on Android).
+$font: (-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
 
 /// Material's theme for the kit. Include it once, on `html`.
 @mixin theme() {
@@ -15,11 +21,11 @@
         primary: mat.$violet-palette,
         tertiary: mat.$cyan-palette,
       ),
-      // One font for everything (lenzi, 2026-10-02: "Usa roboto mono per tutto"). The hierarchy is
-      // Material's sizes and weights (400, 500, 700).
+      // One font for the interface (lenzi, 2026-11-25: "proviamo ad usare i font di apple per l'interfaccia"). The
+      // hierarchy is Material's sizes and weights (400, 500, 700).
       typography: (
-        plain-family: ('Roboto Mono', monospace),
-        brand-family: ('Roboto Mono', monospace),
+        plain-family: $font,
+        brand-family: $font,
         regular-weight: 400,
         medium-weight: 500,
         bold-weight: 700,
@@ -48,6 +54,6 @@
   );
   @each $style, $size in $bold-styles {
     --mat-sys-#{$style}-weight: 700;
-    --mat-sys-#{$style}: 700 #{list.nth($size, 1)} / #{list.nth($size, 2)} 'Roboto Mono', monospace;
+    --mat-sys-#{$style}: 700 #{list.nth($size, 1)} / #{list.nth($size, 2)} #{$font};
   }
 }

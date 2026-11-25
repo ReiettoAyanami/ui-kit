@@ -39,6 +39,8 @@ export class LenziLiquidGlass {
   readonly lightAngle = input(-60, { transform: numberAttribute });
   /** How many boids near the glass light its rim whole. */
   readonly rimBoids = input(60, { transform: numberAttribute });
+  /** How far from the glass the pointer lights its rim, px (0: never). */
+  readonly pointerReach = input(160, { transform: numberAttribute });
   /**
    * A shape of its own (lenzi, 2026-11-19: Liquid Glass on the cat): an SVG path (filled even-odd), stretched over the
    * element as `glassViewBox` says, as a mask of the same path is; the bezel follows its outline. None: the element's
@@ -61,6 +63,7 @@ export class LenziLiquidGlass {
     rim: this.rim(),
     lightAngle: this.lightAngle(),
     rimBoids: this.rimBoids(),
+    pointerReach: this.pointerReach(),
     glassPath: this.glassPath(),
     glassViewBox: this.glassViewBox(),
   }));

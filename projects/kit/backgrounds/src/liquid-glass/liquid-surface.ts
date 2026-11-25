@@ -21,6 +21,8 @@ export interface LenziLiquidGlassSettings {
   rim: number;
   lightAngle: number;
   rimBoids: number;
+  /** How far from the glass the pointer lights its rim, px (0: never); on the side it comes from, brighter nearer. */
+  pointerReach: number;
   glassPath: string | null;
   glassViewBox: string;
 }
@@ -36,9 +38,24 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
   rim: 0.5,
   lightAngle: -60,
   rimBoids: 60,
+  pointerReach: 160,
   glassPath: null,
   glassViewBox: '0 0 100 100',
 };
+
+/** Where the pointer is on a page (one listener a document, for every glass); `on`: over the page. */
+const pointers = new WeakMap<Document, { x: number; y: number; on: boolean }>();
+function pointerOf(document: Document): { x: number; y: number; on: boolean } {
+  let pointer = pointers.get(document);
+  if (!pointer) {
+    const tracked = { x: 0, y: 0, on: false };
+    pointer = tracked;
+    pointers.set(document, tracked);
+    document.addEventListener('pointermove', (event) => Object.assign(tracked, { x: event.clientX, y: event.clientY, on: true }), { passive: true });
+    document.documentElement.addEventListener('pointerleave', () => (tracked.on = false));
+  }
+  return pointer;
+}
 
 /** Whether this browser draws an SVG filter as a backdrop-filter (only Chromium does). */
 export function refracts(view: Window | null): boolean {
@@ -146,12 +163,22 @@ export class LenziLiquidSurface {
     const s = this.settings();
     const box = this.element.getBoundingClientRect();
     const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    // What lights the rim: the boids of a flock behind (as many as `rimBoids`: whole), or the pointer near the glass
+    // (lenzi, 2026-11-25: "Controlla che i bordi dinamici lo siano veramente": with no flock, the rims never moved).
     const crowd = this.sights.around(middle, Math.max(box.width, box.height) * 0.8);
-    const bright = crowd ? Math.max(0, s.rim) * Math.min(1, crowd.count / Math.max(1, s.rimBoids)) : 0;
+    const byBoids = crowd ? Math.max(0, s.rim) * Math.min(1, crowd.count / Math.max(1, s.rimBoids)) : 0;
+    const pointer = pointerOf(this.document);
+    let byPointer = 0;
+    if (pointer.on && s.pointerReach > 0) {
+      const away = Math.hypot(Math.max(box.left - pointer.x, 0, pointer.x - box.right), Math.max(box.top - pointer.y, 0, pointer.y - box.bottom));
+      byPointer = Math.max(0, s.rim) * Math.pow(Math.max(0, 1 - away / s.pointerReach), 2);
+    }
+    const from = byPointer > byBoids ? pointer : crowd;
+    const bright = Math.max(byBoids, byPointer);
     let side = this.rims.length - 1;
-    if (crowd) {
-      const ox = (crowd.x - middle.x) / Math.max(1, box.width / 2);
-      const oy = (crowd.y - middle.y) / Math.max(1, box.height / 2);
+    if (from && bright > 0) {
+      const ox = (from.x - middle.x) / Math.max(1, box.width / 2);
+      const oy = (from.y - middle.y) / Math.max(1, box.height / 2);
       if (Math.hypot(ox, oy) > 0.35) {
         const angle = (Math.atan2(oy, ox) * 180) / Math.PI;
         let best = 0;

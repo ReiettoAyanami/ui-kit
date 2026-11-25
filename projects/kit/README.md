@@ -1,7 +1,7 @@
 # @lenzi/ui-kit
 
 lenzi's Angular component kit: Angular Material 3, heavily modified (dark violet on neutral greys, glass,
-2 px borders, Roboto Mono), with the rules and the notes for Claude of every piece.
+2 px borders, Apple's SF), with the rules and the notes for Claude of every piece.
 
 ## Use
 

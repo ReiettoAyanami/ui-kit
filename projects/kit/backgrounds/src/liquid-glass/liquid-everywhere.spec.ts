@@ -19,15 +19,15 @@ describe('LenziLiquidEverywhere', () => {
 
   it("makes the app's surfaces glass as they come, and lets go of them when they go", async () => {
     const glass = TestBed.inject(LenziLiquidEverywhere);
-    const card = add('mat-mdc-card');
-    const plain = add('nothing');
+    const card = add('lenzi-shell-bar');
+    const plain = add('mat-mdc-card');
     glass.start();
     await frame();
     expect(card.classList.contains('lenzi-liquid-everywhere')).toBe(true);
     expect(card.classList.contains('lenzi-liquid-glass')).toBe(true);
     expect(plain.classList.contains('lenzi-liquid-everywhere')).toBe(false);
     const dialog = add('mat-mdc-dialog-surface');
-    const surface = add('lenzi-surface');
+    const surface = add('lenzi-floating');
     await frame();
     await frame();
     expect(dialog.classList.contains('lenzi-liquid-everywhere')).toBe(true);
@@ -38,9 +38,17 @@ describe('LenziLiquidEverywhere', () => {
     expect(glass.count).toBe(2);
   });
 
-  it('turns it all off with Reduce transparency, and on again', async () => {
+  it('makes the page\'s own surfaces glass only when asked', async () => {
     const glass = TestBed.inject(LenziLiquidEverywhere);
     const card = add('mat-mdc-card');
+    glass.start({ pages: true });
+    await frame();
+    expect(card.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+  });
+
+  it('turns it all off with Reduce transparency, and on again', async () => {
+    const glass = TestBed.inject(LenziLiquidEverywhere);
+    const card = add('mat-mdc-dialog-surface');
     glass.start();
     await frame();
     expect(card.classList.contains('lenzi-liquid-everywhere')).toBe(true);

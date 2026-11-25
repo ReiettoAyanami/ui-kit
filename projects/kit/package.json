@@ -1,7 +1,7 @@
 {
   "name": "@lenzi/ui-kit",
   "version": "0.1.0",
-  "description": "lenzi's component kit: Angular Material 3, heavily modified (dark violet, glass, 2 px borders, Roboto Mono), with the rules and the AI notes of every component.",
+  "description": "lenzi's component kit: Angular Material 3, heavily modified (dark violet, glass, 2 px borders, Apple's SF), with the rules and the AI notes of every component.",
   "license": "Unlicense",
   "peerDependencies": {
     "@angular/cdk": "^21.2.0",

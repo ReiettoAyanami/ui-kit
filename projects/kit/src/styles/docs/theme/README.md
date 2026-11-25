@@ -2,7 +2,7 @@
 
 The kit's Material 3 theme: dark only, violet accents on neutral greys, one font. It is the first thing an
 app takes: `styles/kit.scss` (the theme, the global variables, the global rules) and `styles/fonts.css`
-(Roboto Mono and Material Icons, bundled).
+(Roboto Mono for code and Material Icons, bundled; the interface's font is the system's).
 
 ## Rules
 
@@ -10,8 +10,10 @@ app takes: `styles/kit.scss` (the theme, the global variables, the global rules)
 - **Violet accents** (Material's violet palette), **cyan tertiary**; **neutral grey surfaces**, not the
   palette's violet-tinted ones: the page `#1f1f22`, the chart cards `#121214`, windows and menus lighter.
 - **Status colours** (`--lenzi-status-good`, `--lenzi-status-bad`) are the only colours with a meaning.
-- **One font: Roboto Mono** (lenzi, 2026-10-02: "Usa roboto mono per tutto"). **Bold (700)** for display,
-  headline, title and label styles; values regular. Material's sizes.
+- **One font for the interface: Apple's SF** (lenzi, 2026-11-25: "proviamo ad usare i font di apple per
+  l'interfaccia"; Roboto Mono until then): `-apple-system` on Apple's devices, SF by its names where installed, the
+  system's font elsewhere. Never bundled (Apple's licence: Apple's platforms only). Code in Roboto Mono. **Bold
+  (700)** for display, headline, title and label styles; values regular. Material's sizes.
 - **Colours and type always through variables**: `var(--mat-sys-primary)`, `font: var(--mat-sys-title-medium)`.
 
 ## Use

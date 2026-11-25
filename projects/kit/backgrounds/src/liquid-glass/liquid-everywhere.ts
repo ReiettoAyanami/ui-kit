@@ -11,9 +11,9 @@ import { LenziSights } from '../sights/sights';
 import { LIQUID_GLASS_SETTINGS, LenziLiquidGlassSettings, LenziLiquidSurface, refracts } from './liquid-surface';
 
 /**
- * The surfaces an app made of Liquid Glass turns into it: the top bar and the drawer, dialogs, menus and the panels
- * of selects and autocompletes, Material's cards, and what the kit or the app marks as a page's surface
- * (`.lenzi-surface`: the schedule grid's box, the data table's box).
+ * What floats over the page, Liquid Glass by default (lenzi, 2026-11-25: "Diminuisci un po' le cose che usano sto
+ * liquidglass e rendile solide"): the top bar and the drawer, dialogs, menus and the panels of selects and
+ * autocompletes, and what the app marks as floating (`.lenzi-floating`: a bar of actions over the page).
  */
 export const LENZI_LIQUID_SURFACES: readonly string[] = [
   '.lenzi-shell-bar',
@@ -22,23 +22,27 @@ export const LENZI_LIQUID_SURFACES: readonly string[] = [
   '.mat-mdc-menu-panel',
   '.mat-mdc-select-panel',
   '.mat-mdc-autocomplete-panel',
-  '.mat-mdc-card',
-  '.lenzi-surface',
+  '.lenzi-floating',
 ];
+
+/** The surfaces of the page itself, glass too only when asked (`pages: true`): cards, the grid's and the table's boxes. */
+export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '.lenzi-surface'];
 
 /** The optics of the whole app's glass: a narrower bezel than a single window's, and a little more blur to read on. */
 export const LIQUID_EVERYWHERE_SETTINGS: LenziLiquidGlassSettings = { ...LIQUID_GLASS_SETTINGS, bezel: 18, thickness: 40, blur: 3 };
 
 export interface LenziLiquidGlassOptions {
-  /** The surfaces to turn into glass; the kit's own by default. */
+  /** The surfaces to turn into glass; what floats over the page by default. */
   selectors?: readonly string[];
+  /** The page's own surfaces too (cards, boxes): every surface glass. */
+  pages?: boolean;
   /** Their optics; the whole app's by default. */
   settings?: Partial<LenziLiquidGlassSettings>;
 }
 
 /**
- * Every surface of the app made of Liquid Glass (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass", "tutta
- * l'app"). It finds them as they come and go (a dialog opened, a page changed), gives each the class
+ * The app's floating surfaces made of Liquid Glass, or every surface (`pages`) (lenzi, 2026-11-25, the shifts app: "qui
+ * usiamo liquid glass"; then "Diminuisci un po' ... e rendile solide"). It finds them as they come and go (a dialog opened, a page changed), gives each the class
  * `lenzi-liquid-glass lenzi-liquid-everywhere` (the kit's styles take away its fill and border and give it a light tint
  * to read on, `--lenzi-liquid-tint`) and, in Chromium, its own bending filter, drawn again when it changes size. One
  * frame loop lights the rims of all of them. Reduce transparency (`LenziAppearance`, or the system's wish) turns it all
@@ -62,7 +66,7 @@ export class LenziLiquidEverywhere {
     const view = this.document.defaultView;
     if (this.started || !view || typeof MutationObserver !== 'function') return;
     this.started = true;
-    this.selectors = options.selectors ?? LENZI_LIQUID_SURFACES;
+    this.selectors = [...(options.selectors ?? LENZI_LIQUID_SURFACES), ...(options.pages ? LENZI_LIQUID_PAGE_SURFACES : [])];
     this.settings = { ...LIQUID_EVERYWHERE_SETTINGS, ...options.settings };
     const bends = refracts(view);
     if (bends && typeof ResizeObserver === 'function') {

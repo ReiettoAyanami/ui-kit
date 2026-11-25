@@ -21,6 +21,9 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   (lenzi, 2026-11-19: "quelli devono esserci solo quando i boidi ci si avvicinano"): dark while none is near,
   brighter the more there are (whole at `rimBoids`, 60; `rim` 0.5 at most), lit on the side they come from (eight
   sides), all round once they are under the glass (`LenziSights.around`, at every frame; the nine rims drawn once).
+- **The pointer lights it too** (lenzi, 2026-11-25: "Controlla che i bordi dinamici lo siano veramente": with no flock
+  the rims never moved): within `pointerReach` px (160) of the glass, brighter nearer, on the side it comes from; the
+  brighter of the two lights wins.
 - **One filter per glass, made for its size**, again when it changes size or a setting (the maps are as large as it
   is), or its corners (`border-radius`, from any CSS: looked at about twice a second; lenzi, 2026-11-21, "tanti input non
   si aggiornano automaticamente").
@@ -69,13 +72,14 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 .window { border-radius: 28px; padding: 24px 32px; }
 ```
 
-## A whole app of Liquid Glass
+## An app of Liquid Glass
 
-`provideLenziLiquidGlass(options?)` (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass", "tutta l'app"):
-every surface of the app is Liquid Glass, as it comes and goes (`LenziLiquidEverywhere`): the top bar and the drawer
-(`LenziAppShell`), dialogs, menus, the panels of selects and autocompletes, Material's cards, and what is marked
-`.lenzi-surface` (the schedule grid's box, the data table's box, an app's own panels). `LenziLiquidSurface` is one
-glass, the engine the directive uses too.
+`provideLenziLiquidGlass(options?)` (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass"; then "Diminuisci un
+po' le cose che usano sto liquidglass e rendile solide"): what floats over the page is Liquid Glass, as it comes and goes
+(`LenziLiquidEverywhere`): the top bar and the drawer (`LenziAppShell`), dialogs, menus, the panels of selects and
+autocompletes, and what the app marks `.lenzi-floating` (a bar of actions). The page's own surfaces stay solid; `{ pages:
+true }` makes them glass too (Material's cards, `.lenzi-surface`: the schedule grid's and the data table's boxes, an
+app's own panels). `LenziLiquidSurface` is one glass, the engine the directive uses too.
 
 - **Readable first**: each surface keeps `--lenzi-liquid-tint` (42%) of the page's colour, and a little more blur than
   a single window (`LIQUID_EVERYWHERE_SETTINGS`: bezel 18, thickness 40, blur 3); a bezel is never wider than a third
@@ -84,7 +88,8 @@ glass, the engine the directive uses too.
   colour; a `.lenzi-surface` of the app keeps its border, which may say something (today, a rule broken).
 - **Tables and grids**: their cells clear, the parts that stay in place (header, names) a frosted strip the cells
   slide under.
-- **A background behind the pages** (a scene, a picture): there is nothing to bend on a plain page.
+- **What it bends is the page under it**: the content scrolling under the bar, the page under a window; a scene or a
+  picture behind the pages gives it more to bend.
 - **One frame loop** for all of them (the rims); a surface's filter is drawn again when it changes size.
 - **Reduce transparency** (`LenziAppearance`, or the system's wish) turns it all off: the kit's frosted glass again.
 - Snackbars and tooltips stay frosted glass: small and gone in a moment.

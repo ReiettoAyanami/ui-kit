@@ -1,6 +1,7 @@
 /* The kit's fonts and icons, bundled with the app: no request to Google Fonts, so they work offline
-   (the Android app, the desktop app) and under a strict Content Security Policy. Roboto Mono in the
-   three weights the theme uses (400, 500, 700) and italic; Material Icons, filled. */
+   (the Android app, the desktop app) and under a strict Content Security Policy. Roboto Mono, for code (the
+   interface is in Apple's SF, the system's own: never bundled, see _theme.scss), in 400, 500, 700 and italic;
+   Material Icons, filled. */
 @import '@fontsource/roboto-mono/400.css';
 @import '@fontsource/roboto-mono/400-italic.css';
 @import '@fontsource/roboto-mono/500.css';
