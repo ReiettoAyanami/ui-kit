@@ -1,7 +1,6 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { firstValueFrom } from 'rxjs';
 
 import { LenziStatusMessage, couldNotLoad, describeError } from '@lenzi/ui-kit';
@@ -11,7 +10,7 @@ import { KitFiles } from '../kit-files';
 import { KitServer } from '../kit-server';
 import { Markdown } from '../markdown/markdown';
 import { SaveHint } from '../save-hint/save-hint';
-import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassOption, LenziGlassSegmented, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * A document of the kit (RULES.md, AI-RULES.md, a piece's README.md and AI.md), to read and, for the
@@ -21,7 +20,7 @@ import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
  */
 @Component({
   selector: 'app-doc-view',
-  imports: [CodeEditor, LenziLit, LenziStatusMessage, Markdown, MatButtonModule, MatButtonToggleModule, SaveHint],
+  imports: [CodeEditor, LenziGlassSegmented, LenziLit, LenziStatusMessage, Markdown, MatButtonModule, SaveHint],
   templateUrl: './doc-view.html',
   styleUrl: './doc-view.css',
 })
@@ -43,6 +42,10 @@ export class DocView {
    */
   protected readonly canEdit = this.server.admin;
   private readonly chosen = signal<'read' | 'edit'>('read');
+  protected readonly modes: readonly LenziGlassOption[] = [
+    { value: 'read', label: 'Read' },
+    { value: 'edit', label: 'Edit' },
+  ];
   protected readonly mode = computed(() => (this.canEdit() ? this.chosen() : 'read'));
 
   protected choose(mode: 'read' | 'edit'): void {

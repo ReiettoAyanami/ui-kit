@@ -6,7 +6,7 @@ a large title; when its chart can be read in several intervals, a toggle of them
 
 ## Rules
 
-- **Almost black** (`surface-container-lowest`), **24 px corners**, the 2 px outline of every card.
+- **Almost black** (`surface-container-lowest`), **24 px corners**, the 1 px outline of every card.
 - **An icon in a round well** from what it measures: quantities `inventory_2`, counts `numbers`, money
   `payments`, prices `sell`, hours `schedule`.
 - **Each card its own interval toggle** (lenzi, 2026-10-01: "ogni card suo toggle"): drawn at once, saved by

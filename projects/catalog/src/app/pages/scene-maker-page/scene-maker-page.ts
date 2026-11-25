@@ -1,14 +1,11 @@
 import { Component, DOCUMENT, DestroyRef, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSliderModule } from '@angular/material/slider';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgTemplateOutlet } from '@angular/common';
@@ -21,6 +18,9 @@ import {
   BoidsFollow,
   DEFAULT_BOIDS,
   DEFAULT_BOID_SIZES,
+  LenziGlassSegmented,
+  LenziGlassSlider,
+  LenziGlassSwitch,
   LenziLit,
   BLOB_SHAPE_NAMES,
   BlobShapeName,
@@ -49,7 +49,6 @@ import { KitServer } from '../../shared/kit-server';
 import { SavedScenes } from '../../shared/saved-scenes';
 import { SCENE_LAYERS, SCENE_LIMITS, SCENE_WEIGHTS, cleanScene, sceneFromCode, sceneToCode } from '../../shared/scene-code';
 import { randomScene } from '../../shared/scene-random';
-import { slid } from '../../shared/slid';
 
 /**
  * A scene with every object put somewhere: a blob without a place where the background would have it (its
@@ -252,20 +251,20 @@ export function fleetDefault(fleet: LenziSceneFleet, key: FleetField['key']): nu
 @Component({
   selector: 'app-scene-maker-page',
   imports: [
+    LenziGlassSegmented,
+    LenziGlassSlider,
+    LenziGlassSwitch,
     LenziColorPicker,
     LenziLit,
     LenziSceneBackground,
     NgTemplateOutlet,
     MatButtonModule,
-    MatButtonToggleModule,
     MatCardModule,
     MatChipsModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatListModule,
-    MatSlideToggleModule,
-    MatSliderModule,
     MatTooltipModule,
   ],
   templateUrl: './scene-maker-page.html',
@@ -297,10 +296,8 @@ export class SceneMakerPage {
   protected readonly liquidSurfaces = LIQUID_SURFACES;
   /** The liquid glass's window, as an object to choose. */
   protected readonly liquidObject: SceneObject = { type: 'liquid' };
-  /** A slider's number while it is dragged: the value follows the thumb (lenzi, 2026-11-21). */
-  protected readonly slid = slid;
-
   protected readonly layers = Array.from({ length: SCENE_LAYERS[1] - SCENE_LAYERS[0] + 1 }, (_, i) => SCENE_LAYERS[0] + i);
+  protected readonly layerOptions = this.layers.map((layer) => ({ value: layer, label: `${layer}` }));
 
   /** The scene being made: the link's, or the home's to start from; every object put somewhere. */
   readonly scene = signal<LenziScene>(placed(structuredClone(HOME_SCENE)));

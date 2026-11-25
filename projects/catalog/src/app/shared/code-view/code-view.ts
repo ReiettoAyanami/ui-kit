@@ -1,7 +1,6 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { firstValueFrom } from 'rxjs';
 
@@ -12,6 +11,7 @@ import { languageOf } from '../highlight';
 import { KitFiles } from '../kit-files';
 import { KitServer } from '../kit-server';
 import { SaveHint } from '../save-hint/save-hint';
+import { LenziGlassOption, LenziGlassSegmented } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * The real code of a piece of the kit, file by file, as it is on disk, in an editor (lenzi,
@@ -22,7 +22,7 @@ import { SaveHint } from '../save-hint/save-hint';
  */
 @Component({
   selector: 'app-code-view',
-  imports: [CodeEditor, LenziStatusMessage, MatButtonModule, MatButtonToggleModule, MatIconModule, SaveHint],
+  imports: [CodeEditor, LenziGlassSegmented, LenziStatusMessage, MatButtonModule, MatIconModule, SaveHint],
   templateUrl: './code-view.html',
   styleUrl: './code-view.css',
 })
@@ -46,6 +46,10 @@ export class CodeView {
   });
 
   protected readonly text = computed(() => this.drafts()[this.chosen()] ?? (this.file.hasValue() ? this.file.value() : ''));
+  /** The files as choices; one changed and not saved has a "*" after its name, as in an editor. */
+  protected readonly fileOptions = computed<readonly LenziGlassOption[]>(() =>
+    this.files().map((path) => ({ value: path, label: this.name(path) + (path in this.drafts() ? ' *' : '') })),
+  );
   protected readonly changed = computed(() => this.chosen() in this.drafts());
   protected readonly language = computed(() => languageOf(this.chosen()));
   protected readonly failure = computed(() => (this.file.error() ? couldNotLoad(this.chosen(), this.file.error()) : null));

@@ -34,6 +34,7 @@ drawer that opens from it on every screen; and the page.
 | Attribute | Where | For |
 | --- | --- | --- |
 | `lenziShellNav` | the drawer | a `LenziNavList` |
+| `lenziShellTabs` | a bar at the bottom, floating (`navigation` `'bar'`, or `'auto'` on a phone) | a `LenziGlassTabBar` with the same entries |
 | `lenziShellActions` | the end of the top bar | a `LenziNotificationBell`, an icon button |
 | `lenziShellBanner` | a bar above the top bar, sticky | "Viewing as" (`LenziInfoBar`, tone tertiary) |
 | `lenziShellBelow` | under the top bar | "Offline", "A new version" (`LenziInfoBar`), `LenziPullToRefresh` |
@@ -46,6 +47,7 @@ drawer that opens from it on every screen; and the page.
 | input | `title` | `string \| null` | `null` | null: the deepest route's title |
 | input | `bare` | `boolean \| 'route'` | `'route'` | the page alone: `'route'` follows route data `bare: true`; `true` / `false` always / never |
 | input | `menuLabel` | `string` | `'Menu'` | the menu button's accessible name |
+| input | `navigation` | `'drawer' \| 'bar' \| 'auto'` | `'drawer'` | the drawer; the bar of `lenziShellTabs` at the bottom (no menu button, the top bar stays whole, the page and the "+" clear of it); the bar under 600 px and the drawer wider (2026-11-25) |
 | method | `openNav(click?)` / `closeNav()` | | | `LenziNavList` closes it after a link |
 | signal | `compact` | `boolean` | | scrolled past the bar: it has shrunk to its menu button |
 | directive | `lenziShellSearch` | | | on a page's `LenziSearchBar`, a child of the page's column: it rides beside the shrunk bar |

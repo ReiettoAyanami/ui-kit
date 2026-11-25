@@ -3,7 +3,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -15,7 +14,7 @@ import { PageBackground, PageBackgrounds, choiceOf, choiceValue } from '../../sh
 import { PublicPages } from '../../shared/public-pages';
 import { SavedScene, SavedScenes } from '../../shared/saved-scenes';
 import { SitePage } from '../../site-map';
-import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassPage, LenziGlassSwitch, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * Where the catalog's one admin signs in (lenzi, 2026-11-12: "pagina admin per abilitare la modifica
@@ -36,6 +35,7 @@ import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/bac
   selector: 'app-admin-page',
   imports: [
     LenziGlassPage,
+    LenziGlassSwitch,
     LenziFigure,
     LenziFigureGrid,
     LenziLit,
@@ -44,7 +44,6 @@ import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/bac
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatSlideToggleModule,
     RouterLink,
   ],
   templateUrl: './admin-page.html',

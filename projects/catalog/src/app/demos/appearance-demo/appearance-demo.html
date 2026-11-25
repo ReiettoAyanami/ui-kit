@@ -1,4 +1,4 @@
-<mat-slide-toggle [checked]="appearance.reduceTransparency()" (change)="set($event.checked)">Reduce transparency</mat-slide-toggle>
+<lenzi-glass-switch label="Reduce transparency" [checked]="appearance.reduceTransparency()" (checkedChange)="set($event)">Reduce transparency</lenzi-glass-switch>
 <div class="stage">
   <div class="glass">
     <span class="title">A glass surface</span>

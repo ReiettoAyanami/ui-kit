@@ -16,7 +16,7 @@ const INSET = 3.6 / 67;
  * nel kit come quelli di apple"; read from kube.io's code): a capsule track, the accent when on; one thumb that is
  * always Liquid Glass (a lip bezel) under a white fill. Held, the fill goes to 10%, the thumb grows (0.65 to 0.9) and
  * bends more (0.4 to 0.9): it is glass, bending the track under it; it follows the pointer, stretching a little past the
- * ends, and settles white on its side. A tap switches it; a drag puts it where it is let go; Space and Enter switch it.
+ * ends, and settles white on its side. A tap switches it; a drag puts it where it is let go; a click (Space and Enter, a screen reader) switches it.
  */
 @Component({
   selector: 'lenzi-glass-switch',
@@ -40,6 +40,8 @@ export class LenziGlassSwitch {
   private readonly thumb = viewChild.required<ElementRef<HTMLElement>>('thumb');
   private start: { x: number; at: number } | null = null;
   private moved = false;
+  /** A pointer switched it: the click it brings is not another switch. */
+  private tapped = false;
   private settle: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -81,6 +83,8 @@ export class LenziGlassSwitch {
     if (!this.start) return;
     const dragged = this.moved ? this.dragAt() : null;
     this.start = null;
+    // the click that follows this pointer is this tap: it is done
+    this.tapped = true;
     this.dragAt.set(null);
     this.checked.set(dragged === null ? !this.checked() : dragged >= 0.5);
     this.letGo();
@@ -88,13 +92,29 @@ export class LenziGlassSwitch {
 
   protected cancel(): void {
     this.start = null;
+    this.tapped = false;
     this.dragAt.set(null);
     this.letGo();
   }
 
-  protected key(event: KeyboardEvent): void {
-    if (this.disabled() || (event.key !== ' ' && event.key !== 'Enter')) return;
-    event.preventDefault();
+  /** A tap on the words beside it. */
+  protected tapText(): void {
+    if (this.disabled()) return;
+    this.hold();
+    this.checked.set(!this.checked());
+    this.letGo();
+  }
+
+  /**
+   * A click: after a tap or a drag, already done; otherwise (Space or Enter on it, a screen reader, a click from code)
+   * it switches it.
+   */
+  protected clicked(): void {
+    if (this.tapped) {
+      this.tapped = false;
+      return;
+    }
+    if (this.disabled()) return;
     this.hold();
     this.checked.set(!this.checked());
     this.letGo();

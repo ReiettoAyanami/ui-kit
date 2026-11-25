@@ -30,7 +30,13 @@ function routeIsBare(route: ActivatedRouteSnapshot): boolean {
  * closed after a tap on a link; and the page. The document scrolls, not the shell, so a page window
  * can stop it scrolling under itself.
  *
- * What it holds comes in by attribute: `lenziShellNav` (the drawer's content, a LenziNavList),
+ * The navigation is a drawer or a bar (`navigation`; lenzi, 2026-11-25: "una barra orizzontale (magari da usare su
+ * mobile invece che su web, ma in realtà anche su web deve funzionare e può essere un'alternativa)"): with the bar
+ * the top bar has no menu button and `lenziShellTabs` (a LenziGlassTabBar) floats at the bottom of the screen, the page
+ * and the "+" kept clear of it.
+ *
+ * What it holds comes in by attribute: `lenziShellNav` (the drawer's content, a LenziNavList), `lenziShellTabs` (the
+ * bar's, a LenziGlassTabBar),
  * `lenziShellActions` (the end of the top bar: a bell), `lenziShellBanner` (a bar above the top bar that
  * cannot be closed: "Viewing as"), `lenziShellBelow` (bars under it: offline, update), and the page
  * (a router outlet). Global styles (encapsulation none): every class starts with `lenzi-shell`.
@@ -55,6 +61,16 @@ export class LenziAppShell {
   });
   /** The menu button's accessible name. */
   readonly menuLabel = input('Menu');
+  /**
+   * How one goes between the pages: 'drawer' (the default: the menu button opens `lenziShellNav`), 'bar' (always the
+   * bar of `lenziShellTabs` at the bottom), 'auto' (the bar on a phone, under 600 px; the drawer wider).
+   */
+  readonly navigation = input<'drawer' | 'bar' | 'auto'>('drawer');
+
+  /** A phone's width, under 600 px (for 'auto'). */
+  private readonly narrow = signal(false);
+  /** The bar at the bottom instead of the drawer. */
+  protected readonly tabs = computed(() => this.navigation() === 'bar' || (this.navigation() === 'auto' && this.narrow()));
 
   private readonly drawer = viewChild.required(MatSidenav);
   private readonly router = inject(Router);
@@ -105,8 +121,16 @@ export class LenziAppShell {
     let pending = 0;
     const check = () => {
       pending = 0;
-      this.compact.set(!this.isBare() && view.scrollY > this.barBottom());
+      // with the bar there is no menu button to close onto: the top bar stays whole
+      this.compact.set(!this.isBare() && !this.tabs() && view.scrollY > this.barBottom());
     };
+    const phone = view.matchMedia?.('(max-width: 599px)');
+    if (phone) {
+      this.narrow.set(phone.matches);
+      const changed = (event: MediaQueryListEvent) => this.narrow.set(event.matches);
+      phone.addEventListener?.('change', changed);
+      inject(DestroyRef).onDestroy(() => phone.removeEventListener?.('change', changed));
+    }
     const onScroll = () => (pending ||= view.requestAnimationFrame(check));
     view.addEventListener('scroll', onScroll, { passive: true });
     inject(DestroyRef).onDestroy(() => {

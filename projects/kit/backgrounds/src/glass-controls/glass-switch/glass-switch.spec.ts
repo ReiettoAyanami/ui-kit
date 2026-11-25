@@ -41,13 +41,17 @@ describe('LenziGlassSwitch', () => {
     expect(fixture.componentInstance.checked()).toBe(false);
   });
 
-  it('Space switches it; disabled, nothing does', () => {
-    const { fixture, track } = make();
-    track.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+  it('a click (Space, Enter, a screen reader) switches it; the click after a tap is that tap; disabled, nothing does', () => {
+    const { fixture, track, press } = make();
+    track.click();
     expect(fixture.componentInstance.checked()).toBe(true);
+    press('pointerdown');
+    press('pointerup');
+    track.click();
+    expect(fixture.componentInstance.checked()).toBe(false);
     fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();
-    track.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-    expect(fixture.componentInstance.checked()).toBe(true);
+    track.click();
+    expect(fixture.componentInstance.checked()).toBe(false);
   });
 });

@@ -3,6 +3,8 @@
    kube.io's: the thumb 146 by 92 on a 67 high track, at rest 0.65 of that, held 0.9; 3.6 of 67 from the ends. */
 :host {
   display: inline-flex;
+  align-items: center;
+  gap: 12px;
   --lenzi-switch-width: 64px;
   --lenzi-switch-height: 28px;
   /* Apple's thumb is white in both themes */
@@ -78,4 +80,12 @@
   .thumb {
     transition: none;
   }
+}
+
+.text {
+  cursor: pointer;
+}
+
+.text:empty {
+  display: none;
 }

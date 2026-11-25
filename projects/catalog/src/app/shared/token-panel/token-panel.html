@@ -1,8 +1,5 @@
 <div class="top">
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Edit the variables with" [value]="mode()" (change)="choose($event.value)">
-    <mat-button-toggle value="controls">Controls</mat-button-toggle>
-    <mat-button-toggle value="text">Text</mat-button-toggle>
-  </mat-button-toggle-group>
+  <lenzi-glass-segmented label="Edit the variables with" [options]="modes" [value]="mode()" (valueChange)="choose($any($event))" />
 </div>
 
 @if (canEdit()) {
@@ -53,17 +50,11 @@
 
           @if (isNumeric(token)) {
             <div class="number">
-              <mat-slider [min]="token.min ?? 0" [max]="token.max ?? 100" [step]="token.step ?? 1" [disabled]="!canEdit()">
-                <input matSliderThumb [value]="numberOf(token)" [attr.aria-label]="token.label" (input)="setNumber(token, slid($event))" (valueChange)="setNumber(token, $event)" />
-              </mat-slider>
+              <lenzi-glass-slider [label]="token.label" [min]="token.min ?? 0" [max]="token.max ?? 100" [step]="token.step ?? 1" [disabled]="!canEdit()" [value]="numberOf(token)" (valueChange)="setNumber(token, $event)" />
               <span class="value">{{ value(token) }}</span>
             </div>
           } @else if (token.type === 'choice') {
-            <mat-button-toggle-group class="choice" [value]="value(token)" [attr.aria-label]="token.label" [disabled]="!canEdit()" (change)="set(token, $event.value)">
-              @for (option of token.options ?? []; track option.value) {
-                <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
-              }
-            </mat-button-toggle-group>
+            <lenzi-glass-segmented class="choice" [label]="token.label" [options]="token.options ?? []" [value]="value(token)" [disabled]="!canEdit()" (valueChange)="set(token, $any($event))" />
           } @else if (token.type === 'color') {
             <div class="color">
               <lenzi-color-picker [value]="value(token)" [label]="token.label" [size]="36" [disabled]="!canEdit()" (valueChange)="set(token, $event)" />

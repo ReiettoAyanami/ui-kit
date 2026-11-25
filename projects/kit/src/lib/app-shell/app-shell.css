@@ -209,3 +209,38 @@
 .lenzi-shell-bare > .lenzi-shell-content > .lenzi-shell-bar {
   display: none;
 }
+
+/* The navigation as a bar (LenziGlassTabBar in lenziShellTabs; lenzi, 2026-11-25): floating at the bottom, in the middle,
+   inside the safe area, over the page and under the windows. The page ends above it, and the "+" stands above it
+   (--lenzi-shell-tabs-clearance). Without the bar it is not there. */
+.lenzi-shell-tabs {
+  display: none;
+}
+
+/* on the whole page, so what sits in a corner outside the shell too (the version) stands above the bar */
+:root:has(.lenzi-shell-with-tabs:not(.lenzi-shell-bare)) {
+  --lenzi-shell-tabs-clearance: calc(var(--lenzi-tab-bar-height, 60px) + var(--lenzi-float-gap));
+}
+
+.lenzi-shell-with-tabs > .lenzi-shell-content > .lenzi-shell-tabs {
+  position: fixed;
+  right: calc(var(--lenzi-float-gap) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--lenzi-float-gap) + env(safe-area-inset-bottom, 0px));
+  left: calc(var(--lenzi-float-gap) + env(safe-area-inset-left, 0px));
+  z-index: 9;
+  display: block;
+  pointer-events: none;
+}
+
+.lenzi-shell-with-tabs > .lenzi-shell-content > .lenzi-shell-tabs > * {
+  pointer-events: auto;
+}
+
+/* the page's end clear of the bar */
+.lenzi-shell-with-tabs > .lenzi-shell-content.mat-drawer-content {
+  padding-bottom: calc(var(--lenzi-tab-bar-height, 60px) + 2 * var(--lenzi-float-gap) + env(safe-area-inset-bottom, 0px));
+}
+
+.lenzi-shell-bare > .lenzi-shell-content > .lenzi-shell-tabs {
+  display: none;
+}

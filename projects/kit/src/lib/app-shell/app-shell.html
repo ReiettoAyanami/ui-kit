@@ -3,6 +3,7 @@
   class="lenzi-shell"
   [class.lenzi-shell-bare]="isBare()"
   [class.lenzi-shell-compact]="compact()"
+  [class.lenzi-shell-with-tabs]="tabs()"
   [class.lenzi-shell-with-search]="search() !== null"
   [style.--lenzi-shell-search-left.px]="search()?.left ?? null"
   [style.--lenzi-shell-search-right.px]="search()?.right ?? null"
@@ -21,13 +22,17 @@
   <mat-sidenav-content class="lenzi-shell-content">
     <div class="lenzi-shell-banner"><ng-content select="[lenziShellBanner]" /></div>
     <mat-toolbar class="lenzi-shell-bar">
-      <button mat-icon-button type="button" class="lenzi-shell-menu" [attr.aria-label]="menuLabel()" (click)="openNav($event)">
-        <mat-icon>menu</mat-icon>
-      </button>
+      @if (!tabs()) {
+        <button mat-icon-button type="button" class="lenzi-shell-menu" [attr.aria-label]="menuLabel()" (click)="openNav($event)">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
       <span class="lenzi-shell-title">{{ shownTitle() }}</span>
       <ng-content select="[lenziShellActions]" />
     </mat-toolbar>
     <div class="lenzi-shell-below"><ng-content select="[lenziShellBelow]" /></div>
     <ng-content />
+    <!-- the navigation as a bar, floating at the bottom (navigation 'bar', or 'auto' on a phone) -->
+    <div class="lenzi-shell-tabs"><ng-content select="[lenziShellTabs]" /></div>
   </mat-sidenav-content>
 </mat-sidenav-container>

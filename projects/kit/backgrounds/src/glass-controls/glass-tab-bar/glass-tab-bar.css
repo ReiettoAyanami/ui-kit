@@ -1,0 +1,155 @@
+/* Apple's tab bar, in the kit's colours: capsules of glass floating over the page; the current page's tab on a
+   capsule that is glass under a fill, its icon and name in the accent (Apple: the selected tab is tinted). On a phone
+   the icon over the name and the bar as wide as the screen; wider, the icon beside the name and the bar as wide as
+   its tabs. */
+:host {
+  display: block;
+  --lenzi-tab-bar-height: 60px;
+  --lenzi-glass-pill: color-mix(in srgb, var(--mat-sys-on-surface) 16%, var(--mat-sys-surface-container-high));
+}
+
+.bar {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.capsule {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  height: var(--lenzi-tab-bar-height);
+  padding: 4px;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: calc(var(--lenzi-tab-bar-height) / 2);
+  background-color: color-mix(in srgb, var(--mat-sys-surface-container) var(--lenzi-glass), transparent);
+  backdrop-filter: var(--lenzi-glass-filter);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.32);
+}
+
+.pages {
+  flex: 1;
+  min-width: 0;
+  /* more tabs than fit (Apple: five at most): they scroll, the capsule with them */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 56px;
+  padding: 0 12px;
+  border: none;
+  border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--lenzi-standard-duration) var(--lenzi-standard-easing);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rest .tab {
+  flex: none;
+}
+
+.tab:hover {
+  color: var(--mat-sys-on-surface);
+}
+
+.tab.current {
+  color: var(--mat-sys-primary);
+}
+
+.tab:focus-visible {
+  outline: var(--lenzi-border-focus) solid var(--mat-sys-primary);
+  outline-offset: -2px;
+}
+
+.icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+
+/* Wider than a phone: the icon beside the name, the bar as wide as its tabs. */
+@media (min-width: 600px) {
+  :host {
+    --lenzi-tab-bar-height: 52px;
+  }
+
+  .bar {
+    justify-content: center;
+  }
+
+  .pages {
+    flex: none;
+  }
+
+  .tab {
+    flex: 1 1 auto;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0 18px;
+    font: var(--mat-sys-label-large);
+    font-weight: 700;
+  }
+}
+
+/* The current page's capsule: glass under a solid fill; on its way to another tab the fill goes to 10% and it grows
+   over the tabs (it bends them), then settles behind its tab. */
+.pill {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  bottom: 4px;
+  border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px);
+  background-color: var(--lenzi-glass-pill);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+  opacity: 0;
+  /* where the filter does not bend (not Chromium): a light blur */
+  backdrop-filter: blur(1.5px);
+  pointer-events: none;
+}
+
+/* once it is in place it slides, grows and fades (the first time it is just there) */
+.pill.placed {
+  transition:
+    left 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    width 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    background-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.pill.shown {
+  opacity: 1;
+}
+
+.moving .pill {
+  z-index: 2;
+  background-color: color-mix(in srgb, var(--lenzi-glass-pill) 10%, transparent);
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.16),
+    inset 2px 5px 16px rgb(0 0 0 / 0.08),
+    inset -2px -5px 16px rgb(255 255 255 / 0.08);
+  transform: scale(1.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill,
+  .tab {
+    transition: none;
+  }
+}

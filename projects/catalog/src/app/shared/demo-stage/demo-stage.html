@@ -1,12 +1,6 @@
 <div class="bar">
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Width" [value]="width()" (change)="width.set($event.value)">
-    <mat-button-toggle value="phone">Phone</mat-button-toggle>
-    <mat-button-toggle value="desktop">Desktop</mat-button-toggle>
-  </mat-button-toggle-group>
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Background" [value]="pattern()" (change)="pattern.set($event.value)">
-    <mat-button-toggle [value]="false">Plain</mat-button-toggle>
-    <mat-button-toggle [value]="true">Pattern</mat-button-toggle>
-  </mat-button-toggle-group>
+  <lenzi-glass-segmented label="Width" [options]="widths" [value]="width()" (valueChange)="width.set($any($event))" />
+  <lenzi-glass-segmented label="Background" [options]="patterns" [value]="pattern()" (valueChange)="pattern.set(!!$event)" />
 </div>
 
 <div class="viewport" [class.phone]="width() === 'phone'">

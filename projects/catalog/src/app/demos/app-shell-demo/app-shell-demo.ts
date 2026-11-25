@@ -2,13 +2,15 @@ import { Component, computed, inject, input } from '@angular/core';
 
 import { LenziAppShell, LenziInfoBar, LenziNavEntry, LenziNavList, LenziNotification, LenziNotificationBell } from '@lenzi/ui-kit';
 
+import { LenziGlassTabBar } from '@lenzi/ui-kit/backgrounds';
+
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
 
 /** A whole shell inside the frame: the drawer opens from the menu button, the page scrolls under the bar. */
 @Component({
   selector: 'app-app-shell-demo',
-  imports: [LenziAppShell, LenziInfoBar, LenziNavList, LenziNotificationBell],
+  imports: [LenziAppShell, LenziGlassTabBar, LenziInfoBar, LenziNavList, LenziNotificationBell],
   templateUrl: './app-shell-demo.html',
   styleUrl: './app-shell-demo.css',
 })
@@ -17,8 +19,18 @@ export class AppShellDemo {
   private readonly events = inject(DemoEvents);
 
   protected readonly title = computed(() => String(this.values()['title'] ?? ''));
+  protected readonly navigation = computed(() => {
+    const navigation = this.values()['navigation'];
+    return navigation === 'bar' || navigation === 'auto' ? navigation : 'drawer';
+  });
   protected readonly pages: LenziNavEntry[] = [
     { label: 'Consumptions', icon: 'history', link: '/frame/app-shell' },
+    { label: 'Substances', icon: 'inventory_2', link: '/frame/app-shell/substances' },
+    { label: 'Statistics', icon: 'insights', link: '/frame/app-shell/statistics' },
+  ];
+  /** On the bar, a word each (Apple: "Use single words whenever possible"). */
+  protected readonly tabPages: LenziNavEntry[] = [
+    { label: 'History', icon: 'history', link: '/frame/app-shell' },
     { label: 'Substances', icon: 'inventory_2', link: '/frame/app-shell/substances' },
     { label: 'Statistics', icon: 'insights', link: '/frame/app-shell/statistics' },
   ];

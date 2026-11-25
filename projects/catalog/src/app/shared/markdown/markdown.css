@@ -52,7 +52,7 @@
 .markdown ::ng-deep blockquote {
   margin: 0 0 12px;
   padding: 8px 16px;
-  border-left: 4px solid var(--mat-sys-primary);
+  border-left: 2px solid var(--mat-sys-primary);
   border-radius: 4px;
   background: var(--mat-sys-surface-container-low);
   color: var(--mat-sys-on-surface-variant);

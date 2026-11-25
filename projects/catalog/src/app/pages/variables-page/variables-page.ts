@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -23,7 +22,7 @@ import {
 import { KitServer } from '../../shared/kit-server';
 import { TokenPanel } from '../../shared/token-panel/token-panel';
 import { TokensApi } from '../../shared/tokens-api';
-import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassPage, LenziGlassSegmented, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * The global variables of the look (RULES.md, every value comes from them): every one with its control
@@ -35,6 +34,7 @@ import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/bac
   selector: 'app-variables-page',
   imports: [
     LenziGlassPage,
+    LenziGlassSegmented,
     LenziDelta,
     LenziLit,
     LenziPillToggle,
@@ -42,7 +42,6 @@ import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/bac
     LenziSegmentedBar,
     LenziStatusMessage,
     MatButtonModule,
-    MatButtonToggleModule,
     MatIconModule,
     MatMenuModule,
     RouterLink,
@@ -65,6 +64,10 @@ export class VariablesPage {
 
   // The preview's own state.
   protected readonly measure = signal('price');
+  protected readonly shownOptions = [
+    { value: 'last', label: 'last' },
+    { value: 'average', label: 'average' },
+  ];
   protected readonly measures: LenziPillOption<string>[] = [
     { value: 'price', label: 'price' },
     { value: 'qty', label: 'qty' },

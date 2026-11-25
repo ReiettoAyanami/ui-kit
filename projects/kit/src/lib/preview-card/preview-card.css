@@ -103,7 +103,7 @@
 }
 
 .card:has(.open:focus-visible) {
-  outline: 2px solid var(--mat-sys-on-surface);
+  outline: var(--lenzi-border-focus) solid var(--mat-sys-on-surface);
   outline-offset: 2px;
 }
 

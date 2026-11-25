@@ -7,6 +7,7 @@ import kitPackage from '../../../kit/package.json';
 import { LiveTokens } from './shared/live-tokens';
 import { PageBackground } from './shared/page-background/page-background';
 import { PublicPages } from './shared/public-pages';
+import { LenziGlassTabBar } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * The catalog of the kit, built with the kit: its shell and drawer, its version in the corner. The
@@ -16,7 +17,7 @@ import { PublicPages } from './shared/public-pages';
  */
 @Component({
   selector: 'app-root',
-  imports: [LenziAppShell, LenziNavList, LenziVersionLabel, PageBackground, RouterOutlet],
+  imports: [LenziAppShell, LenziGlassTabBar, LenziNavList, LenziVersionLabel, PageBackground, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

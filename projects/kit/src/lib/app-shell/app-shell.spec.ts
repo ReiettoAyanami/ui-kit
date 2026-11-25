@@ -11,8 +11,9 @@ class Page {}
 @Component({
   imports: [LenziAppShell, RouterOutlet],
   template: `
-    <lenzi-app-shell [title]="title" [bare]="bare">
+    <lenzi-app-shell [title]="title" [bare]="bare" [navigation]="navigation">
       <p lenziShellNav class="nav">nav</p>
+      <p lenziShellTabs class="tabs">tabs</p>
       <button lenziShellActions class="action">bell</button>
       <router-outlet />
     </lenzi-app-shell>
@@ -21,6 +22,7 @@ class Page {}
 class Host {
   title: string | null = null;
   bare: boolean | 'route' = 'route';
+  navigation: 'drawer' | 'bar' | 'auto' = 'drawer';
 }
 
 describe('LenziAppShell', () => {
@@ -98,5 +100,22 @@ describe('LenziAppShell', () => {
     const element = await at('/tickets');
     element.querySelector<HTMLButtonElement>('.lenzi-shell-menu')!.click();
     await vi.waitFor(() => expect(element.querySelector('.lenzi-shell-drawer')?.classList.contains('mat-drawer-opened')).toBe(true));
+  });
+
+  it('with the bar: no menu button, the tabs at the bottom; with the drawer, the bar is not there (2026-11-25)', async () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.navigation = 'bar';
+    await TestBed.inject(Router).navigateByUrl('/tickets');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.lenzi-shell-menu')).toBeNull();
+    expect(element.querySelector('.lenzi-shell.lenzi-shell-with-tabs .lenzi-shell-tabs .tabs')).not.toBeNull();
+    const drawer = TestBed.createComponent(Host);
+    drawer.detectChanges();
+    await drawer.whenStable();
+    const other = drawer.nativeElement as HTMLElement;
+    expect(other.querySelector('.lenzi-shell-menu')).not.toBeNull();
+    expect(other.querySelector('.lenzi-shell-with-tabs')).toBeNull();
   });
 });

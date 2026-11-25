@@ -98,9 +98,10 @@ the rule says what, the variable says how much.
 
 ## Borders and shape
 
-- **Every rounded border is 2 px** (`--lenzi-border`), Material's and ours (lenzi, 2026-10-02: "i bordi
-  agli angoli non hanno lo stesso spessore dei lati DA NESSUNA PARTE"): at 100% scale a 1 px border is
-  smeared at half strength along a corner. A focused field 3 px. **Straight dividers stay 1 px.**
+- **Every border is 1 px** (`--lenzi-border`), Material's and ours (lenzi, 2026-11-25: "in generale dovrebbero essere
+  dappertutto il 50% di quello che sono ora, tante outline sono troppo spesse"; before, 2 px, from 2026-10-02: "i
+  bordi agli angoli non hanno lo stesso spessore dei lati", a 1 px border being fainter along a corner at 100%
+  scale). A focused field, and a focus ring, 2 px (`--lenzi-border-focus`). A chosen swatch's ring 1 px too.
 - **Every corner takes one shape** (`--lenzi-corner-shape`, round or squircle; lenzi, 2026-11-14: "a toggle
   for squircle/normal rounded squares ... a global variable and should act everywhere"): Material's and
   ours, from the global styles. Never set `corner-shape` in a piece, except to keep a circle a circle: next
@@ -123,6 +124,17 @@ the rule says what, the variable says how much.
   wide. `LenziAppShell` + `LenziNavList`.
 - **The drawer holds links only, no data**: the app's name at the top, one link per page with its icon,
   the current one highlighted (also on its child routes), the rest at the bottom (settings, sign out).
+- **Or a bar of pages at the bottom** (lenzi, 2026-11-25: "una barra orizzontale (magari da usare su mobile invece che
+  su web, ma in realtà anche su web deve funzionare e può essere un'alternativa)"): `LenziGlassTabBar` in
+  `lenziShellTabs`, `navigation="bar"` always or `"auto"` (the bar on a phone, the drawer wider). Apple's tab bar: it
+  floats over the page, its tabs are pages only (no actions), a word each, five at most, never hidden or disabled; the
+  current one on a capsule that slides there as glass; the rest (Admin, Sign out) in a capsule of its own at the end.
+  With the bar the top bar has no menu button and stays whole; the page and the "+" keep clear of it.
+- **Controls of the kit's own, not Google's** (lenzi, 2026-11-25: "riadatta il kit per usare questi elementi al posto
+  di quelli default di google"): a switch is `LenziGlassSwitch`, a slider `LenziGlassSlider`, choices side by side
+  `LenziGlassSegmented` (32 px with its track, as every toggle), in the catalog and in a new page; Material's slide
+  toggle, slider and button toggle group are not used for them any more. Apple (HIG, Toggles): a switch for a setting
+  in a list row; elsewhere a button that toggles.
 - **The top bar shows the current route's title** and sticks while the page scrolls under its glass.
 - **The document scrolls, not the shell.**
 - **Unknown addresses** get the not-found page (`LenziNotFound`) with one way out.

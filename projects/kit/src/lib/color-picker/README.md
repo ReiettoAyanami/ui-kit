@@ -17,7 +17,7 @@ selector di colore").
 
 ## Rules
 
-- **The swatch is round**, with the 2 px border of every rounded thing; 32 px by default, and 48 px to tap
+- **The swatch is round**, with the 1 px border of every rounded thing; 32 px by default, and 48 px to tap
   however small it is drawn.
 - **The selector is a glass panel like a menu's**: rounded on every side, a few px away from its swatch,
   rising into place; above the swatch when there is no room under it, never out of the screen.

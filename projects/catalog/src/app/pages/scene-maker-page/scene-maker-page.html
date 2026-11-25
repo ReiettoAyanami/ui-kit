@@ -180,12 +180,12 @@
       <!-- what the pointer does to the blobs while the scene plays: in the main panel, at its foot, always there (lenzi,
            2026-11-17: "fai in modo che sia sempre configurabile, dal pannello generale non solo quando non c'é", then
            "dev'essere nel pannello generale, non in quello dei blob", an arrow at the panel's foot) -->
-      <mat-slide-toggle class="toggle" [checked]="scene().throwable === true" (change)="setThrowable($event.checked)">The pointer throws the blobs</mat-slide-toggle>
+      <lenzi-glass-switch class="toggle" [checked]="scene().throwable === true" (checkedChange)="setThrowable($event)" label="The pointer throws the blobs">The pointer throws the blobs</lenzi-glass-switch>
       <!-- how its glass looks, under it (lenzi, 2026-11-19: "un'altra scelta nel kit"): the page's frosted glass, or liquid;
            beside it, its settings in a window of their own (2026-11-20: "una sezione per il liquidglass ... per regolare le
            varie proprietá dello stesso") -->
       <div class="toggle-row">
-        <mat-slide-toggle class="toggle" [checked]="scene().glass === 'liquid'" (change)="setLiquid($event.checked)">Liquid glass: it bends what is behind it</mat-slide-toggle>
+        <lenzi-glass-switch class="toggle" [checked]="scene().glass === 'liquid'" (checkedChange)="setLiquid($event)" label="Liquid glass: it bends what is behind it">Liquid glass: it bends what is behind it</lenzi-glass-switch>
         <button
           mat-icon-button
           type="button"
@@ -240,20 +240,14 @@
           @case ('liquid') {
             <!-- every glass blob and blob-boid of the scene: one liquid glass for all of them, as lenziLiquidGlass's optics -->
             <p class="hint">Every glass blob and blob-boid of the scene: clear, and bent near its edge by a curved bezel.</p>
-            <mat-slide-toggle class="toggle" [checked]="scene().glass === 'liquid'" (change)="setLiquid($event.checked)">Liquid glass: it bends what is behind it</mat-slide-toggle>
+            <lenzi-glass-switch class="toggle" [checked]="scene().glass === 'liquid'" (checkedChange)="setLiquid($event)" label="Liquid glass: it bends what is behind it">Liquid glass: it bends what is behind it</lenzi-glass-switch>
             @if (scene().glass === 'liquid') {
               <p class="label">The bezel's profile</p>
-              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The bezel's profile" [value]="liquidSurface()" (change)="setLiquidSurface($event.value)">
-                @for (surface of liquidSurfaces; track surface.value) {
-                  <mat-button-toggle [value]="surface.value">{{ surface.label }}</mat-button-toggle>
-                }
-              </mat-button-toggle-group>
+              <lenzi-glass-segmented label="The bezel's profile" [options]="liquidSurfaces" [value]="liquidSurface()" (valueChange)="setLiquidSurface($any($event))" />
               @for (field of liquidFields; track field.key) {
                 <p class="label">{{ field.label }}</p>
                 <div class="number">
-                  <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
-                    <input matSliderThumb [value]="liquidValue(field.key)" [attr.aria-label]="field.label" (input)="setLiquidNumber(field.key, slid($event))" (valueChange)="setLiquidNumber(field.key, $event)" />
-                  </mat-slider>
+                  <lenzi-glass-slider [min]="field.min" [max]="field.max" [step]="field.step" [label]="field.label" [value]="liquidValue(field.key)" (valueChange)="setLiquidNumber(field.key, $event)" />
                   <span class="value">{{ shown(liquidValue(field.key)) }}</span>
                 </div>
               }
@@ -283,28 +277,20 @@
               </mat-chip-listbox>
               <p class="label">Size (share of the screen)</p>
               <div class="number">
-                <mat-slider min="0.02" max="0.5" step="0.005">
-                  <input matSliderThumb [value]="blob.size" aria-label="Size" (input)="setBlob({ size: slid($event) })" (valueChange)="setBlob({ size: $event })" />
-                </mat-slider>
+                <lenzi-glass-slider min="0.02" max="0.5" step="0.005" label="Size" [value]="blob.size" (valueChange)="setBlob({ size: $event })" />
                 <span class="value">{{ (blob.size * 100).toFixed(1) }}%</span>
               </div>
               <p class="label">Level (it stops only what is on its own)</p>
-              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Level" [value]="layerOf(blob, 'blob')" (change)="setLayer($event.value)">
-                @for (layer of layers; track layer) {
-                  <mat-button-toggle [value]="layer">{{ layer }}</mat-button-toggle>
-                }
-              </mat-button-toggle-group>
-              <mat-slide-toggle class="toggle" [checked]="blob.obstacle === true" (change)="setBlob({ obstacle: $event.checked })">
+              <lenzi-glass-segmented label="Level" [options]="layerOptions" [value]="layerOf(blob, 'blob')" (valueChange)="setLayer($any($event))" />
+              <lenzi-glass-switch class="toggle" [checked]="blob.obstacle === true" (checkedChange)="setBlob({ obstacle: $event })" label="An obstacle: blobs of another material on its level bounce off it">
                 An obstacle: blobs of another material on its level bounce off it
-              </mat-slide-toggle>
-              <mat-slide-toggle class="toggle" [checked]="blob.fixed === true" (change)="setBlob({ fixed: $event.checked })">
+              </lenzi-glass-switch>
+              <lenzi-glass-switch class="toggle" [checked]="blob.fixed === true" (checkedChange)="setBlob({ fixed: $event })" label="It stays put (it does not wander, it cannot be thrown)">
                 It stays put (it does not wander, it cannot be thrown)
-              </mat-slide-toggle>
+              </lenzi-glass-switch>
               <p class="label">Weight (heavier: it turns slower, sinks, and currents carry it less; lighter than 1: it rises)</p>
               <div class="number">
-                <mat-slider [min]="weights[0]" [max]="weights[1]" step="0.05">
-                  <input matSliderThumb [value]="blob.weight ?? 1" aria-label="Weight" (input)="setBlob({ weight: slid($event) })" (valueChange)="setBlob({ weight: $event })" />
-                </mat-slider>
+                <lenzi-glass-slider [min]="weights[0]" [max]="weights[1]" step="0.05" label="Weight" [value]="blob.weight ?? 1" (valueChange)="setBlob({ weight: $event })" />
                 <span class="value">{{ shown(blob.weight ?? 1) }}</span>
               </div>
               <button mat-stroked-button type="button" class="remove" (click)="remove()">
@@ -321,18 +307,14 @@
               </p>
               <p class="label">Reach (share of the screen, each side of its line)</p>
               <div class="number">
-                <mat-slider min="0.02" max="0.3" step="0.01">
-                  <input matSliderThumb [value]="current.width ?? defaultCurrent.width" aria-label="Reach" (input)="setCurrentWidth(slid($event))" (valueChange)="setCurrentWidth($event)" />
-                </mat-slider>
+                <lenzi-glass-slider min="0.02" max="0.3" step="0.01" label="Reach" [value]="current.width ?? defaultCurrent.width" (valueChange)="setCurrentWidth($event)" />
                 <span class="value">{{ shown(current.width ?? defaultCurrent.width) }}</span>
               </div>
               <h3 class="group">Each segment's push</h3>
               @for (segment of segmentsOf(current); track segment.index) {
                 <p class="label">Segment {{ segment.index + 1 }}</p>
                 <div class="number">
-                  <mat-slider min="0" [max]="strongestCurrent" step="10">
-                    <input matSliderThumb [value]="strengthOf(current, segment.index)" [attr.aria-label]="'Segment ' + (segment.index + 1) + ' push'" (input)="setStrength(segment.index, slid($event))" (valueChange)="setStrength(segment.index, $event)" />
-                  </mat-slider>
+                  <lenzi-glass-slider min="0" [max]="strongestCurrent" step="10" [label]="'Segment ' + (segment.index + 1) + ' push'" [value]="strengthOf(current, segment.index)" (valueChange)="setStrength(segment.index, $event)" />
                   <span class="value">{{ strengthOf(current, segment.index) }}</span>
                 </div>
               }
@@ -359,29 +341,20 @@
           @case ('fleet') {
             @if (chosenFleet(); as fleet) {
               <p class="label">The leader is</p>
-              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The leader is" [value]="fleet.kind" (change)="setKind($event.value)">
-                <mat-button-toggle value="boid">A boid</mat-button-toggle>
-                <mat-button-toggle value="blob-boid">A blob-boid</mat-button-toggle>
-              </mat-button-toggle-group>
+              <lenzi-glass-segmented label="The leader is" [options]="[{ value: 'boid', label: 'A boid' }, { value: 'blob-boid', label: 'A blob-boid' }]" [value]="fleet.kind" (valueChange)="setKind($any($event))" />
               @if (fleet.kind === 'blob-boid') {
                 <ng-container [ngTemplateOutlet]="look" [ngTemplateOutletContext]="{ $implicit: fleet, noun: 'fleet' }" />
               } @else {
                 <ng-container [ngTemplateOutlet]="paint" [ngTemplateOutletContext]="{ $implicit: fleet, noun: 'fleet' }" />
               }
               <p class="label">Level (it flies round only what is on its own)</p>
-              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Level" [value]="layerOf(fleet, fleet.kind)" (change)="setLayer($event.value)">
-                @for (layer of layers; track layer) {
-                  <mat-button-toggle [value]="layer">{{ layer }}</mat-button-toggle>
-                }
-              </mat-button-toggle-group>
+              <lenzi-glass-segmented label="Level" [options]="layerOptions" [value]="layerOf(fleet, fleet.kind)" (valueChange)="setLayer($any($event))" />
 
               <h3 class="group">Its fleet</h3>
               @for (field of fleetFields; track field.key) {
                 <p class="label">{{ field.label }}</p>
                 <div class="number">
-                  <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
-                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (input)="setFleetNumber(field.key, slid($event))" (valueChange)="setFleetNumber(field.key, $event)" />
-                  </mat-slider>
+                  <lenzi-glass-slider [min]="field.min" [max]="field.max" [step]="field.step" [label]="field.label" [value]="fleetValue(fleet, field.key)" (valueChange)="setFleetNumber(field.key, $event)" />
                   <span class="value">{{ shown(fleetValue(fleet, field.key)) }}</span>
                 </div>
               }
@@ -389,18 +362,11 @@
               <h3 class="group">The leader's ways (the whole fleet takes them)</h3>
               <!-- what the fleet does with the pointer, a fleet apart (lenzi, 2026-11-17: "This should be configurable for every boid") -->
               <p class="label">The pointer</p>
-              <mat-button-toggle-group hideSingleSelectionIndicator aria-label="The pointer" [value]="followOf(fleet)" (change)="setFollow($event.value)">
-                <mat-button-toggle value="flee">Flee</mat-button-toggle>
-                <mat-button-toggle value="near">Near</mat-button-toggle>
-                <mat-button-toggle value="target">Target</mat-button-toggle>
-                <mat-button-toggle value="none">None</mat-button-toggle>
-              </mat-button-toggle-group>
+              <lenzi-glass-segmented label="The pointer" [options]="[{ value: 'flee', label: 'Flee' }, { value: 'near', label: 'Near' }, { value: 'target', label: 'Target' }, { value: 'none', label: 'None' }]" [value]="followOf(fleet)" (valueChange)="setFollow($any($event))" />
               @for (field of leaderFields; track field.key) {
                 <p class="label">{{ field.label }}</p>
                 <div class="number">
-                  <mat-slider [min]="field.min" [max]="field.max" [step]="field.step">
-                    <input matSliderThumb [value]="fleetValue(fleet, field.key)" [attr.aria-label]="field.label" (input)="setFleetNumber(field.key, slid($event))" (valueChange)="setFleetNumber(field.key, $event)" />
-                  </mat-slider>
+                  <lenzi-glass-slider [min]="field.min" [max]="field.max" [step]="field.step" [label]="field.label" [value]="fleetValue(fleet, field.key)" (valueChange)="setFleetNumber(field.key, $event)" />
                   <span class="value">{{ shown(fleetValue(fleet, field.key)) }}</span>
                 </div>
               }
@@ -421,24 +387,16 @@
      "both for boids and blobs"; "a configurable color with a color picker"; "glass should have a tint parameter"). -->
 <ng-template #look let-thing let-noun="noun">
   <p class="label">Body</p>
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Body" [value]="bodyOf(thing.material ?? 'lamp')" (change)="setLook($event.value, emitsOf(thing))">
-    <mat-button-toggle value="solid">Solid</mat-button-toggle>
-    <mat-button-toggle value="glass">Glass</mat-button-toggle>
-  </mat-button-toggle-group>
+  <lenzi-glass-segmented label="Body" [options]="[{ value: 'solid', label: 'Solid' }, { value: 'glass', label: 'Glass' }]" [value]="bodyOf(thing.material ?? 'lamp')" (valueChange)="setLook($any($event), emitsOf(thing))" />
   <p class="label">Light</p>
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Light" [value]="emitsOf(thing)" (change)="setLook(bodyOf(thing.material ?? 'lamp'), $event.value)">
-    <mat-button-toggle [value]="true">Emitting</mat-button-toggle>
-    <mat-button-toggle [value]="false">Not emitting</mat-button-toggle>
-  </mat-button-toggle-group>
+  <lenzi-glass-segmented label="Light" [options]="[{ value: true, label: 'Emitting' }, { value: false, label: 'Not emitting' }]" [value]="emitsOf(thing)" (valueChange)="setLook(bodyOf(thing.material ?? 'lamp'), $any($event))" />
   <ng-container [ngTemplateOutlet]="paint" [ngTemplateOutletContext]="{ $implicit: thing, noun: noun }" />
   @if (bodyOf(thing.material ?? 'lamp') === 'glass') {
     <!-- three properties of its own, each doing one thing (lenzi, 2026-11-21: "tre proprietà indipendenti per ogni vetro"):
          the hue of what is seen through it, how much is seen through it, how blurred -->
     <p class="label">Tint (how much its colour's hue colours what is seen through it)</p>
     <div class="number">
-      <mat-slider min="0" max="1" step="0.05">
-        <input matSliderThumb [value]="thing.tint ?? glassDefaults(thing).tint" aria-label="Tint" (input)="setTint(slid($event))" (valueChange)="setTint($event)" />
-      </mat-slider>
+      <lenzi-glass-slider min="0" max="1" step="0.05" label="Tint" [value]="thing.tint ?? glassDefaults(thing).tint" (valueChange)="setTint($event)" />
       <span class="value">{{ shown(thing.tint ?? glassDefaults(thing).tint) }}</span>
     </div>
     @if (!hasHue(thing)) {
@@ -446,16 +404,12 @@
     }
     <p class="label">Transparency (how much of what is behind it shows through)</p>
     <div class="number">
-      <mat-slider min="0" max="1" step="0.05">
-        <input matSliderThumb [value]="thing.transparency ?? glassDefaults(thing).transparency" aria-label="Transparency" (input)="setTransparency(slid($event))" (valueChange)="setTransparency($event)" />
-      </mat-slider>
+      <lenzi-glass-slider min="0" max="1" step="0.05" label="Transparency" [value]="thing.transparency ?? glassDefaults(thing).transparency" (valueChange)="setTransparency($event)" />
       <span class="value">{{ shown(thing.transparency ?? glassDefaults(thing).transparency) }}</span>
     </div>
     <p class="label">Blur (of what is seen through it, px: 0 sharp, {{ glassBlur }} frosted)</p>
     <div class="number">
-      <mat-slider min="0" [max]="glassBlur" step="0.5">
-        <input matSliderThumb [value]="thing.blur ?? glassDefaults(thing).blur" aria-label="Blur" (input)="setBlur(slid($event))" (valueChange)="setBlur($event)" />
-      </mat-slider>
+      <lenzi-glass-slider min="0" [max]="glassBlur" step="0.5" label="Blur" [value]="thing.blur ?? glassDefaults(thing).blur" (valueChange)="setBlur($event)" />
       <span class="value">{{ shown(thing.blur ?? glassDefaults(thing).blur) }}</span>
     </div>
   }
@@ -465,10 +419,7 @@
      colori tra cui shiftare come la home"). -->
 <ng-template #paint let-thing let-noun="noun">
   <p class="label">Colour</p>
-  <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Colour" [value]="isMulti(thing)" (change)="setMulti($event.value)">
-    <mat-button-toggle [value]="false">One colour</mat-button-toggle>
-    <mat-button-toggle [value]="true">Many, shifting</mat-button-toggle>
-  </mat-button-toggle-group>
+  <lenzi-glass-segmented label="Colour" [options]="[{ value: false, label: 'One colour' }, { value: true, label: 'Many, shifting' }]" [value]="isMulti(thing)" (valueChange)="setMulti($any($event))" />
   <div class="colour">
     @if (isMulti(thing)) {
       @for (colour of thing.colours; track $index) {

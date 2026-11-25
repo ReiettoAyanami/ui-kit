@@ -26,7 +26,7 @@ describe('ControlsPanel', () => {
     const kind = (key: string) => {
       const label = panel.querySelector(`#label-${key}`)!;
       const field = label.nextElementSibling!;
-      return field.tagName === 'MAT-BUTTON-TOGGLE-GROUP' ? 'pills' : field.querySelector('mat-select') ? 'select' : field.tagName;
+      return field.tagName === 'LENZI-GLASS-SEGMENTED' ? 'pills' : field.querySelector('mat-select') ? 'select' : field.tagName;
     };
     expect(kind('short')).toBe('pills');
     expect(kind('long')).toBe('select');
@@ -39,10 +39,10 @@ describe('ControlsPanel', () => {
     fixture.componentRef.setInput('values', { bezel: 28 });
     fixture.detectChanges();
     await fixture.whenStable();
-    const thumb = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('input[matSliderThumb]')!;
-    // the thumb's own input moves while it is dragged: its "input" events, no "change" yet
-    thumb.value = '60';
-    thumb.dispatchEvent(new Event('input', { bubbles: true }));
+    const track = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('lenzi-glass-slider .track')!;
+    track.getBoundingClientRect = () => ({ left: 0, width: 86, top: 0, height: 40, right: 86, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    // pressed and held at 56 of 86 px (60 on 4 to 90): the value follows before it is let go
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 56 }));
     fixture.detectChanges();
     expect(fixture.componentInstance.values()['bezel']).toBe(60);
   });

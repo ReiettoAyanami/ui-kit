@@ -47,12 +47,12 @@
               </span>
             </header>
             @for (row of rows(); track row.page.key) {
-              <mat-slide-toggle class="page-toggle" [checked]="row.shown" [disabled]="savingPages()" (change)="setPublic([row.page], $event.checked)">
+              <lenzi-glass-switch class="page-toggle" [label]="row.page.title" [checked]="row.shown" [disabled]="savingPages()" (checkedChange)="setPublic([row.page], $event)">
                 <span class="names">
                   <span class="page-title">{{ row.page.title }}</span>
                   <code class="page-address">/{{ row.page.key }}</code>
                 </span>
-              </mat-slide-toggle>
+              </lenzi-glass-switch>
             }
           </div>
         }

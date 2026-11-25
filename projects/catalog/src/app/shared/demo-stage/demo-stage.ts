@@ -1,11 +1,10 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { KitDoc, Values } from '../../registry';
 import { DemoEvents, FrameMessage } from '../demo-events';
-import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassOption, LenziGlassSegmented, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * Where a demo runs: a frame of the catalog itself (`/frame/<id>`), as wide as a phone (390 px) or
@@ -16,7 +15,7 @@ import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
  */
 @Component({
   selector: 'app-demo-stage',
-  imports: [LenziLit, MatButtonModule, MatButtonToggleModule],
+  imports: [LenziGlassSegmented, LenziLit, MatButtonModule],
   templateUrl: './demo-stage.html',
   styleUrl: './demo-stage.css',
 })
@@ -28,6 +27,14 @@ export class DemoStage {
   readonly values = input.required<Values>();
 
   protected readonly events = inject(DemoEvents);
+  protected readonly widths: readonly LenziGlassOption<'phone' | 'desktop'>[] = [
+    { value: 'phone', label: 'Phone' },
+    { value: 'desktop', label: 'Desktop' },
+  ];
+  protected readonly patterns: readonly LenziGlassOption<boolean>[] = [
+    { value: false, label: 'Plain' },
+    { value: true, label: 'Pattern' },
+  ];
   protected readonly width = signal<'phone' | 'desktop'>('desktop');
   /** A busy background behind the demo, to see what glass does. */
   protected readonly pattern = signal(false);

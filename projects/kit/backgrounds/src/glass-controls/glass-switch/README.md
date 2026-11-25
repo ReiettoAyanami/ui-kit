@@ -11,6 +11,9 @@
   quelli di apple").
 - **A tap switches it; a drag puts it where it is let go**; Space and Enter switch it.
 - **A `role="switch"`** with its name and `aria-checked`.
+- **Its words beside it** are its content (`<lenzi-glass-switch>Notifications</lenzi-glass-switch>`): a tap on them
+  switches it too.
+- Apple (HIG, Toggles): a switch for a setting, in a list row or a panel of settings.
 - Chromium bends; elsewhere the glass is blurred only.
 - **Built as kube.io's** (read from its code): one thumb, always glass under a white fill (`--lenzi-glass-thumb`);
   held, the fill goes to 10%, the thumb grows from 0.65 to 0.9 and bends from 0.4 to 0.9 of its bending; past an end
@@ -27,7 +30,7 @@
 ## Example
 
 ```html
-<lenzi-glass-switch label="Notifications" [(checked)]="notifications" />
+<lenzi-glass-switch label="Notifications" [(checked)]="notifications">Notifications</lenzi-glass-switch>
 ```
 
 ## Variables

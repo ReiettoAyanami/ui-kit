@@ -109,8 +109,8 @@ describe('SceneMakerPage', () => {
   it('what the pointer does is said by each leader, for its fleet alone; the scene window no longer says it', async () => {
     // lenzi, 2026-11-17: "This should be configurable for every boid" (the toggle was the scene's, for all)
     const { page, click, maker } = await open();
-    const toggle = () => page.querySelector<HTMLElement>('.window mat-button-toggle-group[aria-label="The pointer"]');
-    const pressed = () => toggle()?.querySelector('.mat-button-toggle-checked')?.textContent?.trim();
+    const toggle = () => page.querySelector<HTMLElement>('.window [role=radiogroup][aria-label="The pointer"]');
+    const pressed = () => toggle()?.querySelector('.segment.chosen')?.textContent?.trim();
     await click('Home');
     expect(toggle()).toBeNull();
     // the home scene says it once for all (flee): every leader shows it as its own until told otherwise
@@ -269,7 +269,7 @@ describe('SceneMakerPage', () => {
     expect(maker.scene().blobs[1]!.colour).toBe('#d5baff');
 
     const flip = async (label: string) => {
-      const toggle = [...page.querySelectorAll<HTMLElement>('.window mat-slide-toggle')].find((found) => found.textContent?.includes(label))!;
+      const toggle = [...page.querySelectorAll<HTMLElement>('.window lenzi-glass-switch')].find((found) => found.textContent?.includes(label))!;
       toggle.querySelector<HTMLButtonElement>('button')!.click();
       fixture.detectChanges();
       await fixture.whenStable();
@@ -288,7 +288,7 @@ describe('SceneMakerPage', () => {
 
   it("the scene's glass is frosted until the toggle makes it liquid, and back (2026-11-19)", async () => {
     const { page, maker, fixture } = await open();
-    const liquid = () => [...page.querySelectorAll<HTMLElement>('.objects mat-slide-toggle')].find((toggle) => toggle.textContent?.includes('Liquid glass'));
+    const liquid = () => [...page.querySelectorAll<HTMLElement>('.objects lenzi-glass-switch')].find((toggle) => toggle.textContent?.includes('Liquid glass'));
     expect(liquid()).toBeDefined();
     expect(maker.scene().glass).toBeUndefined();
     liquid()!.querySelector<HTMLButtonElement>('button')!.click();
@@ -308,15 +308,15 @@ describe('SceneMakerPage', () => {
     maker.chosen.set({ type: 'blob', index: glass });
     fixture.detectChanges();
     await fixture.whenStable();
-    const blur = () => page.querySelector<HTMLInputElement>('.window input[aria-label="Blur"]')!;
+    const blur = () => page.querySelector<HTMLElement>('.window [role=slider][aria-label="Blur"]')!;
     const shownBlur = () => blur().closest('.number')?.querySelector('.value')?.textContent?.trim();
     // frosted: the page glass's blur; liquid: sharp
     expect(shownBlur()).toBe('24');
     (maker as unknown as { setLiquid(on: boolean): void }).setLiquid(true);
     fixture.detectChanges();
     expect(shownBlur()).toBe('0');
-    blur().value = '6';
-    blur().dispatchEvent(new Event('input', { bubbles: true }));
+    // from 0, twelve steps of 0.5 with the arrow key
+    for (let i = 0; i < 12; i++) blur().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
     expect(maker.scene().blobs[glass]!.blur).toBe(6);
     expect(shownBlur()).toBe('6');
@@ -345,10 +345,10 @@ describe('SceneMakerPage', () => {
     maker.chosen.set({ type: 'blob', index: glass });
     fixture.detectChanges();
     await fixture.whenStable();
-    const tint = page.querySelector<HTMLInputElement>('.window input[aria-label="Tint"]')!;
-    // the thumb's own input moves while it is dragged: its "input" events, no "change" yet
-    tint.value = '0.35';
-    tint.dispatchEvent(new Event('input', { bubbles: true }));
+    const tint = page.querySelector<HTMLElement>('.window [role=slider][aria-label="Tint"]')!;
+    tint.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 40, right: 100, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    // pressed and held at 35 of 100 px: the value follows before it is let go
+    tint.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 35 }));
     fixture.detectChanges();
     expect(maker.scene().blobs[glass]!.tint).toBe(0.35);
     expect(tint.closest('.number')?.querySelector('.value')?.textContent?.trim()).toBe('0.35');
@@ -366,14 +366,14 @@ describe('SceneMakerPage', () => {
     expect(maker.chosen()).toEqual({ type: 'liquid' });
     expect(window().querySelector('.window-title')?.textContent?.trim()).toBe('Liquid glass');
     // frosted: only its toggle, no settings
-    expect(window().querySelectorAll('mat-slider').length).toBe(0);
-    window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
+    expect(window().querySelectorAll('lenzi-glass-slider').length).toBe(0);
+    window().querySelector<HTMLButtonElement>('lenzi-glass-switch button')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(maker.scene().glass).toBe('liquid');
     // liquid: its profile and its six numbers, at the kit's values
-    expect(window().querySelectorAll('mat-button-toggle').length).toBe(3);
-    expect([...window().querySelectorAll('mat-slider input')].map((input) => input.getAttribute('aria-label'))).toEqual([
+    expect(window().querySelectorAll('lenzi-glass-segmented .segment').length).toBe(3);
+    expect([...window().querySelectorAll('lenzi-glass-slider [role=slider]')].map((input) => input.getAttribute('aria-label'))).toEqual([
       'Bezel width: how far in from the edge it bends (px)',
       'Thickness: the thicker, the more it bends (px)',
       'Refractive index (air is 1)',
@@ -394,12 +394,12 @@ describe('SceneMakerPage', () => {
     // frosted and liquid again: its settings are still there
     maker.chosen.set({ type: 'liquid' });
     fixture.detectChanges();
-    window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
+    window().querySelector<HTMLButtonElement>('lenzi-glass-switch button')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(maker.scene().glass).toBeUndefined();
     expect(maker.scene().liquid).toEqual({ saturation: 3, surface: 'lip' });
-    window().querySelector<HTMLButtonElement>('mat-slide-toggle button')!.click();
+    window().querySelector<HTMLButtonElement>('lenzi-glass-switch button')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     // back to the default: the scene says nothing of it
@@ -415,7 +415,7 @@ describe('SceneMakerPage', () => {
     // then "fai in modo che sia sempre configurabile, dal pannello generale"
     const { page, click, maker, fixture } = await open();
     const sceneRow = () => page.querySelector('mat-action-list .object [matListItemLine]')?.textContent?.trim();
-    const throwing = () => [...page.querySelectorAll<HTMLElement>('.objects mat-slide-toggle')].find((toggle) => toggle.textContent?.includes('The pointer throws the blobs'));
+    const throwing = () => [...page.querySelectorAll<HTMLElement>('.objects lenzi-glass-switch')].find((toggle) => toggle.textContent?.includes('The pointer throws the blobs'));
     expect(sceneRow()).toBe('The pointer throws the blobs');
     expect(throwing()).toBeDefined();
     // at the panel's foot, after the buttons that add (lenzi's arrow)

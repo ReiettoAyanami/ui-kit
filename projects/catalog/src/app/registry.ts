@@ -419,9 +419,24 @@ usageLanguage: 'html',
       { key: 'banner', label: 'A bar above it (Viewing as)', type: 'boolean', default: false, code: { match: /lenziShellBanner/ } },
       { key: 'below', label: 'A bar under it (Offline)', type: 'boolean', default: false, code: { match: /lenziShellBelow/ } },
       { key: 'bare', label: 'Bare (the page alone)', type: 'boolean', default: false, code: { match: /\[bare\]="true"/ } },
+      {
+        key: 'navigation',
+        label: 'Navigation',
+        type: 'select',
+        default: 'drawer',
+        options: [
+          { value: 'drawer', label: 'drawer' },
+          { value: 'bar', label: 'bar' },
+          { value: 'auto', label: 'auto' },
+        ],
+        code: { attr: 'navigation', otherwise: 'drawer' },
+        hint: 'The bar (LenziGlassTabBar) floats at the bottom; auto: the bar on a phone, the drawer wider.',
+      },
     ],
-    usage: (v) => `<lenzi-app-shell${attr('title', v['title'])}${v['bare'] ? ' [bare]="true"' : ''}>
+    usage: (v) => `<lenzi-app-shell${attr('title', v['title'])}${v['navigation'] && v['navigation'] !== 'drawer' ? ` navigation="${v['navigation']}"` : ''}${v['bare'] ? ' [bare]="true"' : ''}>
   <lenzi-nav-list lenziShellNav appName="Substance tracker" [pages]="pages" [bottom]="bottom" />${
+    v['navigation'] && v['navigation'] !== 'drawer' ? '\n  <lenzi-glass-tab-bar lenziShellTabs [pages]="pages" [bottom]="bottom" />' : ''
+  }${
     v['actions'] ? '\n  <lenzi-notification-bell lenziShellActions noun="tickets" [items]="news()" />' : ''
   }${v['banner'] ? '\n  <lenzi-info-bar lenziShellBanner icon="visibility" tone="tertiary" actionLabel="Exit" (action)="exit()">Viewing as lenzi</lenzi-info-bar>' : ''}${
     v['below'] ? '\n  <lenzi-info-bar lenziShellBelow icon="cloud_off">Offline · data from 14:32</lenzi-info-bar>' : ''
@@ -1665,6 +1680,26 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
 <!-- Reduce transparency makes them solid and unlit: LenziAppearance.setReduceTransparency(${v['reduce']}) -->`,
     usageLanguage: 'html',
     height: 480,
+  },
+  {
+    id: 'glass-tab-bar',
+    name: 'Glass tab bar',
+    category: 'Layout',
+    summary: "The navigation as Apple's tab bar: capsules of glass at the bottom; the current page's capsule slides there as glass.",
+    api: '<lenzi-glass-tab-bar>',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: 'new in the kit, 2026-11-25 ("una barra orizzontale ... da usare su mobile ... anche su web ... un\'alternativa")',
+    files: [...glassControl('glass-tab-bar')],
+    ...docs('backgrounds/src/glass-controls/glass-tab-bar'),
+    demo: () => import('./demos/glass-tab-bar-demo/glass-tab-bar-demo').then((m) => m.GlassTabBarDemo),
+    controls: [],
+    usage: () => `<lenzi-app-shell navigation="auto">
+  <lenzi-nav-list lenziShellNav appName="Shifts" [pages]="pages" [bottom]="bottom" />
+  <lenzi-glass-tab-bar lenziShellTabs [pages]="pages" [bottom]="bottom" />
+  <router-outlet />
+</lenzi-app-shell>`,
+    usageLanguage: 'html',
+    height: 320,
   },
   {
     id: 'glass-switch',

@@ -1,9 +1,7 @@
 import { Component, booleanAttribute, computed, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSliderModule } from '@angular/material/slider';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
@@ -16,8 +14,7 @@ import { SaveHint } from '../save-hint/save-hint';
 import { tokensToCss } from '../token-css';
 import { TokenEditor } from '../token-editor/token-editor';
 import { TokenDef, TokenGroup, TokensApi } from '../tokens-api';
-import { slid } from '../slid';
-import { LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassOption, LenziGlassSegmented, LenziGlassSlider, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 /** The easing curves offered by name; any other is kept as written (and editable as text). */
 const EASINGS = [
@@ -46,15 +43,17 @@ function split(value: string): { number: number; unit: string } {
  */
 @Component({
   selector: 'app-token-panel',
-  imports: [LenziColorPicker, LenziLit, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatSliderModule, MatTooltipModule, SaveHint, TokenEditor],
+  imports: [LenziColorPicker, LenziGlassSegmented, LenziGlassSlider, LenziLit, MatButtonModule, MatIconModule, MatSelectModule, MatTooltipModule, SaveHint, TokenEditor],
   templateUrl: './token-panel.html',
   styleUrl: './token-panel.css',
 })
 export class TokenPanel {
   /** Over a background its surfaces are lit, solid without one (RULES.md, 2026-11-17). */
   protected readonly lit = lenziOverBackground();
-  /** A slider's number while it is dragged: the value follows the thumb (lenzi, 2026-11-21). */
-  protected readonly slid = slid;
+  protected readonly modes: readonly LenziGlassOption<'controls' | 'text'>[] = [
+    { value: 'controls', label: 'Controls' },
+    { value: 'text', label: 'Text' },
+  ];
 
   readonly groups = input.required<readonly TokenGroup[]>();
   /** What the editor is called, for a screen reader. */

@@ -1,16 +1,27 @@
 /* Apple's segmented control, moving like its switch: a capsule track, the chosen choice on a light capsule; on its way
-   to another the capsule is Liquid Glass, larger, over the words. */
+   to another the capsule is Liquid Glass, larger, over the words. Every choice as wide as the widest (Apple: "keep
+   segment size consistent"); 32 px high with its track, the kit's toggles' height. Wider than its place, it scrolls. */
 :host {
   display: inline-flex;
-  --lenzi-segment-width: 96px;
-  --lenzi-segment-height: 36px;
+  max-width: 100%;
+  --lenzi-segment-min-width: 64px;
+  --lenzi-segment-height: 28px;
   --lenzi-glass-pill: color-mix(in srgb, var(--mat-sys-on-surface) 22%, var(--mat-sys-surface-container-high));
+}
+
+.scroller {
+  max-width: 100%;
+  /* room for the focus ring, which the scrolling would cut */
+  margin: -6px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .track {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--lenzi-segments), var(--lenzi-segment-width));
+  display: inline-grid;
+  grid-template-columns: repeat(var(--lenzi-segments), minmax(var(--lenzi-segment-min-width), 1fr));
   height: var(--lenzi-segment-height);
   padding: 2px;
   border-radius: calc(var(--lenzi-segment-height) / 2 + 2px);
@@ -26,8 +37,9 @@
 .segment {
   position: relative;
   z-index: 1;
-  padding: 0 12px;
+  padding: 0 14px;
   border: none;
+  white-space: nowrap;
   background: none;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-label-large);
@@ -52,8 +64,8 @@
   position: absolute;
   z-index: 0;
   top: 50%;
-  left: calc(2px + var(--lenzi-segment-width) * (var(--lenzi-segment-at) + 0.5));
-  width: calc(var(--lenzi-segment-width) - 2px);
+  left: calc(2px + (100% - 4px) * (var(--lenzi-segment-at) + 0.5) / var(--lenzi-segments));
+  width: calc((100% - 4px) / var(--lenzi-segments));
   height: var(--lenzi-segment-height);
   border-radius: calc(var(--lenzi-segment-height) / 2);
   background-color: var(--lenzi-glass-pill);

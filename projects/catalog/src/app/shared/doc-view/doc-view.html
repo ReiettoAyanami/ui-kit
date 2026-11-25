@@ -1,9 +1,6 @@
 <div class="top">
   @if (canEdit()) {
-    <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Read or edit" [value]="mode()" (change)="choose($event.value)">
-      <mat-button-toggle value="read">Read</mat-button-toggle>
-      <mat-button-toggle value="edit">Edit</mat-button-toggle>
-    </mat-button-toggle-group>
+    <lenzi-glass-segmented label="Read or edit" [options]="modes" [value]="mode()" (valueChange)="choose($any($event))" />
   }
   <code class="path">projects/kit/{{ path() }}</code>
 </div>

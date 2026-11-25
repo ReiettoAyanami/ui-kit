@@ -22,7 +22,8 @@
 | input | `label` | `string` | required (for a screen reader) |
 | input | `disabled` | `boolean` | `false` |
 
-Sizes: `--lenzi-segment-width` (96 px a choice), `--lenzi-segment-height` (36 px).
+Sizes: every choice as wide as the widest (at least `--lenzi-segment-min-width`, 64 px); `--lenzi-segment-height`
+(28 px, 32 with its track, as every toggle of the kit). Wider than its place, it scrolls.
 
 ## Example
 

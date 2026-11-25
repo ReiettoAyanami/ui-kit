@@ -1,8 +1,9 @@
-/* Bottom right, above the content (under the windows), clear of the phone's gesture bar. */
+/* Bottom right, above the content (under the windows), clear of the phone's gesture bar, and above the shell's
+   bar of pages when it has one (--lenzi-shell-tabs-clearance). */
 :host {
   position: fixed;
   right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(16px + var(--lenzi-shell-tabs-clearance, 0px) + env(safe-area-inset-bottom, 0px));
   z-index: 10;
 }
 

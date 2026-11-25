@@ -26,10 +26,7 @@
             <span class="window-text">Glass over the page: its opacity, blur and border.</span>
           </div>
         </div>
-        <mat-button-toggle-group hideSingleSelectionIndicator aria-label="Shown" value="last">
-          <mat-button-toggle value="last">last</mat-button-toggle>
-          <mat-button-toggle value="average">average</mat-button-toggle>
-        </mat-button-toggle-group>
+        <lenzi-glass-segmented label="Shown" [options]="shownOptions" value="last" />
         <span class="row">
           <lenzi-pill-toggle [options]="measures" [(value)]="measure" />
           <span class="figure">{{ measure() === 'price' ? '€8.93/g' : '6/10 g' }}</span>

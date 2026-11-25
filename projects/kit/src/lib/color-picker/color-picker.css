@@ -32,7 +32,7 @@
 .area:focus-visible,
 .hue:focus-visible,
 .choice:focus-visible {
-  outline: 2px solid var(--mat-sys-on-surface);
+  outline: var(--lenzi-border-focus) solid var(--mat-sys-on-surface);
   outline-offset: 2px;
 }
 
@@ -142,6 +142,6 @@
 }
 
 .choice.chosen {
-  outline: 2px solid var(--mat-sys-primary);
+  outline: var(--lenzi-border) solid var(--mat-sys-primary);
   outline-offset: 2px;
 }

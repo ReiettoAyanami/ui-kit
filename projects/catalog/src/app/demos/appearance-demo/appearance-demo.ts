@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { LenziGlassSwitch } from '@lenzi/ui-kit/backgrounds';
 
 import { LenziAppearance } from '@lenzi/ui-kit';
 
@@ -8,7 +8,7 @@ import { DemoEvents } from '../../shared/demo-events';
 /** Reduce transparency, as an app's settings page offers it: every glass solid, remembered by this browser. */
 @Component({
   selector: 'app-appearance-demo',
-  imports: [MatSlideToggleModule],
+  imports: [LenziGlassSwitch],
   templateUrl: './appearance-demo.html',
   styleUrl: './appearance-demo.css',
 })

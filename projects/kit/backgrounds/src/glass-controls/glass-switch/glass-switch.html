@@ -14,8 +14,9 @@
   (pointermove)="move($event)"
   (pointerup)="up()"
   (pointercancel)="cancel()"
-  (keydown)="key($event)"
-  (click)="$event.preventDefault()"
+  (click)="clicked()"
 >
   <span #thumb class="thumb" aria-hidden="true"></span>
 </button>
+<!-- what it switches, beside it: a tap on it switches it too -->
+<span class="text" (click)="tapText()"><ng-content /></span>

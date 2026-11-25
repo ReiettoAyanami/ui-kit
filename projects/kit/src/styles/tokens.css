@@ -19,8 +19,8 @@
   --lenzi-shadow: 60%;
 
   /* Borders */
-  --lenzi-border: 2px;
-  --lenzi-border-focus: 3px;
+  --lenzi-border: 1px;
+  --lenzi-border-focus: 2px;
 
   /* Shape */
   --lenzi-corner-shape: round;

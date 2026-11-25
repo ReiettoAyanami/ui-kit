@@ -1,5 +1,6 @@
-<lenzi-app-shell [title]="title()" [bare]="!!values()['bare']">
+<lenzi-app-shell [title]="title()" [bare]="!!values()['bare']" [navigation]="navigation()">
   <lenzi-nav-list lenziShellNav appName="Substance tracker" subtitle="lenzi" [pages]="pages" [bottom]="bottom" (pressed)="log('pressed ' + $event)" (navigated)="log('went to ' + $event.label)" />
+  <lenzi-glass-tab-bar lenziShellTabs [pages]="tabPages" [bottom]="bottom" (pressed)="log('pressed ' + $event)" (navigated)="log('went to ' + $event.label)" />
   @if (values()['actions']) {
     <lenzi-notification-bell lenziShellActions noun="tickets" [items]="news" (opened)="log('bell opened')" />
   }
