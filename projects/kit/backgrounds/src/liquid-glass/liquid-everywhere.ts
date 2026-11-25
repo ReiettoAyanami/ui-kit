@@ -28,6 +28,9 @@ export const LENZI_LIQUID_SURFACES: readonly string[] = [
   '.lenzi-floating',
 ];
 
+/** What may open over a window: frosted, not glass, when a window is open. */
+const OVER_WINDOWS = '.mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel';
+
 /** The surfaces of the page itself, glass too only when asked (`pages: true`): cards, the grid's and the table's boxes. */
 export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '.lenzi-surface'];
 
@@ -114,6 +117,11 @@ export class LenziLiquidEverywhere {
 
   private scan(bends: boolean): void {
     const found = this.reduced() ? new Set<HTMLElement>() : new Set(this.document.querySelectorAll<HTMLElement>(this.selectors.join(',')));
+    // Never glass on glass (Apple, Adopting Liquid Glass: "avoid overcrowding or layering Liquid Glass elements on top of
+    // each other"): a menu or a select opened over a window stays the kit's frosted glass.
+    if ([...found].some((e) => e.matches('.mat-mdc-dialog-surface'))) {
+      for (const element of [...found]) if (element.matches(OVER_WINDOWS)) found.delete(element);
+    }
     for (const element of [...this.marked]) {
       if (found.has(element) && element.isConnected) continue;
       this.marked.delete(element);

@@ -90,7 +90,18 @@ come in modo ottimale"; the Human Interface Guidelines, Materials and Color, rea
   with a 35% dark layer: not used by the kit's surfaces.
 - **No colour of its own**; the primary action alone is coloured glass ("For primary actions, color the background"):
   the "+" keeps its accent.
-- **Its rim lives**: near the pointer and the boids (above).
+- **Its rim lives**: near the pointer and the boids (above); **pressed**, the whole rim lights up, brighter, and the "+"
+  gives a little ("reacts to touch and pointer interactions in real time").
+- **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
+  replica"; Adopting Liquid Glass, Applying Liquid Glass to custom views, HIG Layout):
+  - **no stroke**: a glass has no border, its rim is light;
+  - **concentric corners** ("rounded shapes that are concentric to their containers"): a control is a capsule ("within a
+    Capsule shape"): the top bar, a bar of actions, the "+" (a circle); a larger panel's radius is its content's plus
+    the gap: menus 8 + 6 px, the drawer 28 + 12, windows 20 + 16;
+  - **a scroll edge effect** instead of a fill under the bar ("use a scroll edge effect to visually elevate controls
+    above content"): what scrolls under the bar is blurred and fades at its edge;
+  - **never glass on glass** ("avoid overcrowding or layering Liquid Glass elements on top of each other"): a menu or a
+    select opened over a window stays frosted.
 - A kit or Material surface keeps its border's width, not its colour; a bezel is never wider than a third of the
   surface's smaller side. Snackbars and tooltips stay frosted glass. **Reduce transparency** turns it all off.
 - `LenziLiquidSurface` is one glass, the engine the directive uses too.

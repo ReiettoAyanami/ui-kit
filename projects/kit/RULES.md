@@ -73,7 +73,10 @@ the rule says what, the variable says how much.
     **larger glass more opaque** (the drawer, windows: `--lenzi-liquid-tint-large`, 75%). The clear variant only over
     photos and videos, with a 35% dark layer.
   - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
-  - **Its rim lives**: lit near the pointer, and by a flock's boids behind it.
+  - **Its rim lives**: lit near the pointer, and by a flock's boids behind it; pressed, all of it, brighter.
+  - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
+    replica"): no stroke; corners concentric to what they hold (controls are capsules, a panel's radius is its
+    content's plus the gap); a scroll edge effect under the bar instead of a fill; never glass on glass.
 - **Reduce transparency** (`LenziAppearance`, and the system's own `prefers-reduced-transparency`) makes
   every surface solid again.
 

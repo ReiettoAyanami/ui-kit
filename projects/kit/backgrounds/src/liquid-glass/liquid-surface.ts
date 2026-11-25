@@ -44,15 +44,18 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
 };
 
 /** Where the pointer is on a page (one listener a document, for every glass); `on`: over the page. */
-const pointers = new WeakMap<Document, { x: number; y: number; on: boolean }>();
-function pointerOf(document: Document): { x: number; y: number; on: boolean } {
+const pointers = new WeakMap<Document, { x: number; y: number; on: boolean; down: boolean }>();
+function pointerOf(document: Document): { x: number; y: number; on: boolean; down: boolean } {
   let pointer = pointers.get(document);
   if (!pointer) {
-    const tracked = { x: 0, y: 0, on: false };
+    const tracked = { x: 0, y: 0, on: false, down: false };
     pointer = tracked;
     pointers.set(document, tracked);
-    document.addEventListener('pointermove', (event) => Object.assign(tracked, { x: event.clientX, y: event.clientY, on: true }), { passive: true });
-    document.documentElement.addEventListener('pointerleave', () => (tracked.on = false));
+    const at = (event: PointerEvent) => Object.assign(tracked, { x: event.clientX, y: event.clientY, on: true });
+    document.addEventListener('pointermove', at, { passive: true });
+    document.addEventListener('pointerdown', (event) => (at(event), (tracked.down = true)), { passive: true, capture: true });
+    for (const end of ['pointerup', 'pointercancel'] as const) document.addEventListener(end, () => (tracked.down = false), { passive: true, capture: true });
+    document.documentElement.addEventListener('pointerleave', () => Object.assign(tracked, { on: false, down: false }));
   }
   return pointer;
 }
@@ -173,10 +176,13 @@ export class LenziLiquidSurface {
       const away = Math.hypot(Math.max(box.left - pointer.x, 0, pointer.x - box.right), Math.max(box.top - pointer.y, 0, pointer.y - box.bottom));
       byPointer = Math.max(0, s.rim) * Math.pow(Math.max(0, 1 - away / s.pointerReach), 2);
     }
+    // Pressed: the whole rim lights up, brighter (Apple: glass "reacts to touch and pointer interactions in real time").
+    const pressed =
+      pointer.on && pointer.down && pointer.x >= box.left && pointer.x <= box.right && pointer.y >= box.top && pointer.y <= box.bottom;
     const from = byPointer > byBoids ? pointer : crowd;
-    const bright = Math.max(byBoids, byPointer);
+    const bright = pressed ? Math.min(1, Math.max(0, s.rim) * 2) : Math.max(byBoids, byPointer);
     let side = this.rims.length - 1;
-    if (from && bright > 0) {
+    if (from && bright > 0 && !pressed) {
       const ox = (from.x - middle.x) / Math.max(1, box.width / 2);
       const oy = (from.y - middle.y) / Math.max(1, box.height / 2);
       if (Math.hypot(ox, oy) > 0.35) {

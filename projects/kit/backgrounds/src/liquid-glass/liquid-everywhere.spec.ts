@@ -46,6 +46,19 @@ describe('LenziLiquidEverywhere', () => {
     expect(card.classList.contains('lenzi-liquid-everywhere')).toBe(true);
   });
 
+  it('never puts glass on glass: a menu over a window stays frosted', async () => {
+    const glass = TestBed.inject(LenziLiquidEverywhere);
+    const menu = add('mat-mdc-menu-panel');
+    glass.start();
+    await frame();
+    expect(menu.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+    const dialog = add('mat-mdc-dialog-surface');
+    await frame();
+    await frame();
+    expect(dialog.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+    expect(menu.classList.contains('lenzi-liquid-everywhere')).toBe(false);
+  });
+
   it('turns it all off with Reduce transparency, and on again', async () => {
     const glass = TestBed.inject(LenziLiquidEverywhere);
     const card = add('mat-mdc-dialog-surface');
