@@ -44,4 +44,20 @@ describe('LenziGlassSlider', () => {
     track.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }));
     expect(fixture.componentInstance.value()).toBe(75);
   });
+
+  it('its thumbs take the shapes asked for; the fill may be a wave, flowing or still (2026-11-25)', () => {
+    const { fixture, track } = make();
+    expect(track.classList.contains('thumb-capsule')).toBe(true);
+    fixture.componentRef.setInput('thumb', 'bar');
+    fixture.componentRef.setInput('lens', 'circle');
+    fixture.componentRef.setInput('track', 'wave');
+    fixture.componentRef.setInput('waveMoving', false);
+    fixture.detectChanges();
+    expect(track.classList.contains('thumb-bar')).toBe(true);
+    expect(track.classList.contains('lens-circle')).toBe(true);
+    expect(track.classList.contains('track')).toBe(true);
+    const wave = track.querySelector<HTMLElement>('.rail.wave')!;
+    expect(wave.classList.contains('still')).toBe(true);
+    expect(wave.style.getPropertyValue('--lenzi-wave')).toContain('data:image/svg+xml');
+  });
 });

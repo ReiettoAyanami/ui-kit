@@ -1744,8 +1744,14 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
     files: [...glassControl('glass-slider')],
     ...docs('backgrounds/src/glass-controls/glass-slider'),
     demo: () => import('./demos/glass-slider-demo/glass-slider-demo').then((m) => m.GlassSliderDemo),
-    controls: [],
-    usage: () => `<lenzi-glass-slider label="Volume" [(value)]="volume" [step]="5" />`,
+    controls: [
+      { key: 'track', label: 'Rail', type: 'select', default: 'line', options: [{ value: 'line', label: 'line' }, { value: 'wave', label: 'wave' }], code: { attr: 'track', otherwise: 'line' } },
+      { key: 'waveMoving', label: 'The wave flows', type: 'boolean', default: true, code: false },
+      { key: 'thumb', label: 'Solid thumb', type: 'select', default: 'capsule', options: [{ value: 'capsule', label: 'capsule' }, { value: 'circle', label: 'circle' }, { value: 'bar', label: 'bar' }], code: { attr: 'thumb', otherwise: 'capsule' } },
+      { key: 'lens', label: 'Glass thumb', type: 'select', default: 'capsule', options: [{ value: 'capsule', label: 'capsule' }, { value: 'circle', label: 'circle' }, { value: 'bar', label: 'bar' }], code: { attr: 'lens', otherwise: 'capsule' } },
+    ],
+    usage: (v) =>
+      `<lenzi-glass-slider label="Volume" [(value)]="volume" [step]="5"${attr('track', v['track'] === 'wave' ? 'wave' : '')}${v['track'] === 'wave' && v['waveMoving'] === false ? ' [waveMoving]="false"' : ''}${attr('thumb', v['thumb'] === 'capsule' ? '' : v['thumb'])}${attr('lens', v['lens'] === 'capsule' ? '' : v['lens'])} />`,
     usageLanguage: 'html',
     height: 300,
   },

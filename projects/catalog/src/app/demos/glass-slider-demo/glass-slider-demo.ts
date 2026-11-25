@@ -1,5 +1,5 @@
 import { Component, inject, input, signal } from '@angular/core';
-import { LenziGlassSlider } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassSlider, LenziSliderThumb } from '@lenzi/ui-kit/backgrounds';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -15,6 +15,10 @@ export class GlassSliderDemo {
   readonly values = input<Values>({});
   private readonly events = inject(DemoEvents);
   protected readonly value = signal(40);
+
+  protected shape(value: unknown): LenziSliderThumb {
+    return value === 'circle' || value === 'bar' ? value : 'capsule';
+  }
 
   protected set(value: number): void {
     this.value.set(value);

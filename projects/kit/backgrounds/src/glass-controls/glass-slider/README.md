@@ -5,6 +5,9 @@
 ## Rules
 
 - **A thin capsule rail**, the accent up to the value; **a light capsule thumb**.
+- **Shapes of the page's** (lenzi, 2026-11-25: "la forma dei knob dovrebbe essere configurabile, sia quello di vetro
+  nell'animazione che quello che poi è solido"): `thumb` and `lens`; and **a wavy fill** ("una barra ondulata come su
+  android per la musica"): `track="wave"`, flowing unless `[waveMoving]="false"` (still with reduced motion).
 - **Dragged, the thumb is Liquid Glass**, larger, magnifying the rail under it, and settles solid (lenzi, 2026-11-25:
   "come quelli di apple").
 - A tap on the rail jumps there; the arrow keys step, Page Up/Down ten steps, Home and End the ends; always on a step,
@@ -22,6 +25,11 @@
 | input | `label` | `string` | required |
 | input | `valueText` | `string \| null` | `null` (how the value reads aloud: "40 %") |
 | input | `disabled` | `boolean` | `false` |
+| input | `thumb` | `'capsule' \| 'circle' \| 'bar'` | `'capsule'` | the solid thumb: Apple's capsule (38 × 24), a circle (24), Android's upright bar (6 × 30) |
+| input | `lens` | `'capsule' \| 'circle' \| 'bar'` | `'capsule'` | the glass thumb while dragged: 63 × 40, 44, 24 × 48 |
+| input | `track` | `'line' \| 'wave'` | `'line'` | the fill as a wave, Android's music player's; the rest a line |
+| input | `waveAmplitude`, `waveLength` | px | `3`, `28` | the wave's height either side and its length |
+| input | `waveMoving` | `boolean` | `true` | the wave flows along (as music plays) |
 
 ## Example
 

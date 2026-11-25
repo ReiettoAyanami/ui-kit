@@ -1,11 +1,12 @@
 <div
-  #track
+  #rail
   class="track"
   role="slider"
   [attr.tabindex]="disabled() ? -1 : 0"
   [class.active]="active()"
   [class.dragging]="dragging()"
   [class.disabled]="disabled()"
+  [class]="'thumb-' + thumb() + ' lens-' + lens()"
   [style.--lenzi-slider-at]="fraction()"
   [attr.aria-label]="label()"
   [attr.aria-valuemin]="min()"
@@ -19,6 +20,21 @@
   (pointercancel)="up()"
   (keydown)="key($event)"
 >
-  <span class="rail" aria-hidden="true"><span class="fill"></span></span>
-  <span #thumb class="thumb" aria-hidden="true"></span>
+  @if (track() === 'wave') {
+    @let wave = waveMask();
+    <!-- Android's music player: the fill a wave, flowing; the rest a line -->
+    <span
+      class="rail wave"
+      [class.still]="!waveMoving()"
+      aria-hidden="true"
+      [style.--lenzi-wave]="wave.image"
+      [style.--lenzi-wave-length.px]="wave.length"
+      [style.--lenzi-wave-height.px]="wave.height"
+      ><span class="fill"></span><span class="rest"></span
+    ></span>
+  } @else {
+    <span class="rail" aria-hidden="true"><span class="fill"></span></span>
+  }
+  <span class="knob" aria-hidden="true"></span>
+  <span #glass class="lens" aria-hidden="true"></span>
 </div>

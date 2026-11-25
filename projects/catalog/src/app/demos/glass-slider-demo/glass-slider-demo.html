@@ -1,3 +1,13 @@
 <div class="stage">
-  <lenzi-glass-slider label="Volume" [value]="value()" (valueChange)="set($event)" [step]="5" [valueText]="value() + ' %'" />
+  <lenzi-glass-slider
+    label="Volume"
+    [value]="value()"
+    (valueChange)="set($event)"
+    [step]="5"
+    [valueText]="value() + ' %'"
+    [track]="values()['track'] === 'wave' ? 'wave' : 'line'"
+    [waveMoving]="values()['waveMoving'] !== false"
+    [thumb]="shape(values()['thumb'])"
+    [lens]="shape(values()['lens'])"
+  />
 </div>

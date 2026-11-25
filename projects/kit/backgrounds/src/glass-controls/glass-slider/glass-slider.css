@@ -44,37 +44,147 @@
   background-color: var(--mat-sys-primary);
 }
 
-/* One thumb, always glass under a white fill (kube.io's: 90 by 60, at rest 0.6 of that, dragged 1, the fill 1 to 0.1). */
-.thumb {
+/* The wave (track="wave"): the fill shows through a wave of one length, repeated and flowing along; the rest of the
+   rail a line as thick as the wave's. */
+.rail.wave {
+  height: var(--lenzi-wave-height);
+  overflow: visible;
+  border-radius: 0;
+  background: none;
+}
+
+.rail.wave .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--lenzi-slider-at) * 100%);
+  mask: var(--lenzi-wave) 0 50% / var(--lenzi-wave-length) var(--lenzi-wave-height) repeat-x;
+  animation: lenzi-slider-wave 1.4s linear infinite;
+}
+
+.rail.wave.still .fill {
+  animation: none;
+}
+
+.rail.wave .rest {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: calc(var(--lenzi-slider-at) * 100% + 6px);
+  height: 4px;
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 22%, transparent);
+  transform: translateY(-50%);
+}
+
+@keyframes lenzi-slider-wave {
+  to {
+    mask-position: var(--lenzi-wave-length) 50%;
+  }
+}
+
+/* The thumbs: a solid one, and one of Liquid Glass shown while it is dragged; each the shape the page chose (the class
+   thumb-… and lens-…). Sizes: the solid capsule 38 × 24 (Apple's), circle 24, bar 6 × 30 (Android's); the glass
+   larger: capsule 63 × 40 (kube.io's: 1/0.6 of the solid one), circle 44, bar 24 × 48. */
+.knob,
+.lens {
   position: absolute;
   top: 50%;
   left: calc(var(--lenzi-slider-at) * 100%);
-  width: calc(var(--lenzi-slider-thumb-width) / 0.6);
-  height: calc(var(--lenzi-slider-thumb-height) / 0.6);
-  border-radius: calc(var(--lenzi-slider-thumb-height) / 1.2);
-  background-color: rgb(var(--lenzi-glass-thumb) / 1);
-  box-shadow: 0 3px 14px rgb(0 0 0 / 0.1);
-  transform: translate(-50%, -50%) scale(0.6);
-  /* where the filter does not bend (not Chromium): a light blur */
-  backdrop-filter: blur(1.5px);
   pointer-events: none;
-  transition:
-    transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
-    background-color 180ms ease;
 }
 
-.track:focus-visible .thumb {
+.knob {
+  width: var(--knob-width);
+  height: var(--knob-height);
+  border-radius: var(--knob-radius);
+  background-color: rgb(var(--lenzi-glass-thumb) / 1);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  transform: translate(-50%, -50%);
+  transition:
+    opacity 140ms ease,
+    transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1);
+}
+
+.lens {
+  width: var(--lens-width);
+  height: var(--lens-height);
+  border-radius: var(--lens-radius);
+  background-color: rgb(var(--lenzi-glass-thumb) / 0.1);
+  box-shadow:
+    0 3px 14px rgb(0 0 0 / 0.12),
+    inset 2px 5px 16px rgb(0 0 0 / 0.08),
+    inset -2px -5px 16px rgb(255 255 255 / 0.08);
+  /* where the filter does not bend (not Chromium): a light blur */
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  transition:
+    opacity 140ms ease,
+    transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1);
+}
+
+.thumb-capsule {
+  --knob-width: var(--lenzi-slider-thumb-width);
+  --knob-height: var(--lenzi-slider-thumb-height);
+  --knob-radius: calc(var(--lenzi-slider-thumb-height) / 2);
+}
+
+.thumb-circle {
+  --knob-width: 24px;
+  --knob-height: 24px;
+  --knob-radius: 50%;
+}
+
+.thumb-bar {
+  --knob-width: 6px;
+  --knob-height: 30px;
+  --knob-radius: 3px;
+}
+
+.lens-capsule {
+  --lens-width: calc(var(--lenzi-slider-thumb-width) / 0.6);
+  --lens-height: calc(var(--lenzi-slider-thumb-height) / 0.6);
+  --lens-radius: calc(var(--lenzi-slider-thumb-height) / 1.2);
+}
+
+.lens-circle {
+  --lens-width: 44px;
+  --lens-height: 44px;
+  --lens-radius: 50%;
+}
+
+.lens-bar {
+  --lens-width: 24px;
+  --lens-height: 48px;
+  --lens-radius: 12px;
+}
+
+.thumb-circle .knob,
+.lens-circle .lens {
+  corner-shape: round;
+}
+
+.track:focus-visible .knob {
   outline: var(--lenzi-border-focus) solid var(--mat-sys-primary);
   outline-offset: 2px;
 }
 
-.active .thumb {
-  background-color: rgb(var(--lenzi-glass-thumb) / 0.1);
+/* dragged: the solid thumb gives way to the glass one */
+.active .knob {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.4);
+}
+
+.active .lens {
+  opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .thumb {
+  .knob,
+  .lens,
+  .rail.wave .fill {
     transition: none;
+    animation: none;
   }
 }
