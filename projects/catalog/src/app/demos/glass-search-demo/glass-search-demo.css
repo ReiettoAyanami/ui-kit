@@ -17,3 +17,8 @@
     var(--mat-sys-surface-container-high) 28px 42px
   );
 }
+
+/* a search field takes the width it is given: here a column's */
+lenzi-glass-search {
+  width: min(100%, 420px);
+}
