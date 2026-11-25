@@ -21,6 +21,8 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
   pick each shift's colour with `LenziColorPicker`). Never a status colour, never a colour written in the code.
 - **A second fact has its own colour's dot** before it (`detailColor`), when it is a thing with a colour (an
   on-call).
+- **What has no short code is an icon** (`icon`: a holiday, a sick day), never a word cut with "…"; its words are
+  in `label` (lenzi, 2026-11-25: ferie, permesso, malattia in the shifts app).
 - **A cell that breaks a rule is marked** (lenzi, 2026-11-25: "fai apparire gli errori nella scheda della griglia"):
   its tag outlined in `--lenzi-status-bad`, a "!" at its corner, the rule in its tooltip and in what a screen reader
   hears. The page lists the same errors under the grid, in words.
@@ -43,7 +45,7 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
 | input | `emptyLabel` | `string` | `'Empty'` (what a screen reader hears for an empty cell) |
 | output | `picked` | `LenziSchedulePick` (`{ row, day, cell }`) | |
 
-`LenziScheduleCell`: `{ text, detail?, color?, detailColor?, label?, problem? }`; `label` is what a screen reader hears
+`LenziScheduleCell`: `{ text, icon?, detail?, color?, detailColor?, label?, problem? }`; `label` is what a screen reader hears
 and the tooltip; `problem` the rule it breaks, in words.
 
 ## Example

@@ -1,4 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { Component, ElementRef, afterRenderEffect, booleanAttribute, computed, inject, input, output } from '@angular/core';
 
 /** One column: a day (or any slot) of the span shown. */
@@ -21,6 +22,8 @@ export interface LenziScheduleDay {
 export interface LenziScheduleCell {
   /** The main fact, short: a shift's code. */
   text: string;
+  /** A Material icon in place of the text, for what has no short code (a holiday); `label` says it in words. */
+  icon?: string | null;
   /** A second fact under it, smaller: an on-call. */
   detail?: string | null;
   /** The colour of the cell: the colour of what it says (its identity colour, or the one the user chose for it); none: a neutral cell. */
@@ -60,7 +63,7 @@ export interface LenziSchedulePick {
  */
 @Component({
   selector: 'lenzi-schedule-grid',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, MatIconModule],
   templateUrl: './schedule-grid.html',
   styleUrl: './schedule-grid.css',
 })

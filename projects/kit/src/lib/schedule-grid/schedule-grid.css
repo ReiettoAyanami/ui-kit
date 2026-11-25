@@ -241,3 +241,10 @@ td.problem .tag {
   font-weight: 700;
   line-height: 1;
 }
+
+.tag-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  color: var(--mat-sys-on-surface-variant);
+}

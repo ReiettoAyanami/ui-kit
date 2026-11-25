@@ -85,6 +85,15 @@ describe('LenziScheduleGrid', () => {
     expect(element.querySelectorAll('.problem-mark').length).toBe(1);
   });
 
+  it('shows an icon in place of the text when the cell has one, its words still for a screen reader', () => {
+    const away: LenziScheduleRow[] = [{ id: 'anna', name: 'Anna', cells: { '2026-01-02': { text: 'Holiday', icon: 'beach_access', label: 'Holiday' } } }];
+    const { element } = grid({ rows: away, editable: true });
+    const tag = element.querySelector('tbody .tag')!;
+    expect(tag.querySelector('mat-icon')?.textContent?.trim()).toBe('beach_access');
+    expect(tag.querySelector('.tag-text')).toBeNull();
+    expect(element.querySelector('tbody button')?.getAttribute('aria-label')).toBe('Anna, Fri 2: Holiday');
+  });
+
   it('makes the row of the person looking stand out', () => {
     const { element } = grid({ highlight: 'bruno' });
     const highlighted = Array.from(element.querySelectorAll('tbody tr')).map((tr) => tr.classList.contains('highlight'));

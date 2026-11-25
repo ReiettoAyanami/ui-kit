@@ -8,6 +8,7 @@
 - A rule broken: the API says which days (never check rules in the browser); give the cell `problem` in words, and
   list the same problems under the grid.
 - Two facts in a cell: `text` and `detail`, never joined into one string.
+- A word too long for a cell ("Malattia"): an `icon`, with the word in `label` (and in `text`, for the code that reads it).
 - `label` of a cell: the whole words a screen reader needs ("Shift T1, on call RS"); `emptyLabel` in the app's
   language.
 - `editable` + `(picked)` → open a form with `LenziDialogs`; save through the API; give the grid the new rows. Never

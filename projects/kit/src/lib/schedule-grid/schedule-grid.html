@@ -55,9 +55,13 @@
 
 <!-- A cell's tag: the code on top, the second fact under it with its own colour's dot; a mark when it breaks a rule. -->
 <ng-template #tag let-cell>
-  @if (cell?.text) {
+  @if (cell?.text || cell?.icon) {
     <span class="tag" [class.toned]="!!cell.color" [style.--lenzi-schedule-tone]="cell.color ?? null">
-      <span class="tag-text">{{ cell.text }}</span>
+      @if (cell.icon) {
+        <mat-icon class="tag-icon" aria-hidden="true">{{ cell.icon }}</mat-icon>
+      } @else {
+        <span class="tag-text">{{ cell.text }}</span>
+      }
       @if (cell.detail) {
         <span class="tag-detail">
           @if (cell.detailColor) {
