@@ -16,7 +16,7 @@ export interface NgAddOptions {
 export const LENZI_STYLES = ['node_modules/@lenzi/ui-kit/styles/kit.scss', 'node_modules/@lenzi/ui-kit/styles/fonts.css'];
 
 /** What the kit needs next to it in every app (the charts' and three's are added by the app that uses them). */
-const PEERS = ['@angular/cdk', '@angular/material', '@fontsource/roboto-mono', 'material-icons'];
+const PEERS = ['@angular/cdk', '@angular/material', '@fontsource/roboto', '@fontsource/roboto-mono', 'material-icons'];
 
 /** The versions the kit asks for, from its own package.json (installed in the app's node_modules). */
 function peerVersions(tree: Tree): Record<string, string> {
@@ -25,6 +25,7 @@ function peerVersions(tree: Tree): Record<string, string> {
   const fallback: Record<string, string> = {
     '@angular/cdk': '^21.2.0',
     '@angular/material': '^21.2.0',
+    '@fontsource/roboto': '^5.3.0',
     '@fontsource/roboto-mono': '^5.3.0',
     'material-icons': '^1.13.14',
   };

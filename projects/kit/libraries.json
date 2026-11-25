@@ -79,12 +79,24 @@
           }
         },
         {
+          "name": "Roboto (Fontsource)",
+          "package": "@fontsource/roboto",
+          "url": "https://fontsource.org/fonts/roboto",
+          "role": "The interface's font, bundled with every app (works offline, under a strict CSP).",
+          "rules": [
+            "The interface's one font (lenzi, 2026-11-25: \"il font proviamo roboto perfavore. così da non andare in contro ad apple\"); weights 400, 500, 700 and italic; through styles/fonts.css."
+          ],
+          "versions": {
+            "kit": "5.3.0"
+          }
+        },
+        {
           "name": "Roboto Mono (Fontsource)",
           "package": "@fontsource/roboto-mono",
           "url": "https://fontsource.org/fonts/roboto-mono",
-          "role": "The one font of every app, bundled with it (works offline, under a strict CSP).",
+          "role": "The font of code (the catalog's editors), bundled.",
           "rules": [
-            "One font for everything (lenzi, 2026-10-02: \"Usa roboto mono per tutto\"); weights 400, 500, 700 and italic; through styles/fonts.css."
+            "Code only, since 2026-11-25 (the interface was all Roboto Mono from 2026-10-02: \"Usa roboto mono per tutto\"); weights 400, 500, 700 and italic; through styles/fonts.css."
           ],
           "versions": {
             "kit": "5.3.0",

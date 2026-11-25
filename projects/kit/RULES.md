@@ -33,10 +33,9 @@ the rule says what, the variable says how much.
 
 ## Typography
 
-- **One font for the interface: Apple's SF** (lenzi, 2026-11-25: "proviamo ad usare i font di apple per l'interfaccia";
-  until then Roboto Mono, 2026-10-02): the system's own on Apple's devices, by its names where it is installed, the
-  system's font elsewhere (Segoe UI, Roboto). **Never bundled**: Apple's licence lets SF be used only for Apple's
-  platforms. Code stays in Roboto Mono, bundled (`styles/fonts.css`).
+- **One font for the interface: Roboto** (lenzi, 2026-11-25: "il font proviamo roboto perfavore. così da non andare in
+  contro ad apple"; Roboto Mono for everything from 2026-10-02), bundled with the app (`styles/fonts.css`). Code in
+  Roboto Mono, bundled too. Never Apple's SF: its licence lets it be used only for Apple's platforms.
 - **Bold (700)** for display, headline, title and label styles: titles, buttons, chips, tabs, toggles,
   menus, the drawer's entries, the names of figures and of table rows. **Values regular.**
 - Material's sizes, untouched.
@@ -64,10 +63,17 @@ the rule says what, the variable says how much.
 - **Liquid Glass is another material** (lenzi, 2026-11-19: "quasi come il liquid glass di IOS ... diverso dal classico
   vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo"): `lenziLiquidGlass`, clear, it bends what is behind it
   near its curved edge, and has no border, only a rim of light on its very edge. Chromium only bends.
-- **An app may be Liquid Glass** (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass"; then "Diminuisci un
-  po' le cose che usano sto liquidglass e rendile solide"): `provideLenziLiquidGlass()`: what floats over the page (bar,
-  drawer, windows, menus, a bar of actions) is Liquid Glass keeping `--lenzi-liquid-tint` of the page's colour; the
-  page's surfaces stay solid. The rims light up near the pointer and the boids.
+- **An app may be Liquid Glass, Apple's way** (lenzi, 2026-11-25: "usa le regole di Apple per capire dove applicarlo e
+  come in modo ottimale"; Apple's Human Interface Guidelines, Materials and Color): `provideLenziLiquidGlass()`.
+  - **Only the layer of navigation and controls that floats over the content** ("a distinct functional layer for
+    controls and navigation elements"): the top bar, the drawer, windows, menus and select panels, the "+", a bar of
+    actions (`.lenzi-floating`). **Never the content** ("Don't use Liquid Glass in the content layer"): cards, tables,
+    grids, a page's panels stay solid. **Sparingly** ("Use Liquid Glass effects sparingly").
+  - **The regular variant**, which blurs and darkens what is behind to read on (`--lenzi-liquid-tint` 60%, blur 5 px);
+    **larger glass more opaque** (the drawer, windows: `--lenzi-liquid-tint-large`, 75%). The clear variant only over
+    photos and videos, with a 35% dark layer.
+  - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
+  - **Its rim lives**: lit near the pointer, and by a flock's boids behind it.
 - **Reduce transparency** (`LenziAppearance`, and the system's own `prefers-reduced-transparency`) makes
   every surface solid again.
 

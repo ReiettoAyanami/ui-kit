@@ -74,25 +74,26 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 
 ## An app of Liquid Glass
 
-`provideLenziLiquidGlass(options?)` (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass"; then "Diminuisci un
-po' le cose che usano sto liquidglass e rendile solide"): what floats over the page is Liquid Glass, as it comes and goes
-(`LenziLiquidEverywhere`): the top bar and the drawer (`LenziAppShell`), dialogs, menus, the panels of selects and
-autocompletes, and what the app marks `.lenzi-floating` (a bar of actions). The page's own surfaces stay solid; `{ pages:
-true }` makes them glass too (Material's cards, `.lenzi-surface`: the schedule grid's and the data table's boxes, an
-app's own panels). `LenziLiquidSurface` is one glass, the engine the directive uses too.
+`provideLenziLiquidGlass(options?)`, Apple's way (lenzi, 2026-11-25: "usa le regole di Apple per capire dove applicarlo e
+come in modo ottimale"; the Human Interface Guidelines, Materials and Color, read on 2026-11-25):
 
-- **Readable first**: each surface keeps `--lenzi-liquid-tint` (42%) of the page's colour, and a little more blur than
-  a single window (`LIQUID_EVERYWHERE_SETTINGS`: bezel 18, thickness 40, blur 3); a bezel is never wider than a third
-  of the surface's smaller side.
-- **No fill, no border of its own**: a kit or Material surface keeps its border's width (nothing moves), not its
-  colour; a `.lenzi-surface` of the app keeps its border, which may say something (today, a rule broken).
-- **Tables and grids**: their cells clear, the parts that stay in place (header, names) a frosted strip the cells
-  slide under.
-- **What it bends is the page under it**: the content scrolling under the bar, the page under a window; a scene or a
-  picture behind the pages gives it more to bend.
-- **One frame loop** for all of them (the rims); a surface's filter is drawn again when it changes size.
-- **Reduce transparency** (`LenziAppearance`, or the system's wish) turns it all off: the kit's frosted glass again.
-- Snackbars and tooltips stay frosted glass: small and gone in a moment.
+- **The floating layer of navigation and controls only** ("a distinct functional layer for controls and navigation
+  elements"): the top bar and the drawer (`LenziAppShell`), dialogs, menus, the panels of selects and autocompletes, the
+  floating "+" (`LenziAddButton`), and what the app marks `.lenzi-floating` (a bar of actions). `LENZI_LIQUID_SURFACES`.
+- **Never the content** ("Don't use Liquid Glass in the content layer"): cards, tables, grids, a page's panels stay solid
+  (`{ pages: true }` would make them glass too: only for a page that is itself a picture).
+- **Sparingly** ("Use Liquid Glass effects sparingly"): what it bends is the content scrolling under it.
+- **The regular variant**: it "blurs and adjusts the luminosity of background content to maintain legibility": a tint
+  of the page's colour (`--lenzi-liquid-tint`, 60%) and 5 px of blur (`LIQUID_EVERYWHERE_SETTINGS`; lenzi: "più scura e
+  leggermente più blurrata"). **Larger glass more opaque** ("more opaque in larger elements like sidebars"): the drawer
+  and the windows, `--lenzi-liquid-tint-large` (75%). Apple's clear variant is for what floats over photos and videos,
+  with a 35% dark layer: not used by the kit's surfaces.
+- **No colour of its own**; the primary action alone is coloured glass ("For primary actions, color the background"):
+  the "+" keeps its accent.
+- **Its rim lives**: near the pointer and the boids (above).
+- A kit or Material surface keeps its border's width, not its colour; a bezel is never wider than a third of the
+  surface's smaller side. Snackbars and tooltips stay frosted glass. **Reduce transparency** turns it all off.
+- `LenziLiquidSurface` is one glass, the engine the directive uses too.
 
 ## The blobs' liquid glass
 

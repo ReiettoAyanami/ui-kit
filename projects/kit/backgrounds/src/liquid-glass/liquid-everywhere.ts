@@ -11,9 +11,11 @@ import { LenziSights } from '../sights/sights';
 import { LIQUID_GLASS_SETTINGS, LenziLiquidGlassSettings, LenziLiquidSurface, refracts } from './liquid-surface';
 
 /**
- * What floats over the page, Liquid Glass by default (lenzi, 2026-11-25: "Diminuisci un po' le cose che usano sto
- * liquidglass e rendile solide"): the top bar and the drawer, dialogs, menus and the panels of selects and
- * autocompletes, and what the app marks as floating (`.lenzi-floating`: a bar of actions over the page).
+ * Liquid Glass is the layer of navigation and controls that floats over the content, never the content (Apple's Human
+ * Interface Guidelines, Materials: "a distinct functional layer for controls and navigation elements"; "Don't use Liquid
+ * Glass in the content layer"; "Use Liquid Glass effects sparingly"; lenzi, 2026-11-25: "usa le regole di Apple per
+ * capire dove applicarlo"): the top bar and the drawer, dialogs, menus and the panels of selects and autocompletes, the
+ * floating "+" (`LenziAddButton`), and what the app marks as floating (`.lenzi-floating`: a bar of actions).
  */
 export const LENZI_LIQUID_SURFACES: readonly string[] = [
   '.lenzi-shell-bar',
@@ -22,14 +24,19 @@ export const LENZI_LIQUID_SURFACES: readonly string[] = [
   '.mat-mdc-menu-panel',
   '.mat-mdc-select-panel',
   '.mat-mdc-autocomplete-panel',
+  'lenzi-add-button .mat-mdc-fab',
   '.lenzi-floating',
 ];
 
 /** The surfaces of the page itself, glass too only when asked (`pages: true`): cards, the grid's and the table's boxes. */
 export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '.lenzi-surface'];
 
-/** The optics of the whole app's glass: a narrower bezel than a single window's, and a little more blur to read on. */
-export const LIQUID_EVERYWHERE_SETTINGS: LenziLiquidGlassSettings = { ...LIQUID_GLASS_SETTINGS, bezel: 18, thickness: 40, blur: 3 };
+/**
+ * The optics of the app's glass: Apple's "regular" variant, which "blurs and adjusts the luminosity of background
+ * content to maintain legibility" (the clear one is only for what floats over photos and videos): a narrower bezel than
+ * a single window's, more blur (lenzi, 2026-11-25: "più scura e leggermente più blurrata").
+ */
+export const LIQUID_EVERYWHERE_SETTINGS: LenziLiquidGlassSettings = { ...LIQUID_GLASS_SETTINGS, bezel: 18, thickness: 40, blur: 5 };
 
 export interface LenziLiquidGlassOptions {
   /** The surfaces to turn into glass; what floats over the page by default. */

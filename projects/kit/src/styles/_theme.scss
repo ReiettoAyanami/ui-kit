@@ -1,16 +1,14 @@
 // The kit's Material 3 theme (RULES.md, "Theme"): dark only, Material's violet palette for the
-// accents and cyan for the tertiary, one font (Apple's, the system's elsewhere) with bold labels and titles. The colours
+// accents and cyan for the tertiary, one font (Roboto) with bold labels and titles. The colours
 // people pick are global variables too (tokens.css: "Accents" with the palette's own values, and the
 // neutral "Surfaces"), so the catalog's Variables page changes them; this palette is where the other
 // roles come from. Use it through kit.scss, which also sets the page's colours.
 @use 'sass:list';
 @use '@angular/material' as mat;
 
-/// The interface's font (lenzi, 2026-11-25: "proviamo ad usare i font di apple per l'interfaccia"; before, Roboto Mono
-/// for everything). Apple's SF where it is: on Apple's devices the browser's own (`-apple-system`), elsewhere when it is
-/// installed (by its names). Never bundled: Apple's licence lets it be used only for Apple's platforms. Without it, the
-/// system's own (Segoe UI on Windows, Roboto on Android).
-$font: (-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF Pro', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+/// The interface's font (lenzi, 2026-11-25: "il font proviamo roboto perfavore. così da non andare in contro ad apple";
+/// Roboto Mono for everything from 2026-10-02, Apple's SF for an afternoon): Roboto, bundled (styles/fonts.css).
+$font: ('Roboto', system-ui, sans-serif);
 
 /// Material's theme for the kit. Include it once, on `html`.
 @mixin theme() {
@@ -21,8 +19,8 @@ $font: (-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'SF 
         primary: mat.$violet-palette,
         tertiary: mat.$cyan-palette,
       ),
-      // One font for the interface (lenzi, 2026-11-25: "proviamo ad usare i font di apple per l'interfaccia"). The
-      // hierarchy is Material's sizes and weights (400, 500, 700).
+      // One font for the interface (lenzi, 2026-11-25: "il font proviamo roboto"). The hierarchy is Material's sizes
+      // and weights (400, 500, 700).
       typography: (
         plain-family: $font,
         brand-family: $font,

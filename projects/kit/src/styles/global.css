@@ -537,6 +537,17 @@ html {
   border-color: transparent;
 }
 
+/* Larger glass is more opaque, to read on (Apple, Color: Liquid Glass "appears more opaque in larger elements like
+   sidebars to preserve legibility"): the drawer and the windows keep --lenzi-liquid-tint-large. */
+.lenzi-liquid-everywhere.lenzi-liquid-everywhere.lenzi-liquid-everywhere:is(.lenzi-shell-drawer, .mat-mdc-dialog-surface) {
+  background: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint-large), transparent);
+}
+
+/* The primary action is coloured glass (Apple, Color: "For primary actions, color the background"), the one that is. */
+.lenzi-liquid-everywhere.lenzi-liquid-everywhere.lenzi-liquid-everywhere.mat-mdc-fab {
+  background: color-mix(in srgb, var(--mat-sys-primary-container) var(--lenzi-liquid-tint-large), transparent);
+}
+
 /* a card's outline is drawn by Material with a token */
 .lenzi-liquid-everywhere.mat-mdc-card {
   --mat-card-outlined-outline-color: transparent;
