@@ -63,6 +63,9 @@
             const target = pick(action.key);
             const view = target?.ownerDocument.defaultView;
             target?.dispatchEvent(new view.KeyboardEvent('keydown', { key: action.name, keyCode: action.name === 'Escape' ? 27 : 0, shiftKey: !!action.shift, bubbles: true, cancelable: true }));
+          } else if (action.classed) {
+            // {"classed": "selector", "add": "moving"}: a class put on it, to see a state that lasts a moment
+            pick(action.classed)?.classList.add(action.add);
           } else if (action.hold) {
             // {"hold": "selector", "x": 0.2, "to": [0.6, 0.5]}: a pointer pressed (and moved), not let go: what a held
             // control shows (a glass thumb)

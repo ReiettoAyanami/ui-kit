@@ -88,7 +88,9 @@ come in modo ottimale"; the Human Interface Guidelines, Materials and Color, rea
 - **The default optics, the edge in the colours under it** (lenzi, 2026-11-25: "guarda come i bordi prendono il colore
   di quello che sta sotto"; "per il vetro tieni i valori dafault di apple per ora"): kube.io's filter chain: what is
   behind blurred a little (0.2) and bent (refraction 1); on the edge, where the specular map says, a much more saturated
-  copy of it (`specularSaturation` 6) and over it a white highlight (`specularOpacity` 0.5); a light tint of the page's
+  copy of it (`specularSaturation` 6) and over it a white highlight (`specularOpacity` 0.5). The specular map is
+  kube.io's, measured from its maps: a line about 1.5 px wide on the very edge, lit as the edge lines up with the light
+  (`lightAngle`, -60°), on both sides alike (cos²), dark across it; a light tint of the page's
   colour to read on (`--lenzi-liquid-tint`, 30%). **Larger glass more opaque** ("more opaque in larger elements like
   sidebars"): the drawer and the windows, `--lenzi-liquid-tint-large` (50%). Apple's clear variant is for what floats over photos and videos,
   with a 35% dark layer: not used by the kit's surfaces.

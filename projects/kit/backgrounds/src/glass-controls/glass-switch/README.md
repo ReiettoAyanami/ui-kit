@@ -12,6 +12,9 @@
 - **A tap switches it; a drag puts it where it is let go**; Space and Enter switch it.
 - **A `role="switch"`** with its name and `aria-checked`.
 - Chromium bends; elsewhere the glass is blurred only.
+- **Built as kube.io's** (read from its code): one thumb, always glass under a white fill (`--lenzi-glass-thumb`);
+  held, the fill goes to 10%, the thumb grows from 0.65 to 0.9 and bends from 0.4 to 0.9 of its bending; past an end
+  it stretches a little.
 
 ## API
 
@@ -30,7 +33,7 @@
 ## Variables
 
 `--mat-sys-primary`, `--mat-sys-inverse-surface`, `--lenzi-border-focus`; the glass: `LENS_SETTINGS` (`glass-controls/lens.ts`:
-a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6).
+a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6), `LENS_BENDING` (0.4 at rest, 0.9 held).
 
 ## Origin
 

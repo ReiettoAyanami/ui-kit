@@ -10,6 +10,8 @@
   alla prossima opzione diventando vetro e tutto").
 - **On its way the capsule is Liquid Glass**, larger, bending the words under it, and settles solid.
 - The arrow keys move it, round. A `radiogroup` of `radio`s.
+- **Built as kube.io's switch**: the capsule is always glass under a solid fill (`--lenzi-glass-pill`); on its way
+  the fill goes to 10%, it grows (1.18) and bends more.
 
 ## API
 
@@ -31,7 +33,7 @@ Sizes: `--lenzi-segment-width` (96 px a choice), `--lenzi-segment-height` (36 px
 ## Variables
 
 `--mat-sys-primary`, `--mat-sys-inverse-surface`, `--lenzi-border-focus`; the glass: `LENS_SETTINGS` (`glass-controls/lens.ts`:
-a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6).
+a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6), `LENS_BENDING` (0.4 at rest, 0.9 held).
 
 ## Origin
 

@@ -30,12 +30,19 @@ describe('liquidGlassMaps', () => {
     expect(maps.scale).toBeGreaterThan(0);
   });
 
-  it('lights only the very edge, most where it faces the light (top left), none in the middle', () => {
+  it("lights a thin line on the very edge, kube.io's: along the light (both sides alike), dark across it, none inside", () => {
+    // the light from -60 degrees: the top and bottom edges face it (cos 30 degrees), the left and right ones barely (cos 60)
     const maps = liquidGlassMaps(SHAPE);
     const alpha = (x: number, y: number) => maps.specular[(y * maps.width + x) * 4 + 3]!;
+    const colour = (x: number, y: number) => maps.specular[(y * maps.width + x) * 4]!;
     expect(alpha(100, 60)).toBe(0);
-    expect(alpha(100, 0)).toBeGreaterThan(alpha(100, 119));
-    expect(alpha(100, 10)).toBe(0);
+    expect(alpha(100, 1)).toBeGreaterThan(100);
+    expect(Math.abs(alpha(100, 1) - alpha(100, 118))).toBeLessThan(8);
+    expect(alpha(1, 60)).toBeLessThan(alpha(100, 1) / 2);
+    // a line about two pixels wide
+    expect(alpha(100, 4)).toBe(0);
+    // its colour the glint, its alpha the glint squared
+    expect(Math.abs(colour(100, 1) - Math.round(255 * Math.sqrt(alpha(100, 1) / 255)))).toBeLessThan(3);
   });
 
   it('fades its rim across the pixels the round corners cross, no staircase (antialiased)', () => {
@@ -81,8 +88,11 @@ describe('liquidGlassOutlineMaps', () => {
 
   it('lights its own edge, from where the light is, and nothing in the middle', () => {
     const alpha = (x: number, y: number) => maps.specular[at(x, y) + 3]!;
+    // the light from the top: the top and the bottom lit alike, the sides dark
     expect(alpha(50, 50)).toBe(0);
-    expect(alpha(50, 11)).toBeGreaterThan(alpha(50, 88));
+    expect(alpha(50, 11)).toBeGreaterThan(100);
+    expect(Math.abs(alpha(50, 11) - alpha(50, 88))).toBeLessThan(12);
+    expect(alpha(11, 50)).toBeLessThan(10);
   });
 });
 

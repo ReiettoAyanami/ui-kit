@@ -36,7 +36,7 @@ export interface LenziLiquidGlassMaps {
   displacement: Uint8ClampedArray;
   /** The largest displacement, px: feDisplacementMap's scale. */
   scale: number;
-  /** RGBA: white, its alpha the rim's light from `lightAngle`. */
+  /** RGBA: kube.io's specular map: a thin line on the edge, its alpha the glint squared, its colour the glint. */
   specular: Uint8ClampedArray;
   /**
    * The rim's light from each of RIM_ANGLES (degrees) and, last, from all round (`angle` null): what the glass shows
@@ -270,12 +270,14 @@ function mapsOf(field: DistanceField, bezel: number, optics: Optics): LenziLiqui
     // the rim: light only on the very edge, strongest where the edge faces the light (and a little opposite)
     const facing = nx * lx + ny * ly;
     const rim = Math.pow(Math.max(0, 1 - d / Math.min(bezel, 6)), 2);
-    // the whole edge a little, most where it faces the light, much on the other side too (kube.io's, Apple's)
-    const glance = 0.3 + 0.7 * Math.max(0, facing) + 0.45 * Math.max(0, -facing);
+    // The specular map, kube.io's measured (its maps, 2026-11-25): a line about 1.5 px wide on the very edge, brightest
+    // 1 px in; lit as the edge lines up with the light, on both sides alike (|cos|), dark where it is across it.
+    const line = Math.max(0, 1 - ((d - 1) / 1.4) ** 2);
+    const glint = line * Math.abs(facing);
     return {
       sx: -nx * shift,
       sy: -ny * shift,
-      specular: rim * glance,
+      specular: glint * glint,
       rims: directions.map((direction) => {
         // from one side: lit where the edge faces it; from all round (null): the whole rim, evenly
         const toward = nx * direction.x + ny * direction.y;
@@ -293,7 +295,6 @@ function mapsOf(field: DistanceField, bezel: number, optics: Optics): LenziLiqui
       const at = (y * width + x) * 4;
       displacement[at + 2] = 128;
       displacement[at + 3] = 255;
-      specular[at] = specular[at + 1] = specular[at + 2] = 255;
       for (const rim of rims) rim.data[at] = rim.data[at + 1] = rim.data[at + 2] = 255;
       const d = -distance(px, py);
       const edge = Math.abs(d) < 1;
@@ -312,6 +313,8 @@ function mapsOf(field: DistanceField, bezel: number, optics: Optics): LenziLiqui
       const n = points.length;
       displacement[at] = Math.round(128 + (sx / n) * 127);
       displacement[at + 1] = Math.round(128 + (sy / n) * 127);
+      // kube.io's: alpha the glint squared, the colour the glint (grey where it is faint, white where it is bright)
+      specular[at] = specular[at + 1] = specular[at + 2] = Math.round(255 * Math.sqrt(lit / n));
       specular[at + 3] = Math.round((255 * lit) / n);
       rimLight.forEach((value, k) => (rims[k]!.data[at + 3] = Math.round((255 * value) / n)));
     }

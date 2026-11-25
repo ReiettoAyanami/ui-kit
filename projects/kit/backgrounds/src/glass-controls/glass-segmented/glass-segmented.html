@@ -9,11 +9,10 @@
   [style.--lenzi-segment-at]="index()"
   (keydown)="key($event)"
 >
-  <span class="pill" aria-hidden="true"></span>
   @for (option of options(); track $index; let i = $index) {
     <button type="button" role="radio" class="segment" tabindex="-1" [class.chosen]="i === index()" [attr.aria-checked]="i === index()" [disabled]="disabled()" (click)="pick(i)">
       {{ option.label }}
     </button>
   }
-  <span #lens class="lens lenzi-liquid-glass" aria-hidden="true"></span>
+  <span #pill class="pill" aria-hidden="true"></span>
 </div>

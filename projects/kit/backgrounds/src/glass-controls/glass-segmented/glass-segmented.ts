@@ -1,6 +1,6 @@
-import { Component, ElementRef, booleanAttribute, computed, input, model, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, booleanAttribute, computed, effect, input, model, signal, viewChild } from '@angular/core';
 
-import { glassLens } from '../lens';
+import { LENS_BENDING, glassLens } from '../lens';
 
 /** One choice of a segmented control. */
 export interface LenziGlassOption<T = string> {
@@ -15,9 +15,10 @@ const SETTLE = 380;
 /**
  * Two or more choices side by side, one chosen, the way Apple's segmented control and switch move (lenzi, 2026-11-25:
  * "fammi un selettore triplo con animazione simile/uguale a questo switch. Quindi quando clicchi va alla prossima opzione
- * diventando vetro"): the chosen one sits on a light capsule; a tap on another moves the capsule there, a tap on the
- * chosen one moves it to the next (round to the first); on its way the capsule is Liquid Glass, larger, bending the words
- * under it, and settles solid. The arrow keys move it too.
+ * diventando vetro"): the chosen one sits on a capsule that is always Liquid Glass under a solid fill (kube.io's switch);
+ * a tap on another moves the capsule there, a tap on the chosen one moves it to the next (round to the first); on its way
+ * the fill goes to 10% and the capsule grows and bends more: it is glass over the words, and settles solid. The arrow
+ * keys move it too.
  */
 @Component({
   selector: 'lenzi-glass-segmented',
@@ -37,11 +38,12 @@ export class LenziGlassSegmented<T = string> {
   protected readonly moving = signal(false);
   protected readonly index = computed(() => Math.max(0, this.options().findIndex((o) => o.value === this.value())));
 
-  private readonly lens = viewChild.required<ElementRef<HTMLElement>>('lens');
+  private readonly pill = viewChild.required<ElementRef<HTMLElement>>('pill');
   private settle: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    glassLens(() => this.lens().nativeElement);
+    const lens = glassLens(() => this.pill().nativeElement);
+    effect(() => lens.bending(this.moving() ? LENS_BENDING.held : LENS_BENDING.rest));
   }
 
   /** A tap: another choice, or the next one after the chosen. */

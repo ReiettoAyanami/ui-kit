@@ -9,6 +9,9 @@
   "come quelli di apple").
 - A tap on the rail jumps there; the arrow keys step, Page Up/Down ten steps, Home and End the ends; always on a step,
   inside the ends. A `role="slider"` with its ends, value and `aria-valuetext`.
+- **Built as kube.io's** (read from its code): one thumb, always glass under a white fill (`--lenzi-glass-thumb`);
+  dragged, the fill goes to 10% and the thumb grows from 0.6 to 1: the rail shows through it. A convex bezel,
+  specular 0.4 and 7, no blur.
 
 ## API
 
@@ -29,7 +32,7 @@
 ## Variables
 
 `--mat-sys-primary`, `--mat-sys-inverse-surface`, `--lenzi-border-focus`; the glass: `LENS_SETTINGS` (`glass-controls/lens.ts`:
-a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6).
+a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6), `LENS_BENDING` (0.4 at rest, 0.9 held).
 
 ## Origin
 

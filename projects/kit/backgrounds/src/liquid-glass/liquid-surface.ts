@@ -81,6 +81,9 @@ export class LenziLiquidSurface {
   private readonly id = `lenzi-liquid-glass-${++made}`;
   private svg: SVGSVGElement | null = null;
   private size = '';
+  /** The share of its bending it shows (`bending()`), and the whole of it, px. */
+  private bend = 1;
+  private fullBend = 0;
   /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
   private radius = 0;
   private framesSinceRadius = 0;
@@ -133,6 +136,7 @@ export class LenziLiquidSurface {
     svg.style.position = 'absolute';
     svg.style.pointerEvents = 'none';
     const scale = (maps.scale * Math.max(0, s.refraction)).toFixed(2);
+    this.fullBend = Number(scale);
     const saturation = Math.max(0, s.saturation);
     // kube.io's chain (lenzi, 2026-11-25: "guarda come i bordi prendono il colore di quello che sta sotto"): what is behind,
     // softened and bent; on the edge a much more saturated copy of it, where the specular map says (so the edge takes the
@@ -140,7 +144,7 @@ export class LenziLiquidSurface {
     svg.innerHTML = `<filter id="${this.id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
   <feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0, s.blur)}" result="soft"/>
   <feImage href="${picture(maps.displacement)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="map"/>
-  <feDisplacementMap in="soft" in2="map" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+  <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${(Number(scale) * this.bend).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
   <feColorMatrix in="bent" type="saturate" values="${saturation}" result="refracted"/>
   <feColorMatrix in="bent" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
   <feImage href="${picture(maps.specular)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="specular"/>
@@ -158,6 +162,15 @@ export class LenziLiquidSurface {
       this.svg = svg;
     }
     this.element.style.setProperty('backdrop-filter', `url(#${this.id})`);
+  }
+
+  /**
+   * How much of its bending the glass shows now, 0 to 1 (kube.io's switch: 0.4 at rest, 0.9 while held): changes the
+   * filter's scale only, the maps stay.
+   */
+  bending(share: number): void {
+    this.bend = Math.max(0, share);
+    this.svg?.querySelector('.lenzi-liquid-glass-bend')?.setAttribute('scale', (this.fullBend * this.bend).toFixed(2));
   }
 
   /** Draws the filter again at the next build, even for the same size (a setting changed). */

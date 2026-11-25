@@ -1,15 +1,19 @@
-import { Component, ElementRef, booleanAttribute, computed, input, model, numberAttribute, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, booleanAttribute, computed, effect, input, model, numberAttribute, signal, viewChild } from '@angular/core';
 
-import { glassLens } from '../lens';
+import { LENS_BENDING, LENS_SETTINGS, glassLens } from '../lens';
 
 /** How long the thumb stays glass after it is let go, ms. */
 const SETTLE = 260;
 
+/** kube.io's slider's glass: a convex bezel, specular 0.4 and 7, no blur. */
+const SLIDER_GLASS = { ...LENS_SETTINGS, surface: 'squircle' as const, bezel: 12, thickness: 18, blur: 0, specularOpacity: 0.4, specularSaturation: 7 };
+
 /**
- * A slider the way Apple's is (lenzi, 2026-11-25: "implementa gli slider ... nel kit come quelli di apple"): a thin
- * capsule track filled with the accent up to the value, a light capsule thumb that becomes Liquid Glass while it is
- * dragged, larger, magnifying the track under it, and settles solid. A tap on the track jumps there; the arrow keys step,
- * Page Up/Down by ten steps, Home and End to the ends.
+ * A slider the way Apple's is, built as kube.io's (lenzi, 2026-11-25: "implementa gli slider ... nel kit come quelli di
+ * apple"): a thin capsule rail filled with the accent up to the value; one thumb, always Liquid Glass under a white
+ * fill. Dragged, the fill goes to 10% and the thumb grows (0.6 to 1): you see the rail and its fill through the glass,
+ * its sides bending what is around; let go, it is white again. A tap on the rail jumps there; the arrow keys step, Page
+ * Up/Down by ten steps, Home and End to the ends.
  */
 @Component({
   selector: 'lenzi-glass-slider',
@@ -38,11 +42,12 @@ export class LenziGlassSlider {
   });
 
   private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
-  private readonly lens = viewChild.required<ElementRef<HTMLElement>>('lens');
+  private readonly thumb = viewChild.required<ElementRef<HTMLElement>>('thumb');
   private settle: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    glassLens(() => this.lens().nativeElement);
+    const lens = glassLens(() => this.thumb().nativeElement, SLIDER_GLASS);
+    effect(() => lens.bending(this.active() ? LENS_BENDING.held : LENS_BENDING.rest));
   }
 
   protected down(event: PointerEvent): void {
