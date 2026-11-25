@@ -76,3 +76,14 @@ td {
   background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
   outline: none;
 }
+
+/* Over Liquid Glass (an app made of it, provideLenziLiquidGlass): the box is the glass, the rows clear; the header and
+   the names, which stay in place, a frosted strip the rest slides under. */
+.table-scroll.lenzi-liquid-everywhere {
+  --mat-table-background-color: transparent;
+}
+
+.table-scroll.lenzi-liquid-everywhere .mat-mdc-table-sticky {
+  background-color: color-mix(in srgb, var(--mat-sys-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}

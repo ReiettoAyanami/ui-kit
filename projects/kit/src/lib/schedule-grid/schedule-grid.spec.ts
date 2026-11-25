@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { LenziScheduleDay, LenziSchedulePick, LenziScheduleGrid, LenziScheduleRow } from './schedule-grid';
+import { LenziScheduleDay, LenziSchedulePick, LenziScheduleGrid, LenziScheduleRow, LenziScheduleSelection } from './schedule-grid';
 
 describe('LenziScheduleGrid', () => {
   const days: LenziScheduleDay[] = [
@@ -92,6 +92,60 @@ describe('LenziScheduleGrid', () => {
     expect(tag.querySelector('mat-icon')?.textContent?.trim()).toBe('beach_access');
     expect(tag.querySelector('.tag-text')).toBeNull();
     expect(element.querySelector('tbody button')?.getAttribute('aria-label')).toBe('Anna, Fri 2: Holiday');
+  });
+
+  describe('choosing several cells', () => {
+    function choosing(inputs: Record<string, unknown> = {}) {
+      const made = grid({ editable: true, multiple: true, ...inputs });
+      const picks: LenziSchedulePick[] = [];
+      made.fixture.componentInstance.picked.subscribe((pick) => picks.push(pick));
+      const buttons = Array.from(made.element.querySelectorAll<HTMLButtonElement>('button.slot'));
+      const selection = () => made.fixture.componentInstance.selection() as LenziScheduleSelection | null;
+      return { ...made, picks, buttons, selection };
+    }
+
+    it('chooses from the last cell tapped to a Shift+click, a rectangle of rows and days', () => {
+      const { fixture, element, buttons, picks, selection } = choosing();
+      buttons[0]!.click();
+      buttons[5]!.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+      fixture.detectChanges();
+      expect(picks.length).toBe(1);
+      expect(selection()).toEqual({ rowIds: ['anna', 'bruno'], dayKeys: ['2026-01-02', '2026-01-03', '2026-01-04'] });
+      expect(element.querySelectorAll('td.chosen').length).toBe(6);
+      expect(buttons[3]!.getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('chooses the cells a pointer is dragged over, and the click that ends the drag is not a tap', () => {
+      const { fixture, element, buttons, picks, selection } = choosing();
+      const cells = Array.from(element.querySelectorAll<HTMLElement>('tbody td'));
+      // jsdom has no layout: the cell under the pointer is said here.
+      const doc = document as Document & { elementFromPoint: (x: number, y: number) => Element | null };
+      const before = doc.elementFromPoint;
+      doc.elementFromPoint = () => cells[1]!;
+      buttons[0]!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }));
+      element.querySelector('.grid-scroll')!.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 5, clientY: 5 }));
+      element.querySelector('.grid-scroll')!.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }));
+      buttons[0]!.click();
+      fixture.detectChanges();
+      doc.elementFromPoint = before;
+      expect(selection()).toEqual({ rowIds: ['anna'], dayKeys: ['2026-01-02', '2026-01-03'] });
+      expect(picks.length).toBe(0);
+    });
+
+    it('leaves out the rows that may not be chosen, and lets go with Escape or a plain tap', () => {
+      const { fixture, element, buttons, picks, selection } = choosing({ selectableRows: ['bruno'] });
+      buttons[0]!.click();
+      buttons[5]!.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+      expect(selection()).toEqual({ rowIds: ['bruno'], dayKeys: ['2026-01-02', '2026-01-03', '2026-01-04'] });
+      element.querySelector('.grid-scroll')!.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape' }));
+      fixture.detectChanges();
+      expect(selection()).toBeNull();
+      buttons[3]!.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+      expect(selection()).not.toBeNull();
+      buttons[4]!.click();
+      expect(selection()).toBeNull();
+      expect(picks.map((p) => p.day.key)).toEqual(['2026-01-02', '2026-01-03']);
+    });
   });
 
   it('makes the row of the person looking stand out', () => {

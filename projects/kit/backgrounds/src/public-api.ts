@@ -23,6 +23,8 @@ export * from './glow/light-field';
 export * from './glow/solid';
 export * from './liquid-glass/liquid-glass';
 export * from './liquid-glass/liquid-glass-maps';
+export * from './liquid-glass/liquid-surface';
+export * from './liquid-glass/liquid-everywhere';
 
 // The numbers behind them: shapes, colours, the flock (for an app that draws its own).
 export * from './engine/color';

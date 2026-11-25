@@ -1,6 +1,6 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 
-import { LenziScheduleDay, LenziScheduleGrid, LenziSchedulePick, LenziScheduleRow, identityColor } from '@lenzi/ui-kit';
+import { LenziScheduleDay, LenziScheduleGrid, LenziSchedulePick, LenziScheduleRow, LenziScheduleSelection, identityColor } from '@lenzi/ui-kit';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { Values } from '../../registry';
@@ -51,6 +51,13 @@ export class ScheduleGridDemo {
 
   protected readonly me = computed(() => (this.values()['highlight'] === false ? null : 2));
   protected readonly editable = computed(() => this.values()['editable'] !== false);
+  protected readonly multiple = computed(() => this.values()['multiple'] !== false);
+  protected readonly selection = signal<LenziScheduleSelection | null>(null);
+
+  protected chose(selection: LenziScheduleSelection | null): void {
+    this.selection.set(selection);
+    if (selection) this.events.log(`chose ${selection.rowIds.length * selection.dayKeys.length} cells: ${selection.rowIds.length} people, ${selection.dayKeys.length} days`);
+  }
 
   protected change(pick: LenziSchedulePick): void {
     this.events.log(`${pick.row.name}, ${pick.day.label}: ${pick.cell ? pick.cell.text : 'empty'}`);

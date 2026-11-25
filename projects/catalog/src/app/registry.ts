@@ -812,13 +812,14 @@ usageLanguage: 'html',
     demo: () => import('./demos/schedule-grid-demo/schedule-grid-demo').then((m) => m.ScheduleGridDemo),
     controls: [
       { key: 'editable', label: 'Cells are buttons', type: 'boolean', default: true },
+      { key: 'multiple', label: 'Several cells at once (drag, Shift+click)', type: 'boolean', default: true },
       { key: 'highlight', label: 'The row of the person looking', type: 'boolean', default: true, code: { match: /\[highlight\]/ } },
     ],
     usage: (v) => `<lenzi-schedule-grid
   nameHeader="Person"
   label="Shifts of January"
   [days]="days()"
-  [rows]="rows()"${v['highlight'] ? '\n  [highlight]="me()"' : ''}${v['editable'] ? '\n  editable\n  (picked)="change($event)"' : ''}
+  [rows]="rows()"${v['highlight'] ? '\n  [highlight]="me()"' : ''}${v['editable'] ? '\n  editable\n  (picked)="change($event)"' : ''}${v['multiple'] ? '\n  multiple\n  [(selection)]="selection"' : ''}
 />`,
     usageLanguage: 'html',
     height: 420,

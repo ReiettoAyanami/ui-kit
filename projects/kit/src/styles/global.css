@@ -523,6 +523,25 @@ html {
   backdrop-filter: blur(1.5px) saturate(1.5);
 }
 
+/* An app made of Liquid Glass (provideLenziLiquidGlass; lenzi, 2026-11-25: "qui usiamo liquid glass", "tutta l'app"):
+   every surface it finds (the bar, the drawer, dialogs, menus, cards, .lenzi-surface) keeps --lenzi-liquid-tint of the
+   page's colour to read on, and no fill or border of its own (a kit or Material surface loses its border's colour, not
+   its width: nothing moves). A .lenzi-surface of the app keeps its own border, which may say something. Each class
+   three times: above Material's and the components' own fills. */
+.lenzi-liquid-everywhere.lenzi-liquid-everywhere.lenzi-liquid-everywhere {
+  background: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint), transparent);
+  box-shadow: none;
+}
+
+.lenzi-liquid-everywhere.lenzi-liquid-everywhere.lenzi-liquid-everywhere:not(.lenzi-surface) {
+  border-color: transparent;
+}
+
+/* a card's outline is drawn by Material with a token */
+.lenzi-liquid-everywhere.mat-mdc-card {
+  --mat-card-outlined-outline-color: transparent;
+}
+
 /* Every surface takes only its own light. Custom properties inherit, so a surface with none of its own would
    draw the light of the surface that holds it (lenzi, 2026-11-14: "if i try to move the play button, the
    light moves on multiple surfaces": the cards showed the floor's light, in the floor's coordinates). What

@@ -5,5 +5,8 @@
   [rows]="rows"
   [highlight]="me()"
   [editable]="editable()"
+  [multiple]="multiple()"
+  [selection]="selection()"
+  (selectionChange)="chose($event)"
   (picked)="change($event)"
 />

@@ -1,6 +1,6 @@
 <!-- The grid scrolls sideways inside its box; the names and the days stay in place. -->
-<div class="grid-scroll">
-  <table [attr.aria-label]="label()">
+<div class="grid-scroll lenzi-surface" [class.choosing]="multiple() && editable()" (pointermove)="pointerMove($event)" (pointerup)="pointerUp()" (pointercancel)="pointerUp()" (keydown.escape)="escape()">
+  <table [attr.aria-label]="label()" [attr.aria-multiselectable]="multiple() && editable() ? true : null">
     <thead>
       <tr>
         <th scope="col" class="name">{{ nameHeader() }}</th>
@@ -23,7 +23,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (row of rows(); track row.id) {
+      @for (row of rows(); track row.id; let r = $index) {
         <tr [class.highlight]="row.id === highlight()">
           <th scope="row" class="name">
             <span class="name-line">
@@ -33,11 +33,27 @@
               <span class="name-text">{{ row.name }}</span>
             </span>
           </th>
-          @for (day of days(); track day.key) {
+          @for (day of days(); track day.key; let d = $index) {
             @let cell = cellOf(row, day);
-            <td [class.off]="day.off" [class.today]="day.today" [class.problem]="!!cell?.problem">
+            @let isChosen = chosen().has(row.id + '|' + day.key);
+            <td
+              [attr.data-row]="r"
+              [attr.data-column]="d"
+              [class.off]="day.off"
+              [class.today]="day.today"
+              [class.problem]="!!cell?.problem"
+              [class.chosen]="isChosen"
+            >
               @if (editable()) {
-                <button type="button" class="slot" [attr.aria-label]="labelOf(row, day)" [attr.title]="titleOf(cell)" (click)="pick(row, day)">
+                <button
+                  type="button"
+                  class="slot"
+                  [attr.aria-label]="labelOf(row, day)"
+                  [attr.aria-selected]="multiple() ? isChosen : null"
+                  [attr.title]="titleOf(cell)"
+                  (pointerdown)="pointerDown($event, row, day)"
+                  (click)="pick(row, day, $event)"
+                >
                   <ng-container [ngTemplateOutlet]="tag" [ngTemplateOutletContext]="{ $implicit: cell }" />
                 </button>
               } @else if (cell) {

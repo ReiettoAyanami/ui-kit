@@ -31,6 +31,11 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
   scrolls it: do not hide days to make it fit.
 - **Editable: every cell is a button**, empty ones too, and says which was tapped; the page opens what changes it
   (a dialog with `LenziDialogs`). It never changes a cell by itself.
+- **Several cells at once** (`multiple`; lenzi, 2026-11-25: "permettimi di segnalare più caselle per inserire i turni
+  più facilmente, drag and drop"): a mouse drags over them, a finger holds a cell for a moment then drags (a quick
+  swipe still scrolls the grid), Shift+click goes from the last cell tapped; Escape or a plain tap lets go. Always a
+  rectangle of rows and days; rows outside `selectableRows` are left out. The chosen cells are tinted and outlined in
+  the accent. The page shows what to do with them (a bar with the count and its actions) and opens one form for all.
 
 ## API
 
@@ -43,6 +48,9 @@ second fact under it (an on-call). Days off are shaded, today is marked, the row
 | input | `highlight` | `string \| number \| null` | `null` (a row's id) |
 | input | `editable` | `boolean` | `false` |
 | input | `emptyLabel` | `string` | `'Empty'` (what a screen reader hears for an empty cell) |
+| input | `multiple` | `boolean` | `false` (with `editable`: cells chosen together) |
+| input | `selectableRows` | `(string \| number)[] \| null` | `null` (all rows) |
+| model | `selection` | `LenziScheduleSelection \| null` (`{ rowIds, dayKeys }`) | `null`; `[(selection)]` |
 | output | `picked` | `LenziSchedulePick` (`{ row, day, cell }`) | |
 
 `LenziScheduleCell`: `{ text, icon?, detail?, color?, detailColor?, label?, problem? }`; `label` is what a screen reader hears

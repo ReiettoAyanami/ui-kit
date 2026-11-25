@@ -6,3 +6,6 @@
   the rim is its border.
 - Never `lenziLit` or `lenziSolid` on the same element: one material per element.
 - It bends what is behind it: put it over a scene or a picture. Check it in Chrome; elsewhere it is only blurred.
+- A whole app of it: `provideLenziLiquidGlass()` in the app's providers and a scene behind the shell; mark the app's own
+  panels `.lenzi-surface` (never `lenziLiquidGlass` on each card, never a fill of your own on them). No `lenziGlassPage`
+  then: the surfaces are the glass.

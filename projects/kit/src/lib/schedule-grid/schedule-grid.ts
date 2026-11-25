@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { Component, ElementRef, afterRenderEffect, booleanAttribute, computed, inject, input, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, afterNextRender, afterRenderEffect, booleanAttribute, computed, inject, input, model, output } from '@angular/core';
 
 /** One column: a day (or any slot) of the span shown. */
 export interface LenziScheduleDay {
@@ -46,6 +46,12 @@ export interface LenziScheduleRow {
   cells: Readonly<Record<string, LenziScheduleCell | undefined>>;
 }
 
+/** Cells chosen together: the rows (in the grid's order) times the days (in order). */
+export interface LenziScheduleSelection {
+  rowIds: (string | number)[];
+  dayKeys: string[];
+}
+
 /** A cell that was tapped. */
 export interface LenziSchedulePick {
   row: LenziScheduleRow;
@@ -59,7 +65,9 @@ export interface LenziSchedulePick {
  * number on top and its weekday under it, a short code in each cell in its identity colour. Days off
  * are shaded, today is marked, one row can stand out (the person looking). It scrolls sideways inside
  * its own box and opens on today. With `editable`, every cell is a button and says which was tapped;
- * the host opens what changes it.
+ * the host opens what changes it. With `multiple` too, cells are chosen together (lenzi, 2026-11-25:
+ * "permettimi di segnalare più caselle per inserire i turni più facilmente, drag and drop"): dragged over
+ * with a mouse, held then dragged with a finger, Shift+click from the last one; `selection` says which.
  */
 @Component({
   selector: 'lenzi-schedule-grid',
@@ -80,14 +88,48 @@ export class LenziScheduleGrid {
   readonly editable = input(false, { transform: booleanAttribute });
   /** What a screen reader hears for an empty cell. */
   readonly emptyLabel = input('Empty');
+  /** Cells can be chosen together (with `editable`). */
+  readonly multiple = input(false, { transform: booleanAttribute });
+  /** The rows that may be chosen together; null: all. */
+  readonly selectableRows = input<readonly (string | number)[] | null>(null);
+  /** The cells chosen together; null: none. Two or more cells, or none. */
+  readonly selection = model<LenziScheduleSelection | null>(null);
   readonly picked = output<LenziSchedulePick>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** "rowId|dayKey" of every chosen cell, for the template. */
+  protected readonly chosen = computed(() => {
+    const selection = this.selection();
+    const keys = new Set<string>();
+    for (const row of selection?.rowIds ?? []) for (const day of selection?.dayKeys ?? []) keys.add(`${row}|${day}`);
+    return keys;
+  });
+
+  /** Where a choice of several cells starts (the last cell tapped, or where a drag began). */
+  private anchor: { row: number; day: number } | null = null;
+  /** A drag (or a held finger) is choosing cells; it moved to another cell. */
+  private dragging = false;
+  private dragged = false;
+  /** The click that ends a drag is not a tap. */
+  private swallowClick = false;
+  private holdTimer: ReturnType<typeof setTimeout> | null = null;
+  private holdStart: { x: number; y: number } | null = null;
 
   /** The column of today, to scroll it into view when the days change. */
   private readonly todayKey = computed(() => this.days().find((day) => day.today)?.key ?? null);
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      // A finger choosing cells must not scroll the box: only a listener that may cancel the move can stop it.
+      const box = this.host.nativeElement.querySelector<HTMLElement>('.grid-scroll');
+      const hold = (event: TouchEvent) => {
+        if (this.dragging) event.preventDefault();
+      };
+      box?.addEventListener('touchmove', hold, { passive: false });
+      destroyRef.onDestroy(() => box?.removeEventListener('touchmove', hold));
+    });
     afterRenderEffect(() => {
       const key = this.todayKey();
       if (!key) return;
@@ -115,8 +157,102 @@ export class LenziScheduleGrid {
     return [cell?.label, cell?.problem].filter(Boolean).join('\n') || null;
   }
 
-  protected pick(row: LenziScheduleRow, day: LenziScheduleDay): void {
+  protected pick(row: LenziScheduleRow, day: LenziScheduleDay, event?: MouseEvent): void {
+    if (this.swallowClick) {
+      this.swallowClick = false;
+      return;
+    }
+    const at = this.indexOf(row, day);
+    if (this.multiple() && event?.shiftKey && this.anchor && at) {
+      this.choose(this.anchor, at);
+      return;
+    }
+    this.selection.set(null);
+    this.anchor = at;
     this.picked.emit({ row, day, cell: this.cellOf(row, day) });
+  }
+
+  /** Esc lets go of the cells chosen. */
+  protected escape(): void {
+    if (this.selection()) this.selection.set(null);
+  }
+
+  // ---- choosing several cells
+
+  protected pointerDown(event: PointerEvent, row: LenziScheduleRow, day: LenziScheduleDay): void {
+    if (!this.multiple() || !this.editable() || event.button !== 0 || event.shiftKey) return;
+    const at = this.indexOf(row, day);
+    if (!at || !this.selectable(row.id)) return;
+    this.anchor = at;
+    this.dragged = false;
+    if (event.pointerType === 'touch') {
+      // A finger scrolls the box; held still for a moment, it chooses instead.
+      this.holdStart = { x: event.clientX, y: event.clientY };
+      this.holdTimer = setTimeout(() => {
+        this.holdTimer = null;
+        this.dragging = true;
+        this.choose(at, at);
+        navigator.vibrate?.(10);
+      }, 450);
+    } else {
+      this.dragging = true;
+    }
+  }
+
+  protected pointerMove(event: PointerEvent): void {
+    if (this.holdTimer && this.holdStart && Math.hypot(event.clientX - this.holdStart.x, event.clientY - this.holdStart.y) > 8) this.cancelHold();
+    if (!this.dragging || !this.anchor) return;
+    const at = this.cellAt(event.clientX, event.clientY);
+    if (!at) return;
+    if (at.row !== this.anchor.row || at.day !== this.anchor.day || event.pointerType === 'touch') {
+      this.dragged = true;
+      this.choose(this.anchor, at);
+    }
+  }
+
+  protected pointerUp(): void {
+    this.cancelHold();
+    if (this.dragging && this.dragged) this.swallowClick = true;
+    if (this.dragging && this.dragged && this.selection() && this.cellCount(this.selection()!) < 2) this.selection.set(null);
+    this.dragging = false;
+  }
+
+  private cancelHold(): void {
+    if (this.holdTimer) clearTimeout(this.holdTimer);
+    this.holdTimer = null;
+    this.holdStart = null;
+  }
+
+  private selectable(rowId: string | number): boolean {
+    const rows = this.selectableRows();
+    return !rows || rows.includes(rowId);
+  }
+
+  private indexOf(row: LenziScheduleRow, day: LenziScheduleDay): { row: number; day: number } | null {
+    const r = this.rows().indexOf(row);
+    const d = this.days().indexOf(day);
+    return r < 0 || d < 0 ? null : { row: r, day: d };
+  }
+
+  /** The cell under a point of the screen (a pointer held captures its events on the cell it began on). */
+  private cellAt(x: number, y: number): { row: number; day: number } | null {
+    const cell = this.host.nativeElement.ownerDocument.elementFromPoint(x, y)?.closest<HTMLElement>('td[data-row]');
+    if (!cell || !this.host.nativeElement.contains(cell)) return null;
+    return { row: Number(cell.dataset['row']), day: Number(cell.dataset['column']) };
+  }
+
+  /** The rectangle from one cell to another, the rows that may not be chosen left out. */
+  private choose(from: { row: number; day: number }, to: { row: number; day: number }): void {
+    const rows = this.rows().slice(Math.min(from.row, to.row), Math.max(from.row, to.row) + 1).filter((r) => this.selectable(r.id));
+    const days = this.days().slice(Math.min(from.day, to.day), Math.max(from.day, to.day) + 1);
+    const next = { rowIds: rows.map((r) => r.id), dayKeys: days.map((d) => d.key) };
+    const current = this.selection();
+    if (current && current.rowIds.join() === next.rowIds.join() && current.dayKeys.join() === next.dayKeys.join()) return;
+    this.selection.set(rows.length && days.length ? next : null);
+  }
+
+  private cellCount(selection: LenziScheduleSelection): number {
+    return selection.rowIds.length * selection.dayKeys.length;
   }
 }
 

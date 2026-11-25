@@ -13,5 +13,8 @@
   language.
 - `editable` + `(picked)` → open a form with `LenziDialogs`; save through the API; give the grid the new rows. Never
   change a cell in the grid's input in place.
+- Several cells: `multiple` and `[(selection)]`; when the selection has cells, show a bar with how many and an action
+  that opens the same form as one cell, saving all of them in one request. Clear the selection (`null`) after saving.
+  Never start a drag of your own on the cells, never an `<input type="checkbox">` per cell.
 - Put it in the page's column at full width; it scrolls by itself. To keep it shorter than the window, give its host
   a `max-height` (the box inherits it).

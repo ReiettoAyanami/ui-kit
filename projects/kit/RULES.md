@@ -62,6 +62,9 @@ the rule says what, the variable says how much.
 - **Liquid Glass is another material** (lenzi, 2026-11-19: "quasi come il liquid glass di IOS ... diverso dal classico
   vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo"): `lenziLiquidGlass`, clear, it bends what is behind it
   near its curved edge, and has no border, only a rim of light on its very edge. Chromium only bends.
+- **An app may be all Liquid Glass** (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass", "tutta l'app"):
+  `provideLenziLiquidGlass()` and a scene behind the pages; its bar, drawer, windows, menus, cards, tables and grids are
+  Liquid Glass, each keeping `--lenzi-liquid-tint` of the page's colour to read on. No glass pane behind the page then.
 - **Reduce transparency** (`LenziAppearance`, and the system's own `prefers-reduced-transparency`) makes
   every surface solid again.
 

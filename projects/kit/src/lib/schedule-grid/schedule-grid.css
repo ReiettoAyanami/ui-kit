@@ -248,3 +248,49 @@ td.problem .tag {
   font-size: 20px;
   color: var(--mat-sys-on-surface-variant);
 }
+
+/* Choosing several cells: no text selected while dragging; the cells chosen tinted and outlined in the accent. */
+.grid-scroll.choosing {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+td.chosen {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 22%, var(--mat-sys-surface));
+  box-shadow: inset 0 0 0 var(--lenzi-border) var(--mat-sys-primary);
+}
+
+/* Over Liquid Glass (an app made of it, provideLenziLiquidGlass): the box is the glass, the cells clear, their shades
+   see-through; the parts that stay in place (the days, the names) a frosted strip the cells slide under. */
+.grid-scroll.lenzi-liquid-everywhere td {
+  background-color: transparent;
+}
+
+.grid-scroll.lenzi-liquid-everywhere td.off {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.grid-scroll.lenzi-liquid-everywhere tr.highlight > td:not(.today) {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+}
+
+.grid-scroll.lenzi-liquid-everywhere td.today {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+}
+
+.grid-scroll.lenzi-liquid-everywhere td.chosen {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 28%, transparent);
+}
+
+.grid-scroll.lenzi-liquid-everywhere th {
+  background-color: color-mix(in srgb, var(--mat-sys-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.grid-scroll.lenzi-liquid-everywhere th.off {
+  background-color: color-mix(in srgb, var(--mat-sys-surface-container-high) 88%, transparent);
+}
+
+.grid-scroll.lenzi-liquid-everywhere th.today {
+  background-color: var(--mat-sys-primary-container);
+}

@@ -53,6 +53,8 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |
 | function | `liquidGlassOutlineMaps(outline)` | the same for any shape, from what it covers (one alpha a pixel) | |
+| function | `provideLenziLiquidGlass({ selectors?, settings? })` | the whole app of Liquid Glass | |
+| class | `LenziLiquidSurface(element, document, sights, settings)` | one glass: `build()`, `light()`, `destroy()` | |
 
 ## Example
 
@@ -64,6 +66,26 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 ```css
 .window { border-radius: 28px; padding: 24px 32px; }
 ```
+
+## A whole app of Liquid Glass
+
+`provideLenziLiquidGlass(options?)` (lenzi, 2026-11-25, the shifts app: "qui usiamo liquid glass", "tutta l'app"):
+every surface of the app is Liquid Glass, as it comes and goes (`LenziLiquidEverywhere`): the top bar and the drawer
+(`LenziAppShell`), dialogs, menus, the panels of selects and autocompletes, Material's cards, and what is marked
+`.lenzi-surface` (the schedule grid's box, the data table's box, an app's own panels). `LenziLiquidSurface` is one
+glass, the engine the directive uses too.
+
+- **Readable first**: each surface keeps `--lenzi-liquid-tint` (42%) of the page's colour, and a little more blur than
+  a single window (`LIQUID_EVERYWHERE_SETTINGS`: bezel 18, thickness 40, blur 3); a bezel is never wider than a third
+  of the surface's smaller side.
+- **No fill, no border of its own**: a kit or Material surface keeps its border's width (nothing moves), not its
+  colour; a `.lenzi-surface` of the app keeps its border, which may say something (today, a rule broken).
+- **Tables and grids**: their cells clear, the parts that stay in place (header, names) a frosted strip the cells
+  slide under.
+- **A background behind the pages** (a scene, a picture): there is nothing to bend on a plain page.
+- **One frame loop** for all of them (the rims); a surface's filter is drawn again when it changes size.
+- **Reduce transparency** (`LenziAppearance`, or the system's wish) turns it all off: the kit's frosted glass again.
+- Snackbars and tooltips stay frosted glass: small and gone in a moment.
 
 ## The blobs' liquid glass
 
