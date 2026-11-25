@@ -3,6 +3,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
 import { provideLenziKit } from '@lenzi/ui-kit';
+import { provideLenziLiquidGlass } from '@lenzi/ui-kit/backgrounds';
 import { lenziErrorInterceptor } from '@lenzi/ui-kit/http';
 
 import { routes } from './app.routes';
@@ -14,5 +15,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })),
     provideHttpClient(withFetch(), withInterceptors([lenziErrorInterceptor])),
     provideLenziKit({ appId: 'kit-catalog' }),
+    // The catalog's floating layer is Liquid Glass (lenzi, 2026-11-25: "nel kit l'interfaccia va convertita con i nuovi
+    // componenti liquidglass"): the top bar, menus, selects, windows, the "+" (Apple: the layer of controls, not the
+    // content).
+    provideLenziLiquidGlass(),
   ],
 };

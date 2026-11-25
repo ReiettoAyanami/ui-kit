@@ -48,8 +48,9 @@ The entries are `LenziNavList`'s (`LenziNavEntry`). Height: `--lenzi-tab-bar-hei
 ## Variables
 
 `--lenzi-tab-bar-height`, `--lenzi-glass-pill` (the current page's capsule), `--lenzi-glass`, `--lenzi-glass-filter`,
-`--lenzi-border`; the capsule's glass: `LENS_SETTINGS`, `LENS_BENDING`. With `provideLenziLiquidGlass()` the capsules
-are Liquid Glass (they are `.lenzi-floating`).
+`--lenzi-liquid-tint`; the capsules are Liquid Glass of their own (`BAR_GLASS`: a squircle bezel, the default optics;
+lenzi, 2026-11-25: "non è liquidglass, solo di nome"), whatever the app; the current page's capsule `LENS_SETTINGS`,
+`LENS_BENDING`.
 
 ## Origin
 

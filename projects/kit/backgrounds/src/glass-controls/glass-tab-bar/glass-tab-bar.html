@@ -1,5 +1,5 @@
 <nav class="bar" [attr.aria-label]="label()">
-  <div #capsule class="capsule pages lenzi-floating" [class.moving]="moving()">
+  <div #capsule class="capsule pages" [class.moving]="moving()">
     <span
       #lens
       class="pill"
@@ -40,7 +40,7 @@
 
   @if (bottom().length) {
     <!-- the rest, apart from the pages -->
-    <div class="capsule rest lenzi-floating">
+    <div #rest class="capsule rest">
       @for (entry of bottom(); track key(entry)) {
         @if (entry.link !== undefined) {
           <a

@@ -2,11 +2,11 @@ import { Component, computed, inject, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 
-import { LenziSearchBar, LenziStatusMessage } from '@lenzi/ui-kit';
+import { LenziStatusMessage } from '@lenzi/ui-kit';
 
 import { CATEGORIES, DOCS, KitDoc } from '../../registry';
 import { PublicPages } from '../../shared/public-pages';
-import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassPage, LenziLit, lenziOverBackground, LenziGlassSearch } from '@lenzi/ui-kit/backgrounds';
 
 /**
  * Every page of the kit, by category, with a search bar (RULES.md: the search is in the URL, `?q=`,
@@ -14,7 +14,7 @@ import { LenziGlassPage, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/bac
  */
 @Component({
   selector: 'app-components-page',
-  imports: [LenziGlassPage, LenziLit, LenziSearchBar, LenziStatusMessage, MatIconModule, RouterLink],
+  imports: [LenziGlassPage, LenziLit, LenziGlassSearch, LenziStatusMessage, MatIconModule, RouterLink],
   templateUrl: './components-page.html',
   styleUrl: './components-page.css',
 })

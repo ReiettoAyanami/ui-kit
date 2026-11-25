@@ -23,9 +23,11 @@
   box-sizing: border-box;
   height: var(--lenzi-tab-bar-height);
   padding: 4px;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  /* Liquid Glass of its own (the filter is set on it in Chromium); no stroke, its edge is light; a light tint of the
+     page to read on. Elsewhere the kit's frosted glass. */
+  border: none;
   border-radius: calc(var(--lenzi-tab-bar-height) / 2);
-  background-color: color-mix(in srgb, var(--mat-sys-surface-container) var(--lenzi-glass), transparent);
+  background-color: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint), transparent);
   backdrop-filter: var(--lenzi-glass-filter);
   box-shadow: 0 8px 28px rgb(0 0 0 / 0.32);
 }
