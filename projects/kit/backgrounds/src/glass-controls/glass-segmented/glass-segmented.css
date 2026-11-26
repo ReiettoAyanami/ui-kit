@@ -11,15 +11,24 @@
 
 .scroller {
   max-width: 100%;
-  /* room for the focus ring, which the scrolling would cut */
-  margin: -6px;
-  padding: 6px;
+  /* room for what the scrolling would cut: the focus ring, and the capsule grown on its way (1.18 times: on a choice
+     150 px wide, 14 px each side). Without it the capsule was cut flat at the track's end, a dark notch at its side
+     (lenzi, 2026-11-26: "questo continua ad essere super iper mega buggato"). The room takes no taps: what is under it
+     stays tappable. */
+  margin: -6px -16px;
+  padding: 6px 16px;
   overflow-x: auto;
   scrollbar-width: none;
+  pointer-events: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
 }
 
 .track {
   position: relative;
+  pointer-events: auto;
   display: inline-grid;
   grid-template-columns: repeat(var(--lenzi-segments), minmax(var(--lenzi-segment-min-width), 1fr));
   height: var(--lenzi-segment-height);

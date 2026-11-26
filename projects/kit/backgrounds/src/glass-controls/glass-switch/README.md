@@ -20,7 +20,9 @@
 - Chromium bends; elsewhere the glass is blurred only.
 - **Built as kube.io's** (read from its code): one thumb, always glass under a white fill (`--lenzi-glass-thumb`);
   held, the fill goes to 10%, the thumb grows from 0.65 to 0.9 and bends from 0.4 to 0.9 of its bending; past an end
-  it stretches a little.
+  it follows less and less, a rubber band, at most a little over half of itself (lenzi, 2026-11-26: "fai in modo che
+  arrivi a un po' di più della sua metà (MASSIMO)"); let go, it springs back to its side, a little past it and back
+  ("tipo molla ... lieve effetto").
 
 ## API
 

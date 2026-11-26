@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { LenziGlassSwitch } from './glass-switch';
+import { LenziGlassSwitch, OVERSHOOT } from './glass-switch';
 
 describe('LenziGlassSwitch', () => {
   function make(checked = false) {
@@ -39,6 +39,30 @@ describe('LenziGlassSwitch', () => {
     press('pointerup', 60);
     fixture.detectChanges();
     expect(fixture.componentInstance.checked()).toBe(false);
+  });
+
+  it('dragged far past an end, the thumb goes at most a little over half of itself past it', () => {
+    const { fixture, track, press } = make(true);
+    // the test's window lays nothing out: a track 64 by 28
+    Object.defineProperty(track, 'clientWidth', { configurable: true, value: 64 });
+    Object.defineProperty(track, 'clientHeight', { configurable: true, value: 28 });
+    const travel = 64 - 28 * ((146 / 67) * 0.65 + (2 * 3.6) / 67);
+    const most = 28 * (146 / 67) * 0.65 * OVERSHOOT;
+    const at = () => Number((track.style.getPropertyValue('--lenzi-switch-at') || '0').trim());
+    press('pointerdown', 0);
+    press('pointermove', 40);
+    fixture.detectChanges();
+    const near = (at() - 1) * travel;
+    press('pointermove', 4000);
+    fixture.detectChanges();
+    const far = (at() - 1) * travel;
+    expect(near).toBeGreaterThan(0);
+    expect(far).toBeGreaterThan(near);
+    expect(far).toBeLessThanOrEqual(most + 0.001);
+    press('pointerup', 4000);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.checked()).toBe(true);
+    expect(at()).toBe(1);
   });
 
   it('a click (Space, Enter, a screen reader) switches it; the click after a tap is that tap; disabled, nothing does', () => {

@@ -3,20 +3,22 @@ import { Component, ElementRef, booleanAttribute, effect, input, model, signal, 
 import { LENS_BENDING, glassLens } from '../lens';
 
 /** How long the thumb stays glass after it is let go, ms: the time of its way to the other side. */
-const SETTLE = 320;
+const SETTLE = 420;
 
 /** The thumb's size against the track's height, at rest its scale (kube.io's switch: 146 by 92 on a 67 high track). */
 const THUMB_WIDTH = 146 / 67;
 const REST = 0.65;
 /** The gap at each end, against the track's height (kube.io's: 3.6 on 67). */
 const INSET = 3.6 / 67;
+/** How far past an end a drag takes the thumb at most, against its width at rest: a little over half of it. */
+export const OVERSHOOT = 0.6;
 
 /**
  * An on/off switch the way Apple's is, built as kube.io's (lenzi, 2026-11-25: "implementa gli slider/toggle/searchbar
  * nel kit come quelli di apple"; read from kube.io's code): a capsule track, the accent when on; one thumb that is
  * always Liquid Glass (a lip bezel) under a white fill. Held, the fill goes to 10%, the thumb grows (0.65 to 0.9) and
- * bends more (0.4 to 0.9): it is glass, bending the track under it; it follows the pointer, stretching a little past the
- * ends, and settles white on its side. A tap switches it; a drag puts it where it is let go; a click (Space and Enter, a screen reader) switches it.
+ * bends more (0.4 to 0.9): it is glass, bending the track under it; it follows the pointer, past the ends a rubber band (at
+ * most a little over half of itself), and springs back white to its side. A tap switches it; a drag puts it where it is let go; a click (Space and Enter, a screen reader) switches it.
  */
 @Component({
   selector: 'lenzi-glass-switch',
@@ -73,10 +75,14 @@ export class LenziGlassSwitch {
     const dx = event.clientX - this.start.x;
     if (Math.abs(dx) > 3) this.moved = true;
     if (!this.moved) return;
-    // past an end it stretches a little (kube.io's: a 22nd of the way past)
+    // Past an end it follows less and less, like a rubber band, and never further than a little over half of itself
+    // (lenzi, 2026-11-26: "si riesce a trasportare fino a dove voglio ... fai in modo che arrivi a un po' di più della sua
+    // metà (MASSIMO)"); let go, it springs back to its side (the thumb's transition).
     const at = this.start.at + dx / Math.max(1, travel);
-    const past = at < 0 ? at : at > 1 ? at - 1 : 0;
-    this.dragAt.set(Math.min(1, Math.max(0, at)) + past / 22);
+    const past = (at < 0 ? at : at > 1 ? at - 1 : 0) * travel;
+    const most = this.track().nativeElement.clientHeight * THUMB_WIDTH * REST * OVERSHOOT;
+    const stretched = Math.sign(past) * most * (1 - Math.exp(-Math.abs(past) / Math.max(1, most)));
+    this.dragAt.set(Math.min(1, Math.max(0, at)) + stretched / Math.max(1, travel));
   }
 
   protected up(): void {

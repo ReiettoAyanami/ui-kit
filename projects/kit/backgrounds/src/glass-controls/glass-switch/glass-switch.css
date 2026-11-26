@@ -57,8 +57,10 @@
   /* where the filter does not bend (not Chromium): a light blur */
   backdrop-filter: blur(1.5px);
   pointer-events: none;
+  /* let go, it springs to its side: a little past it, then back (lenzi, 2026-11-26: "torni indietro tipo molla una volta
+     rilasciato (lieve effetto tho)") */
   transition:
-    left 320ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    left 420ms cubic-bezier(0.34, 1.45, 0.5, 1),
     transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
     background-color 180ms ease,
     box-shadow 180ms ease;

@@ -8,6 +8,9 @@
 
 html {
   height: 100%;
+  // Dark here too: the window's own scroll bar is the root's, and took the light one (lenzi, 2026-11-26: "Anche la barra
+  // di scroll usa quella del kit").
+  color-scheme: dark;
   @include theme.theme();
 }
 

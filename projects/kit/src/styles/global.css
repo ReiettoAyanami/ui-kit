@@ -10,6 +10,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Scroll bars, the kit's (lenzi, 2026-11-26: "Anche la barra di scroll usa quella del kit", a demo's frame showing the
+   browser's light one): thin, a thumb of the text's colour, faint, on nothing; the window's and every box's that scrolls
+   (the colour is inherited). A box that hides its bar (a row of shelves, a segmented control) keeps it hidden. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--mat-sys-on-surface) 28%, transparent) transparent;
+}
+
 /* Corners (lenzi, 2026-11-14: "a toggle for squircle/normal rounded squares ... a global variable and should
    act everywhere"): every rounded corner, Material's and the kit's, takes the shape of --lenzi-corner-shape,
    round or squircle (a superellipse). Zero specificity, so a piece that says otherwise wins. What is a circle
@@ -562,6 +570,15 @@ html {
    are the app's glass then), windows, menus and the drawer. The bar, the "+" and the controls keep the light tint. */
 .lenzi-liquid-everywhere:is(.lenzi-glass-page-pane, .lenzi-liquid-lit, .mat-mdc-card, .lenzi-surface, .mat-mdc-dialog-surface, .mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel, .lenzi-shell-drawer) {
   --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint-large), transparent);
+}
+
+/* What floats over the page's words is lightly frosted (lenzi, 2026-11-26, a select's panel over the page's controls: "in
+   questi casi sarebbe da opacizzare lievemente (lieve frosting) dietro se sono tipo tooltip ecc... o comunque cose che
+   hanno dietro del testo"): windows, menus, the panels of selects and autocompletes, the drawer and a bar of actions blur
+   what is behind them by --lenzi-liquid-frost-over, so two layers of words never read at once; their edge still bends.
+   The page's own panels and cards (nothing of the page is behind them) stay clear. */
+.lenzi-liquid-everywhere:is(.mat-mdc-dialog-surface, .mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel, .lenzi-shell-drawer, .lenzi-floating) {
+  --lenzi-liquid-frost: var(--lenzi-liquid-frost-over);
 }
 
 /* The primary action is coloured glass (Apple, Color: "For primary actions, color the background"), the one that is. */

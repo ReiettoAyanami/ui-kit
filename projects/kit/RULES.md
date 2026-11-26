@@ -72,7 +72,9 @@ the rule says what, the variable says how much.
     (`.lenzi-surface`) and every lit surface (`lenziLit` gives itself to the app's glass). **Clear, never frosted**
     (lenzi, 2026-11-26: "i pannelli di vetro devono tutti essere convertiti in liquid glass, adesso sono solo glass
     blurrati"): what is behind shows sharp and bends at the edge; those with words on them have a darker tint to read
-    on. Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what floats.
+    on. **What floats over the page's words is lightly frosted** (lenzi,
+    2026-11-26: "opacizzare lievemente (lieve frosting) dietro ... cose che hanno dietro del testo"): windows, menus,
+    select and autocomplete panels, the drawer, a bar of actions (`--lenzi-liquid-frost-over`, 3 px). Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what floats.
   - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass,
     never glass on glass.
   - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti
@@ -155,6 +157,8 @@ the rule says what, the variable says how much.
   in a list row; elsewhere a button that toggles.
 - **The top bar shows the current route's title** and sticks while the page scrolls under its glass.
 - **The document scrolls, not the shell.**
+- **Scroll bars are the kit's** (lenzi, 2026-11-26: "Anche la barra di scroll usa quella del kit"): thin, a faint thumb
+  of the text's colour on nothing, dark like the rest (the window's too), from the global styles; never the browser's light one.
 - **Unknown addresses** get the not-found page (`LenziNotFound`) with one way out.
 - **The version** sits in the bottom right corner of every page, small and faint (lenzi, 2026-10-03).
 
