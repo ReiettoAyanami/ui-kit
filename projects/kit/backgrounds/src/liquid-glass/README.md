@@ -58,6 +58,7 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `specularOpacity` | 0 to 1: how bright the edge gets over a full light | `0.5` |
 | input | `specularSaturation` | the edge's copy of what is behind, saturated | `6` |
 | input | `lightReach` | px: how far round the edge the light under it is gathered (frosted glass: as far as it is frosted) | `12` |
+| input | `lightBase` | 0 to 1: the edge's light with nothing bright under it, the same all round (the kit's controls: 0.45, so a thumb over a dark panel shows as glass) | `0.1` |
 | input | `glassPath` | an SVG path (even-odd): the glass's own shape | `null` (its box) |
 | input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |

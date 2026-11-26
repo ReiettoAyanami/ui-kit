@@ -9,7 +9,7 @@
   --lenzi-switch-height: 28px;
   /* Apple's thumb is white in both themes; at rest milky glass, not solid (2026-11-26: the glass seen on small things) */
   --lenzi-glass-thumb: 255 255 255;
-  --lenzi-glass-rest: 0.42;
+  --lenzi-glass-rest: 0.16;
 }
 
 .track {

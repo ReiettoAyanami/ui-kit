@@ -12,13 +12,18 @@ import { LIQUID_GLASS_SETTINGS, LenziLiquidGlassSettings, LenziLiquidSurface, re
  */
 export const LENS_SETTINGS: LenziLiquidGlassSettings = {
   ...LIQUID_GLASS_SETTINGS,
-  surface: 'lip',
+  // convex, not kube.io's lip: bending this much, a lip's concave middle took pixels from past the thumb's edge, where
+  // nothing is, and drew a box inside it (lenzi, 2026-11-26: "ci sono dei problemi con questi selettori ... hanno un
+  // quadratino sopra"); a convex bezel takes from inside
+  surface: 'squircle',
   bezel: 12,
   thickness: 36,
   refraction: 1.5,
   blur: 0.2,
   specularOpacity: 0.5,
   specularSaturation: 6,
+  // its edge's line shows all round over a dark panel too (lenzi, 2026-11-26: "la barra di ricerca nella overview non é glass e non il pomello del toggle ancora non lo é, o comunque si vede poco")
+  lightBase: 0.45,
 };
 
 /**

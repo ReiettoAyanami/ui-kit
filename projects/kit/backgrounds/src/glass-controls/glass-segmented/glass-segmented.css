@@ -69,7 +69,7 @@
   height: var(--lenzi-segment-height);
   border-radius: calc(var(--lenzi-segment-height) / 2);
   /* at rest milky glass, not solid (2026-11-26: the glass seen on small things) */
-  background-color: color-mix(in srgb, var(--lenzi-glass-pill) 45%, transparent);
+  background-color: color-mix(in srgb, var(--lenzi-glass-pill) 25%, transparent);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
   transform: translate(-50%, -50%);
   /* where the filter does not bend (not Chromium): a light blur */

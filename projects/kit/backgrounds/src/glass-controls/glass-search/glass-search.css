@@ -12,7 +12,9 @@
   padding: 0 8px 0 16px;
   box-sizing: border-box;
   border-radius: calc(var(--lenzi-glass-search-height) / 2);
-  background-color: color-mix(in srgb, var(--mat-sys-surface) 30%, transparent);
+  /* a light tint: clear glass (2026-11-26, "la barra di ricerca ... non é glass": at 30% over a glass panel it read as a
+     dark field) */
+  background-color: color-mix(in srgb, var(--mat-sys-surface) 12%, transparent);
   cursor: text;
 }
 

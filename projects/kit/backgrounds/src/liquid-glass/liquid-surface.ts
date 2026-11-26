@@ -27,6 +27,12 @@ export interface LenziLiquidGlassSettings {
   specularSaturation: number;
   /** How far round each point of the edge the light under it is gathered, px: wider, a light farther in lights the edge. */
   lightReach: number;
+  /**
+   * How much of the edge's light it has with nothing bright under it, 0 to 1 (LIGHT_BASE, 0.1: the shape just reads). A
+   * small control over a dark glass panel takes more, the same all round, so it shows as glass (lenzi, 2026-11-26: "la barra di ricerca nella overview non é glass e non il pomello del toggle ancora non lo é, o comunque si vede poco"); the light
+   * under it adds to it as on any glass.
+   */
+  lightBase: number;
   glassPath: string | null;
   glassViewBox: string;
 }
@@ -42,6 +48,7 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
   specularOpacity: 0.5,
   specularSaturation: 6,
   lightReach: 12,
+  lightBase: 0.1,
   glassPath: null,
   glassViewBox: '0 0 100 100',
 };
@@ -235,7 +242,7 @@ export class LenziLiquidSurface {
     this.tinted = !!tint;
     if (this.tinted) this.element.style.setProperty('background-color', 'transparent');
     const reach = Math.max(0, s.lightReach);
-    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
+    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
     if (key === this.size) return;
     this.size = key;
     // A bezel wider than half the glass would bend the whole of it: never more than a third of its smaller side.
@@ -288,7 +295,7 @@ export class LenziLiquidSurface {
   <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
   ${body}
   ${fromFrost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
-  <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix()}" result="light"/>
+  <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix(LIGHT_FLOOR, LIGHT_GAIN, Math.max(0, s.lightBase))}" result="light"/>
   <feComposite in="light" in2="specular" operator="in" result="lit-line"/>
   <feColorMatrix in="bent" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
   <feComposite in="vivid" in2="lit-line" operator="in" result="edge"/>

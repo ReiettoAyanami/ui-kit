@@ -37,6 +37,8 @@ export class LenziLiquidGlass {
   readonly specularSaturation = input(6, { transform: numberAttribute });
   /** How far round each point of the edge the light under it is gathered, px. */
   readonly lightReach = input(12, { transform: numberAttribute });
+  /** How much of the edge's light it has with nothing bright under it, 0 to 1. */
+  readonly lightBase = input(0.1, { transform: numberAttribute });
   /**
    * A shape of its own (lenzi, 2026-11-19: Liquid Glass on the cat): an SVG path (filled even-odd), stretched over the
    * element as `glassViewBox` says, as a mask of the same path is; the bezel follows its outline. None: the element's
@@ -59,6 +61,7 @@ export class LenziLiquidGlass {
     specularOpacity: this.specularOpacity(),
     specularSaturation: this.specularSaturation(),
     lightReach: this.lightReach(),
+    lightBase: this.lightBase(),
     glassPath: this.glassPath(),
     glassViewBox: this.glassViewBox(),
   }));
@@ -69,7 +72,7 @@ export class LenziLiquidGlass {
     const destroyRef = inject(DestroyRef);
     // a setting changed: the filter again (its key says whether anything it is made of changed)
     effect(() => {
-      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.lightReach(), this.glassPath(), this.glassViewBox()];
+      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.lightReach(), this.lightBase(), this.glassPath(), this.glassViewBox()];
       untracked(() => this.rebuild?.());
     });
     afterNextRender(() => {
