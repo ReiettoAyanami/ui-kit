@@ -1,4 +1,4 @@
-import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, effect, inject, input, numberAttribute, untracked } from '@angular/core';
+import { DOCUMENT, booleanAttribute, DestroyRef, Directive, ElementRef, afterNextRender, effect, inject, input, numberAttribute, untracked } from '@angular/core';
 
 import { LenziGlassSurface } from './liquid-glass-maps';
 import { LenziLiquidSurface, refracts } from './liquid-surface';
@@ -36,15 +36,16 @@ export class LenziLiquidGlass {
   /** How saturated the copy of what is behind is on the edge: the edge takes its colour. */
   readonly specularSaturation = input(6, { transform: numberAttribute });
   /** How far round each point of the edge the light under it is gathered, px. */
-  readonly lightReach = input(12, { transform: numberAttribute });
+  readonly lightReach = input(24, { transform: numberAttribute });
   /** How much of the edge's light it has with nothing bright under it, 0 to 1. */
-  readonly lightBase = input(0.1, { transform: numberAttribute });
+  readonly lightBase = input(0, { transform: numberAttribute });
   /** Colour fringes where it bends, 0 to 1 (red bent more, blue less). */
   readonly chromaticAberration = input(0, { transform: numberAttribute });
   /** Brighter or darker than what is behind, -0.5 to 0.5. */
   readonly brightness = input(0, { transform: numberAttribute });
   /** A fine ripple all over it, 0 to 1: rough glass. */
   readonly distortion = input(0, { transform: numberAttribute });
+  readonly dome = input(false, { transform: booleanAttribute });
   /**
    * A shape of its own (lenzi, 2026-11-19: Liquid Glass on the cat): an SVG path (filled even-odd), stretched over the
    * element as `glassViewBox` says, as a mask of the same path is; the bezel follows its outline. None: the element's
@@ -71,6 +72,7 @@ export class LenziLiquidGlass {
     chromaticAberration: this.chromaticAberration(),
     brightness: this.brightness(),
     distortion: this.distortion(),
+    dome: this.dome(),
     glassPath: this.glassPath(),
     glassViewBox: this.glassViewBox(),
   }));
@@ -81,7 +83,7 @@ export class LenziLiquidGlass {
     const destroyRef = inject(DestroyRef);
     // a setting changed: the filter again (its key says whether anything it is made of changed)
     effect(() => {
-      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.lightReach(), this.lightBase(), this.chromaticAberration(), this.brightness(), this.distortion(), this.glassPath(), this.glassViewBox()];
+      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.lightReach(), this.lightBase(), this.chromaticAberration(), this.brightness(), this.distortion(), this.dome(), this.glassPath(), this.glassViewBox()];
       untracked(() => this.rebuild?.());
     });
     afterNextRender(() => {

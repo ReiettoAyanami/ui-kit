@@ -10,28 +10,11 @@
 </div>
 
 <div class="side">
-  <div class="tabs" role="tablist" [attr.aria-label]="label()">
-    @for (slide of slides(); track slide; let i = $index) {
-      <button
-        type="button"
-        role="tab"
-        class="tab"
-        [class.current]="i === shown()"
-        [attr.aria-selected]="i === shown()"
-        [attr.tabindex]="i === shown() ? 0 : -1"
-        (click)="go(i)"
-        (keydown)="key($event, i)"
-      >
-        <span class="name">{{ slide.name() }}</span>
-        @if (slide.caption()) {
-          <span class="caption">{{ slide.caption() }}</span>
-        }
-        @if (i === shown()) {
-          <span class="clock" aria-hidden="true"><span class="fill" [class.running]="running()" (animationend)="next()"></span></span>
-        }
-      </button>
-    }
-  </div>
+  <!-- the list of slides: a glass list, the slide on show under its lens (lenzi, 2026-11-26), the clock under its name -->
+  <lenzi-glass-list class="list" [label]="label()" [items]="entries()" [selected]="shown()" (selectedChange)="go($event)" [extra]="clock" />
+  <ng-template #clock>
+    <span class="clock" aria-hidden="true"><span class="fill" [class.running]="running()" (animationend)="next()"></span></span>
+  </ng-template>
   @if (slides().length > 1) {
     <button mat-button type="button" class="pause" (click)="toggle()">
       <mat-icon aria-hidden="true">{{ paused() ? 'play_arrow' : 'pause' }}</mat-icon>

@@ -43,6 +43,10 @@ styles, the fonts, `provideLenziKit({ appId })` and the interceptor. Then the ap
 ## The rules that are easiest to get wrong
 
 - Figures: **name bold on top, value under** (`LenziFigure`); **never two data on one line joined by "·"**.
+- **Highlights or a border on an element, never both** (lenzi's general rule of style, 2026-11-26): glass has its
+  highlights and no border.
+- **A glass that moves** (a thumb, a lens, a capsule) moves by `translate` and `scale` only, never its size; a scroller
+  gives it room; its bezel never slides over lines of text (RULES.md, Controls of glass).
 - **Whole words** on every button and toggle; the interface in the app's language (English so far).
 - **Dark only.** Do not add a light theme or follow the system's.
 - **One "+" per page** (`LenziAddButton`), bottom right, for its one way of adding.

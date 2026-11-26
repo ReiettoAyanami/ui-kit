@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 
-import { LenziShowcase, LenziShowcaseSlide } from '@lenzi/ui-kit';
+import { LenziShowcase, LenziShowcaseSlide } from '@lenzi/ui-kit/backgrounds';
 
 import { DemoEvents } from '../../shared/demo-events';
 import { USAGE_EXAMPLES, UsageExampleView } from '../../shared/usage-example/usage-example';

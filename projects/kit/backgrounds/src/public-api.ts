@@ -31,6 +31,9 @@ export * from './glass-controls/glass-segmented/glass-segmented';
 export * from './glass-controls/glass-slider/glass-slider';
 export * from './glass-controls/glass-search/glass-search';
 export * from './glass-controls/glass-tab-bar/glass-tab-bar';
+export * from './glass-controls/glass-list/glass-list';
+export * from './showcase/showcase';
+export * from './showcase/showcase-slide';
 
 // The numbers behind them: shapes, colours, the flock (for an app that draws its own).
 export * from './engine/color';

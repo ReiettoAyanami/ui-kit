@@ -1,5 +1,5 @@
 import { liquidGlassMaps } from './liquid-glass-maps';
-import { LIGHT_BASE, LIGHT_FLOOR, SLICE_AREA, bendLimit, glassCuts, glassPlace, lightMatrix } from './liquid-surface';
+import { LIGHT_BASE, LIGHT_FLOOR, SLICE_AREA, SQUIRCLE_CONCENTRIC, bendLimit, concentric, cornerOf, glassCuts, glassPlace, lightMatrix } from './liquid-surface';
 
 const OPTICS = { bezel: 14, thickness: 28, ior: 1.5, surface: 'squircle' as const };
 
@@ -52,7 +52,7 @@ describe('the light under the glass (lenzi, 2026-11-26: "la direzione della luce
     return { r: row(0), g: row(1), b: row(2), a: row(3) };
   };
 
-  it("the page's dark colour is only a faint base (the shape still reads); a bright thing under the glass is all of it", () => {
+  it("the page's dark colour lights nothing (highlights or a border, never a line all round); a bright thing is all of it", () => {
     expect(lit(LIGHT_FLOOR, LIGHT_FLOOR, LIGHT_FLOOR).a).toBeCloseTo(LIGHT_BASE, 5);
     expect(lit(0.12, 0.12, 0.13).a).toBeLessThan(0.15);
     expect(lit(0, 0, 0).a).toBe(0);
@@ -99,20 +99,52 @@ describe('glassPlace (lenzi, 2026-11-26: "non funziona con altri layer di liquid
     return { ...all, getPropertyValue: (name: string) => all[name] ?? '' } as unknown as CSSStyleDeclaration;
   };
 
+  const round = { rx: 24, ry: 24, shape: 'round' as const };
+
   it('a glass that may hold glass bends on a layer behind what it holds, over its clear border', () => {
-    expect(glassPlace(style({}), 300, 200, 24, true)).toEqual({ layer: true, edge: 1, width: 300, height: 200, radius: 24 });
+    expect(glassPlace(style({}), 300, 200, round, true)).toEqual({ layer: true, edge: 1, width: 300, height: 200, corner: round });
+    // cut at the border's outer edge: still over it
+    expect(glassPlace(style({ overflowX: 'clip', overflowY: 'clip', 'overflow-clip-margin': 'border-box' }), 300, 200, round, true).edge).toBe(1);
   });
 
-  it('a border that shows, or one cut at, keeps the layer inside it: the maps the size of the inside', () => {
-    expect(glassPlace(style({ borderTopColor: 'rgb(73, 69, 79)' }), 300, 200, 24, true)).toEqual({ layer: true, edge: 0, width: 298, height: 198, radius: 23 });
-    expect(glassPlace(style({ overflowX: 'hidden', overflowY: 'hidden' }), 300, 200, 24, true)).toEqual({ layer: true, edge: 0, width: 298, height: 198, radius: 23 });
+  it('a border that shows, or one cut at, keeps the layer inside it: the inside, its corners concentric', () => {
+    const inside = { layer: true, edge: 0, width: 298, height: 198, corner: { rx: 23, ry: 23, shape: 'round' } };
+    expect(glassPlace(style({ borderTopColor: 'rgb(73, 69, 79)' }), 300, 200, round, true)).toEqual(inside);
+    expect(glassPlace(style({ overflowX: 'hidden', overflowY: 'hidden' }), 300, 200, round, true)).toEqual(inside);
+    // a squircle shrinks 1.84 times the border
+    const squircle = glassPlace(style({ borderTopColor: 'rgb(73, 69, 79)' }), 300, 200, { rx: 24, ry: 24, shape: 'squircle' }, true);
+    expect(squircle.corner.rx).toBeCloseTo(24 - SQUIRCLE_CONCENTRIC, 5);
   });
 
   it('on the glass itself where a layer cannot be: it scrolls, it is a root anyway (a mask), or a thumb', () => {
-    const self = { layer: false, edge: 0, width: 300, height: 200, radius: 24 };
-    expect(glassPlace(style({ overflowY: 'auto' }), 300, 200, 24, true)).toEqual(self);
-    expect(glassPlace(style({ 'mask-image': 'url("cat.svg")' }), 300, 200, 24, true)).toEqual(self);
-    expect(glassPlace(style({ filter: 'blur(2px)' }), 300, 200, 24, true)).toEqual(self);
-    expect(glassPlace(style({}), 300, 200, 24, false)).toEqual(self);
+    const self = { layer: false, edge: 0, width: 300, height: 200, corner: round };
+    expect(glassPlace(style({ overflowY: 'auto' }), 300, 200, round, true)).toEqual(self);
+    expect(glassPlace(style({ 'mask-image': 'url("cat.svg")' }), 300, 200, round, true)).toEqual(self);
+    expect(glassPlace(style({ filter: 'blur(2px)' }), 300, 200, round, true)).toEqual(self);
+    expect(glassPlace(style({}), 300, 200, round, false)).toEqual(self);
+  });
+});
+
+describe('the corners (lenzi, 2026-11-26: "Usa la formula giusta per ogni tipo arrotondazione differente")', () => {
+  const style = (radius: string, shape = 'round') =>
+    ({ borderTopLeftRadius: radius, getPropertyValue: (name: string) => (name === 'corner-shape' ? shape : '') }) as unknown as CSSStyleDeclaration;
+
+  it("reads an ellipse's radii, a percentage, and the shape", () => {
+    expect(cornerOf(style('12px 8px'), 200, 100)).toEqual({ rx: 12, ry: 8, shape: 'round' });
+    expect(cornerOf(style('50%'), 56, 56)).toEqual({ rx: 28, ry: 28, shape: 'round' });
+    expect(cornerOf(style('20px', 'squircle'), 200, 100).shape).toBe('squircle');
+    // never more than half the glass
+    expect(cornerOf(style('999px'), 120, 40)).toEqual({ rx: 60, ry: 20, shape: 'round' });
+  });
+
+  it('concentric: a round corner d px inside shrinks by d, a squircle by 1.84 d (the gap the same across the corner)', () => {
+    expect(concentric('round')).toBe(1);
+    expect(SQUIRCLE_CONCENTRIC).toBeCloseTo(1.841, 3);
+    // the squircle's corner point (45°) of the outer and of the inner, d apart along the diagonal
+    const R = 40;
+    const d = 8;
+    const r = R - concentric('squircle') * d;
+    const at45 = (radius: number, inset: number) => inset + radius * (1 - 2 ** -0.25);
+    expect(Math.SQRT2 * (at45(r, d) - at45(R, 0))).toBeCloseTo(d, 5);
   });
 });

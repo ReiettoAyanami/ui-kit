@@ -42,6 +42,13 @@ export interface LenziLiquidGlassSettings {
   brightness: number;
   /** A fine ripple all over it, 0 to 1 (ybouane's "distortion": rough glass). 0: smooth. */
   distortion: number;
+  /**
+   * Curved all over, a dome, as a real pill (lenzi, 2026-11-26: "le pillole così voglio che siano più rotonde sopra come
+   * una pillola vera, senza che si tagli a metà"): its bezel reaches its middle (half its smaller side), no flat middle
+   * where what is behind shows cut in two (a slider's thumb: the filled rail on one side, the empty on the other), and a
+   * circle's profile (a pill's), not the squircle's flat top. The kit's thumbs and capsules. ybouane's "dome" bevel.
+   */
+  dome: boolean;
   glassPath: string | null;
   glassViewBox: string;
 }
@@ -56,11 +63,12 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
   saturation: 1,
   specularOpacity: 0.5,
   specularSaturation: 6,
-  lightReach: 12,
-  lightBase: 0.1,
+  lightReach: 24,
+  lightBase: 0,
   chromaticAberration: 0,
   brightness: 0,
   distortion: 0,
+  dome: false,
   glassPath: null,
   glassViewBox: '0 0 100 100',
 };
@@ -114,16 +122,96 @@ function wholeTiles(maps: LenziLiquidGlassMaps, document: Document): LenziGlassT
 }
 
 /**
+ * A glass's corners (lenzi, 2026-11-26: "i border-radius qui sono impostati male. Usa la formula giusta per ogni tipo
+ * arrotondazione differente"): their radii across and down, px (an ellipse's when the gaps round what it holds differ),
+ * and their shape, CSS corner-shape's: `round` a circle's or an ellipse's arc, `squircle` a superellipse of exponent 4.
+ */
+export interface LenziGlassCorner {
+  rx: number;
+  ry: number;
+  shape: 'round' | 'squircle';
+}
+
+/**
+ * How many times the gap a corner d px inside another has its radius shrink, to be concentric with it: the gap is d
+ * across the corner too, where it is widest (the diagonal). (1 − 2^−1/2) / (1 − 2^−1/n), n the corner's exponent: 1 for
+ * a round corner (R − d), 1.84 for a squircle (its curve is flatter, it reaches nearer its corner).
+ */
+export const SQUIRCLE_CONCENTRIC = (1 - 2 ** -0.5) / (1 - 2 ** -0.25);
+
+export function concentric(shape: LenziGlassCorner['shape']): number {
+  return shape === 'squircle' ? SQUIRCLE_CONCENTRIC : 1;
+}
+
+/** The corners of an element of this size, from its computed style (its top left corner: one for all four). */
+export function cornerOf(style: CSSStyleDeclaration | undefined, width: number, height: number): LenziGlassCorner {
+  const [across = '0', down = across] = (style?.borderTopLeftRadius || '0').trim().split(/\s+/);
+  const length = (value: string, of: number) => (value.endsWith('%') ? (parseFloat(value) / 100) * of : parseFloat(value)) || 0;
+  const shapeName = `${style?.getPropertyValue('corner-top-left-shape') ?? ''} ${style?.getPropertyValue('corner-shape') ?? ''}`;
+  return {
+    rx: Math.min(width / 2, Math.max(0, length(across, width))),
+    ry: Math.min(height / 2, Math.max(0, length(down, height))),
+    shape: /squircle|superellipse\(2\)/.test(shapeName) ? 'squircle' : 'round',
+  };
+}
+
+export function cornerKey(corner: LenziGlassCorner): string {
+  return `${corner.shape} ${corner.rx.toFixed(2)} ${corner.ry.toFixed(2)}`;
+}
+
+/** What a box of this size and these corners covers, one alpha a pixel, drawn by a canvas; null without one. */
+function boxInside(document: Document, width: number, height: number, corner: LenziGlassCorner): Uint8ClampedArray | null {
+  const context = Object.assign(document.createElement('canvas'), { width, height }).getContext('2d');
+  if (!context) return null;
+  const { rx, ry } = corner;
+  // a corner's quarter, centred on (cx, cy), from angle a: an ellipse's, or a superellipse of exponent 4
+  // (|x/rx|^4 + |y/ry|^4 = 1)
+  const curve = (cx: number, cy: number, a: number) => {
+    const steps = 24;
+    for (let i = 0; i <= steps; i++) {
+      const t = a + ((Math.PI / 2) * i) / steps;
+      const c = Math.cos(t);
+      const n = Math.sin(t);
+      const x = corner.shape === 'squircle' ? Math.sign(c) * Math.sqrt(Math.abs(c)) : c;
+      const y = corner.shape === 'squircle' ? Math.sign(n) * Math.sqrt(Math.abs(n)) : n;
+      context.lineTo(cx + x * rx, cy + y * ry);
+    }
+  };
+  context.beginPath();
+  curve(width - rx, ry, -Math.PI / 2);
+  curve(width - rx, height - ry, 0);
+  curve(rx, height - ry, Math.PI / 2);
+  curve(rx, ry, Math.PI);
+  context.closePath();
+  context.fill();
+  const pixels = context.getImageData(0, 0, width, height).data;
+  const inside = new Uint8ClampedArray(width * height);
+  for (let i = 0; i < inside.length; i++) inside[i] = pixels[i * 4 + 3]!;
+  return inside;
+}
+
+/**
+ * The maps of a box with these corners: a round corner of one radius from its exact distance (liquidGlassMaps), any
+ * other (an ellipse's, a squircle's) from its outline drawn into pixels, as the cat's: the bezel follows the corner the
+ * browser draws.
+ */
+function boxMaps(width: number, height: number, corner: LenziGlassCorner, optics: Omit<LenziLiquidGlassShape, 'width' | 'height' | 'radius'>, document: Document): LenziLiquidGlassMaps {
+  if (corner.shape === 'round' && Math.abs(corner.rx - corner.ry) < 0.5) return liquidGlassMaps({ width, height, radius: corner.rx, ...optics });
+  const inside = boxInside(document, width, height, corner);
+  return inside ? liquidGlassOutlineMaps({ width, height, inside, ...optics }) : liquidGlassMaps({ width, height, radius: Math.min(corner.rx, corner.ry), ...optics });
+}
+
+/**
  * The whole map of a box, made once for every glass of that size, corners and optics (2026-11-26: every card's preview
  * of the Components page is a glass now, fifty of one size; each made its own, 275 ms each in headless Chrome).
  */
 const WHOLES = new Map<string, LenziGlassTiles>();
 
-function sharedWholeTiles(shape: LenziLiquidGlassShape, document: Document): LenziGlassTiles {
-  const key = `${shape.width}x${shape.height}|${shape.radius}|${shape.bezel}|${shape.thickness}|${shape.ior}|${shape.surface}`;
+function sharedWholeTiles(width: number, height: number, corner: LenziGlassCorner, optics: Omit<LenziLiquidGlassShape, 'width' | 'height' | 'radius'>, document: Document): LenziGlassTiles {
+  const key = `${width}x${height}|${cornerKey(corner)}|${optics.bezel}|${optics.thickness}|${optics.ior}|${optics.surface}`;
   let tiles = WHOLES.get(key);
   if (!tiles) {
-    tiles = wholeTiles(liquidGlassMaps(shape), document);
+    tiles = wholeTiles(boxMaps(width, height, corner, optics, document), document);
     if (WHOLES.size >= MOST_PIECES) WHOLES.delete(WHOLES.keys().next().value!);
     WHOLES.set(key, tiles);
   }
@@ -141,17 +229,17 @@ function sharedWholeTiles(shape: LenziLiquidGlassShape, document: Document): Len
 export function slicedTiles(
   width: number,
   height: number,
-  radius: number,
+  corner: LenziGlassCorner,
   optics: Omit<LenziLiquidGlassShape, 'width' | 'height' | 'radius'>,
   document: Document,
 ): LenziGlassTiles | null {
-  const cuts = glassCuts(width, height, radius, optics.bezel);
+  const cuts = glassCuts(width, height, Math.max(corner.rx, corner.ry), optics.bezel);
   if (!cuts) return null;
   const side = cuts.side;
-  const key = `${side}|${radius}|${optics.bezel}|${optics.thickness}|${optics.ior}|${optics.surface}`;
+  const key = `${side}|${cornerKey(corner)}|${optics.bezel}|${optics.thickness}|${optics.ior}|${optics.surface}`;
   let pictures = PIECES.get(key);
   if (!pictures) {
-    const maps = liquidGlassMaps({ width: side, height: side, radius, ...optics });
+    const maps = boxMaps(side, side, corner, optics, document);
     const map = cuts.pieces.map(([fx, fy, fw, fh]) => {
       const piece = new Uint8ClampedArray(fw * fh * 4);
       for (let row = 0; row < fh; row++) piece.set(maps.displacement.subarray(((fy + row) * side + fx) * 4, ((fy + row) * side + fx + fw) * 4), row * fw * 4);
@@ -226,12 +314,15 @@ export interface LenziGlassPlace {
   edge: number;
   width: number;
   height: number;
-  radius: number;
+  corner: LenziGlassCorner;
 }
 
-/** Where the glass's bending goes (above), from its computed style and its size and corners with its border. */
-export function glassPlace(style: CSSStyleDeclaration | undefined, width: number, height: number, radius: number, layered: boolean): LenziGlassPlace {
-  const self = { layer: false, edge: 0, width, height, radius };
+/**
+ * Where the glass's bending goes (above), from its computed style and its size and corners with its border. A layer
+ * inside the border has its corners concentric with the glass's (`concentric`, each axis its own border).
+ */
+export function glassPlace(style: CSSStyleDeclaration | undefined, width: number, height: number, corner: LenziGlassCorner, layered: boolean): LenziGlassPlace {
+  const self = { layer: false, edge: 0, width, height, corner };
   if (!layered || !style) return self;
   const overflow = `${style.overflowX} ${style.overflowY}`;
   if (/auto|scroll/.test(overflow)) return self;
@@ -242,13 +333,22 @@ export function glassPlace(style: CSSStyleDeclaration | undefined, width: number
   const right = parseFloat(style.borderRightWidth) || 0;
   const bottom = parseFloat(style.borderBottomWidth) || 0;
   const left = parseFloat(style.borderLeftWidth) || 0;
-  const covers = /^visible visible$/.test(overflow) && clearColour(style.borderTopColor);
-  if (covers || !(top || right || bottom || left)) return { layer: true, edge: top, width, height, radius };
-  return { layer: true, edge: 0, width: Math.max(2, width - left - right), height: Math.max(2, height - top - bottom), radius: Math.max(0, radius - top) };
+  // its border, when clear and not cut away (it cuts nothing, or cuts at the border's outer edge: overflow-clip-margin)
+  const cutAtBorder = /^(visible|clip) (visible|clip)$/.test(overflow) && (/^visible visible$/.test(overflow) || /border-box/.test(style.getPropertyValue('overflow-clip-margin')));
+  const covers = cutAtBorder && clearColour(style.borderTopColor);
+  if (covers || !(top || right || bottom || left)) return { layer: true, edge: top, width, height, corner };
+  const k = concentric(corner.shape);
+  return {
+    layer: true,
+    edge: 0,
+    width: Math.max(2, width - left - right),
+    height: Math.max(2, height - top - bottom),
+    corner: { shape: corner.shape, rx: Math.max(0, corner.rx - k * left), ry: Math.max(0, corner.ry - k * top) },
+  };
 }
 
 function placeKey(place: LenziGlassPlace): string {
-  return place.layer ? `layer ${place.edge} ${place.width}x${place.height} ${place.radius}` : 'self';
+  return place.layer ? `layer ${place.edge} ${place.width}x${place.height} ${cornerKey(place.corner)}` : 'self';
 }
 
 /** Whether a computed colour is see-through (no border to keep). */
@@ -275,7 +375,14 @@ export function refracts(view: Window | null): boolean {
  */
 export const LIGHT_FLOOR = 0.12;
 export const LIGHT_GAIN = 2.4;
-export const LIGHT_BASE = 0.1;
+export const LIGHT_BASE = 0;
+
+/**
+ * How the edge's light rises and dies along it: smoothly at both ends (a smoothstep), so a highlight ends soft, almost
+ * faded (lenzi, 2026-11-26: "voglio che vengano disegnati che terminano così ... che terminano bene soffici quasi
+ * sfumati, ma come venivano calcolate le posizioni degli highlight andava bene").
+ */
+export const LIGHT_EASE = '0 0.028 0.104 0.216 0.352 0.5 0.648 0.784 0.896 0.972 1';
 
 /** The light's colour matrix: its colour what is behind halfway to white, its alpha how bright that is (luminance). */
 export function lightMatrix(floor = LIGHT_FLOOR, gain = LIGHT_GAIN, base = LIGHT_BASE): string {
@@ -298,8 +405,8 @@ export class LenziLiquidSurface {
   private fullBend = 0;
   /** The most it may bend, px (`bendLimit`): never past its middle. */
   private limit = Infinity;
-  /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
-  private radius = 0;
+  /** The corners the filter was drawn for (`cornerKey`); and the frames since they were last looked at. */
+  private corners = '';
   /** The tint (`--lenzi-liquid-fill`) the filter was drawn with. */
   private fill = '';
   private framesSinceRadius = 0;
@@ -327,10 +434,12 @@ export class LenziLiquidSurface {
     const outerWidth = Math.round(this.element.offsetWidth || box.width);
     const outerHeight = Math.round(this.element.offsetHeight || box.height);
     if (outerWidth < 2 || outerHeight < 2) return;
-    this.radius = this.cornerRadius();
-    // on a layer behind what it holds, or on itself (glassPlace): the maps are the size of what bends
-    const place = glassPlace(this.document.defaultView?.getComputedStyle(this.element), outerWidth, outerHeight, this.radius, this.layered);
-    const { width, height, radius } = place;
+    const computed = this.document.defaultView?.getComputedStyle(this.element);
+    const outer = cornerOf(computed, outerWidth, outerHeight);
+    this.corners = cornerKey(outer);
+    // on a layer behind what it holds, or on itself (glassPlace): the maps are the size of what bends, its corners
+    const place = glassPlace(computed, outerWidth, outerHeight, outer, this.layered);
+    const { width, height, corner } = place;
     this.place = placeKey(place);
     const path = s.glassPath;
     // A glass of the app's (`--lenzi-liquid-fill`, the kit's styles give it) has its tint drawn by the filter, under its
@@ -347,16 +456,18 @@ export class LenziLiquidSurface {
     this.tinted = !!tint;
     if (this.tinted) this.element.style.setProperty('background-color', 'transparent');
     const reach = Math.max(0, s.lightReach);
-    const key = `${this.place}|${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.chromaticAberration}|${s.brightness}|${s.distortion}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
+    const key = `${this.place}|${width}x${height}|${cornerKey(corner)}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.chromaticAberration}|${s.brightness}|${s.distortion}|${s.dome}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
     if (key === this.size) return;
     this.size = key;
     // A bezel wider than half the glass would bend the whole of it: never more than a third of its smaller side.
-    const bezel = Math.min(s.bezel, Math.max(4, Math.min(width, height) / 3));
-    const optics = { bezel, thickness: s.thickness, ior: s.ior, surface: s.surface };
+    // (a dome: curved to its middle, all of it bending)
+    const bezel = s.dome ? Math.max(4, Math.min(width, height) / 2) : Math.min(s.bezel, Math.max(4, Math.min(width, height) / 3));
+    // a dome is a circle's profile (a pill's), not the squircle's flat top: it bends evenly to its middle
+    const optics = { bezel, thickness: s.thickness, ior: s.ior, surface: s.dome ? ('circle' as const) : s.surface };
     const inside = path ? this.outline(path, width, height) : null;
     const tiles = inside
       ? wholeTiles(liquidGlassOutlineMaps({ width, height, inside, ...optics }), this.document)
-      : slicedTiles(width, height, radius, optics, this.document) ?? sharedWholeTiles({ width, height, radius, ...optics }, this.document);
+      : slicedTiles(width, height, corner, optics, this.document) ?? sharedWholeTiles(width, height, corner, optics, this.document);
     const svg = this.svg ?? (this.document.createElementNS(SVG, 'svg') as SVGSVGElement);
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('width', '0');
@@ -430,8 +541,9 @@ export class LenziLiquidSurface {
   ${bright}
   ${fromFrost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
   <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix(LIGHT_FLOOR, LIGHT_GAIN, Math.max(0, s.lightBase))}" result="light"/>
+  <feComponentTransfer in="light" result="light"><feFuncA type="table" tableValues="${LIGHT_EASE}"/></feComponentTransfer>
   <feComposite in="light" in2="specular" operator="in" result="lit-line"/>
-  <feColorMatrix in="bent" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
+  <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
   <feComposite in="vivid" in2="lit-line" operator="in" result="edge"/>
   <feBlend in="edge" in2="refracted" mode="normal" result="coloured"/>
   <feComponentTransfer in="lit-line" result="highlight"><feFuncA type="linear" slope="${(shine * 2).toFixed(2)}"/></feComponentTransfer>
@@ -452,7 +564,7 @@ export class LenziLiquidSurface {
       style.removeProperty('backdrop-filter');
       style.setProperty('--lenzi-liquid-filter', `url(#${this.id})`);
       style.setProperty('--lenzi-liquid-inset', `${-place.edge}px`);
-      style.setProperty('--lenzi-liquid-radius', `${place.radius}px`);
+      style.setProperty('--lenzi-liquid-radius', `${place.corner.rx}px / ${place.corner.ry}px`);
       this.element.classList.add('lenzi-liquid-layered');
     } else {
       this.unlayer();
@@ -498,11 +610,12 @@ export class LenziLiquidSurface {
     // its corners, or its tint (a variable the app changed: the filter draws it), or where it may lie (it began to
     // scroll, its border shows now)
     const style = this.document.defaultView?.getComputedStyle(this.element);
-    const radius = this.cornerRadius();
-    if (radius !== this.radius || (style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '') !== this.fill) return true;
     const width = Math.round(this.element.offsetWidth);
     const height = Math.round(this.element.offsetHeight);
-    return width >= 2 && height >= 2 && placeKey(glassPlace(style, width, height, radius, this.layered)) !== this.place;
+    if (width < 2 || height < 2) return false;
+    const corner = cornerOf(style, width, height);
+    if (cornerKey(corner) !== this.corners || (style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '') !== this.fill) return true;
+    return placeKey(glassPlace(style, width, height, corner, this.layered)) !== this.place;
   }
 
   destroy(): void {
@@ -512,11 +625,6 @@ export class LenziLiquidSurface {
     this.element.style.removeProperty('backdrop-filter');
     if (this.tinted) this.element.style.removeProperty('background-color');
     this.tinted = false;
-  }
-
-  /** The element's corners' radius now, px (its top left one: the glass's corners are one radius). */
-  private cornerRadius(): number {
-    return parseFloat(this.document.defaultView?.getComputedStyle(this.element).borderTopLeftRadius ?? '0') || 0;
   }
 
   /** What the path covers at this size, one alpha a pixel (0 out, 255 in); null when it cannot be drawn. */

@@ -90,8 +90,14 @@ the rule says what, the variable says how much.
   - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass.
   - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti
     scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che ti
-    inventi"): bright where a light is under it, on that side, dark over the dark page (a faint line only, so the shape
-    reads), following it at every frame, smoothly. Never a light of its own: no pointer, no fixed angle, no boids.
+    inventi"): bright where a light is under it, on that side, nothing over the dark page, following it at every frame,
+    smoothly. Never a light of its own: no pointer, no fixed angle, no boids, no reflection on the opposite side (tried
+    after kube.io's rim, 2026-11-26; lenzi: "non voglio la specularità dell'esempio ... come venivano calcolate le
+    posizioni degli highlight andava bene"). **Each highlight ends soft, almost faded** (lenzi, 2026-11-26: "voglio che
+    vengano disegnati che terminano ... bene soffici quasi sfumati"): the light gathered 24 px round the edge, rising and
+    dying smoothly along it, its colour the light's (never a sharp copy of what is behind: over words and boids it broke
+    the line into dashes). **No dark border round it** (lenzi, 2026-11-26: "ci sono come dei bordi neri a tutto"): every
+    glass's border is clear, the panels' (`.lenzi-surface`) too.
   - **The default optics** (lenzi, 2026-11-25: "per il vetro tieni i valori dafault di apple per ora"; kube.io's: refraction
     1, blur 0.2, specular opacity 0.5, specular saturation 6): **its edge takes the colour of what is under it** (a
     saturated copy of it, kube.io's way: "guarda come i bordi prendono il colore di quello che sta sotto"), with a light
@@ -101,10 +107,34 @@ the rule says what, the variable says how much.
     and settles milky again; thicker glass than kube.io's, bending more, convex (a lip drew a box inside the thumb),
     its edge's line lit all round (`lightBase` 0.45), so it shows on something this small
     (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc.").
+    `LenziGlassList`: the chosen entry of a list under a lens of glass, milky white and violet (lenzi, 2026-11-26).
+  - **Every thumb is a spring** (lenzi, 2026-11-26: "anche le barre di scorrimento devono avere il comportamento a
+    molla"): dragged past an end, it follows less and less, a rubber band (at most a little over half of itself:
+    `OVERSHOOT` for the switch, `SLIDER_OVERSHOOT` for the slider), the value staying at the end; let go, it springs
+    back, a little past, then home. The switch's and the slider's thumbs alike, and any thumb the kit adds.
+  - **Every pill is a dome** (lenzi, 2026-11-26: "le pillole così voglio che siano più rotonde sopra come una pillola
+    vera, senza che si tagli a metà"): a thumb's or a capsule's glass is curved to its middle (`dome`, a circle's
+    profile), no flat middle where what is behind shows cut in two.
+  - **What a moving glass must never do** (lenzi, 2026-11-26, the glass list: "ha gli stessi primi problemi degli altri
+    selettori, come vedi si taglia e soprattutto fa degli sfarfallii strani prima di arrivare"):
+    - **never change size while it moves**: its filter is made for its size, so a size that moves makes a new filter at
+      every frame, its maps pictures the browser has not drawn yet: it flickers. It takes its new size at once and only
+      its place and scale move (translate, scale: they leave the filter as it is);
+    - **never be cut by what holds it**: a scroller (overflow) cuts it, grown on its way, and the focus ring; give it
+      room (padding, the same negative margin), or do not scroll where nothing needs to (the segmented control's
+      capsule, 2026-11-26, and the glass list's lens);
+    - **never slide its bezel over words**: it stretches their lines into streaks, new ones at every frame. A lens over
+      a few letters (a segmented control's word, a thumb) may; a lens over lines of text (a list) moves under them.
   - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
   - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
     replica"): no stroke; corners concentric to what they hold (controls are capsules, a panel's radius is its
     content's plus the gap); a scroll edge effect under the bar instead of a fill.
+  - **Concentric, each kind of corner its own formula** (lenzi, 2026-11-26: "i border-radius qui sono impostati male.
+    Usa la formula giusta per ogni tipo arrotondazione differente"): a corner d px inside another has the outer radius
+    less d × `--lenzi-concentric`: 1 for round corners, 1.84 for squircles (a superellipse is flatter: the gap stays d
+    across the corner). Where the gaps across and down differ, the inner corner is an ellipse, one gap each axis (a
+    preview card's preview: 12 / 8 px in a 20 px corner). The glass's bend and rim follow the corner the browser draws
+    (round, elliptical, squircle).
   - **The page's title is in the page** (lenzi, 2026-11-25: "togli la barra sopra che non ha senso, metti un titolo
     normale un po' grande"; "il titolo è troppo vicino al lato"): with the bar of pages there is no top bar; the title
     is large and bold at the top of the page's column (`lenziGlassPage`), one per page (a page's own h1 wins).
@@ -125,6 +155,11 @@ the rule says what, the variable says how much.
 - **None of it with reduced motion.**
 
 ## Borders and shape
+
+- **Highlights or a border, never both** (lenzi, 2026-11-26, his general rule of style: "Come mia generale regola di
+  stile si possono scegliere o gli highlight o un bordo su un elemento. Appuntala"): an element is outlined by one
+  thing. A glass has its highlights (the light under it on its edge), so no border and no faint line all round; a
+  surface with a border has no light on it.
 
 - **Every border is 1 px** (`--lenzi-border`), Material's and ours (lenzi, 2026-11-25: "in generale dovrebbero essere
   dappertutto il 50% di quello che sono ora, tante outline sono troppo spesse"; before, 2 px, from 2026-10-02: "i

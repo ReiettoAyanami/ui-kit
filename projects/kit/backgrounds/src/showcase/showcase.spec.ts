@@ -26,7 +26,7 @@ describe('LenziShowcase', () => {
     const element = fixture.nativeElement as HTMLElement;
     const showcase = fixture.debugElement.children[0]!.componentInstance as LenziShowcase;
     const made = () => [...element.querySelectorAll('.made')].map((node) => node.textContent);
-    const tabs = () => [...element.querySelectorAll<HTMLButtonElement>('.tab')];
+    const tabs = () => [...element.querySelectorAll<HTMLButtonElement>('lenzi-glass-list .entry')];
     return { fixture, element, showcase, made, tabs };
   };
 
@@ -55,10 +55,10 @@ describe('LenziShowcase', () => {
 
   it('walks the list with the arrows, Home and End', async () => {
     const { fixture, made, tabs } = await make();
-    tabs()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    tabs()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     fixture.detectChanges();
     expect(made()).toEqual(['figure']);
-    tabs()[2]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
+    tabs()[2]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
     fixture.detectChanges();
     expect(made()).toEqual(['slider']);
   });

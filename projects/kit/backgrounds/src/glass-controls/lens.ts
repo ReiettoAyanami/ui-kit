@@ -24,6 +24,11 @@ export const LENS_SETTINGS: LenziLiquidGlassSettings = {
   specularSaturation: 6,
   // its edge's line shows all round over a dark panel too (lenzi, 2026-11-26: "la barra di ricerca nella overview non é glass e non il pomello del toggle ancora non lo é, o comunque si vede poco")
   lightBase: 0.45,
+  // the light gathered close round it, as before (2026-11-26: the panels' reach went to 24, for highlights that end soft)
+  lightReach: 12,
+  // a real pill: curved to its middle (lenzi, 2026-11-26: "più rotonde sopra come una pillola vera, senza che si tagli a
+  // metà")
+  dome: true,
 };
 
 /**

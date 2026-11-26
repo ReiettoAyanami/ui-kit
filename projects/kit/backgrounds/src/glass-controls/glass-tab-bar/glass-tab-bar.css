@@ -52,7 +52,7 @@
   min-width: 56px;
   padding: 0 12px;
   border: none;
-  border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px);
+  border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px * var(--lenzi-concentric, 1));
   background: none;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-label-small);
@@ -120,7 +120,7 @@
   top: 4px;
   bottom: 4px;
   left: 0;
-  border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px);
+  border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px * var(--lenzi-concentric, 1));
   /* at rest milky glass, not solid (2026-11-26: the glass seen on small things) */
   background-color: color-mix(in srgb, var(--lenzi-glass-pill) 30%, transparent);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);

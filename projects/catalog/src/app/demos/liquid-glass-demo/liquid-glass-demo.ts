@@ -33,8 +33,8 @@ export class LiquidGlassDemo {
   protected readonly saturation = computed(() => this.num('saturation', 1.5));
   protected readonly specularOpacity = computed(() => this.num('specularOpacity', 0.5));
   protected readonly specularSaturation = computed(() => this.num('specularSaturation', 6));
-  protected readonly lightReach = computed(() => this.num('lightReach', 12));
-  protected readonly lightBase = computed(() => this.num('lightBase', 0.1));
+  protected readonly lightReach = computed(() => this.num('lightReach', 24));
+  protected readonly lightBase = computed(() => this.num('lightBase', 0));
   protected readonly chromaticAberration = computed(() => this.num('chromaticAberration', 0));
   protected readonly brightness = computed(() => this.num('brightness', 0));
   protected readonly distortion = computed(() => this.num('distortion', 0));

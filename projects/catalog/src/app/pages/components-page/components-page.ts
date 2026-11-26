@@ -5,7 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 
-import { LenziPreviewCard, LenziShelf, LenziShowcase, LenziShowcaseSlide, LenziStatusMessage } from '@lenzi/ui-kit';
+import { LenziPreviewCard, LenziShelf, LenziStatusMessage } from '@lenzi/ui-kit';
+import { LenziShowcase, LenziShowcaseSlide } from '@lenzi/ui-kit/backgrounds';
 import { LenziGlassPage, LenziGlassSearch, LenziLit, lenziOverBackground } from '@lenzi/ui-kit/backgrounds';
 
 import { CATEGORIES, DOCS, KitDoc, Values, defaults } from '../../registry';

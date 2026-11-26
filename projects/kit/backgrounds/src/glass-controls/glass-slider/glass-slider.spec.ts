@@ -45,6 +45,27 @@ describe('LenziGlassSlider', () => {
     expect(fixture.componentInstance.value()).toBe(75);
   });
 
+  it('pulled past an end, the value stays at it and the thumb stretches, less and less; let go, it springs back', () => {
+    const { fixture, track } = make();
+    track.getBoundingClientRect = () => ({ left: 0, width: 200, top: 0, height: 40, right: 200, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 190 }));
+    track.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 260 }));
+    fixture.detectChanges();
+    const over = () => parseFloat(track.style.getPropertyValue('--lenzi-slider-over'));
+    expect(fixture.componentInstance.value()).toBe(100);
+    const pulled = over();
+    expect(pulled).toBeGreaterThan(0);
+    track.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 2000 }));
+    fixture.detectChanges();
+    // never further than its share of the glass, however far the pointer goes
+    expect(over()).toBeGreaterThan(pulled);
+    const glass = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.lens')!;
+    expect(over()).toBeLessThanOrEqual((glass.offsetWidth || 40) * 0.6 + 0.01);
+    track.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }));
+    fixture.detectChanges();
+    expect(over()).toBe(0);
+  });
+
   it('its thumbs take the shapes asked for; the fill may be a wave, flowing or still (2026-11-25)', () => {
     const { fixture, track } = make();
     expect(track.classList.contains('thumb-capsule')).toBe(true);

@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { NgTemplateOutlet } from '@angular/common';
 
+import { LenziGlassList, LenziGlassListItem } from '../glass-controls/glass-list/glass-list';
 import { LenziShowcaseSlide } from './showcase-slide';
 
 /**
@@ -15,7 +16,7 @@ import { LenziShowcaseSlide } from './showcase-slide';
  */
 @Component({
   selector: 'lenzi-showcase',
-  imports: [MatButtonModule, MatIconModule, NgTemplateOutlet],
+  imports: [LenziGlassList, MatButtonModule, MatIconModule, NgTemplateOutlet],
   templateUrl: './showcase.html',
   styleUrl: './showcase.css',
   host: {
@@ -40,6 +41,8 @@ export class LenziShowcase {
 
   protected readonly slides = contentChildren(LenziShowcaseSlide);
   protected readonly current = computed(() => this.slides()[this.shown()] ?? null);
+  /** The list's entries: each slide's name and caption. */
+  protected readonly entries = computed<LenziGlassListItem[]>(() => this.slides().map((slide) => ({ name: slide.name(), caption: slide.caption() })));
   /** The index, kept inside the slides there are. */
   protected readonly shown = computed(() => {
     const count = this.slides().length;
@@ -94,14 +97,4 @@ export class LenziShowcase {
     if (!this.host.nativeElement.contains(event.relatedTarget as Node | null)) this.focused.set(false);
   }
 
-  /** The list is tabs: the arrows walk them, Home and End go to the ends; the focus follows. */
-  protected key(event: KeyboardEvent, index: number): void {
-    const count = this.slides().length;
-    const to = { ArrowRight: index + 1, ArrowDown: index + 1, ArrowLeft: index - 1, ArrowUp: index - 1, Home: 0, End: count - 1 }[event.key];
-    if (to === undefined) return;
-    event.preventDefault();
-    this.go(to);
-    const tabs = this.host.nativeElement.querySelectorAll<HTMLElement>('.tab');
-    tabs[this.shown()]?.focus();
-  }
 }

@@ -18,3 +18,7 @@
   that dims): the glass inside it would bend nothing under it. Fade or dim the glass's content, never what holds it.
 - Never style a glass's `::before`: it is the glass's layer (`lenzi-liquid-layered`). Never a `backdrop-filter` of your
   own on anything that holds glass, for the same reason as above.
+- A glass that moves (a control's thumb, a lens, a capsule): animate its `translate` and `scale` only, never its width or
+  height (a new filter at every frame: it flickers); give it room in a scroller; never slide its bezel over lines of
+  text (lenzi, 2026-11-26: "si taglia e soprattutto fa degli sfarfallii strani prima di arrivare"). RULES.md, Controls of
+  glass.

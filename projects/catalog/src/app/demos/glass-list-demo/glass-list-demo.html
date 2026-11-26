@@ -1,0 +1,4 @@
+<div class="stage">
+  <lenzi-glass-list class="list" label="Examples" [items]="items" [selected]="selected()" (selectedChange)="chose($event)" />
+  <p class="shown">{{ items[selected()]?.name }}</p>
+</div>

@@ -16,6 +16,10 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   into a displacement map (red and green, 128 none; blue the line on the edge, below) and given to `feDisplacementMap`,
   its scale the largest shift. One picture a glass: every picture of the filter is drawn again at every frame (three
   maps under six cards took the home from 200 frames a second to 51; one, in nine shared pieces, to 188; 2026-11-26).
+- **Its corners, whatever they are** (lenzi, 2026-11-26: "Usa la formula giusta per ogni tipo arrotondazione
+  differente"): round corners of one radius from their exact distance; elliptical ones (two radii) and squircles (CSS
+  `corner-shape`, a superellipse of exponent 4) from their outline drawn into pixels, as the cat's, so the bezel and the
+  rim follow the corner the browser draws. A layer inside a border has concentric corners (`concentric()`).
 - **Antialiased** (lenzi, 2026-11-25: "attiva antialiasing"): a pixel the outline crosses is four points of the maps
   averaged, so the rim and the bending fade across the round corners instead of stepping with the pixels.
 - **A little blur and saturation** of what is behind (`blur` 1.5 px, `saturation` 1.5).
@@ -23,8 +27,9 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   sono tutti scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che
   ti inventi"; before, a rim lit by the pointer and the boids, one of eight sides at a time): kube.io's line on the very
   edge (about 1.5 px, the same all round), as bright as what is under each point of it is (what is behind, gathered
-  `lightReach` px round it; nothing below the page's dark colour but a faint line, `LIGHT_BASE`, so the shape reads;
-  whole a little past half), in its colour (the saturated copy) with a highlight in the light's own colour over it
+  `lightReach` px round it, 24; nothing below the page's dark colour; whole a little past half; rising and dying
+  smoothly along the edge, so each highlight ends soft, almost faded: lenzi, 2026-11-26, "che terminano bene soffici
+  quasi sfumati"), in its colour (the saturated copy) with a highlight in the light's own colour over it
   (`specularOpacity`). All in the filter: at every frame the page draws, the edge lights on the side a light is under
   it and follows it smoothly. No fixed side, no pointer, no script.
 - **On a layer behind what it holds** (lenzi, 2026-11-26: "il liquidglass non funziona bene, non funziona con altri
@@ -70,16 +75,18 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `saturation` | 1: as it is | `1` |
 | input | `specularOpacity` | 0 to 1: how bright the edge gets over a full light | `0.5` |
 | input | `specularSaturation` | the edge's copy of what is behind, saturated | `6` |
-| input | `lightReach` | px: how far round the edge the light under it is gathered (frosted glass: as far as it is frosted) | `12` |
-| input | `lightBase` | 0 to 1: the edge's light with nothing bright under it, the same all round (the kit's controls: 0.45, so a thumb over a dark panel shows as glass) | `0.1` |
+| input | `lightReach` | px: how far round the edge the light under it is gathered (frosted glass: as far as it is frosted) | `24` (the kit's controls: 12) |
+| input | `lightBase` | 0 to 1: the edge's light with nothing bright under it, the same all round (the kit's controls: 0.45, so a thumb over a dark panel shows as glass) | `0` (highlights or a border, never both: lenzi, 2026-11-26) |
 | input | `chromaticAberration` | 0 to 1: colour fringes where it bends, red bent more and blue less (ybouane's; lenzi, 2026-11-26: "se possiamo anche noi avere gli stessi slider"); 0 costs nothing | `0` |
 | input | `brightness` | -0.5 to 0.5: brighter or darker than what is behind (ybouane's) | `0` |
 | input | `distortion` | 0 to 1: a fine ripple all over it, rough glass (ybouane's) | `0` |
+| input | `dome` | curved to its middle, as a real pill: the bezel half its smaller side, no flat middle (ybouane's dome; the kit's thumbs and capsules; lenzi, 2026-11-26: "più rotonde sopra come una pillola vera, senza che si tagli a metà") | `false` |
 | input | `glassPath` | an SVG path (even-odd): the glass's own shape | `null` (its box) |
 | input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |
 | function | `liquidGlassOutlineMaps(outline)` | the same for any shape, from what it covers (one alpha a pixel) | |
-| function | `glassPlace(style, width, height, radius, layered)` | where a glass draws its bending: on its layer or on itself, and the layer's size and corners | |
+| function | `glassPlace(style, width, height, corner, layered)` | where a glass draws its bending: on its layer or on itself, and the layer's size and corners | |
+| function | `cornerOf(style, width, height)`, `concentric(shape)` | a glass's corners (`{ rx, ry, shape }`: round or squircle); how many times a gap a corner inside shrinks by (1, 1.84) | |
 | function | `provideLenziLiquidGlass({ selectors?, settings? })` | the whole app of Liquid Glass | |
 | class | `LenziLiquidSurface(element, document, settings, layered = true)` | one glass: `build()`, `check()` (its corners and its place, now and then), `destroy()`; `layered` false: always on itself (a thumb) | |
 

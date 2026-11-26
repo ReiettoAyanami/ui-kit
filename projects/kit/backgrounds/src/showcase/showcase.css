@@ -43,61 +43,17 @@
   margin-top: 16px;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tab {
-  position: relative;
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  padding: 8px 14px 12px;
-  border: none;
-  border-radius: var(--lenzi-option-radius);
-  background: none;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: start;
-  font: inherit;
-  cursor: pointer;
-  transition: background-color 150ms linear;
-}
-
-.tab:hover {
-  background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
-}
-
-.tab:focus-visible {
-  outline: var(--lenzi-border-focus) solid var(--mat-sys-primary);
-  outline-offset: -2px;
-}
-
-.tab.current {
-  background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
-  color: var(--mat-sys-on-surface);
-}
-
-.name {
-  font: var(--mat-sys-title-small);
-  white-space: nowrap;
-}
-
-/* where it is narrow the names alone, a row of them */
-.caption {
-  display: none;
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-on-surface-variant);
+/* the list of slides (LenziGlassList): where it is narrow a row of names, scrolling */
+.list {
+  --lenzi-glass-list-direction: row;
+  --lenzi-glass-list-captions: none;
+  --lenzi-glass-list-wrap: nowrap;
+  --lenzi-glass-list-overflow: auto;
 }
 
 /* the clock: a line under the current name that fills while the slide stays; when full, the next slide */
 .clock {
-  position: absolute;
-  inset: auto 14px 5px;
+  display: block;
   height: 2px;
   border-radius: 1px;
   background: color-mix(in srgb, var(--mat-sys-on-surface) 14%, transparent);
@@ -141,21 +97,11 @@
     margin-top: 0;
   }
 
-  .tabs {
-    flex-direction: column;
-    overflow: visible;
-  }
-
-  .tab {
-    flex: none;
-  }
-
-  .name {
-    white-space: normal;
-  }
-
-  .caption {
-    display: block;
+  .list {
+    --lenzi-glass-list-direction: column;
+    --lenzi-glass-list-captions: block;
+    --lenzi-glass-list-wrap: normal;
+    --lenzi-glass-list-overflow: visible;
   }
 }
 

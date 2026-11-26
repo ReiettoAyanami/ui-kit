@@ -1,0 +1,35 @@
+<!-- The entries, and the lens on the chosen one: under its words at rest, over them (bending them) on its way. -->
+<div class="items" role="tablist" [attr.aria-label]="label()" [class.moving]="moving()">
+  @for (item of items(); track $index; let i = $index) {
+    <button
+      #entry
+      type="button"
+      role="tab"
+      class="entry"
+      [class.chosen]="i === current()"
+      [attr.aria-selected]="i === current()"
+      [attr.tabindex]="i === current() ? 0 : -1"
+      (click)="choose(i)"
+      (keydown)="key($event, i)"
+    >
+      <span class="name">{{ item.name }}</span>
+      @if (item.caption) {
+        <span class="caption">{{ item.caption }}</span>
+      }
+      @if (i === current() && extra(); as extra) {
+        <span class="extra">
+          <ng-container [ngTemplateOutlet]="extra" [ngTemplateOutletContext]="{ $implicit: i }" />
+        </span>
+      }
+    </button>
+  }
+  <span
+    #lens
+    class="lens"
+    aria-hidden="true"
+    [class.placed]="box()"
+    [style.width.px]="box()?.width"
+    [style.height.px]="box()?.height"
+    [style.translate]="box() ? box()!.x + 'px ' + box()!.y + 'px' : null"
+  ></span>
+</div>

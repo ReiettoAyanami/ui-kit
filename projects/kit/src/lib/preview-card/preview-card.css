@@ -5,8 +5,11 @@
   --preview-card-side: 8px;
   --preview-card-end: 12px;
   /* the card's corner, so it can be a lit surface (lenziLit on it, over a background: 2026-11-17, "cards or any
-     elements over the background should turn into lit elements") */
-  border-radius: calc(var(--lenzi-panel-radius) + var(--preview-card-side));
+     elements over the background should turn into lit elements"): concentric with the preview's, across its side gap
+     (--lenzi-concentric: the corner shape's own formula; lenzi, 2026-11-26: "Usa la formula giusta per ogni tipo
+     arrotondazione differente") */
+  --preview-card-radius: calc(var(--lenzi-panel-radius) + var(--preview-card-side) * var(--lenzi-concentric));
+  border-radius: var(--preview-card-radius);
 }
 
 /* Lit, it is a surface over the background all the time: the border every surface has. */
@@ -22,7 +25,7 @@
   flex-direction: column;
   gap: 12px;
   padding: var(--preview-card-end) var(--preview-card-side);
-  border-radius: calc(var(--lenzi-panel-radius) + var(--preview-card-side));
+  border-radius: var(--preview-card-radius);
   transition: background-color 150ms var(--lenzi-standard-easing);
 }
 
@@ -35,9 +38,14 @@
 .preview {
   box-sizing: border-box;
   width: 100%;
-  overflow: hidden;
+  /* cut at the border's outer edge: as glass (an app of Liquid Glass) its layer lies over its clear border; never taller
+     than its shape for what it holds (cut, not hidden, would let its content stretch it: aspect-ratio's minimum size) */
+  overflow: clip;
+  overflow-clip-margin: border-box;
+  min-height: 0;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--lenzi-panel-radius);
+  /* concentric with the card's corner: across, its side gap; down, its gap above, larger (an ellipse) */
+  border-radius: var(--lenzi-panel-radius) / max(0px, calc(var(--preview-card-radius) - var(--preview-card-end) * var(--lenzi-concentric)));
   background-color: var(--mat-sys-surface-container-lowest);
 }
 

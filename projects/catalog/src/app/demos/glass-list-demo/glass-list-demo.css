@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+/* Stripes in the theme's colours behind the list: its lens bends them, and its edge takes their colour. */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  border-radius: var(--lenzi-panel-radius);
+  background: repeating-linear-gradient(
+    120deg,
+    var(--mat-sys-primary-container) 0 14px,
+    var(--mat-sys-tertiary-container) 14px 28px,
+    var(--mat-sys-surface-container-high) 28px 42px
+  );
+}
+
+.shown {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+  text-align: center;
+}
+
+@media (max-width: 599px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

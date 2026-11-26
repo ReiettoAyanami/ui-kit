@@ -4,6 +4,9 @@
 
 ## Rules
 
+- **A spring** (lenzi, 2026-11-26: "anche le barre di scorrimento devono avere il comportamento a molla"): pulled past an
+  end the thumb follows less and less, a rubber band (at most `SLIDER_OVERSHOOT`, 0.6, of its glass's width), the value
+  at the end; let go, it springs back, a little past, then home. The glass a dome, as every pill.
 - **A thin capsule rail**, the accent up to the value; **a light capsule thumb**.
 - **Shapes of the page's** (lenzi, 2026-11-25: "la forma dei knob dovrebbe essere configurabile, sia quello di vetro
   nell'animazione che quello che poi è solido"): `thumb` and `lens`; and **a wavy fill** ("una barra ondulata come su

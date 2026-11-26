@@ -1,6 +1,6 @@
 # Showcase
 
-`<lenzi-showcase>` and its slides, `<ng-template lenziShowcaseSlide>`: one large slide at a time, live, and the list of
+`<lenzi-showcase>` (`@lenzi/ui-kit/backgrounds`) and its slides, `<ng-template lenziShowcaseSlide>`: one large slide at a time, live, and the list of
 every slide beside it; they take turns by themselves (lenzi, 2026-11-26, the catalog's components, proposal F: "Fai la
 f, ma nella vetrina ci circolano i pezzi / vari esempi di come utilizzarli"). The App Store's Today, Apple TV's top
 shelf.
@@ -20,6 +20,9 @@ shelf.
 - **Only the slide on show is made**: a slide that moves (a scene, a chart) runs only while it is shown.
 - A slide rises into place (8 px, 300 ms) as every panel that appears; none of it with reduced motion.
 - **The list is tabs**: a tap or Enter shows a slide; the arrows walk the list, Home and End go to its ends.
+- **The list is a `LenziGlassList`** (lenzi, 2026-11-26: "fai in modo che l'highlight della selezione sia una lente di
+  liquid glass bianchina/violacea"): the slide on show under a lens of Liquid Glass, milky white and violet, that slides
+  to the next; the clock under its name. In `@lenzi/ui-kit/backgrounds` with it.
 - **It is a panel of the page** (`.lenzi-surface`): in an app of Liquid Glass it is glass. What a slide holds sits on it
   with no panel of its own: never glass on glass.
 - A slide that leads somewhere says so with a button inside it ("Open the page"), never by making the whole slide a link.

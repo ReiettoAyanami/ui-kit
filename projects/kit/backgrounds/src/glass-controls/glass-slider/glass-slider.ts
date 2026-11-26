@@ -8,6 +8,13 @@ const WAVE_STROKE = 4;
 /** How long the thumb stays glass after it is let go, ms. */
 const SETTLE = 260;
 
+/**
+ * Dragged past an end, the thumb follows less and less, like a rubber band, never further than this share of its glass's
+ * width; let go, it springs back to the end (lenzi, 2026-11-26: "anche le barre di scorrimento devono avere il
+ * comportamento a molla", as the switch's thumb).
+ */
+export const SLIDER_OVERSHOOT = 0.6;
+
 /** A thumb's shape: a lying capsule (Apple's), a circle, or an upright bar (Android's). */
 export type LenziSliderThumb = 'capsule' | 'circle' | 'bar';
 
@@ -69,6 +76,8 @@ export class LenziGlassSlider {
 
   protected readonly active = signal(false);
   protected readonly dragging = signal(false);
+  /** How far past an end the thumb is pulled now, px (the rubber band; 0 within the ends, and once let go). */
+  protected readonly over = signal(0);
   /** Where the value is along the track, 0 to 1. */
   protected readonly fraction = computed(() => {
     const span = this.max() - this.min();
@@ -106,6 +115,8 @@ export class LenziGlassSlider {
   protected up(): void {
     if (!this.dragging()) return;
     this.dragging.set(false);
+    // back to the end, as a spring (the thumbs' transition)
+    this.over.set(0);
     this.letGo();
   }
 
@@ -127,11 +138,14 @@ export class LenziGlassSlider {
     this.set(this.value() + moves[event.key]!);
   }
 
-  /** The value at a point of the screen. */
+  /** The value at a point of the screen; past an end, the value stays at it and the thumb stretches (a rubber band). */
   private setFrom(x: number): void {
     const box = this.rail().nativeElement.getBoundingClientRect();
     const fraction = box.width > 0 ? (x - box.left) / box.width : 0;
     this.set(this.min() + fraction * (this.max() - this.min()));
+    const past = (fraction < 0 ? fraction : fraction > 1 ? fraction - 1 : 0) * box.width;
+    const most = Math.max(1, (this.glass().nativeElement.offsetWidth || 40) * SLIDER_OVERSHOOT);
+    this.over.set(Math.sign(past) * most * (1 - Math.exp(-Math.abs(past) / most)));
   }
 
   /** A value on a step, inside the ends. */

@@ -1,0 +1,136 @@
+/* A list of what a panel beside it shows: a column (or a row, --lenzi-glass-list-direction), the chosen entry under a lens
+   of Liquid Glass, milky white and violet (lenzi, 2026-11-26: "una lente di liquid glass bianchina/violacea"), that
+   slides to another entry. */
+:host {
+  display: block;
+  min-width: 0;
+  /* the lens's tint: white, a little violet */
+  --lenzi-glass-list-lens: color-mix(in srgb, var(--mat-sys-primary) 60%, white);
+  --lenzi-glass-list-radius: var(--lenzi-panel-radius);
+}
+
+.items {
+  position: relative;
+  display: flex;
+  flex-direction: var(--lenzi-glass-list-direction, column);
+  gap: 4px;
+  min-width: 0;
+  /* Room round the entries for what a scrolling row would cut: the focus ring, and the lens grown on its way (lenzi,
+     2026-11-26: "la lista ha gli stessi primi problemi degli altri selettori, come vedi si taglia", as the segmented
+     control's capsule cut flat by its scroller on the 26th). A column does not scroll, so cuts nothing; a row scrolls
+     (--lenzi-glass-list-overflow: auto). */
+  margin: -8px;
+  padding: 8px;
+  overflow-x: var(--lenzi-glass-list-overflow, visible);
+  scrollbar-width: none;
+}
+
+.items::-webkit-scrollbar {
+  display: none;
+}
+
+.entry {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 14px 12px;
+  border: none;
+  border-radius: var(--lenzi-glass-list-radius);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color var(--lenzi-standard-duration) var(--lenzi-standard-easing),
+    background-color 150ms linear;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.entry:hover:not(.chosen) {
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.entry:focus-visible {
+  outline: var(--lenzi-border-focus) solid var(--mat-sys-primary);
+  outline-offset: -2px;
+}
+
+.entry.chosen {
+  color: var(--mat-sys-on-surface);
+}
+
+.name {
+  font: var(--mat-sys-title-small);
+  white-space: var(--lenzi-glass-list-wrap, normal);
+}
+
+.caption {
+  display: var(--lenzi-glass-list-captions, block);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* what the app gives under the chosen entry's words (the showcase's clock): in the entry's padding, so choosing another
+   moves nothing */
+.extra {
+  position: absolute;
+  inset: auto 14px 5px;
+  display: block;
+}
+
+/* The lens: kube.io's switch, as the segmented control's capsule: always glass, under a milky fill at rest; on its way the
+   fill thins and it grows a little, clear glass. Always under the words (lenzi, 2026-11-26: "fa degli sfarfallii strani
+   prima di arrivare"): over them, its bezel stretched their lines into streaks and scraps, new ones at every frame of the
+   slide; under them it bends what is behind the list and the words stay sharp. It is the chosen entry's box (measured),
+   so it fits a column, a row, an entry whose caption wraps. */
+.lens {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-radius: var(--lenzi-glass-list-radius);
+  background-color: color-mix(in srgb, var(--lenzi-glass-list-lens) 20%, transparent);
+  box-shadow:
+    0 2px 10px rgb(0 0 0 / 0.16),
+    inset 0 1px 0 color-mix(in srgb, var(--lenzi-glass-list-lens) 22%, transparent);
+  /* where the filter does not bend (not Chromium): a light blur */
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Only its place and its scale move, never its size (lenzi, 2026-11-26: "fa degli sfarfallii strani prima di arrivare"):
+   a glass's filter is made for its size, so a size that moves made a new one at every frame, its maps new pictures the
+   browser had not drawn yet (a frame bent by nothing, the next by the map: the flicker). The size of the entry it goes
+   to is taken at once, one filter; the slide is translate and scale, which leave the filter as it is. */
+.lens.placed {
+  opacity: 1;
+  transition:
+    translate 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    scale 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.moving .lens {
+  background-color: color-mix(in srgb, var(--lenzi-glass-list-lens) 8%, transparent);
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.16),
+    inset 2px 5px 16px rgb(0 0 0 / 0.08),
+    inset -2px -5px 16px rgb(255 255 255 / 0.08);
+  scale: 1.04;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lens.placed,
+  .entry {
+    transition: none;
+  }
+}

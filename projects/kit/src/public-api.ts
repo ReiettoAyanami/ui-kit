@@ -15,8 +15,6 @@ export * from './lib/nav-list/nav-list';
 export * from './lib/not-found/not-found';
 export * from './lib/version-label/version-label';
 export * from './lib/shelf/shelf';
-export * from './lib/showcase/showcase';
-export * from './lib/showcase/showcase-slide';
 
 // Actions and inputs
 export * from './lib/add-button/add-button';

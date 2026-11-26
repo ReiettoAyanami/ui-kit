@@ -33,7 +33,7 @@
   grid-template-columns: repeat(var(--lenzi-segments), minmax(var(--lenzi-segment-min-width), 1fr));
   height: var(--lenzi-segment-height);
   padding: 2px;
-  border-radius: calc(var(--lenzi-segment-height) / 2 + 2px);
+  border-radius: calc(var(--lenzi-segment-height) / 2 + 2px * var(--lenzi-concentric, 1));
   background-color: color-mix(in srgb, var(--mat-sys-on-surface) 14%, transparent);
   outline: none;
 }

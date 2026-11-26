@@ -1,6 +1,6 @@
 # AI notes: Showcase
 
-- `import { LenziShowcase, LenziShowcaseSlide } from '@lenzi/ui-kit'`. Every slide is an `<ng-template
+- `import { LenziShowcase, LenziShowcaseSlide } from '@lenzi/ui-kit/backgrounds'` (moved there on 2026-11-26: its list is a `LenziGlassList`). Every slide is an `<ng-template
   lenziShowcaseSlide="Name" caption="What it shows">`; never a plain element (it would be made, and run, all the time).
 - Three to eight slides. Write their names as the things they show ("Glass slider"), the caption as what the slide is an
   example of ("A player's volume"): one fact each, no "·".

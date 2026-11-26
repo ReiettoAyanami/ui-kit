@@ -93,7 +93,18 @@
   position: absolute;
   top: 50%;
   left: calc(var(--lenzi-slider-at) * 100%);
+  /* pulled past an end: a rubber band; let go, back as a spring (lenzi, 2026-11-26: "anche le barre di scorrimento
+     devono avere il comportamento a molla", the switch's: a little past the end, then back) */
+  translate: var(--lenzi-slider-over, 0px) 0;
   pointer-events: none;
+}
+
+.track:not(.dragging) .knob,
+.track:not(.dragging) .lens {
+  transition:
+    opacity 140ms ease,
+    transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    translate 420ms cubic-bezier(0.34, 1.45, 0.5, 1);
 }
 
 .knob {
@@ -188,6 +199,8 @@
 @media (prefers-reduced-motion: reduce) {
   .knob,
   .lens,
+  .track:not(.dragging) .knob,
+  .track:not(.dragging) .lens,
   .rail.wave .fill {
     transition: none;
     animation: none;
