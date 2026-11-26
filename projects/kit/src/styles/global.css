@@ -581,6 +581,12 @@ html {
   --lenzi-liquid-frost: var(--lenzi-liquid-frost-over);
 }
 
+/* and a little darker (lenzi, 2026-11-26: "e i tooltip di prima fammeli leggermente scuriti"): --lenzi-liquid-tint-over of
+   the page's colour. The bar of actions keeps the light tint of the controls. Twice the class: above the large glass's. */
+.lenzi-liquid-everywhere.lenzi-liquid-everywhere:is(.mat-mdc-dialog-surface, .mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel, .lenzi-shell-drawer) {
+  --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint-over), transparent);
+}
+
 /* The primary action is coloured glass (Apple, Color: "For primary actions, color the background"), the one that is. */
 .lenzi-liquid-everywhere.mat-mdc-fab {
   --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-primary-container) var(--lenzi-liquid-tint-large), transparent);

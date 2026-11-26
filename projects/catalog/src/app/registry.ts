@@ -1885,7 +1885,18 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
       { key: 'specularOpacity', label: 'Edge light: how bright the edge gets over a full light (0 to 1)', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05 },
       { key: 'specularSaturation', label: 'Edge colour: how saturated its copy of what is under it is', type: 'number', default: 6, min: 0, max: 12, step: 0.5 },
       { key: 'lightReach', label: 'How far round the edge the light under it is gathered (px)', type: 'number', default: 12, min: 0, max: 60, step: 1 },
+      { key: 'lightBase', label: 'Edge light with nothing bright under it (0 to 1): the fresnel', type: 'number', default: 0.1, min: 0, max: 1, step: 0.05 },
+      // after ybouane's playground (lenzi, 2026-11-26: "se possiamo anche noi avere gli stessi slider")
+      { key: 'chromaticAberration', label: 'Colour fringes where it bends (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.01 },
+      { key: 'brightness', label: 'Brightness (-0.5 darker to 0.5 brighter)', type: 'number', default: 0, min: -0.5, max: 0.5, step: 0.01 },
+      { key: 'distortion', label: 'Rough glass: a fine ripple (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.01 },
+      { key: 'tint', label: 'Tint: how much of the page’s colour it keeps (%)', type: 'number', default: 0, min: 0, max: 100, step: 1, code: { match: /--lenzi-liquid-fill:[^;]*?(\d+)%/, otherwise: 0 } },
       { key: 'radius', label: 'The window’s corners (px)', type: 'number', default: 28, min: 0, max: 80, step: 1, code: { match: /border-radius:\s*(\d+)px/ } },
+      // only to try: in an app the kit's styles give the glass these
+      { key: 'opacity', label: 'Opacity, to try (an app’s glass is whole)', type: 'number', default: 1, min: 0, max: 1, step: 0.05, code: false },
+      { key: 'shadowOpacity', label: 'Shadow, to try: how dark (0 to 1)', type: 'number', default: 0, min: 0, max: 1, step: 0.05, code: false },
+      { key: 'shadowSpread', label: 'Shadow, to try: how wide (px)', type: 'number', default: 10, min: 0, max: 60, step: 1, code: false },
+      { key: 'shadowOffsetY', label: 'Shadow, to try: how far down (px)', type: 'number', default: 1, min: -20, max: 20, step: 1, code: false },
     ],
     usage: (v) => `<!-- import { LenziLiquidGlass } from '@lenzi/ui-kit/backgrounds'; -->
 <!-- over a background: clear glass needs something behind it to bend (a scene, a picture) -->
@@ -1904,11 +1915,15 @@ ${tag('section', [
   bound('specularOpacity', v['specularOpacity'], 0.5),
   bound('specularSaturation', v['specularSaturation'], 6),
   bound('lightReach', v['lightReach'], 12),
+  bound('lightBase', v['lightBase'], 0.1),
+  bound('chromaticAberration', v['chromaticAberration'], 0),
+  bound('brightness', v['brightness'], 0),
+  bound('distortion', v['distortion'], 0),
 ]).replace(/\/>$/, '>…</section>')}
 
 <!-- its corners and padding, nothing else: no border, background, shadow or backdrop-filter of its own -->
 <style>
-  .window { border-radius: ${v['radius']}px; padding: 24px 32px; }
+  .window { border-radius: ${v['radius']}px; padding: 24px 32px;${Number(v['tint']) ? ` --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) ${v['tint']}%, transparent);` : ''} }
 </style>
 
 <!-- the blobs' own liquid glass is a background's (glass="liquid", [liquid]) and a scene's (glass: 'liquid', liquid) -->`,

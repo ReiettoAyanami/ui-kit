@@ -221,9 +221,14 @@ export abstract class LenziGlowBackground implements OnChanges {
         this.focused = true;
         this.loop();
       };
+      // Focus gone from the top window: to another app, or only into a frame of this page (a tap in a demo's frame, to
+      // drag its glass: lenzi, 2026-11-26, "quando trascini la finestrella interattiva lo sfondo smette di funzionare").
+      // The page still has the focus when it is in one of its frames (hasFocus), asked once the focus has moved.
       const onBlur = () => {
-        this.focused = false;
-        this.loop();
+        view.setTimeout(() => {
+          this.focused = top.document.hasFocus?.() ?? false;
+          this.loop();
+        });
       };
       top.addEventListener('focus', onFocus);
       top.addEventListener('blur', onBlur);

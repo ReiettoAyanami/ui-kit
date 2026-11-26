@@ -74,7 +74,8 @@ the rule says what, the variable says how much.
     blurrati"): what is behind shows sharp and bends at the edge; those with words on them have a darker tint to read
     on. **What floats over the page's words is lightly frosted** (lenzi,
     2026-11-26: "opacizzare lievemente (lieve frosting) dietro ... cose che hanno dietro del testo"): windows, menus,
-    select and autocomplete panels, the drawer, a bar of actions (`--lenzi-liquid-frost-over`, 3 px). Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what floats.
+    select and autocomplete panels, the drawer, a bar of actions (`--lenzi-liquid-frost-over`, 3 px), and a little darker
+    (`--lenzi-liquid-tint-over`, 64 %; lenzi, 2026-11-26: "fammeli leggermente scuriti"). Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what floats.
   - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass,
     never glass on glass.
   - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti

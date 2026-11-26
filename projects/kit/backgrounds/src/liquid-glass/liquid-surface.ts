@@ -33,6 +33,15 @@ export interface LenziLiquidGlassSettings {
    * under it adds to it as on any glass.
    */
   lightBase: number;
+  /**
+   * Colour fringes where it bends, 0 to 1 (ybouane's "chromatic aberration", lenzi 2026-11-26): the red of what is behind
+   * bent that much more, the blue that much less. 0: none (and no cost).
+   */
+  chromaticAberration: number;
+  /** Brighter or darker than what is behind, -0.5 to 0.5 (ybouane's "brightness"). 0: as it is. */
+  brightness: number;
+  /** A fine ripple all over it, 0 to 1 (ybouane's "distortion": rough glass). 0: smooth. */
+  distortion: number;
   glassPath: string | null;
   glassViewBox: string;
 }
@@ -49,6 +58,9 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
   specularSaturation: 6,
   lightReach: 12,
   lightBase: 0.1,
+  chromaticAberration: 0,
+  brightness: 0,
+  distortion: 0,
   glassPath: null,
   glassViewBox: '0 0 100 100',
 };
@@ -219,6 +231,8 @@ export class LenziLiquidSurface {
   private limit = Infinity;
   /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
   private radius = 0;
+  /** The tint (`--lenzi-liquid-fill`) the filter was drawn with. */
+  private fill = '';
   private framesSinceRadius = 0;
   /** The filter draws the glass's tint, its CSS fill is hidden by an inline transparent one. */
   private tinted = false;
@@ -249,11 +263,12 @@ export class LenziLiquidSurface {
     const frost = Math.max(0, parseFloat(style?.getPropertyValue('--lenzi-liquid-frost') ?? '') || 0);
     if (this.tinted) this.element.style.removeProperty('background-color');
     const fill = style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '';
+    this.fill = fill;
     const tint = fill || (frost && style ? style.backgroundColor : '');
     this.tinted = !!tint;
     if (this.tinted) this.element.style.setProperty('background-color', 'transparent');
     const reach = Math.max(0, s.lightReach);
-    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
+    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.chromaticAberration}|${s.brightness}|${s.distortion}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
     if (key === this.size) return;
     this.size = key;
     // A bezel wider than half the glass would bend the whole of it: never more than a third of its smaller side.
@@ -289,6 +304,31 @@ export class LenziLiquidSurface {
   <feBlend in="tint" in2="clear" mode="normal" result="refracted"/>`
       : ''
   }`;
+    // Rough glass (ybouane's distortion): what is behind shifted a little by a fine noise, before it bends.
+    const distortion = Math.max(0, s.distortion);
+    const rough = distortion
+      ? `<feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="1" seed="3" result="noise"/>
+  <feDisplacementMap in="soft" in2="noise" scale="${(distortion * 8).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="soft"/>`
+      : '';
+    // Colour fringes (ybouane's chromatic aberration): red bent more, blue less, green as it is, put back together. Only
+    // where it bends: the bezel. Each bend keeps its share of the bending (data-k), so a thumb's bending moves them all.
+    const aberration = Math.min(1, Math.max(0, s.chromaticAberration));
+    const channel = (r: number, g: number, b: number) => `${r} 0 0 0 0 0 ${g} 0 0 0 0 0 ${b} 0 0 0 0 0 1 0`;
+    const fringes = aberration
+      ? `<feDisplacementMap class="lenzi-liquid-glass-bend" data-k="${(1 + aberration).toFixed(3)}" in="soft" in2="map" scale="${(Number(bending) * (1 + aberration)).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="bent-red"/>
+  <feDisplacementMap class="lenzi-liquid-glass-bend" data-k="${(1 - aberration).toFixed(3)}" in="soft" in2="map" scale="${(Number(bending) * (1 - aberration)).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="bent-blue"/>
+  <feColorMatrix in="bent-red" type="matrix" values="${channel(1, 0, 0)}" result="red"/>
+  <feColorMatrix in="bent" type="matrix" values="${channel(0, 1, 0)}" result="green"/>
+  <feColorMatrix in="bent-blue" type="matrix" values="${channel(0, 0, 1)}" result="blue"/>
+  <feComposite in="red" in2="green" operator="arithmetic" k2="1" k3="1" result="red-green"/>
+  <feComposite in="red-green" in2="blue" operator="arithmetic" k2="1" k3="1" result="bent"/>`
+      : '';
+    // Brighter or darker (ybouane's brightness): the body, before its edge's light.
+    const brightness = Math.min(0.5, Math.max(-0.5, s.brightness));
+    const slope = (1 + brightness).toFixed(3);
+    const bright = brightness
+      ? `<feComponentTransfer in="refracted" result="refracted"><feFuncR type="linear" slope="${slope}"/><feFuncG type="linear" slope="${slope}"/><feFuncB type="linear" slope="${slope}"/></feComponentTransfer>`
+      : '';
     // the light, gathered round each point: from the frosted copy when it is frosted as far (one blur less)
     const fromFrost = frost > 0 && frost >= reach;
     // kube.io's chain (lenzi, 2026-11-25: "guarda come i bordi prendono il colore di quello che sta sotto"): what is behind,
@@ -304,8 +344,11 @@ export class LenziLiquidSurface {
   ${imagesOf(tiles.map, 'map')}
   <feColorMatrix in="map" type="matrix" values="0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0" result="glint"/>
   <feComponentTransfer in="glint" result="specular"><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
+  ${rough}
   <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+  ${fringes}
   ${body}
+  ${bright}
   ${fromFrost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
   <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix(LIGHT_FLOOR, LIGHT_GAIN, Math.max(0, s.lightBase))}" result="light"/>
   <feComposite in="light" in2="specular" operator="in" result="lit-line"/>
@@ -329,7 +372,10 @@ export class LenziLiquidSurface {
    */
   bending(share: number): void {
     this.bend = Math.max(0, share);
-    this.svg?.querySelectorAll('.lenzi-liquid-glass-bend').forEach((bend) => bend.setAttribute('scale', this.shownBend()));
+    const shown = Number(this.shownBend());
+    this.svg
+      ?.querySelectorAll('.lenzi-liquid-glass-bend')
+      .forEach((bend) => bend.setAttribute('scale', (shown * Number(bend.getAttribute('data-k') ?? 1)).toFixed(2)));
   }
 
   /** The filter's scale now: its share of the whole bending, never past `limit`. */
@@ -350,7 +396,9 @@ export class LenziLiquidSurface {
   check(): boolean {
     if (!this.svg || ++this.framesSinceRadius < RADIUS_FRAMES) return false;
     this.framesSinceRadius = 0;
-    return this.cornerRadius() !== this.radius;
+    // its corners, or its tint (a variable the app changed: the filter draws it)
+    const style = this.document.defaultView?.getComputedStyle(this.element);
+    return this.cornerRadius() !== this.radius || (style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '') !== this.fill;
   }
 
   destroy(): void {

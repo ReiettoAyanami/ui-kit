@@ -59,6 +59,9 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `specularSaturation` | the edge's copy of what is behind, saturated | `6` |
 | input | `lightReach` | px: how far round the edge the light under it is gathered (frosted glass: as far as it is frosted) | `12` |
 | input | `lightBase` | 0 to 1: the edge's light with nothing bright under it, the same all round (the kit's controls: 0.45, so a thumb over a dark panel shows as glass) | `0.1` |
+| input | `chromaticAberration` | 0 to 1: colour fringes where it bends, red bent more and blue less (ybouane's; lenzi, 2026-11-26: "se possiamo anche noi avere gli stessi slider"); 0 costs nothing | `0` |
+| input | `brightness` | -0.5 to 0.5: brighter or darker than what is behind (ybouane's) | `0` |
+| input | `distortion` | 0 to 1: a fine ripple all over it, rough glass (ybouane's) | `0` |
 | input | `glassPath` | an SVG path (even-odd): the glass's own shape | `null` (its box) |
 | input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |

@@ -34,6 +34,21 @@ export class LiquidGlassDemo {
   protected readonly specularOpacity = computed(() => this.num('specularOpacity', 0.5));
   protected readonly specularSaturation = computed(() => this.num('specularSaturation', 6));
   protected readonly lightReach = computed(() => this.num('lightReach', 12));
+  protected readonly lightBase = computed(() => this.num('lightBase', 0.1));
+  protected readonly chromaticAberration = computed(() => this.num('chromaticAberration', 0));
+  protected readonly brightness = computed(() => this.num('brightness', 0));
+  protected readonly distortion = computed(() => this.num('distortion', 0));
+  /** The tint the filter draws under its edge (`--lenzi-liquid-fill`, as the app's glass has it). */
+  protected readonly fill = computed(() => {
+    const tint = this.num('tint', 0);
+    return tint > 0 ? `color-mix(in srgb, var(--mat-sys-surface) ${tint}%, transparent)` : null;
+  });
+  /** Only to try, ybouane's: an app's glass is whole and the kit gives it its shadow. */
+  protected readonly opacity = computed(() => this.num('opacity', 1));
+  protected readonly shadow = computed(() => {
+    const alpha = this.num('shadowOpacity', 0);
+    return alpha > 0 ? `0 ${this.num('shadowOffsetY', 1)}px ${this.num('shadowSpread', 10) * 2}px rgb(0 0 0 / ${alpha})` : null;
+  });
   /** The window's corners: the directive follows them (it looks at them about twice a second). */
   protected readonly radius = computed(() => this.num('radius', 28));
 
