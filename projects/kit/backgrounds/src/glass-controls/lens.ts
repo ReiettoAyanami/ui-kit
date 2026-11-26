@@ -6,20 +6,26 @@ import { DOCUMENT, DestroyRef, afterNextRender, inject } from '@angular/core';
 
 import { LIQUID_GLASS_SETTINGS, LenziLiquidGlassSettings, LenziLiquidSurface, refracts } from '../liquid-glass/liquid-surface';
 
-/** The thumb's optics: kube.io's switch: a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6. */
+/**
+ * The thumb's optics: kube.io's switch (a lip bezel, blur 0.2, specular 0.5 and 6), thicker and bending more, so the
+ * glass shows on something as small as a thumb (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc."): thickness 36 (kube.io's 22), refraction 1.5.
+ */
 export const LENS_SETTINGS: LenziLiquidGlassSettings = {
   ...LIQUID_GLASS_SETTINGS,
   surface: 'lip',
   bezel: 12,
-  thickness: 22,
-  refraction: 1,
+  thickness: 36,
+  refraction: 1.5,
   blur: 0.2,
   specularOpacity: 0.5,
   specularSaturation: 6,
 };
 
-/** How much of its bending a thumb shows at rest and while held (kube.io's: 0.4 and 0.9). */
-export const LENS_BENDING = { rest: 0.4, held: 0.9 } as const;
+/**
+ * How much of its bending a thumb shows at rest and while held (kube.io's: 0.4 and 0.9; 2026-11-26: 0.8 and 1.2, the
+ * glass seen at rest too, a thumb's fill there only milky: `--lenzi-glass-rest`).
+ */
+export const LENS_BENDING = { rest: 0.8, held: 1.2 } as const;
 
 /** A thumb's glass, once it is in the page. */
 export interface LenziGlassLens {

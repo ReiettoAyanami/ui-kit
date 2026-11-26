@@ -121,7 +121,8 @@
   bottom: 4px;
   left: 0;
   border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px);
-  background-color: var(--lenzi-glass-pill);
+  /* at rest milky glass, not solid (2026-11-26: the glass seen on small things) */
+  background-color: color-mix(in srgb, var(--lenzi-glass-pill) 50%, transparent);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
   opacity: 0;
   /* where the filter does not bend (not Chromium): a light blur */

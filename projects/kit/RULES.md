@@ -84,7 +84,9 @@ the rule says what, the variable says how much.
     saturated copy of it, kube.io's way: "guarda come i bordi prendono il colore di quello che sta sotto"), with a light
     tint to read on (`--lenzi-liquid-tint` 30%; larger glass more opaque, `--lenzi-liquid-tint-large` 50%).
   - **Controls of glass, Apple's** (`@lenzi/ui-kit/backgrounds`): `LenziGlassSwitch`, `LenziGlassSegmented`,
-    `LenziGlassSlider`, `LenziGlassSearch`: a solid thumb that becomes glass while held, larger, and settles solid.
+    `LenziGlassSlider`, `LenziGlassSearch`: a thumb of milky glass at rest that becomes clear glass while held, larger,
+    and settles milky again; thicker glass than kube.io's, bending more, so it shows on something this small
+    (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc.").
   - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
   - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
     replica"): no stroke; corners concentric to what they hold (controls are capsules, a panel's radius is its

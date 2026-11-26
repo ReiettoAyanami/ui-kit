@@ -30,10 +30,11 @@ export class LenziGlassSearch implements OnDestroy {
   private pause: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    // kube.io's search box: a convex bezel, refraction 0.7, blur 1, specular 0.2 and 4; all of its bending, always.
+    // kube.io's search box (a convex bezel, blur 1, specular 0.2 and 4), thicker and bending more (thickness 44 and
+    // refraction 1.2, kube.io's 30 and 0.7: lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc."); all of its bending, always.
     glassLens(
       () => this.field().nativeElement,
-      { ...LIQUID_GLASS_SETTINGS, surface: 'squircle', bezel: 14, thickness: 30, refraction: 0.7, blur: 1, specularOpacity: 0.2, specularSaturation: 4 },
+      { ...LIQUID_GLASS_SETTINGS, surface: 'squircle', bezel: 14, thickness: 44, refraction: 1.2, blur: 1, specularOpacity: 0.2, specularSaturation: 4 },
       1,
     );
   }

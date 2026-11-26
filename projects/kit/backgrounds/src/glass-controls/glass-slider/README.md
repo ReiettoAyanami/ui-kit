@@ -8,7 +8,8 @@
 - **Shapes of the page's** (lenzi, 2026-11-25: "la forma dei knob dovrebbe essere configurabile, sia quello di vetro
   nell'animazione che quello che poi è solido"): `thumb` and `lens`; and **a wavy fill** ("una barra ondulata come su
   android per la musica"): `track="wave"`, flowing unless `[waveMoving]="false"` (still with reduced motion).
-- **Dragged, the thumb is Liquid Glass**, larger, magnifying the rail under it, and settles solid (lenzi, 2026-11-25:
+- **At rest the thumb is milky glass** (45% white, the rail bending under it), **dragged it is clear Liquid Glass**,
+  larger, magnifying the rail under it, and settles milky again (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc."). First made as Apple's (lenzi, 2026-11-25:
   "come quelli di apple").
 - A tap on the rail jumps there; the arrow keys step, Page Up/Down ten steps, Home and End the ends; always on a step,
   inside the ends. A `role="slider"` with its ends, value and `aria-valuetext`.

@@ -8,6 +8,8 @@
   --lenzi-slider-thumb-height: 24px;
   /* Apple's thumb is white in both themes */
   --lenzi-glass-thumb: 255 255 255;
+  /* the thumb at rest: milky glass, not solid (2026-11-26: the glass seen on small things) */
+  --lenzi-glass-rest: 0.45;
 }
 
 .track {
@@ -97,8 +99,10 @@
   width: var(--knob-width);
   height: var(--knob-height);
   border-radius: var(--knob-radius);
-  background-color: rgb(var(--lenzi-glass-thumb) / 1);
+  background-color: rgb(var(--lenzi-glass-thumb) / var(--lenzi-glass-rest));
   box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  /* where the filter does not bend (not Chromium): a light blur */
+  backdrop-filter: blur(1.5px);
   transform: translate(-50%, -50%);
   transition:
     opacity 140ms ease,

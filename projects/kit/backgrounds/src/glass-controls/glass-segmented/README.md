@@ -8,7 +8,8 @@
 - **A tap on another choice moves the capsule there; a tap on the chosen one moves it to the next**, round to the first
   (lenzi, 2026-11-25: "fammi un selettore triplo con animazione simile/uguale a questo switch. Quindi quando clicchi va
   alla prossima opzione diventando vetro e tutto").
-- **On its way the capsule is Liquid Glass**, larger, bending the words under it, and settles solid.
+- **On its way the capsule is clear Liquid Glass**, larger, bending the words under it, and settles as milky glass
+  (45% of its fill: the bending shows at rest too (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc.")).
 - The arrow keys move it, round. A `radiogroup` of `radio`s.
 - **Built as kube.io's switch**: the capsule is always glass under a solid fill (`--lenzi-glass-pill`); on its way
   the fill goes to 10%, it grows (1.18) and bends more.

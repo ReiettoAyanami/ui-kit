@@ -11,8 +11,10 @@ const SETTLE = 260;
 /** A thumb's shape: a lying capsule (Apple's), a circle, or an upright bar (Android's). */
 export type LenziSliderThumb = 'capsule' | 'circle' | 'bar';
 
-/** kube.io's slider's glass: a convex bezel, specular 0.4 and 7, no blur. */
-const SLIDER_GLASS = { ...LENS_SETTINGS, surface: 'squircle' as const, bezel: 12, thickness: 18, blur: 0, specularOpacity: 0.4, specularSaturation: 7 };
+/** kube.io's slider's glass: a convex bezel, specular 0.4 and 7, no blur; thicker (30, kube.io's 18: lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc."). */
+const SLIDER_GLASS = { ...LENS_SETTINGS, surface: 'squircle' as const, bezel: 12, thickness: 30, blur: 0, specularOpacity: 0.4, specularSaturation: 7 };
+/** The thumb at rest: milky glass of the same optics (2026-11-26: it was solid white, the glass showed only while dragged). */
+const KNOB_GLASS = { ...SLIDER_GLASS, bezel: 8, thickness: 20 };
 
 /**
  * A slider the way Apple's is, built as kube.io's (lenzi, 2026-11-25: "implementa gli slider ... nel kit come quelli di
@@ -75,10 +77,12 @@ export class LenziGlassSlider {
 
   private readonly rail = viewChild.required<ElementRef<HTMLElement>>('rail');
   private readonly glass = viewChild.required<ElementRef<HTMLElement>>('glass');
+  private readonly knob = viewChild.required<ElementRef<HTMLElement>>('knob');
   private settle: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     glassLens(() => this.glass().nativeElement, SLIDER_GLASS, LENS_BENDING.held);
+    glassLens(() => this.knob().nativeElement, KNOB_GLASS, LENS_BENDING.rest);
   }
 
   protected down(event: PointerEvent): void {
