@@ -19,15 +19,24 @@
 
   <mat-sidenav-content class="lenzi-shell-content">
     <div class="lenzi-shell-banner"><ng-content select="[lenziShellBanner]" /></div>
-    <mat-toolbar class="lenzi-shell-bar">
-      @if (!tabs()) {
+    @if (!tabs()) {
+      <mat-toolbar class="lenzi-shell-bar">
         <button mat-icon-button type="button" class="lenzi-shell-menu" [attr.aria-label]="menuLabel()" (click)="openNav($event)">
           <mat-icon>menu</mat-icon>
         </button>
-      }
-      <span class="lenzi-shell-title">{{ shownTitle() }}</span>
-      <ng-content select="[lenziShellActions]" />
-    </mat-toolbar>
+        <span class="lenzi-shell-title">{{ shownTitle() }}</span>
+        <ng-container [ngTemplateOutlet]="actions" />
+      </mat-toolbar>
+    } @else {
+      <!-- With the bar of pages, no top bar: the page's title, large, scrolling with the page (lenzi, 2026-11-25: "per
+           ora togli la barra sopra che non ha senso, metti un titolo normale un po' grande") -->
+      <header class="lenzi-shell-heading">
+        <h1 class="lenzi-shell-heading-title">{{ shownTitle() }}</h1>
+        <ng-container [ngTemplateOutlet]="actions" />
+      </header>
+    }
+    <!-- the actions, in the top bar or beside the title: one place for them, wherever they are shown -->
+    <ng-template #actions><ng-content select="[lenziShellActions]" /></ng-template>
     <div class="lenzi-shell-below"><ng-content select="[lenziShellBelow]" /></div>
     <ng-content />
     <!-- the navigation as a bar, floating at the bottom (navigation 'bar', or 'auto' on a phone) -->

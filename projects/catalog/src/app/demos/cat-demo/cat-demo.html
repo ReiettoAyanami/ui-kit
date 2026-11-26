@@ -11,7 +11,7 @@
 }
 
 <!-- The floor: lit by the lamps, under the cat, so a solid cat's shadow falls on it. -->
-<div class="field lenzi-lit-under" lenziLit [class.over-background]="behind() !== 'dark'">
+<div class="field lenzi-lit-under" lenziLit litOnly [class.over-background]="behind() !== 'dark'">
   <div class="item" cdkDrag cdkDragBoundary=".field" (cdkDragEnded)="dropped()">
     <button
       mat-fab

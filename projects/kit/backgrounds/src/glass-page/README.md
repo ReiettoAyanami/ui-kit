@@ -19,6 +19,13 @@ written from scratch with the kit had to copy its CSS. The kit knows by itself w
   (`100lvh`). Without a background, nothing is added and the page keeps its own margins.
 - **The surfaces** (`lenziOverBackground()`): a signal, `true` while there is a background; the page's cards and
   panels take it, `[lenziLit]="lit()"`, lit over a background and solid without.
+- **In an app of Liquid Glass** (`provideLenziLiquidGlass()`): the pane is Liquid Glass, frosted to read on (lenzi,
+  2026-11-25: "I pannelli dietro per esempio devono essere in vetro"), and so are the lit cards and panels on it (lenzi,
+  2026-11-26: "come i pannelli o altro"): their edges lit by what is under them.
+- **The title** (lenzi, 2026-11-25: "togli la barra sopra che non ha senso, metti un titolo normale un po' grande"; "il
+  titolo è troppo vicino al lato"): with the shell's bar of pages there is no top bar, and the page shows the title
+  (the shell's, the route's) large and bold at the top of its column, where its words start: the same place on every
+  page. A page with its own `h1` keeps that one (this one is hidden); the shell then shows no heading of its own.
 - The pane is a layer of its own, not the elements' container: glass over it still blurs the background, and the page
   gets no layer of its own (no `z-index`), so a search bar in it still rides into the top bar (`lenziShellSearch`).
 
@@ -33,7 +40,7 @@ written from scratch with the kit had to copy its CSS. The kit knows by itself w
 
 | | Name | What |
 | --- | --- | --- |
-| component | `[lenziGlassPage]` | on the page's `<main>`: the glass pane behind its elements, while there is a background |
+| component | `[lenziGlassPage]` | on the page's `<main>`: the glass pane behind its elements, while there is a background; the title at its top with the shell's bar of pages (class `lenzi-glass-page-titled`) |
 | function | `lenziOverBackground()` | `Signal<boolean>` (an injection context): the page has a background behind it |
 | service | `LenziBackgroundPresence` | `present` (`Signal<boolean>`), `add()`: used by the backgrounds, never by an app |
 

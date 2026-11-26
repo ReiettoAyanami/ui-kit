@@ -1,6 +1,5 @@
 import { DOCUMENT, DestroyRef, Directive, ElementRef, afterNextRender, effect, inject, input, numberAttribute, untracked } from '@angular/core';
 
-import { LenziSights } from '../sights/sights';
 import { LenziGlassSurface } from './liquid-glass-maps';
 import { LenziLiquidSurface, refracts } from './liquid-surface';
 
@@ -9,10 +8,9 @@ import { LenziLiquidSurface, refracts } from './liquid-surface';
  * chiama appunto LenziLiquidGlass diverso dal classico vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo";
  * the way: kube.io, "Liquid Glass in the Browser"). Not the kit's glass (`lenziLit`, a frosted pane with a border):
  * a clear slab with a curved bezel that bends what is behind it near its edge (refraction, an SVG filter as its
- * backdrop-filter), a little blur and saturation, and a rim of light only on its very edge. No border. The rim is lit
- * by the boids of a flock behind (lenzi: "quelli devono esserci solo quando i boidi ci si avvicinano"): none while none
- * is near, brighter the more come, on the side they come from, all round once they are under it
- * (`LenziSights.around`). Chromium bends; other browsers get the blur only.
+ * backdrop-filter), a little blur and saturation, and its edge lit only by the light under it (lenzi, 2026-11-26: "la
+ * direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse"): dark over a dark page, bright on
+ * the side a light is, following it at every frame. No border. Chromium bends; other browsers get the blur only.
  */
 @Directive({
   selector: '[lenziLiquidGlass]',
@@ -33,18 +31,12 @@ export class LenziLiquidGlass {
   readonly blur = input(0.2, { transform: numberAttribute });
   /** Saturation of what is behind (1: as it is). */
   readonly saturation = input(1, { transform: numberAttribute });
-  /** The white highlight on the edge, 0 to 1. */
+  /** How bright the edge gets where the light under it is full, 0 to 1. */
   readonly specularOpacity = input(0.5, { transform: numberAttribute });
   /** How saturated the copy of what is behind is on the edge: the edge takes its colour. */
   readonly specularSaturation = input(6, { transform: numberAttribute });
-  /** How bright the rim is, 0 to 1. */
-  readonly rim = input(0.5, { transform: numberAttribute });
-  /** Where the rim's light comes from with no flock to light it, degrees (-90: from the top). */
-  readonly lightAngle = input(-60, { transform: numberAttribute });
-  /** How many boids near the glass light its rim whole. */
-  readonly rimBoids = input(60, { transform: numberAttribute });
-  /** How far from the glass the pointer lights its rim, px (0: never). */
-  readonly pointerReach = input(160, { transform: numberAttribute });
+  /** How far round each point of the edge the light under it is gathered, px. */
+  readonly lightReach = input(12, { transform: numberAttribute });
   /**
    * A shape of its own (lenzi, 2026-11-19: Liquid Glass on the cat): an SVG path (filled even-odd), stretched over the
    * element as `glassViewBox` says, as a mask of the same path is; the bezel follows its outline. None: the element's
@@ -56,7 +48,7 @@ export class LenziLiquidGlass {
 
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly document = inject(DOCUMENT);
-  private readonly glass = new LenziLiquidSurface(this.element, this.document, inject(LenziSights), () => ({
+  private readonly glass = new LenziLiquidSurface(this.element, this.document, () => ({
     bezel: this.bezel(),
     thickness: this.thickness(),
     ior: this.ior(),
@@ -66,10 +58,7 @@ export class LenziLiquidGlass {
     saturation: this.saturation(),
     specularOpacity: this.specularOpacity(),
     specularSaturation: this.specularSaturation(),
-    rim: this.rim(),
-    lightAngle: this.lightAngle(),
-    rimBoids: this.rimBoids(),
-    pointerReach: this.pointerReach(),
+    lightReach: this.lightReach(),
     glassPath: this.glassPath(),
     glassViewBox: this.glassViewBox(),
   }));
@@ -80,7 +69,7 @@ export class LenziLiquidGlass {
     const destroyRef = inject(DestroyRef);
     // a setting changed: the filter again (its key says whether anything it is made of changed)
     effect(() => {
-      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.rim(), this.lightAngle(), this.glassPath(), this.glassViewBox()];
+      void [this.bezel(), this.thickness(), this.ior(), this.refraction(), this.surface(), this.blur(), this.saturation(), this.specularOpacity(), this.specularSaturation(), this.lightReach(), this.glassPath(), this.glassViewBox()];
       untracked(() => this.rebuild?.());
     });
     afterNextRender(() => {
@@ -94,13 +83,13 @@ export class LenziLiquidGlass {
       this.glass.build();
       const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(later) : null;
       resize?.observe(this.element);
-      // the rim, lit by the boids near the glass, at every frame
+      // its corners, looked at now and then (its edge's light is the filter's own)
       let lighting: number | null = null;
-      const light = () => {
-        if (this.glass.light()) later();
-        lighting = view?.requestAnimationFrame(light) ?? null;
+      const check = () => {
+        if (this.glass.check()) later();
+        lighting = view?.requestAnimationFrame(check) ?? null;
       };
-      light();
+      check();
       destroyRef.onDestroy(() => {
         resize?.disconnect();
         if (frame !== null) view?.cancelAnimationFrame(frame);

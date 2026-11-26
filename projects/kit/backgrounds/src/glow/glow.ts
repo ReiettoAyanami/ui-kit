@@ -38,6 +38,8 @@ export class LenziGlow {
   protected readonly reach = computed(() => Math.max(0, this.glowReach()));
 
   constructor() {
+    // a lamp is a light, not glass: lit glass even in an app of Liquid Glass (2026-11-26: the home's lamp cat went dark)
+    inject(LenziLit).keepLit();
     const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const field = inject(LenziLightField);
     const destroyRef = inject(DestroyRef);

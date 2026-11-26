@@ -21,7 +21,7 @@ describe('LenziLiquidEverywhere', () => {
     const glass = TestBed.inject(LenziLiquidEverywhere);
     const card = add('lenzi-shell-bar');
     const plain = add('mat-mdc-card');
-    glass.start();
+    glass.start({ pages: false });
     await frame();
     expect(card.classList.contains('lenzi-liquid-everywhere')).toBe(true);
     expect(card.classList.contains('lenzi-liquid-glass')).toBe(true);
@@ -38,12 +38,32 @@ describe('LenziLiquidEverywhere', () => {
     expect(glass.count).toBe(2);
   });
 
-  it('makes the page\'s own surfaces glass only when asked', async () => {
+  it('makes the page\'s own surfaces glass too, unless the app says pages: false (lenzi, 2026-11-26: "come i pannelli o altro")', async () => {
     const glass = TestBed.inject(LenziLiquidEverywhere);
     const card = add('mat-mdc-card');
-    glass.start({ pages: true });
+    const panel = add('lenzi-surface');
+    glass.start();
     await frame();
+    expect(glass.pages).toBe(true);
     expect(card.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+    expect(panel.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+  });
+
+  it('takes the surfaces given to it (a lit surface) until they are given back; never one kept lit', async () => {
+    const glass = TestBed.inject(LenziLiquidEverywhere);
+    const given = add('section');
+    const kept = add('mat-mdc-card lenzi-lit lenzi-lit-only');
+    glass.start();
+    expect(glass.on()).toBe(true);
+    const giveBack = glass.adopt(given);
+    await frame();
+    await frame();
+    expect(given.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+    expect(kept.classList.contains('lenzi-liquid-everywhere')).toBe(false);
+    giveBack();
+    await frame();
+    await frame();
+    expect(given.classList.contains('lenzi-liquid-everywhere')).toBe(false);
   });
 
   it('never puts glass on glass: a menu over a window stays frosted', async () => {

@@ -1,6 +1,6 @@
 import { bezelShift, glassHeight, liquidGlassMaps, liquidGlassOutlineMaps } from './liquid-glass-maps';
 
-const SHAPE = { width: 200, height: 120, radius: 24, bezel: 20, thickness: 40, ior: 1.5, surface: 'squircle' as const, lightAngle: -60 };
+const SHAPE = { width: 200, height: 120, radius: 24, bezel: 20, thickness: 40, ior: 1.5, surface: 'squircle' as const };
 
 describe('liquidGlassMaps', () => {
   it('the bezel rises from the edge to the flat top; a lip goes back down', () => {
@@ -30,41 +30,37 @@ describe('liquidGlassMaps', () => {
     expect(maps.scale).toBeGreaterThan(0);
   });
 
-  it("lights a thin line on the very edge, kube.io's: along the light (both sides alike), dark across it, none inside", () => {
-    // the light from -60 degrees: the top and bottom edges face it (cos 30 degrees), the left and right ones barely (cos 60)
+  it("draws kube.io's thin line on the very edge, the same all round (no side of its own: the light under it chooses), none inside", () => {
+    // lenzi, 2026-11-26: "la direzione della luce deve cambiare rispetto a quello che sta sotto": the map has no light
     const maps = liquidGlassMaps(SHAPE);
     const alpha = (x: number, y: number) => maps.specular[(y * maps.width + x) * 4 + 3]!;
     const colour = (x: number, y: number) => maps.specular[(y * maps.width + x) * 4]!;
     expect(alpha(100, 60)).toBe(0);
     expect(alpha(100, 1)).toBeGreaterThan(100);
-    expect(Math.abs(alpha(100, 1) - alpha(100, 118))).toBeLessThan(8);
-    expect(alpha(1, 60)).toBeLessThan(alpha(100, 1) / 2);
+    // top, bottom, left and right alike
+    for (const [x, y] of [[100, 118], [1, 60], [198, 60]] as const) expect(Math.abs(alpha(x, y) - alpha(100, 1))).toBeLessThan(8);
     // a line about two pixels wide
     expect(alpha(100, 4)).toBe(0);
     // its colour the glint, its alpha the glint squared
     expect(Math.abs(colour(100, 1) - Math.round(255 * Math.sqrt(alpha(100, 1) / 255)))).toBeLessThan(3);
   });
 
-  it('fades its rim across the pixels the round corners cross, no staircase (antialiased)', () => {
-    const maps = liquidGlassMaps({ width: 40, height: 40, radius: 14, bezel: 10, thickness: 20, ior: 1.5, surface: 'squircle', lightAngle: -135 });
-    const all = maps.rims.at(-1)!.data;
-    // along the corner's arc, on its second row: from nothing outside, through some, to the full rim inside
-    const row = Array.from({ length: 14 }, (_, x) => all[(1 * 40 + x) * 4 + 3]!);
+  it('carries the line in the blue of the bending map, one picture for the filter, opaque everywhere', () => {
+    const maps = liquidGlassMaps(SHAPE);
+    const at = (x: number, y: number) => (y * maps.width + x) * 4;
+    for (const [x, y] of [[100, 1], [100, 60], [1, 60], [6, 60]] as const) {
+      expect(maps.displacement[at(x, y) + 2]).toBe(maps.specular[at(x, y)]);
+      expect(maps.displacement[at(x, y) + 3]).toBe(255);
+    }
+  });
+
+  it('fades its line across the pixels the round corners cross, no staircase (antialiased)', () => {
+    const maps = liquidGlassMaps({ width: 40, height: 40, radius: 14, bezel: 10, thickness: 20, ior: 1.5, surface: 'squircle' });
+    // along the corner's arc, on its second row: from nothing outside, through some, to the full line inside
+    const row = Array.from({ length: 14 }, (_, x) => maps.specular[(1 * 40 + x) * 4 + 3]!);
     const full = Math.max(...row);
     expect(row[0]).toBe(0);
     expect(row.some((alpha) => alpha > 0 && alpha < full * 0.6)).toBe(true);
-  });
-
-  it('has a rim for each side the light may come from and one all round, none lit in the middle', () => {
-    const maps = liquidGlassMaps(SHAPE);
-    expect(maps.rims.length).toBe(9);
-    expect(maps.rims.at(-1)!.angle).toBeNull();
-    const alpha = (data: Uint8ClampedArray, x: number, y: number) => data[(y * maps.width + x) * 4 + 3]!;
-    const fromLeft = maps.rims.find((rim) => rim.angle === 180)!.data;
-    expect(alpha(fromLeft, 0, 60)).toBeGreaterThan(alpha(fromLeft, 199, 60));
-    const round = maps.rims.at(-1)!.data;
-    expect(alpha(round, 0, 60)).toBe(alpha(round, 199, 60));
-    expect(alpha(round, 100, 60)).toBe(0);
   });
 });
 
@@ -72,7 +68,7 @@ describe('liquidGlassOutlineMaps', () => {
   // a disc of radius 40 in the middle of 100 × 100: what a canvas's alpha gives for it
   const size = 100;
   const inside = Array.from({ length: size * size }, (_, i) => (Math.hypot((i % size) + 0.5 - 50, Math.floor(i / size) + 0.5 - 50) <= 40 ? 255 : 0));
-  const maps = liquidGlassOutlineMaps({ width: size, height: size, inside, bezel: 14, thickness: 30, ior: 1.5, surface: 'squircle', lightAngle: -90 });
+  const maps = liquidGlassOutlineMaps({ width: size, height: size, inside, bezel: 14, thickness: 30, ior: 1.5, surface: 'squircle' });
   const at = (x: number, y: number) => (y * size + x) * 4;
 
   it('follows the outline: the middle and what is outside stay as they are, the bezel takes from inwards', () => {
@@ -86,13 +82,12 @@ describe('liquidGlassOutlineMaps', () => {
     expect(Math.abs(maps.displacement[at(15, 50)]! - 128 - (128 - maps.displacement[at(84, 50)]!))).toBeLessThan(12);
   });
 
-  it('lights its own edge, from where the light is, and nothing in the middle', () => {
+  it('draws the line on its own edge all round, and nothing in the middle', () => {
     const alpha = (x: number, y: number) => maps.specular[at(x, y) + 3]!;
-    // the light from the top: the top and the bottom lit alike, the sides dark
     expect(alpha(50, 50)).toBe(0);
     expect(alpha(50, 11)).toBeGreaterThan(100);
     expect(Math.abs(alpha(50, 11) - alpha(50, 88))).toBeLessThan(12);
-    expect(alpha(11, 50)).toBeLessThan(10);
+    expect(Math.abs(alpha(11, 50) - alpha(50, 11))).toBeLessThan(12);
   });
 });
 

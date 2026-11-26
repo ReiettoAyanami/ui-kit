@@ -2,8 +2,23 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
+import { LenziLiquidEverywhere } from '../liquid-glass/liquid-everywhere';
 import { LenziAmbientLight } from './ambient-light';
 import { LenziLit } from './lit';
+
+const frame = () => new Promise<void>((resolve) => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => resolve()) : setTimeout(resolve, 20)));
+
+@Component({
+  imports: [LenziLit],
+  template: `<div lenziLit class="surface"><p>A card</p></div>`,
+})
+class LiquidHost {}
+
+@Component({
+  imports: [LenziLit],
+  template: `<div lenziLit litOnly class="kept"><p>A demo of lit glass</p></div>`,
+})
+class KeptHost {}
 
 @Component({
   imports: [LenziLit],
@@ -86,5 +101,34 @@ describe('LenziLit', () => {
     top = 40;
     surface.dispatchEvent(new Event('scroll'));
     expect(surface.style.getPropertyValue('--lenzi-lit-scroll-y')).toBe('180px');
+  });
+
+  it("in an app of Liquid Glass a lit surface is the app's glass and takes no light; litOnly keeps it lit (2026-11-26)", async () => {
+    // lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato convertito in liquid glass, come i pannelli o altro"
+    TestBed.inject(LenziLiquidEverywhere).start();
+    const light = TestBed.inject(LenziAmbientLight);
+    const fixture = TestBed.createComponent(LiquidHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await frame();
+    await frame();
+    const surface = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.surface')!;
+    expect(surface.classList.contains('lenzi-liquid-lit')).toBe(true);
+    expect(surface.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+    // still .lenzi-lit: an app gives its surfaces their own fill only :not(.lenzi-lit)
+    expect(surface.classList.contains('lenzi-lit')).toBe(true);
+    expect(light.wanted).toBe(false);
+
+    const kept = TestBed.createComponent(KeptHost);
+    kept.detectChanges();
+    await kept.whenStable();
+    await frame();
+    await frame();
+    const demo = (kept.nativeElement as HTMLElement).querySelector<HTMLElement>('.kept')!;
+    expect(demo.classList.contains('lenzi-lit-only')).toBe(true);
+    expect(demo.classList.contains('lenzi-liquid-everywhere')).toBe(false);
+    expect(light.wanted).toBe(true);
+    kept.destroy();
+    fixture.destroy();
   });
 });

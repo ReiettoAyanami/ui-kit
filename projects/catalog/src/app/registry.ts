@@ -1775,7 +1775,7 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
     id: 'liquid-glass',
     name: 'Liquid glass',
     category: 'Light',
-    summary: 'Clear glass that bends what is behind it near its curved edge, with no border: only a rim of light when boids come near.',
+    summary: 'Clear glass that bends what is behind it near its curved edge, with no border: its edge lit by the light under it.',
     api: '[lenziLiquidGlass]',
     entry: '@lenzi/ui-kit/backgrounds',
     origin: 'new in the kit, 2026-11-19 ("quasi come il liquid glass di IOS"); its page 2026-11-20 ("per regolare le varie proprietá dello stesso")',
@@ -1818,9 +1818,9 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
       },
       { key: 'blur', label: 'Blur of what is behind it (px)', type: 'number', default: 1.5, min: 0, max: 12, step: 0.25 },
       { key: 'saturation', label: 'Saturation of what is behind it (1: as it is)', type: 'number', default: 1.5, min: 0, max: 3, step: 0.05 },
-      { key: 'rim', label: 'Rim light, at most (0 to 1)', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05 },
-      { key: 'lightAngle', label: 'The rim’s light comes from (degrees, -90 the top)', type: 'number', default: -60, min: -180, max: 180, step: 5 },
-      { key: 'rimBoids', label: 'Boids near it for its whole rim', type: 'number', default: 60, min: 1, max: 300, step: 1 },
+      { key: 'specularOpacity', label: 'Edge light: how bright the edge gets over a full light (0 to 1)', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05 },
+      { key: 'specularSaturation', label: 'Edge colour: how saturated its copy of what is under it is', type: 'number', default: 6, min: 0, max: 12, step: 0.5 },
+      { key: 'lightReach', label: 'How far round the edge the light under it is gathered (px)', type: 'number', default: 12, min: 0, max: 60, step: 1 },
       { key: 'radius', label: 'The window’s corners (px)', type: 'number', default: 28, min: 0, max: 80, step: 1, code: { match: /border-radius:\s*(\d+)px/ } },
     ],
     usage: (v) => `<!-- import { LenziLiquidGlass } from '@lenzi/ui-kit/backgrounds'; -->
@@ -1837,9 +1837,9 @@ ${tag('section', [
   plain('surface', v['surface'], 'squircle'),
   bound('blur', v['blur'], 1.5),
   bound('saturation', v['saturation'], 1.5),
-  bound('rim', v['rim'], 0.5),
-  bound('lightAngle', v['lightAngle'], -60),
-  bound('rimBoids', v['rimBoids'], 60),
+  bound('specularOpacity', v['specularOpacity'], 0.5),
+  bound('specularSaturation', v['specularSaturation'], 6),
+  bound('lightReach', v['lightReach'], 12),
 ]).replace(/\/>$/, '>…</section>')}
 
 <!-- its corners and padding, nothing else: no border, background, shadow or backdrop-filter of its own -->

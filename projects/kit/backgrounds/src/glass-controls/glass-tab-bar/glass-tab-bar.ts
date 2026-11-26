@@ -1,11 +1,12 @@
 import { Component, ElementRef, afterRenderEffect, computed, effect, inject, input, output, signal, untracked, viewChild, viewChildren } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { IsActiveMatchOptions, RouterLink, RouterLinkActive } from '@angular/router';
+import { IsActiveMatchOptions, NavigationCancel, NavigationEnd, NavigationError, NavigationSkipped, Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { LenziAppShell, LenziNavEntry } from '@lenzi/ui-kit';
 
-import { LIQUID_GLASS_SETTINGS, LenziLiquidGlassSettings } from '../../liquid-glass/liquid-surface';
+import { LIQUID_EVERYWHERE_SETTINGS } from '../../liquid-glass/liquid-everywhere';
+import { LenziLiquidGlassSettings } from '../../liquid-glass/liquid-surface';
 import { LENS_BENDING, glassLens } from '../lens';
 
 const EXACT: IsActiveMatchOptions = { paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' };
@@ -13,10 +14,9 @@ const SUBTREE: IsActiveMatchOptions = { paths: 'subset', queryParams: 'ignored',
 
 /**
  * The bar's own glass (lenzi, 2026-11-25: "la barra di lato ... non è liquidglass, solo di nome"): Liquid Glass of its
- * own, whatever the app: a squircle bezel, the default optics (refraction 1, blur 0.2, specular 0.5 and 6), no moving
- * rim.
+ * own, whatever the app: the kit's glass, which is this bar's (a squircle bezel, the default optics, its edge lit by what is under it).
  */
-const BAR_GLASS: LenziLiquidGlassSettings = { ...LIQUID_GLASS_SETTINGS, surface: 'squircle', bezel: 14, thickness: 28, rim: 0, pointerReach: 0 };
+const BAR_GLASS: LenziLiquidGlassSettings = LIQUID_EVERYWHERE_SETTINGS;
 
 /** How long the capsule stays glass on its way to the next page, ms. */
 const SETTLE = 420;
@@ -67,6 +67,9 @@ export class LenziGlassTabBar {
   protected readonly moving = signal(false);
 
   private readonly tabs = viewChildren<ElementRef<HTMLElement>>('tab');
+  /** The tabs whose page the router says is the current one (the capsule may have set off before it says so). */
+  private readonly routed = new Set<number>();
+  private readonly router = inject(Router);
   private readonly capsule = viewChild.required<ElementRef<HTMLElement>>('capsule');
   private readonly rest = viewChild<ElementRef<HTMLElement>>('rest');
   private readonly lens = viewChild.required<ElementRef<HTMLElement>>('lens');
@@ -111,6 +114,13 @@ export class LenziGlassTabBar {
     return entry.id ?? JSON.stringify(entry.link ?? entry.label);
   }
 
+  /** The router says a tab's page became the current one (or stopped being it). */
+  protected routeActive(index: number, active: boolean): void {
+    if (active) this.routed.add(index);
+    else this.routed.delete(index);
+    this.activated(index, active);
+  }
+
   /** A tab's page became the current one (or stopped being it). */
   protected activated(index: number, active: boolean): void {
     if (!active) {
@@ -128,7 +138,25 @@ export class LenziGlassTabBar {
     this.last = index;
   }
 
-  protected follow(entry: LenziNavEntry): void {
+  /**
+   * A link was tapped. A page's tab: the capsule sets off now, not when the page is there (lenzi, 2026-11-25: "L'animazione
+   * del menu lagga"; a page that takes long to build kept it still); if the page never comes (a guard said no), it goes
+   * back to the page that is still the current one.
+   */
+  protected follow(entry: LenziNavEntry, index?: number): void {
+    if (index !== undefined && this.active() !== index) {
+      this.activated(index, true);
+      const off = this.router.events.subscribe((event) => {
+        if (event instanceof NavigationEnd) off.unsubscribe();
+        else if (event instanceof NavigationCancel || event instanceof NavigationError || event instanceof NavigationSkipped) {
+          off.unsubscribe();
+          const [current = -1] = this.routed;
+          if (current === this.active()) return;
+          if (current >= 0) this.activated(current, true);
+          else this.active.set(-1);
+        }
+      });
+    }
     this.shell?.closeNav();
     this.navigated.emit(entry);
   }

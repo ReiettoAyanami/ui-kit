@@ -10,7 +10,7 @@ import { HOME_SCENE } from '../../scenes';
 /**
  * Liquid Glass over a background (lenzi, 2026-11-20: "nella pagina del liquid glass nei components per regolare le varie
  * proprietá dello stesso"): a window and a pill of it, both dragged about, every setting of the directive from the
- * parameters. Behind them the home's scene (its boids light the rim as they come near), blobs, a flock or a picture
+ * parameters. Behind them the home's scene (its lights light the edge from under it), blobs, a flock or a picture
  * (the hills' lines show the bending best).
  */
 @Component({
@@ -31,9 +31,9 @@ export class LiquidGlassDemo {
   protected readonly surface = computed(() => String(this.values()['surface'] ?? 'squircle') as LenziGlassSurface);
   protected readonly blur = computed(() => this.num('blur', 1.5));
   protected readonly saturation = computed(() => this.num('saturation', 1.5));
-  protected readonly rim = computed(() => this.num('rim', 0.5));
-  protected readonly lightAngle = computed(() => this.num('lightAngle', -60));
-  protected readonly rimBoids = computed(() => this.num('rimBoids', 60));
+  protected readonly specularOpacity = computed(() => this.num('specularOpacity', 0.5));
+  protected readonly specularSaturation = computed(() => this.num('specularSaturation', 6));
+  protected readonly lightReach = computed(() => this.num('lightReach', 12));
   /** The window's corners: the directive follows them (it looks at them about twice a second). */
   protected readonly radius = computed(() => this.num('radius', 28));
 

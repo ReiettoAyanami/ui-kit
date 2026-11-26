@@ -61,7 +61,7 @@ describe('LenziGlassTabBar', () => {
     expect(pressed).toEqual(['sign-out']);
   });
 
-  it('upright: a column, the capsule placed by its top and height (2026-11-25)', async () => {
+  it('upright: a column, the capsule moved down by translate and as tall as a tab (2026-11-25)', async () => {
     const { fixture, element } = await make();
     expect(element.classList.contains('upright')).toBe(false);
     fixture.componentRef.setInput('orientation', 'vertical');
@@ -70,7 +70,42 @@ describe('LenziGlassTabBar', () => {
     fixture.detectChanges();
     expect(element.classList.contains('upright')).toBe(true);
     const pill = element.querySelector<HTMLElement>('.pill')!;
+    // never by left or top: the browser moves a translate apart from the page (lenzi, 2026-11-25: "L'animazione del menu lagga")
     expect(pill.style.left).toBe('');
-    expect(pill.style.top).not.toBe('');
+    expect(pill.style.top).toBe('');
+    expect(pill.style.translate).toMatch(/^0(px)? -?\d+(\.\d+)?px$/);
+    expect(pill.style.height).not.toBe('');
+  });
+
+  it('the capsule sets off at the tap, before the page is there; back where it was if the page never comes', async () => {
+    const { fixture, router, element, tabs } = await make();
+    // a tap: the capsule goes at once, while the router has not even started
+    tabs()[1]!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    expect(tabs()[1]!.classList.contains('current')).toBe(true);
+    expect(element.querySelector('.capsule.pages')?.classList.contains('moving')).toBe(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(router.url).toBe('/components');
+    expect(tabs()[1]!.classList.contains('current')).toBe(true);
+    // a page that refuses (a guard): the capsule goes back to the page that is still the current one
+    router.resetConfig([{ path: '', component: Page }, { path: 'components', component: Page }, { path: 'components/:id', component: Page, canActivate: [() => false] }]);
+    await router.navigateByUrl('/');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(tabs()[0]!.classList.contains('current')).toBe(true);
+    fixture.componentRef.setInput('pages', [...pages, { label: 'Switch', icon: 'toggle_on', link: '/components/switch', exact: true }]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    tabs()[2]!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    expect(tabs()[2]!.classList.contains('current')).toBe(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(router.url).toBe('/');
+    expect(tabs()[0]!.classList.contains('current')).toBe(true);
+    expect(tabs()[2]!.classList.contains('current')).toBe(false);
   });
 });

@@ -13,6 +13,20 @@
   }
 }
 
+/* The page's title (the shell's, with the bar of pages): large and bold, at the top of the page's column, where its words
+   start. A page with its own h1 keeps that one. */
+.lenzi-glass-page-title {
+  margin: 0 0 16px;
+  font: var(--mat-sys-headline-large);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+:host:has(h1:not(.lenzi-glass-page-title)) .lenzi-glass-page-title {
+  display: none;
+}
+
 /* The glass pane: as large as the page, behind its elements (over the background, which is under everything), with
    the border and radius of a panel. */
 .pane {
@@ -21,6 +35,13 @@
   z-index: -1;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: var(--lenzi-panel-radius);
+  /* as Liquid Glass (an app of it), frosted as much as the kit's glass, words lie on it */
+  --lenzi-liquid-frost: var(--lenzi-glass-blur);
+}
+
+/* Liquid Glass: where the browser does not bend (not Chromium), frosted all the same */
+.pane.lenzi-liquid-glass {
+  backdrop-filter: blur(var(--lenzi-glass-blur)) saturate(1.5);
 }
 
 @media (max-width: 599px) {

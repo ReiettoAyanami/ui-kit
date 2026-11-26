@@ -8,3 +8,5 @@
 - Never give the page element a `z-index`, a `backdrop-filter`, a `filter` or an `opacity` under 1: the pane would no
   longer be glass over the background, and a search bar in the page would not ride into the top bar.
 - Nothing to do for the phone: the pane fills the screen by itself under 600 px.
+- The title: with `navigation="bar"` the page shows the route's title by itself. Do not add an `h1` that repeats it; a
+  page that needs a heading of its own (a component's name) writes its `h1`, and that one is shown instead.

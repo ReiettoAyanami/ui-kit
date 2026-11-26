@@ -111,6 +111,10 @@ describe('LenziAppShell', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.lenzi-shell-menu')).toBeNull();
     expect(element.querySelector('.lenzi-shell.lenzi-shell-with-tabs .lenzi-shell-tabs .tabs')).not.toBeNull();
+    // no top bar: the title as the page's heading, the actions beside it (lenzi, 2026-11-25: "togli la barra sopra")
+    expect(element.querySelector('.lenzi-shell-bar')).toBeNull();
+    expect(element.querySelector('h1.lenzi-shell-heading-title')?.textContent?.trim()).toBe('Tickets');
+    expect(element.querySelector('.lenzi-shell-heading .action')).not.toBeNull();
     // wider than a phone (the test's window): upright on the left
     expect(element.querySelector('.lenzi-shell.lenzi-shell-tabs-upright')).not.toBeNull();
     const drawer = TestBed.createComponent(Host);

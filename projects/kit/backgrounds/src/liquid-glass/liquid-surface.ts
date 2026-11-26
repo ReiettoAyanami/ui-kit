@@ -1,8 +1,7 @@
-// The Liquid Glass of one element, as a plain object: its filter drawn for its size and corners, the rim lit by
-// the boids near it. `lenziLiquidGlass` makes one for its element; `provideLenziLiquidGlass()` one for every surface
-// of the app (2026-11-25). A plain module (no schematic makes one).
-import { LenziSights } from '../sights/sights';
-import { LenziGlassSurface, RIM_ANGLES, liquidGlassMaps, liquidGlassOutlineMaps } from './liquid-glass-maps';
+// The Liquid Glass of one element, as a plain object: its filter drawn for its size and corners, its edge lit by the
+// light under it. `lenziLiquidGlass` makes one for its element; `provideLenziLiquidGlass()` one for every surface of the
+// app (2026-11-25). A plain module (no schematic makes one).
+import { LenziGlassSurface, LenziLiquidGlassMaps, LenziLiquidGlassShape, liquidGlassMaps, liquidGlassOutlineMaps } from './liquid-glass-maps';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /** How many frames apart the glass looks at its corners again (about half a second). */
@@ -18,15 +17,16 @@ export interface LenziLiquidGlassSettings {
   surface: LenziGlassSurface;
   blur: number;
   saturation: number;
-  /** How much of the white highlight lies on the edge, 0 to 1 (kube.io's "specular opacity"). */
+  /**
+   * How bright the edge gets where the light under it is full, 0 to 1 (kube.io's "specular opacity"): the light of what
+   * is under the glass, on the side it is on (lenzi, 2026-11-26: "la direzione della luce deve cambiare rispetto a quello
+   * che sta sotto, no il mouse").
+   */
   specularOpacity: number;
   /** How saturated the copy of what is behind is, on the edge (kube.io's "specular saturation"): the edge takes its colour. */
   specularSaturation: number;
-  rim: number;
-  lightAngle: number;
-  rimBoids: number;
-  /** How far from the glass the pointer lights its rim, px (0: never); on the side it comes from, brighter nearer. */
-  pointerReach: number;
+  /** How far round each point of the edge the light under it is gathered, px: wider, a light farther in lights the edge. */
+  lightReach: number;
   glassPath: string | null;
   glassViewBox: string;
 }
@@ -41,29 +41,124 @@ export const LIQUID_GLASS_SETTINGS: LenziLiquidGlassSettings = {
   saturation: 1,
   specularOpacity: 0.5,
   specularSaturation: 6,
-  rim: 0.5,
-  lightAngle: -60,
-  rimBoids: 60,
-  pointerReach: 160,
+  lightReach: 12,
   glassPath: null,
   glassViewBox: '0 0 100 100',
 };
 
-/** Where the pointer is on a page (one listener a document, for every glass); `on`: over the page. */
-const pointers = new WeakMap<Document, { x: number; y: number; on: boolean; down: boolean }>();
-function pointerOf(document: Document): { x: number; y: number; on: boolean; down: boolean } {
-  let pointer = pointers.get(document);
-  if (!pointer) {
-    const tracked = { x: 0, y: 0, on: false, down: false };
-    pointer = tracked;
-    pointers.set(document, tracked);
-    const at = (event: PointerEvent) => Object.assign(tracked, { x: event.clientX, y: event.clientY, on: true });
-    document.addEventListener('pointermove', at, { passive: true });
-    document.addEventListener('pointerdown', (event) => (at(event), (tracked.down = true)), { passive: true, capture: true });
-    for (const end of ['pointerup', 'pointercancel'] as const) document.addEventListener(end, () => (tracked.down = false), { passive: true, capture: true });
-    document.documentElement.addEventListener('pointerleave', () => Object.assign(tracked, { on: false, down: false }));
+/** A piece of one of a glass's maps: a picture (a data URL) and where it lies in the glass, px (stretched to fit). */
+export interface LenziGlassTile {
+  href: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * A glass's map as pieces to lay in its filter (red and green its bending, blue the line on its edge), and the largest
+ * shift (the bending's scale). One map, not three: every picture the filter lays is drawn again at every frame the page
+ * draws, as large as the glass (measured 2026-11-26: three maps of whole pictures under six cards took the page from 200
+ * to 51 frames a second, nine pieces of each to 118).
+ */
+export interface LenziGlassTiles {
+  map: LenziGlassTile[];
+  scale: number;
+}
+
+/**
+ * A glass larger than this, px², has its map made in pieces (lenziGlassPage's pane is as tall as its page; and every
+ * card of a page is glass, lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato convertito in liquid glass, come i
+ * pannelli"): the pieces of one corner's radius are drawn once and shared by every glass with those corners, and the
+ * filter draws a few small pictures instead of one as large as the glass.
+ */
+export const SLICE_AREA = 40_000;
+
+/** The pictures of the pieces, by what they are made of (the corners, the bezel, the optics): shared by every glass. */
+const PIECES = new Map<string, { map: string[]; scale: number }>();
+const MOST_PIECES = 64;
+
+/** Pixels (RGBA, `width` a row) as a data URL. */
+function pictureOf(document: Document, data: Uint8ClampedArray, width: number, height: number): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d')?.putImageData(new ImageData(new Uint8ClampedArray(data), width, height), 0, 0);
+  return canvas.toDataURL();
+}
+
+/** The map, one picture as large as the glass. */
+function wholeTiles(maps: LenziLiquidGlassMaps, document: Document): LenziGlassTiles {
+  return { map: [{ href: pictureOf(document, maps.displacement, maps.width, maps.height), x: 0, y: 0, width: maps.width, height: maps.height }], scale: maps.scale };
+}
+
+/**
+ * The map of a large rounded box in nine pieces (lenzi, 2026-11-25: "I pannelli dietro ... devono essere in vetro": a
+ * page's pane is thousands of px tall, its map would be millions of px drawn in script): the map of a small box with the
+ * same corners and bezel, cut into its four corners, its four sides (one px across, stretched along the glass) and its
+ * middle (one px, stretched). Past the corners the glass is the same all along its sides, so the pieces are the same
+ * map. Each piece overlaps the next by one px of the same colours (opaque: the upper one is all there is): no seam where
+ * they meet. Null when the glass is small (one picture) or too narrow for its corners.
+ */
+export function slicedTiles(
+  width: number,
+  height: number,
+  radius: number,
+  optics: Omit<LenziLiquidGlassShape, 'width' | 'height' | 'radius'>,
+  document: Document,
+): LenziGlassTiles | null {
+  const cuts = glassCuts(width, height, radius, optics.bezel);
+  if (!cuts) return null;
+  const side = cuts.side;
+  const key = `${side}|${radius}|${optics.bezel}|${optics.thickness}|${optics.ior}|${optics.surface}`;
+  let pictures = PIECES.get(key);
+  if (!pictures) {
+    const maps = liquidGlassMaps({ width: side, height: side, radius, ...optics });
+    const map = cuts.pieces.map(([fx, fy, fw, fh]) => {
+      const piece = new Uint8ClampedArray(fw * fh * 4);
+      for (let row = 0; row < fh; row++) piece.set(maps.displacement.subarray(((fy + row) * side + fx) * 4, ((fy + row) * side + fx + fw) * 4), row * fw * 4);
+      return pictureOf(document, piece, fw, fh);
+    });
+    pictures = { map, scale: maps.scale };
+    if (PIECES.size >= MOST_PIECES) PIECES.delete(PIECES.keys().next().value!);
+    PIECES.set(key, pictures);
   }
-  return pointer;
+  return { map: cuts.pieces.map(([, , , , x, y, w, h], k) => ({ href: pictures.map[k]!, x, y, width: w, height: h })), scale: pictures.scale };
+}
+
+/**
+ * Where the nine pieces of a large glass come from and go: the small box's side (px), and for each piece, the middle
+ * first and the corners last, `[from x, from y, width, height]` in the small box's maps and `[x, y, width, height]` in
+ * the glass. Null when the glass is not larger than SLICE_AREA, or too narrow for its corners.
+ */
+export function glassCuts(width: number, height: number, radius: number, bezel: number): { side: number; pieces: [number, number, number, number, number, number, number, number][] } | null {
+  const c = Math.ceil(Math.max(radius, bezel)) + 2;
+  if (width * height <= SLICE_AREA || width < 2 * c + 4 || height < 2 * c + 4) return null;
+  const across = width - 2 * c + 2;
+  const along = height - 2 * c + 2;
+  return {
+    side: 2 * c + 1,
+    pieces: [
+      [c, c, 1, 1, c - 1, c - 1, across, along],
+      [c, 0, 1, c + 1, c - 1, 0, across, c + 1],
+      [c, c, 1, c + 1, c - 1, height - c - 1, across, c + 1],
+      [0, c, c + 1, 1, 0, c - 1, c + 1, along],
+      [c, c, c + 1, 1, width - c - 1, c - 1, c + 1, along],
+      [0, 0, c + 1, c + 1, 0, 0, c + 1, c + 1],
+      [c, 0, c + 1, c + 1, width - c - 1, 0, c + 1, c + 1],
+      [0, c, c + 1, c + 1, 0, height - c - 1, c + 1, c + 1],
+      [c, c, c + 1, c + 1, width - c - 1, height - c - 1, c + 1, c + 1],
+    ],
+  };
+}
+
+/** The filter's images for the map, its pieces merged into `result` (one piece: the image itself). */
+function imagesOf(tiles: readonly LenziGlassTile[], result: string): string {
+  const image = (tile: LenziGlassTile, name: string) =>
+    `<feImage href="${tile.href}" x="${tile.x}" y="${tile.y}" width="${tile.width}" height="${tile.height}" preserveAspectRatio="none" result="${name}"/>`;
+  if (tiles.length === 1) return image(tiles[0]!, result);
+  const images = tiles.map((tile, k) => image(tile, `${result}-${k}`)).join('\n  ');
+  return `${images}\n  <feMerge result="${result}">${tiles.map((_, k) => `<feMergeNode in="${result}-${k}"/>`).join('')}</feMerge>`;
 }
 
 /** Whether this browser draws an SVG filter as a backdrop-filter (only Chromium does). */
@@ -73,9 +168,29 @@ export function refracts(view: Window | null): boolean {
 }
 
 /**
+ * The light under the glass (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti scattanti e la
+ * direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che ti inventi"): what is behind,
+ * gathered round each point (`lightReach`), is as much light as it is bright past LIGHT_FLOOR (the page's dark colour),
+ * whole a little past half; over the page's dark colour only LIGHT_BASE, so the glass's shape still reads where nothing
+ * is under it (a card over a dark phone's page vanished, 2026-11-26). Its colour is what is behind, paler. The filter
+ * lights the edge with it at every frame the page draws: a bright thing under the glass lights the edge on its side, and
+ * the light follows it smoothly.
+ */
+export const LIGHT_FLOOR = 0.12;
+export const LIGHT_GAIN = 2.4;
+export const LIGHT_BASE = 0.1;
+
+/** The light's colour matrix: its colour what is behind halfway to white, its alpha how bright that is (luminance). */
+export function lightMatrix(floor = LIGHT_FLOOR, gain = LIGHT_GAIN, base = LIGHT_BASE): string {
+  const g = (n: number) => +(n * gain).toFixed(4);
+  return `0.5 0 0 0 0.5 0 0.5 0 0 0.5 0 0 0.5 0 0.5 ${g(0.2126)} ${g(0.7152)} ${g(0.0722)} 0 ${+(base - floor * gain).toFixed(4)}`;
+}
+
+/**
  * One element's Liquid Glass. `build()` draws its filter for its size now (nothing when nothing it is made of
- * changed); `light()` at every frame lights its rim and, now and then, looks at its corners; `destroy()` takes it
- * away. It never runs a frame or watches a size by itself: who made it does.
+ * changed); `check()`, called at every frame, looks at its corners now and then; `destroy()` takes it away. It never
+ * runs a frame or watches a size by itself: who made it does. Its edge needs nothing from script to live: the filter
+ * lights it with what is under it, at every frame.
  */
 export class LenziLiquidSurface {
   private readonly id = `lenzi-liquid-glass-${++made}`;
@@ -87,15 +202,12 @@ export class LenziLiquidSurface {
   /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
   private radius = 0;
   private framesSinceRadius = 0;
-  /** The rim pictures (data URLs) by side, the last from all round; which is shown, and how bright. */
-  private rims: string[] = [];
-  private shownRim = -1;
-  private shownSlope = '';
+  /** Frosted: the filter draws the glass's tint, its CSS fill is hidden by an inline transparent one. */
+  private tinted = false;
 
   constructor(
     readonly element: HTMLElement,
     private readonly document: Document,
-    private readonly sights: LenziSights,
     private readonly settings: () => LenziLiquidGlassSettings,
   ) {}
 
@@ -110,24 +222,28 @@ export class LenziLiquidSurface {
     const radius = this.cornerRadius();
     this.radius = radius;
     const path = s.glassPath;
-    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.lightAngle}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${s.rim}|${s.glassViewBox}|${path ?? ''}`;
+    // A glass with words on it may be frosted (`--lenzi-liquid-frost`, px: a page's pane, a card; lenzi, 2026-11-25: "I
+    // pannelli dietro ... devono essere in vetro, ti ho detto come dovevano essere calcolati i bordi"): its body blurred
+    // as much, and its tint (its CSS fill) drawn by the filter under the edge, so the edge shows as on the clear glass.
+    // The fill is read with the glass's own inline one taken away (it puts a transparent one to hide the CSS's).
+    const style = this.document.defaultView?.getComputedStyle(this.element);
+    const frost = Math.max(0, parseFloat(style?.getPropertyValue('--lenzi-liquid-frost') ?? '') || 0);
+    if (this.tinted) this.element.style.removeProperty('background-color');
+    // the tint from the kit's variable (`--lenzi-liquid-fill`), else the fill: a fill read while it moves would stay
+    const tint = frost && style ? style.getPropertyValue('--lenzi-liquid-fill').trim() || style.backgroundColor : '';
+    this.tinted = frost > 0;
+    if (this.tinted) this.element.style.setProperty('background-color', 'transparent');
+    const reach = Math.max(0, s.lightReach);
+    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
     if (key === this.size) return;
     this.size = key;
     // A bezel wider than half the glass would bend the whole of it: never more than a third of its smaller side.
     const bezel = Math.min(s.bezel, Math.max(4, Math.min(width, height) / 3));
-    const optics = { bezel, thickness: s.thickness, ior: s.ior, surface: s.surface, lightAngle: s.lightAngle };
+    const optics = { bezel, thickness: s.thickness, ior: s.ior, surface: s.surface };
     const inside = path ? this.outline(path, width, height) : null;
-    const maps = inside ? liquidGlassOutlineMaps({ width, height, inside, ...optics }) : liquidGlassMaps({ width, height, radius, ...optics });
-    const picture = (data: Uint8ClampedArray): string => {
-      const canvas = this.document.createElement('canvas');
-      canvas.width = maps.width;
-      canvas.height = maps.height;
-      canvas.getContext('2d')?.putImageData(new ImageData(new Uint8ClampedArray(data), maps.width, maps.height), 0, 0);
-      return canvas.toDataURL();
-    };
-    this.rims = maps.rims.map((rim) => picture(rim.data));
-    this.shownRim = this.rims.length - 1;
-    this.shownSlope = '';
+    const tiles = inside
+      ? wholeTiles(liquidGlassOutlineMaps({ width, height, inside, ...optics }), this.document)
+      : slicedTiles(width, height, radius, optics, this.document) ?? wholeTiles(liquidGlassMaps({ width, height, radius, ...optics }), this.document);
     const svg = this.svg ?? (this.document.createElementNS(SVG, 'svg') as SVGSVGElement);
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('width', '0');
@@ -135,26 +251,42 @@ export class LenziLiquidSurface {
     svg.setAttribute('color-interpolation-filters', 'sRGB');
     svg.style.position = 'absolute';
     svg.style.pointerEvents = 'none';
-    const scale = (maps.scale * Math.max(0, s.refraction)).toFixed(2);
+    const scale = (tiles.scale * Math.max(0, s.refraction)).toFixed(2);
     this.fullBend = Number(scale);
     const saturation = Math.max(0, s.saturation);
+    const bending = (Number(scale) * this.bend).toFixed(2);
+    const shine = Math.max(0, s.specularOpacity);
+    // Frosted: the body bent from a blurred copy, its tint over it.
+    const body = frost
+      ? `<feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="frosted"/>
+  <feDisplacementMap class="lenzi-liquid-glass-bend" in="frosted" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent-frosted"/>
+  <feColorMatrix in="bent-frosted" type="saturate" values="${saturation}" result="clear"/>
+  <feFlood style="flood-color: ${tint}" result="tint"/>
+  <feBlend in="tint" in2="clear" mode="normal" result="refracted"/>`
+      : `<feColorMatrix in="bent" type="saturate" values="${saturation}" result="refracted"/>`;
     // kube.io's chain (lenzi, 2026-11-25: "guarda come i bordi prendono il colore di quello che sta sotto"): what is behind,
-    // softened and bent; on the edge a much more saturated copy of it, where the specular map says (so the edge takes the
-    // colour of what is under it), and a white highlight over that at `specularOpacity`; then the moving light (rims).
+    // softened and bent; on the edge a much more saturated copy of it, so the edge takes the colour of what is under it.
+    // And only where there is light under it (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci ... la
+    // direzione della luce deve cambiare rispetto a quello che sta sotto", LIGHT_FLOOR): the edge's line is as strong as
+    // what is under each point of it is bright, dark over the dark page, and over it a highlight in the light's own
+    // colour. No side of its own, nothing from script: at every frame the page draws, the edge lights where the light
+    // under it is. The line is the map's blue (its colour the glint, its alpha the glint squared: kube.io's). Frosted
+    // glass gathers its light from its frosted copy, as far as it is frosted (one blur less for the GPU).
     svg.innerHTML = `<filter id="${this.id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
   <feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0, s.blur)}" result="soft"/>
-  <feImage href="${picture(maps.displacement)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="map"/>
-  <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${(Number(scale) * this.bend).toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
-  <feColorMatrix in="bent" type="saturate" values="${saturation}" result="refracted"/>
+  ${imagesOf(tiles.map, 'map')}
+  <feColorMatrix in="map" type="matrix" values="0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0" result="glint"/>
+  <feComponentTransfer in="glint" result="specular"><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
+  <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+  ${body}
+  ${frost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
+  <feColorMatrix in="${frost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix()}" result="light"/>
+  <feComposite in="light" in2="specular" operator="in" result="lit-line"/>
   <feColorMatrix in="bent" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
-  <feImage href="${picture(maps.specular)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="specular"/>
-  <feComposite in="vivid" in2="specular" operator="in" result="edge"/>
-  <feComponentTransfer in="specular" result="highlight"><feFuncA type="linear" slope="${Math.max(0, s.specularOpacity)}"/></feComponentTransfer>
+  <feComposite in="vivid" in2="lit-line" operator="in" result="edge"/>
   <feBlend in="edge" in2="refracted" mode="normal" result="coloured"/>
-  <feBlend in="highlight" in2="coloured" mode="normal" result="glass"/>
-  <feImage class="lenzi-liquid-glass-rim" href="${this.rims[this.rims.length - 1]}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" result="light"/>
-  <feComponentTransfer in="light" result="rim"><feFuncA class="lenzi-liquid-glass-rim-light" type="linear" slope="0"/></feComponentTransfer>
-  <feBlend in="rim" in2="glass" mode="screen"/>
+  <feComponentTransfer in="lit-line" result="highlight"><feFuncA type="linear" slope="${(shine * 2).toFixed(2)}"/></feComponentTransfer>
+  <feBlend in="highlight" in2="coloured" mode="screen"/>
 </filter>`;
     // the filter in the page before the glass points at it (pointed at first, Chromium shows nothing)
     if (!this.svg) {
@@ -170,7 +302,7 @@ export class LenziLiquidSurface {
    */
   bending(share: number): void {
     this.bend = Math.max(0, share);
-    this.svg?.querySelector('.lenzi-liquid-glass-bend')?.setAttribute('scale', (this.fullBend * this.bend).toFixed(2));
+    this.svg?.querySelectorAll('.lenzi-liquid-glass-bend').forEach((bend) => bend.setAttribute('scale', (this.fullBend * this.bend).toFixed(2)));
   }
 
   /** Draws the filter again at the next build, even for the same size (a setting changed). */
@@ -179,68 +311,22 @@ export class LenziLiquidSurface {
   }
 
   /**
-   * The rim now: as bright as the boids near the glass are many (none: dark), from the side they are on, all round
-   * once their middle is under the glass. Says whether the corners changed (the filter must be drawn again).
+   * Called at every frame: about twice a second it looks at its corners, changed by the app's CSS (a class, a variable;
+   * lenzi, 2026-11-21: "tanti input non si aggiornano automaticamente"). Says whether they changed (the filter must be
+   * drawn again for them).
    */
-  light(): boolean {
-    const svg = this.svg;
-    if (!svg || this.rims.length === 0) return false;
-    // its corners, about twice a second: changed by the app's CSS (a class, a variable), the filter is drawn again for
-    // them (lenzi, 2026-11-21: "tanti input non si aggiornano automaticamente")
-    let cornersChanged = false;
-    if (++this.framesSinceRadius >= RADIUS_FRAMES) {
-      this.framesSinceRadius = 0;
-      cornersChanged = this.cornerRadius() !== this.radius;
-    }
-    const s = this.settings();
-    const box = this.element.getBoundingClientRect();
-    const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-    // What lights the rim: the boids of a flock behind (as many as `rimBoids`: whole), or the pointer near the glass
-    // (lenzi, 2026-11-25: "Controlla che i bordi dinamici lo siano veramente": with no flock, the rims never moved).
-    const crowd = this.sights.around(middle, Math.max(box.width, box.height) * 0.8);
-    const byBoids = crowd ? Math.max(0, s.rim) * Math.min(1, crowd.count / Math.max(1, s.rimBoids)) : 0;
-    const pointer = pointerOf(this.document);
-    let byPointer = 0;
-    if (pointer.on && s.pointerReach > 0) {
-      const away = Math.hypot(Math.max(box.left - pointer.x, 0, pointer.x - box.right), Math.max(box.top - pointer.y, 0, pointer.y - box.bottom));
-      byPointer = Math.max(0, s.rim) * Math.pow(Math.max(0, 1 - away / s.pointerReach), 2);
-    }
-    // Pressed: the whole rim lights up, brighter (Apple: glass "reacts to touch and pointer interactions in real time").
-    const pressed =
-      pointer.on && pointer.down && pointer.x >= box.left && pointer.x <= box.right && pointer.y >= box.top && pointer.y <= box.bottom;
-    const from = byPointer > byBoids ? pointer : crowd;
-    const bright = pressed ? Math.min(1, Math.max(0, s.rim) * 2) : Math.max(byBoids, byPointer);
-    let side = this.rims.length - 1;
-    if (from && bright > 0 && !pressed) {
-      const ox = (from.x - middle.x) / Math.max(1, box.width / 2);
-      const oy = (from.y - middle.y) / Math.max(1, box.height / 2);
-      if (Math.hypot(ox, oy) > 0.35) {
-        const angle = (Math.atan2(oy, ox) * 180) / Math.PI;
-        let best = 0;
-        RIM_ANGLES.forEach((candidate, k) => {
-          const gap = Math.abs(((angle - candidate + 540) % 360) - 180);
-          const bestGap = Math.abs(((angle - RIM_ANGLES[best]! + 540) % 360) - 180);
-          if (gap < bestGap) best = k;
-        });
-        side = best;
-      }
-    }
-    if (side !== this.shownRim) {
-      this.shownRim = side;
-      svg.querySelector('.lenzi-liquid-glass-rim')?.setAttribute('href', this.rims[side]!);
-    }
-    const slope = bright.toFixed(2);
-    if (slope !== this.shownSlope) {
-      this.shownSlope = slope;
-      svg.querySelector('.lenzi-liquid-glass-rim-light')?.setAttribute('slope', slope);
-    }
-    return cornersChanged;
+  check(): boolean {
+    if (!this.svg || ++this.framesSinceRadius < RADIUS_FRAMES) return false;
+    this.framesSinceRadius = 0;
+    return this.cornerRadius() !== this.radius;
   }
 
   destroy(): void {
     this.svg?.remove();
     this.svg = null;
     this.element.style.removeProperty('backdrop-filter');
+    if (this.tinted) this.element.style.removeProperty('background-color');
+    this.tinted = false;
   }
 
   /** The element's corners' radius now, px (its top left one: the glass's corners are one radius). */

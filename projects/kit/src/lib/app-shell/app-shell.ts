@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DOCUMENT, DestroyRef, ElementRef, ViewEncapsulation, computed, inject, input, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -43,7 +44,7 @@ function routeIsBare(route: ActivatedRouteSnapshot): boolean {
  */
 @Component({
   selector: 'lenzi-app-shell',
-  imports: [MatButtonModule, MatIconModule, MatSidenavModule, MatToolbarModule],
+  imports: [MatButtonModule, MatIconModule, MatSidenavModule, MatToolbarModule, NgTemplateOutlet],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
   encapsulation: ViewEncapsulation.None,
@@ -71,8 +72,8 @@ export class LenziAppShell {
 
   /** A phone's width, under 600 px (for 'auto'). */
   private readonly narrow = signal(false);
-  /** The bar at the bottom instead of the drawer. */
-  protected readonly tabs = computed(() => this.navigation() === 'bar' || (this.navigation() === 'auto' && this.narrow()));
+  /** The bar of pages instead of the drawer (and no top bar: the title is the page's, `lenziGlassPage` shows it). */
+  readonly tabs = computed(() => this.navigation() === 'bar' || (this.navigation() === 'auto' && this.narrow()));
   /** The bar upright on the left (navigation 'bar', wider than a phone). LenziGlassTabBar follows it. */
   readonly tabsUpright = computed(() => this.tabs() && !this.narrow());
 
@@ -87,7 +88,8 @@ export class LenziAppShell {
     initialValue: routeIsBare(this.router.routerState.snapshot.root),
   });
 
-  protected readonly shownTitle = computed(() => this.title() ?? this.routeTitle());
+  /** The title shown: `title`, else the route's. */
+  readonly shownTitle = computed(() => this.title() ?? this.routeTitle());
   protected readonly isBare = computed(() => {
     const bare = this.bare();
     return bare === 'route' ? this.routeBare() : bare;

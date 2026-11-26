@@ -63,12 +63,19 @@ the rule says what, the variable says how much.
 - **Liquid Glass is another material** (lenzi, 2026-11-19: "quasi come il liquid glass di IOS ... diverso dal classico
   vetro"; "il bordo voglio che rimanga nascosto fino all'ultimo"): `lenziLiquidGlass`, clear, it bends what is behind it
   near its curved edge, and has no border, only a rim of light on its very edge. Chromium only bends.
-- **An app may be Liquid Glass, Apple's way** (lenzi, 2026-11-25: "usa le regole di Apple per capire dove applicarlo e
-  come in modo ottimale"; Apple's Human Interface Guidelines, Materials and Color): `provideLenziLiquidGlass()`.
-  - **Only the layer of navigation and controls that floats over the content** ("a distinct functional layer for
-    controls and navigation elements"): the top bar, the drawer, windows, menus and select panels, the "+", a bar of
-    actions (`.lenzi-floating`). **Never the content** ("Don't use Liquid Glass in the content layer"): cards, tables,
-    grids, a page's panels stay solid. **Sparingly** ("Use Liquid Glass effects sparingly").
+- **An app may be Liquid Glass** (lenzi, 2026-11-25: "usa le regole di Apple per capire dove applicarlo e come in modo
+  ottimale"; Apple's Human Interface Guidelines, Materials and Color): `provideLenziLiquidGlass()`.
+  - **Every surface, the panels too** (lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato convertito in liquid
+    glass, come i pannelli o altro, stiamo rifacendo l'interfaccia del kit praticamente"; before, Apple's "Don't use
+    Liquid Glass in the content layer" kept them solid): what floats (the top bar, the drawer, windows, menus and select
+    panels, the "+", a bar of actions `.lenzi-floating`), the pane behind a page, cards, the app's panels
+    (`.lenzi-surface`) and every lit surface (`lenziLit` gives itself to the app's glass). Those with words on them are
+    frosted to read on. Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what
+    floats.
+  - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti
+    scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che ti
+    inventi"): bright where a light is under it, on that side, dark over the dark page (a faint line only, so the shape
+    reads), following it at every frame, smoothly. Never a light of its own: no pointer, no fixed angle, no boids.
   - **The default optics** (lenzi, 2026-11-25: "per il vetro tieni i valori dafault di apple per ora"; kube.io's: refraction
     1, blur 0.2, specular opacity 0.5, specular saturation 6): **its edge takes the colour of what is under it** (a
     saturated copy of it, kube.io's way: "guarda come i bordi prendono il colore di quello che sta sotto"), with a light
@@ -76,10 +83,13 @@ the rule says what, the variable says how much.
   - **Controls of glass, Apple's** (`@lenzi/ui-kit/backgrounds`): `LenziGlassSwitch`, `LenziGlassSegmented`,
     `LenziGlassSlider`, `LenziGlassSearch`: a solid thumb that becomes glass while held, larger, and settles solid.
   - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
-  - **Its rim lives**: lit near the pointer, and by a flock's boids behind it; pressed, all of it, brighter.
   - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
     replica"): no stroke; corners concentric to what they hold (controls are capsules, a panel's radius is its
-    content's plus the gap); a scroll edge effect under the bar instead of a fill; never glass on glass.
+    content's plus the gap); a scroll edge effect under the bar instead of a fill; no glass over a window's glass
+    (a menu opened on a window stays frosted).
+  - **The page's title is in the page** (lenzi, 2026-11-25: "togli la barra sopra che non ha senso, metti un titolo
+    normale un po' grande"; "il titolo è troppo vicino al lato"): with the bar of pages there is no top bar; the title
+    is large and bold at the top of the page's column (`lenziGlassPage`), one per page (a page's own h1 wins).
 - **Reduce transparency** (`LenziAppearance`, and the system's own `prefers-reduced-transparency`) makes
   every surface solid again.
 

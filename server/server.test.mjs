@@ -145,7 +145,7 @@ test('every save is kept, anyone reads the history, the admin undoes a save', as
   const historyPath = join(dir, 'data', 'history.jsonl');
   const app = await buildServer({ tokensJson, tokensCss, kitDir, historyPath, allowFiles: true, ...ADMIN });
   const headers = await signIn(app);
-  await app.inject({ method: 'PUT', url: '/api/tokens', headers, payload: { values: { '--lenzi-glass': '60%', '--lenzi-border': '2px' } } });
+  await app.inject({ method: 'PUT', url: '/api/tokens', headers, payload: { values: { '--lenzi-glass': '60%', '--lenzi-border': '1px' } } });
   await app.inject({ method: 'PUT', url: '/api/files', headers, payload: { path: 'libraries.json', content: '{"groups":[1]}\n' } });
 
   const { entries } = (await app.inject({ method: 'GET', url: '/api/history' })).json();
@@ -155,7 +155,7 @@ test('every save is kept, anyone reads the history, the admin undoes a save', as
   assert.equal(file.path, 'libraries.json');
   assert.equal(file.before, undefined, 'the replaced text stays on the server');
   assert.equal(file.bytesBefore, 14);
-  // only what changed: the border was already 2px
+  // only what changed: the border was already 1px (2026-11-25: "dappertutto il 50%")
   assert.deepEqual(variables.changes, [{ name: '--lenzi-glass', from: '56%', to: '60%' }]);
   assert.equal(variables.user, 'lenzi');
 

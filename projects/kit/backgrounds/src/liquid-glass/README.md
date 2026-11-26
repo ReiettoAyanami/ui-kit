@@ -13,17 +13,20 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   `squircle`, Apple's convex default; `circle`; `lip`, convex then concave), `thickness` px tall, `bezel` px wide. A
   ray from behind meets the bezel's slope and bends by Snell's law (air 1, glass `ior` 1.5); crossing the glass it
   moves sideways. That shift, at each distance from the edge, along the edge's normal (round corners too), is drawn
-  into a displacement map (red and green, 128 none) and given to `feDisplacementMap`, its scale the largest shift.
+  into a displacement map (red and green, 128 none; blue the line on the edge, below) and given to `feDisplacementMap`,
+  its scale the largest shift. One picture a glass: every picture of the filter is drawn again at every frame (three
+  maps under six cards took the home from 200 frames a second to 51; one, in nine shared pieces, to 188; 2026-11-26).
 - **Antialiased** (lenzi, 2026-11-25: "attiva antialiasing"): a pixel the outline crosses is four points of the maps
   averaged, so the rim and the bending fade across the round corners instead of stepping with the pixels.
 - **A little blur and saturation** of what is behind (`blur` 1.5 px, `saturation` 1.5).
-- **No border**: only a rim of light on the very edge (a few px), and only when the boids of a flock behind come near
-  (lenzi, 2026-11-19: "quelli devono esserci solo quando i boidi ci si avvicinano"): dark while none is near,
-  brighter the more there are (whole at `rimBoids`, 60; `rim` 0.5 at most), lit on the side they come from (eight
-  sides), all round once they are under the glass (`LenziSights.around`, at every frame; the nine rims drawn once).
-- **The pointer lights it too** (lenzi, 2026-11-25: "Controlla che i bordi dinamici lo siano veramente": with no flock
-  the rims never moved): within `pointerReach` px (160) of the glass, brighter nearer, on the side it comes from; the
-  brighter of the two lights wins.
+- **No border; its edge is lit by the light under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci,
+  sono tutti scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che
+  ti inventi"; before, a rim lit by the pointer and the boids, one of eight sides at a time): kube.io's line on the very
+  edge (about 1.5 px, the same all round), as bright as what is under each point of it is (what is behind, gathered
+  `lightReach` px round it; nothing below the page's dark colour but a faint line, `LIGHT_BASE`, so the shape reads;
+  whole a little past half), in its colour (the saturated copy) with a highlight in the light's own colour over it
+  (`specularOpacity`). All in the filter: at every frame the page draws, the edge lights on the side a light is under
+  it and follows it smoothly. No fixed side, no pointer, no script.
 - **One filter per glass, made for its size**, again when it changes size or a setting (the maps are as large as it
   is), or its corners (`border-radius`, from any CSS: looked at about twice a second; lenzi, 2026-11-21, "tanti input non
   si aggiornano automaticamente").
@@ -52,16 +55,15 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `surface` | `'squircle' \| 'circle' \| 'lip'` | `'squircle'` |
 | input | `blur` | px | `0.2` |
 | input | `saturation` | 1: as it is | `1` |
-| input | `specularOpacity` | 0 to 1: the white highlight on the edge | `0.5` |
+| input | `specularOpacity` | 0 to 1: how bright the edge gets over a full light | `0.5` |
 | input | `specularSaturation` | the edge's copy of what is behind, saturated | `6` |
-| input | `rim` | 0 to 1 | `0.5` |
-| input | `lightAngle` | degrees | `-60` |
+| input | `lightReach` | px: how far round the edge the light under it is gathered (frosted glass: as far as it is frosted) | `12` |
 | input | `glassPath` | an SVG path (even-odd): the glass's own shape | `null` (its box) |
 | input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |
 | function | `liquidGlassOutlineMaps(outline)` | the same for any shape, from what it covers (one alpha a pixel) | |
 | function | `provideLenziLiquidGlass({ selectors?, settings? })` | the whole app of Liquid Glass | |
-| class | `LenziLiquidSurface(element, document, sights, settings)` | one glass: `build()`, `light()`, `destroy()` | |
+| class | `LenziLiquidSurface(element, document, settings)` | one glass: `build()`, `check()` (its corners, now and then), `destroy()` | |
 
 ## Example
 
@@ -79,25 +81,30 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 `provideLenziLiquidGlass(options?)`, Apple's way (lenzi, 2026-11-25: "usa le regole di Apple per capire dove applicarlo e
 come in modo ottimale"; the Human Interface Guidelines, Materials and Color, read on 2026-11-25):
 
-- **The floating layer of navigation and controls only** ("a distinct functional layer for controls and navigation
-  elements"): the top bar and the drawer (`LenziAppShell`), dialogs, menus, the panels of selects and autocompletes, the
-  floating "+" (`LenziAddButton`), and what the app marks `.lenzi-floating` (a bar of actions). `LENZI_LIQUID_SURFACES`.
-- **Never the content** ("Don't use Liquid Glass in the content layer"): cards, tables, grids, a page's panels stay solid
-  (`{ pages: true }` would make them glass too: only for a page that is itself a picture).
-- **Sparingly** ("Use Liquid Glass effects sparingly"): what it bends is the content scrolling under it.
+- **Every surface** (lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato convertito in liquid glass, come i pannelli
+  o altro, stiamo rifacendo l'interfaccia del kit praticamente"; Apple keeps the content layer solid, lenzi does not):
+  what floats (`LENZI_LIQUID_SURFACES`: the top bar and the drawer, dialogs, menus, the panels of selects and
+  autocompletes, the "+", `.lenzi-floating`, the pane of `lenziGlassPage`) and the page's own surfaces
+  (`LENZI_LIQUID_PAGE_SURFACES`: cards, `.lenzi-surface`), and every lit surface: `lenziLit` gives itself to the app's
+  glass (`adopt`) instead of taking the background's light. `{ pages: false }`: only what floats.
+- **Not glass**: a lamp (`lenziGlow`: a light), a surface kept lit glass (`lenziLit litOnly`: a demo of that material),
+  a menu opened over a window (frosted).
+- **Words on it are read on frosted glass**: the pane, cards and panels, windows, menus and the drawer blur what is
+  behind as much as the kit's glass (`--lenzi-liquid-frost`, the filter's) under their tint (`--lenzi-liquid-fill`); the
+  bar, the "+" and the controls stay clear.
 - **The default optics, the edge in the colours under it** (lenzi, 2026-11-25: "guarda come i bordi prendono il colore
   di quello che sta sotto"; "per il vetro tieni i valori dafault di apple per ora"): kube.io's filter chain: what is
   behind blurred a little (0.2) and bent (refraction 1); on the edge, where the specular map says, a much more saturated
-  copy of it (`specularSaturation` 6) and over it a white highlight (`specularOpacity` 0.5). The specular map is
-  kube.io's, measured from its maps: a line about 1.5 px wide on the very edge, lit as the edge lines up with the light
-  (`lightAngle`, -60°), on both sides alike (cos²), dark across it; a light tint of the page's
+  copy of it (`specularSaturation` 6) and over it a highlight (`specularOpacity` 0.5), both as strong as the light under
+  each point of the edge (2026-11-26, above). The line is kube.io's, measured from its maps: about 1.5 px wide on the
+  very edge (kube.io lit it from a fixed angle, -60°: no more); a light tint of the page's
   colour to read on (`--lenzi-liquid-tint`, 30%). **Larger glass more opaque** ("more opaque in larger elements like
-  sidebars"): the drawer and the windows, `--lenzi-liquid-tint-large` (50%). Apple's clear variant is for what floats over photos and videos,
+  sidebars"): the drawer, the windows and a page's pane, `--lenzi-liquid-tint-large` (50%). Apple's clear variant is for what floats over photos and videos,
   with a 35% dark layer: not used by the kit's surfaces.
 - **No colour of its own**; the primary action alone is coloured glass ("For primary actions, color the background"):
   the "+" keeps its accent.
-- **Its rim lives**: near the pointer and the boids (above); **pressed**, the whole rim lights up, brighter, and the "+"
-  gives a little ("reacts to touch and pointer interactions in real time").
+- **Its edge lives with the light under it** (above), never with the pointer; pressed, the "+" gives a little ("reacts
+  to touch and pointer interactions in real time").
 - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
   replica"; Adopting Liquid Glass, Applying Liquid Glass to custom views, HIG Layout):
   - **no stroke**: a glass has no border, its rim is light;

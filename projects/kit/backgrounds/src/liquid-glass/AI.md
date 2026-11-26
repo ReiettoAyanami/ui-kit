@@ -6,6 +6,10 @@
   the rim is its border.
 - Never `lenziLit` or `lenziSolid` on the same element: one material per element.
 - It bends what is behind it: put it over a scene or a picture. Check it in Chrome; elsewhere it is only blurred.
-- A whole app of it: `provideLenziLiquidGlass()` in the app's providers and a scene behind the shell; mark the app's own
-  panels `.lenzi-surface` (never `lenziLiquidGlass` on each card, never a fill of your own on them). No `lenziGlassPage`
-  then: the surfaces are the glass.
+- A whole app of it: `provideLenziLiquidGlass()` in the app's providers and a scene behind the shell: every surface is
+  glass by itself (cards, `.lenzi-surface`, lit surfaces, the pane of `lenziGlassPage`). Never `lenziLiquidGlass` on each
+  card, never a fill, a border or a `backdrop-filter` of your own on them. A fill of the app's own: only
+  `:not(.lenzi-lit)` on a lit surface.
+- Never light its edge from script (the pointer, a fixed angle, the boids): the filter lights it with what is under it
+  (lenzi, 2026-11-26: "no il mouse o roba che ti inventi").
+- `litOnly` only on a demo of lit glass; a lamp (`lenziGlow`) stays a light by itself.

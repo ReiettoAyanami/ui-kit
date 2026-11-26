@@ -25,6 +25,11 @@ and color").
   hidden`) is cut at its border's outer edge, over the app's own rule, so the line lies on its border.
 - **Nothing is read from the GPU** while no surface is lit.
 - **Reduce transparency** (the kit's `LenziAppearance`, or the system's) makes lit surfaces solid and unlit.
+- **In an app of Liquid Glass** (`provideLenziLiquidGlass()`; lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato
+  convertito in liquid glass, come i pannelli o altro"; "i bordi ... sono tutti scattanti": this light came a few times
+  a second) a lit surface is Liquid Glass instead: it gives itself to the app's glass (class `lenzi-liquid-lit`, and
+  `lenzi-lit` stays for the app's own `:not(.lenzi-lit)` fills), takes no light of its own, and its edge is lit by what
+  is under it at every frame. `litOnly` keeps it lit glass (a demo of this material); a lamp (`lenziGlow`) stays lit.
 
 ## Rules
 
@@ -43,6 +48,7 @@ and color").
 | --- | --- | --- |
 | directive | `[lenziLit]` | the element turns into a lit surface |
 | input | `lenziLit` | `boolean`, `true`: lit; `false`, the surface without it (the attribute alone: `true`) |
+| input | `litOnly` | `boolean`: lit glass even in an app of Liquid Glass (the attribute alone: `true`) |
 | service | `LenziAmbientLight` | `wanted`, `attach(surface)`, `shine(...)`, `dim(source)`: used by the backgrounds |
 | variable | `--lenzi-lit-glass` | `46%`: how much of its colour a lit surface keeps |
 | variable | `--lenzi-lit-veil` | `34%`: the light over it |

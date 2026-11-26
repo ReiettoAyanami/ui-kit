@@ -4,10 +4,9 @@
 // (a scale animation keeps it). A plain module (no schematic makes one).
 import { DOCUMENT, DestroyRef, afterNextRender, inject } from '@angular/core';
 
-import { LenziSights } from '../sights/sights';
 import { LIQUID_GLASS_SETTINGS, LenziLiquidGlassSettings, LenziLiquidSurface, refracts } from '../liquid-glass/liquid-surface';
 
-/** The thumb's optics: kube.io's switch: a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6; no moving rim. */
+/** The thumb's optics: kube.io's switch: a lip bezel, refraction 1, blur 0.2, specular 0.5 and 6. */
 export const LENS_SETTINGS: LenziLiquidGlassSettings = {
   ...LIQUID_GLASS_SETTINGS,
   surface: 'lip',
@@ -17,8 +16,6 @@ export const LENS_SETTINGS: LenziLiquidGlassSettings = {
   blur: 0.2,
   specularOpacity: 0.5,
   specularSaturation: 6,
-  rim: 0,
-  pointerReach: 0,
 };
 
 /** How much of its bending a thumb shows at rest and while held (kube.io's: 0.4 and 0.9). */
@@ -36,7 +33,6 @@ export interface LenziGlassLens {
  */
 export function glassLens(element: () => HTMLElement | undefined, settings: LenziLiquidGlassSettings = LENS_SETTINGS, rest: number = LENS_BENDING.rest): LenziGlassLens {
   const document = inject(DOCUMENT);
-  const sights = inject(LenziSights);
   const destroyRef = inject(DestroyRef);
   let surface: LenziLiquidSurface | null = null;
   let resize: ResizeObserver | null = null;
@@ -44,7 +40,7 @@ export function glassLens(element: () => HTMLElement | undefined, settings: Lenz
   afterNextRender(() => {
     const target = element();
     if (!target || !refracts(document.defaultView)) return;
-    surface = new LenziLiquidSurface(target, document, sights, () => settings);
+    surface = new LenziLiquidSurface(target, document, () => settings);
     surface.bending(share);
     surface.build();
     if (typeof ResizeObserver === 'function') {

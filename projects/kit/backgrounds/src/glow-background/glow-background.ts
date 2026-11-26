@@ -42,6 +42,10 @@ const PAGE_TAKES = 'a, button, input, select, textarea, label, summary, [role="b
 
 /** How often the light goes to the page's lit surfaces, in ms. */
 const LIGHT_EVERY = 160;
+/** A picture this late after the one before waited for the page, not for the GPU (a page being built), ms. */
+const STALL = 150;
+/** The fewest px it draws when the computer cannot keep up: this share of `resolution`. */
+const LOWEST_QUALITY = 0.75;
 /** How often the theme's colours are read again while it moves, in ms (the catalog changes them live). */
 const COLOURS_EVERY = 500;
 
@@ -93,8 +97,9 @@ export abstract class LenziGlowBackground implements OnChanges {
    */
   readonly fps = input(30, { transform: numberAttribute });
   /**
-   * When the computer cannot keep up (its pictures come late for two seconds), it draws fewer px: three quarters of
-   * them each time, down to two fifths. false: always `resolution`.
+   * When the computer cannot keep up (its pictures come late for four seconds, not counting a page that was being
+   * built), it draws fewer px: 87% of them each time, never under three quarters (lenzi, 2026-11-25: "adesso le scene
+   * sono tutte pixellate a schifo": down to two fifths, they were). false: always `resolution`.
    */
   readonly adapt = input(true, { transform: booleanAttribute });
   /** Still while the window is not the one in use (another app in front): a still picture, moving again on focus. */
@@ -119,8 +124,8 @@ export abstract class LenziGlowBackground implements OnChanges {
   private focused = true;
   /** The share of `resolution` it draws now (adapt lowers it). */
   private quality = 1;
-  /** When the pictures of the last two seconds were drawn, to know whether they come late. */
-  private late = { since: 0, frames: 0 };
+  /** When the pictures of the last two seconds were drawn, to know whether they come late; how many spans in a row did. */
+  private late = { since: 0, frames: 0, windows: 0 };
   private lastDrawn = 0;
   /** Where the space's top left is in the window, until the page scrolls or changes size. */
   private originAt: { x: number; y: number } | null = null;
@@ -558,7 +563,8 @@ export abstract class LenziGlowBackground implements OnChanges {
     }
     if (this.frameId !== null) return;
     this.last = view.performance.now();
-    this.late = { since: this.last, frames: 0 };
+    this.late = { since: this.last, frames: 0, windows: 0 };
+    this.lastDrawn = this.last;
     const tick = (now: number) => {
       if (!this.moving()) {
         this.frameId = null;
@@ -571,8 +577,8 @@ export abstract class LenziGlowBackground implements OnChanges {
         this.frameId = view.requestAnimationFrame(tick);
         return;
       }
+      this.keepUp(now, now - this.lastDrawn, every || 1000 / 60);
       this.lastDrawn = now;
-      this.keepUp(now, every || 1000 / 60);
       const delta = Math.min(0.1, Math.max(0, (now - this.last) / 1000)) * Math.max(0, this.speed());
       this.last = now;
       if (now - this.lastColours > COLOURS_EVERY) {
@@ -588,19 +594,29 @@ export abstract class LenziGlowBackground implements OnChanges {
   }
 
   /**
-   * Counts the pictures of the last two seconds: fewer than two thirds of those asked for, the computer cannot keep up,
-   * and it draws fewer px from then on (never more again while the page is open: going up and down would flicker).
+   * Counts the pictures of the last two seconds: fewer than two thirds of those asked for, twice in a row, the computer
+   * cannot keep up, and it draws fewer px from then on (never more again while the page is open: going up and down
+   * would flicker). A picture that waited for the page (`gap` over STALL: a page being built, a window coming back) says
+   * nothing about the GPU: those two seconds do not count (lenzi, 2026-11-25: "adesso le scene sono tutte pixellate a
+   * schifo"; measured: every page opened lost frames, the scene went to 0.32 of its px in three pages and stayed there).
    */
-  private keepUp(now: number, every: number): void {
+  private keepUp(now: number, gap: number, every: number): void {
+    if (gap > STALL) {
+      this.late = { since: now, frames: 0, windows: this.late.windows };
+      return;
+    }
     this.late.frames++;
     const span = now - this.late.since;
     if (span < 2000) return;
-    const asked = span / every;
-    if (this.adapt() && this.late.frames < asked * 0.66 && this.quality > 0.4) {
-      this.quality = Math.max(0.4, this.quality * 0.75);
+    const behind = this.late.frames < (span / every) * 0.66;
+    const windows = behind ? this.late.windows + 1 : 0;
+    if (this.adapt() && windows >= 2 && this.quality > LOWEST_QUALITY) {
+      this.quality = Math.max(LOWEST_QUALITY, this.quality * 0.87);
       this.fit();
+      this.late = { since: now, frames: 0, windows: 0 };
+      return;
     }
-    this.late = { since: now, frames: 0 };
+    this.late = { since: now, frames: 0, windows };
   }
 
   private stop(): void {

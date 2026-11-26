@@ -59,7 +59,7 @@ export class LenziSights {
 
   /**
    * The middle of the sights within `radius` px of a point on the screen, of every source, and how many they are;
-   * null when there is none (what lights a Liquid Glass rim: `lenziLiquidGlass`).
+   * null when there is none (it lit Liquid Glass's rim until 2026-11-26: now the light under the glass does).
    */
   around(point: LenziPoint, radius: number): LenziCrowd | null {
     let x = 0;

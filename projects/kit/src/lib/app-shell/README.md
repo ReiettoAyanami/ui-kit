@@ -34,7 +34,7 @@ drawer that opens from it on every screen; and the page.
 | --- | --- | --- |
 | `lenziShellNav` | the drawer | a `LenziNavList` |
 | `lenziShellTabs` | a bar of pages, floating: at the bottom on a phone, upright on the left wider (`navigation` `'bar'`; `'auto'`: at the bottom on a phone only) | a `LenziGlassTabBar` with the same entries |
-| `lenziShellActions` | the end of the top bar | a `LenziNotificationBell`, an icon button |
+| `lenziShellActions` | the end of the top bar (with the bar of pages: beside the title) | a `LenziNotificationBell`, an icon button |
 | `lenziShellBanner` | a bar above the top bar, sticky | "Viewing as" (`LenziInfoBar`, tone tertiary) |
 | `lenziShellBelow` | under the top bar | "Offline", "A new version" (`LenziInfoBar`), `LenziPullToRefresh` |
 | (none) | the page | `<router-outlet />` |
@@ -46,10 +46,12 @@ drawer that opens from it on every screen; and the page.
 | input | `title` | `string \| null` | `null` | null: the deepest route's title |
 | input | `bare` | `boolean \| 'route'` | `'route'` | the page alone: `'route'` follows route data `bare: true`; `true` / `false` always / never |
 | input | `menuLabel` | `string` | `'Menu'` | the menu button's accessible name |
-| input | `navigation` | `'drawer' \| 'bar' \| 'auto'` | `'drawer'` | the drawer; the bar of `lenziShellTabs` (no menu button, the top bar stays whole): at the bottom on a phone (the page and the "+" clear of it), upright on the left wider, in place of the drawer (the page after it); `'auto'`: the bar at the bottom on a phone, the drawer wider (2026-11-25) |
+| input | `navigation` | `'drawer' \| 'bar' \| 'auto'` | `'drawer'` | the drawer; the bar of `lenziShellTabs` (no top bar: the title is large at the top of the page, scrolling with it, its actions beside it; lenzi, 2026-11-25: "togli la barra sopra che non ha senso, metti un titolo normale un po' grande"): at the bottom on a phone (the page and the "+" clear of it), upright on the left wider, in place of the drawer (the page after it); `'auto'`: the bar at the bottom on a phone, the drawer wider (2026-11-25) |
 | method | `openNav(click?)` / `closeNav()` | | | `LenziNavList` closes it after a link |
 | signal | `compact` | `boolean` | | scrolled past the bar: it has shrunk to its menu button |
 | signal | `tabsUpright` | `boolean` | | the bar of pages is upright on the left (LenziGlassTabBar follows it) |
+| signal | `tabs` | `boolean` | | the bar of pages instead of the drawer: no top bar, the title is the page's (`lenziGlassPage` shows it at the top of its column; 2026-11-26) |
+| signal | `shownTitle` | `string \| null` | | the title shown: `title`, else the deepest route's |
 
 ## Example
 

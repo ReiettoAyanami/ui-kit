@@ -129,6 +129,40 @@
   }
 }
 
+/* With the bar of pages there is no top bar (lenzi, 2026-11-25: "per ora togli la barra sopra che non ha senso, metti un
+   titolo normale un po' grande"; the bar's title sat before its curve: "il titolo è troppo vicino al lato"): the route's
+   title, large and bold, at the top of the page, scrolling with it; the actions at its end. As far from the screen's
+   edges as a page's own words. */
+.lenzi-shell-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--lenzi-shell-bar-height);
+  margin: calc(var(--lenzi-float-gap) + env(safe-area-inset-top, 0px)) var(--lenzi-float-gap) 0;
+  padding: 8px 16px 0;
+  box-sizing: border-box;
+}
+
+.lenzi-shell-heading-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: var(--mat-sys-headline-large);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.lenzi-shell-bare > .lenzi-shell-content > .lenzi-shell-heading {
+  display: none;
+}
+
+/* A page that shows the title in its own column (lenziGlassPage): the shell's heading only for its actions, if any. */
+.lenzi-shell-content:has(.lenzi-glass-page-titled) > .lenzi-shell-heading > .lenzi-shell-heading-title,
+.lenzi-shell-content:has(.lenzi-glass-page-titled) > .lenzi-shell-heading:not(:has(> :not(.lenzi-shell-heading-title))) {
+  display: none;
+}
+
 /* A bar above the top bar that cannot be closed ("Viewing as"): it sticks, and the top bar sticks
    just under it, so both stay in sight however far the page scrolls. */
 .lenzi-shell-banner {

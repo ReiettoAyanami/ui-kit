@@ -1,4 +1,9 @@
 @if (shown()) {
-  <div class="pane" lenziLit aria-hidden="true"></div>
+  <!-- Liquid Glass when the app is (provideLenziLiquidGlass: the kit's glass, frosted), lit glass otherwise -->
+  <div class="pane lenzi-glass-page-pane" [lenziLit]="!liquid()" aria-hidden="true"></div>
+}
+<!-- the page's title, with the bar of pages (no top bar), unless the page has its own h1 (the CSS hides this one) -->
+@if (title(); as title) {
+  <h1 class="lenzi-glass-page-title">{{ title }}</h1>
 }
 <ng-content />

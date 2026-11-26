@@ -33,7 +33,7 @@ export class LenziGlassSearch implements OnDestroy {
     // kube.io's search box: a convex bezel, refraction 0.7, blur 1, specular 0.2 and 4; all of its bending, always.
     glassLens(
       () => this.field().nativeElement,
-      { ...LIQUID_GLASS_SETTINGS, surface: 'squircle', bezel: 14, thickness: 30, refraction: 0.7, blur: 1, specularOpacity: 0.2, specularSaturation: 4, rim: 0, pointerReach: 0 },
+      { ...LIQUID_GLASS_SETTINGS, surface: 'squircle', bezel: 14, thickness: 30, refraction: 0.7, blur: 1, specularOpacity: 0.2, specularSaturation: 4 },
       1,
     );
   }
