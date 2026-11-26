@@ -52,14 +52,17 @@ export const HOME_PHONE_SCENE: LenziScene = {
  */
 export const OVERVIEW_SCENE: LenziScene = {
   name: 'Overview',
+  // towards the middle of the window, each floating a little (lenzi, 2026-11-26: "falli un po' muovere verso il centro
+  // sti blob, possono muoversi, no mouse grab, ma devono essere che si muovono un pochino"): 8% of the space round its
+  // place; nothing thrown, nothing pulled by the pointer (a scene's blobs never are)
   blobs: [
-    { material: 'lamp', size: 0.2, x: 0.2, y: 0.3, shape: 'circle', hover: 0.03 },
-    { material: 'glass', size: 0.22, x: 0.64, y: 0.6, shape: 'squircle', hover: 0.03 },
-    { material: 'solid', size: 0.13, x: 0.88, y: 0.2, shape: 'flower', hover: 0.03 },
-    { material: 'lamp', size: 0.09, x: 0.82, y: 0.86, shape: 'sunny', hover: 0.03 },
-    { material: 'glass', size: 0.1, x: 0.42, y: 0.12, shape: 'hexagon', hover: 0.03 },
-    { material: 'solid', size: 0.08, x: 0.12, y: 0.82, shape: 'pentagon', hover: 0.03 },
-    { material: 'lamp', size: 0.07, x: 0.5, y: 0.9, shape: 'circle', hover: 0.03 },
+    { material: 'lamp', size: 0.2, x: 0.32, y: 0.36, shape: 'circle', hover: 0.08 },
+    { material: 'glass', size: 0.22, x: 0.6, y: 0.55, shape: 'squircle', hover: 0.08 },
+    { material: 'solid', size: 0.13, x: 0.74, y: 0.3, shape: 'flower', hover: 0.08 },
+    { material: 'lamp', size: 0.09, x: 0.68, y: 0.76, shape: 'sunny', hover: 0.08 },
+    { material: 'glass', size: 0.1, x: 0.44, y: 0.2, shape: 'hexagon', hover: 0.08 },
+    { material: 'solid', size: 0.08, x: 0.3, y: 0.7, shape: 'pentagon', hover: 0.08 },
+    { material: 'lamp', size: 0.07, x: 0.5, y: 0.82, shape: 'circle', hover: 0.08 },
   ],
   fleets: [],
   throwable: false,
@@ -70,9 +73,9 @@ export const OVERVIEW_SCENE: LenziScene = {
 export const OVERVIEW_PHONE_SCENE: LenziScene = {
   name: 'Overview on a phone',
   blobs: [
-    { material: 'lamp', size: 0.26, x: 0.25, y: 0.2, shape: 'circle', hover: 0.03 },
-    { material: 'glass', size: 0.3, x: 0.7, y: 0.55, shape: 'squircle', hover: 0.03 },
-    { material: 'solid', size: 0.16, x: 0.2, y: 0.85, shape: 'flower', hover: 0.03 },
+    { material: 'lamp', size: 0.26, x: 0.36, y: 0.3, shape: 'circle', hover: 0.08 },
+    { material: 'glass', size: 0.3, x: 0.62, y: 0.55, shape: 'squircle', hover: 0.08 },
+    { material: 'solid', size: 0.16, x: 0.36, y: 0.76, shape: 'flower', hover: 0.08 },
   ],
   fleets: [],
   throwable: false,
