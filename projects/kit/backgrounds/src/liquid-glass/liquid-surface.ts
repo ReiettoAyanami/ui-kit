@@ -168,6 +168,15 @@ function imagesOf(tiles: readonly LenziGlassTile[], result: string): string {
   return `${images}\n  <feMerge result="${result}">${tiles.map((_, k) => `<feMergeNode in="${result}-${k}"/>`).join('')}</feMerge>`;
 }
 
+/**
+ * The most a glass of this size may bend, px: a point of its bezel takes what is inside it, never past its middle, or
+ * what lies beyond the middle comes back upside down (lenzi, 2026-11-26, a segmented control's capsule over its words:
+ * "cosí é buggato", the word mirrored above and below it). Half its smaller side less half its bezel.
+ */
+export function bendLimit(width: number, height: number, bezel: number): number {
+  return Math.max(1, Math.min(width, height) / 2 - bezel / 2);
+}
+
 /** Whether this browser draws an SVG filter as a backdrop-filter (only Chromium does). */
 export function refracts(view: Window | null): boolean {
   const brands = (view?.navigator as Navigator & { userAgentData?: { brands?: { brand: string }[] } } | undefined)?.userAgentData?.brands;
@@ -206,6 +215,8 @@ export class LenziLiquidSurface {
   /** The share of its bending it shows (`bending()`), and the whole of it, px. */
   private bend = 1;
   private fullBend = 0;
+  /** The most it may bend, px (`bendLimit`): never past its middle. */
+  private limit = Infinity;
   /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
   private radius = 0;
   private framesSinceRadius = 0;
@@ -261,8 +272,9 @@ export class LenziLiquidSurface {
     svg.style.pointerEvents = 'none';
     const scale = (tiles.scale * Math.max(0, s.refraction)).toFixed(2);
     this.fullBend = Number(scale);
+    this.limit = bendLimit(width, height, bezel);
     const saturation = Math.max(0, s.saturation);
-    const bending = (Number(scale) * this.bend).toFixed(2);
+    const bending = this.shownBend();
     const shine = Math.max(0, s.specularOpacity);
     // The body: what is behind bent (frosted: from a blurred copy), and the tint over it.
     const frosted = frost
@@ -317,7 +329,12 @@ export class LenziLiquidSurface {
    */
   bending(share: number): void {
     this.bend = Math.max(0, share);
-    this.svg?.querySelectorAll('.lenzi-liquid-glass-bend').forEach((bend) => bend.setAttribute('scale', (this.fullBend * this.bend).toFixed(2)));
+    this.svg?.querySelectorAll('.lenzi-liquid-glass-bend').forEach((bend) => bend.setAttribute('scale', this.shownBend()));
+  }
+
+  /** The filter's scale now: its share of the whole bending, never past `limit`. */
+  private shownBend(): string {
+    return Math.min(this.fullBend * this.bend, this.limit).toFixed(2);
   }
 
   /** Draws the filter again at the next build, even for the same size (a setting changed). */

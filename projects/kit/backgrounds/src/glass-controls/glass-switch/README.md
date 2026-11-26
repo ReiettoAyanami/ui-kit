@@ -7,7 +7,10 @@
 - **A capsule track**, grey off, the accent on; **a light capsule thumb** on its side.
 - **Held, the thumb is Liquid Glass** (kube.io's switch: "a lip bezel ... the center slider zoomed out, while the edges
   refract the inside"): larger, bending the track under it, its edge taking the track's colour; it follows the pointer
-  and **settles as milky glass** (16% white, the track bending under it (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc.")) on the side it is let go (lenzi, 2026-11-25: "implementa gli slider/toggle/searchbar nel kit come
+  and **settles white** on the side it is let go (lenzi, 2026-11-26: "il toggle non diventa piú bianco all'arrivo", after
+  a few hours of milky glass at rest); on its way it is thicker glass than kube.io's, bending more (lenzi, 2026-11-26:
+  "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle
+  ecc.") (lenzi, 2026-11-25: "implementa gli slider/toggle/searchbar nel kit come
   quelli di apple").
 - **A tap switches it; a drag puts it where it is let go**; Space and Enter switch it.
 - **A `role="switch"`** with its name and `aria-checked`.

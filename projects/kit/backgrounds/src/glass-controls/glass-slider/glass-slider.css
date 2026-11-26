@@ -8,8 +8,9 @@
   --lenzi-slider-thumb-height: 24px;
   /* Apple's thumb is white in both themes */
   --lenzi-glass-thumb: 255 255 255;
-  /* the thumb at rest: milky glass, not solid (2026-11-26: the glass seen on small things) */
-  --lenzi-glass-rest: 0.2;
+  /* the thumb at rest: white, as the switch's when it arrives (lenzi, 2026-11-26: "il toggle non diventa piú bianco
+     all'arrivo"); glass while dragged */
+  --lenzi-glass-rest: 1;
 }
 
 .track {

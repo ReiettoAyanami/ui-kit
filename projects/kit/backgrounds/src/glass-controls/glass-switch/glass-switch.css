@@ -7,9 +7,10 @@
   gap: 12px;
   --lenzi-switch-width: 64px;
   --lenzi-switch-height: 28px;
-  /* Apple's thumb is white in both themes; at rest milky glass, not solid (2026-11-26: the glass seen on small things) */
+  /* Apple's thumb is white in both themes, and white at rest: glass on its way, white when it arrives (lenzi,
+     2026-11-26: "il toggle non diventa piú bianco all'arrivo") */
   --lenzi-glass-thumb: 255 255 255;
-  --lenzi-glass-rest: 0.16;
+  --lenzi-glass-rest: 1;
 }
 
 .track {

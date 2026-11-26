@@ -1,5 +1,5 @@
 import { liquidGlassMaps } from './liquid-glass-maps';
-import { LIGHT_BASE, LIGHT_FLOOR, SLICE_AREA, glassCuts, lightMatrix } from './liquid-surface';
+import { LIGHT_BASE, LIGHT_FLOOR, SLICE_AREA, bendLimit, glassCuts, lightMatrix } from './liquid-surface';
 
 const OPTICS = { bezel: 14, thickness: 28, ior: 1.5, surface: 'squircle' as const };
 
@@ -64,5 +64,16 @@ describe('the light under the glass (lenzi, 2026-11-26: "la direzione della luce
     const violet = lit(0.8, 0.2, 1);
     expect(violet.b).toBeGreaterThan(violet.g);
     expect(violet.g).toBeGreaterThanOrEqual(0.5);
+  });
+});
+
+describe('bendLimit (lenzi, 2026-11-26, the word under a capsule mirrored: "cosí é buggato")', () => {
+  it("never lets the bezel take what lies past the glass's middle", () => {
+    // a capsule 70 by 33 with an 11 px bezel: at most half of 33, less half the bezel
+    expect(bendLimit(70, 33, 11)).toBeCloseTo(11, 5);
+    // a large panel bends as it likes
+    expect(bendLimit(900, 600, 24)).toBe(288);
+    // never nothing
+    expect(bendLimit(4, 4, 12)).toBe(1);
   });
 });
