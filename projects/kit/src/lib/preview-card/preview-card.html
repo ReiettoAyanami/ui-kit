@@ -1,6 +1,7 @@
 <div class="card">
   <!-- What it shows: under the button's own area, so a tap anywhere on the card opens it. -->
-  <div class="preview" [style.aspect-ratio]="ratio()">
+  <!-- a panel of its own (.lenzi-surface): glass in an app of Liquid Glass -->
+  <div class="preview lenzi-surface" [style.aspect-ratio]="ratio()">
     <ng-content />
   </div>
   <div class="about">

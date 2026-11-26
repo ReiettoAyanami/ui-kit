@@ -9,6 +9,8 @@ on hover"). The preview in a rounded box; under it the title, bold, and its fact
 
 - **The preview on top, 16:9**, rounded, with the outline of every surface; what is put in the card fills it (a
   picture, a frame).
+- **The preview is a panel of its own** (`.lenzi-surface`): in an app of Liquid Glass it is glass inside the card's glass
+  (lenzi, 2026-11-26: "ancora i pannelli non sono glass, cioé alcuni, ma solo quelli che volevi te"), with the light tint.
 - **Nothing round the card until it is pointed at**: then a tinted surface behind it all (the keyboard on it:
   the same, and the focus outline). Less padding at its sides than above and under.
 - **The title bold, two lines at most; its facts under it, one a line** (never two joined by "·").

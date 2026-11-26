@@ -13,3 +13,8 @@
 - Never light its edge from script (the pointer, a fixed angle, the boids): the filter lights it with what is under it
   (lenzi, 2026-11-26: "no il mouse o roba che ti inventi").
 - `litOnly` only on a demo of lit glass; a lamp (`lenziGlow`) stays a light by itself.
+- Glass holds glass (lenzi, 2026-11-26: "solo quelli che volevi te", "non funziona con altri layer di liquidglass"): never a
+  mask, a filter, an opacity under 1 or a mix-blend-mode on an element that holds glass (a row that fades, a wrapper
+  that dims): the glass inside it would bend nothing under it. Fade or dim the glass's content, never what holds it.
+- Never style a glass's `::before`: it is the glass's layer (`lenzi-liquid-layered`). Never a `backdrop-filter` of your
+  own on anything that holds glass, for the same reason as above.

@@ -32,16 +32,19 @@ export const LENZI_LIQUID_SURFACES: readonly string[] = [
 /** How long a frame may spend drawing glass filters, ms; the rest wait for the next frames. */
 const BUILD_BUDGET = 4;
 
-/** What may open over a window: frosted, not glass, when a window is open. */
-const OVER_WINDOWS = '.mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel';
-
 /**
  * The surfaces of the page itself: cards, the app's panels (`.lenzi-surface`), and every lit surface (`lenziLit`, which
  * gives itself to the app's glass). Glass too, unless the app says `pages: false` (lenzi, 2026-11-26: "Non c'è ancora
  * nulla che sia stato convertito in liquid glass, come i pannelli o altro, stiamo rifacendo l'interfaccia del kit
  * praticamente": the kit's interface is Liquid Glass, its panels too; Apple keeps the content solid, lenzi does not).
  */
-export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '.lenzi-surface'];
+export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = [
+  '.mat-mdc-card',
+  '.lenzi-surface',
+  // every panel, not only those Claude chose (lenzi, 2026-11-26: "ancora i pannelli non sono glass, cioé alcuni, ma solo
+  // quelli che volevi te"): the expansion panels too, but a flat one (inside a window: no panel of its own)
+  '.mat-expansion-panel:not(.lenzi-flat)',
+];
 
 /**
  * The kit's glass, one for everything that is glass (lenzi, 2026-11-25: "non c'è niente di costante nell'app ... ti ho
@@ -175,11 +178,9 @@ export class LenziLiquidEverywhere {
             // a surface kept lit glass (`lenziLit litOnly`: a demo of that material) stays so
             .filter((e) => !e.classList.contains('lenzi-lit-only')),
         );
-    // Never glass on glass (Apple, Adopting Liquid Glass: "avoid overcrowding or layering Liquid Glass elements on top of
-    // each other"): a menu or a select opened over a window stays the kit's frosted glass.
-    if ([...found].some((e) => e.matches('.mat-mdc-dialog-surface'))) {
-      for (const element of [...found]) if (element.matches(OVER_WINDOWS)) found.delete(element);
-    }
+    // Glass on glass too (lenzi, 2026-11-26: "ancora i pannelli non sono glass, cioé alcuni, ma solo quelli che volevi
+    // te"; before, Apple's "avoid ... layering Liquid Glass elements on top of each other" kept a menu over a window
+    // frosted): every glass bends every level under it (its bending on a layer, glassPlace).
     for (const element of [...this.marked]) {
       if (found.has(element) && element.isConnected) continue;
       this.marked.delete(element);

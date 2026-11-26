@@ -21,6 +21,11 @@ export class FramePage {
   readonly id = input.required<string>();
   /** The values the demo starts with (JSON), from the address. */
   readonly v = input<string | undefined>(undefined);
+  /**
+   * `clear`: no page colour of its own, what is behind the frame shows through (a card of the Components page: its preview
+   * is glass; lenzi, 2026-11-26: "ancora i pannelli non sono glass").
+   */
+  readonly clear = input<string | undefined>(undefined);
 
   private readonly document = inject(DOCUMENT);
 
@@ -57,6 +62,7 @@ export class FramePage {
     window.addEventListener('message', listener);
     inject(DestroyRef).onDestroy(() => window.removeEventListener('message', listener));
     this.document.body.classList.add('catalog-frame');
+    effect(() => this.document.body.classList.toggle('catalog-frame-clear', this.clear() !== undefined));
     window.parent?.postMessage({ type: 'kit-frame-ready' } satisfies FrameMessage, window.location.origin);
   }
 }

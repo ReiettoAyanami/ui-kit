@@ -531,6 +531,74 @@ html {
   backdrop-filter: blur(1.5px) saturate(1.5);
 }
 
+/* Glass that may hold glass draws its bending on a layer behind what it holds, not on itself (lenzi, 2026-11-26: "il
+   liquidglass non funziona bene, non funziona con altri layer di liquidglass ... funziona solo con quello che gli sta
+   sotto direttamente ma non con gli altri livelli"): in Chromium an element with a backdrop-filter is the root of the
+   backdrop of every glass inside it, which then saw only what the outer glass holds. The layer is no root: a glass in
+   it bends every level under it, the outer glass too. LenziLiquidSurface writes the layer's filter, how far it reaches
+   over the border and its corners (glassPlace); they are each glass's own, never inherited. Positioned only where
+   nothing else places it (:where, no weight). The layer over a lit surface's own light (hidden in an app of glass):
+   above its rules. */
+@property --lenzi-liquid-filter {
+  syntax: '*';
+  inherits: false;
+}
+
+@property --lenzi-liquid-inset {
+  syntax: '*';
+  inherits: false;
+}
+
+@property --lenzi-liquid-radius {
+  syntax: '*';
+  inherits: false;
+}
+
+:where(.lenzi-liquid-layered) {
+  position: relative;
+}
+
+.lenzi-liquid-layered.lenzi-liquid-layered.lenzi-liquid-layered {
+  isolation: isolate;
+  backdrop-filter: none;
+}
+
+.lenzi-liquid-layered.lenzi-liquid-layered.lenzi-liquid-layered.lenzi-liquid-layered.lenzi-liquid-layered.lenzi-liquid-layered::before {
+  /* the layer takes its glass's values (they do not inherit by themselves, not even into its own layer) */
+  --lenzi-liquid-filter: inherit;
+  --lenzi-liquid-inset: inherit;
+  --lenzi-liquid-radius: inherit;
+  content: '';
+  position: absolute;
+  inset: var(--lenzi-liquid-inset, 0);
+  z-index: -1;
+  display: block;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--lenzi-liquid-radius);
+  corner-shape: inherit;
+  background: none;
+  mix-blend-mode: normal;
+  opacity: 1;
+  transform: none;
+  mask: none;
+  pointer-events: none;
+  backdrop-filter: var(--lenzi-liquid-filter);
+}
+
+/* Nothing that holds glass is a root of its backdrop: a mask, a filter, an opacity under 1 or a blend there and the
+   glass in it bends only what that holds, never the page under it (it showed its tint and nothing else, and a glass in
+   it painted that tint a second time: 2026-11-26, the cards of the Components page). A shelf of glass is cut at its
+   edges, as the App Store's, instead of fading (its fade is a mask). Classes twice, and the shelf's own: above its
+   rules. */
+.lenzi-shelf.lenzi-shelf .row.row.row:has(.lenzi-liquid-glass) {
+  mask-image: none;
+}
+
 /* An app made of Liquid Glass (provideLenziLiquidGlass; lenzi, 2026-11-25: "qui usiamo liquid glass", "tutta l'app"):
    every surface it finds (the bar, the drawer, dialogs, menus, cards, .lenzi-surface) keeps --lenzi-liquid-tint of the
    page's colour to read on, and no fill or border of its own (a kit or Material surface loses its border's colour, not
@@ -568,8 +636,15 @@ html {
    edge; the words are read on a darker tint (--lenzi-liquid-tint-large, as larger glass is in Apple's Color: "more
    opaque in larger elements like sidebars to preserve legibility"): the page's pane, its cards and panels (lit surfaces
    are the app's glass then), windows, menus and the drawer. The bar, the "+" and the controls keep the light tint. */
-.lenzi-liquid-everywhere:is(.lenzi-glass-page-pane, .lenzi-liquid-lit, .mat-mdc-card, .lenzi-surface, .mat-mdc-dialog-surface, .mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel, .lenzi-shell-drawer) {
+.lenzi-liquid-everywhere:is(.lenzi-glass-page-pane, .lenzi-liquid-lit, .mat-mdc-card, .lenzi-surface, .mat-expansion-panel, .mat-mdc-dialog-surface, .mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel, .lenzi-shell-drawer) {
   --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint-large), transparent);
+}
+
+/* A panel inside a glass panel (2026-11-26, every panel glass and glass bending every level: "solo quelli che volevi te")
+   lies on the tint of the glass that holds it, which the words already read on: it takes the light tint, or two dark tints
+   one over the other made it a dark panel again. */
+.lenzi-liquid-everywhere .lenzi-liquid-everywhere:is(.lenzi-liquid-lit, .mat-mdc-card, .lenzi-surface, .mat-expansion-panel) {
+  --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint), transparent);
 }
 
 /* What floats over the page's words is lightly frosted (lenzi, 2026-11-26, a select's panel over the page's controls: "in

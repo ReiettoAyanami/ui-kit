@@ -15,7 +15,9 @@ and Netflix's shelves.
 - **A title and how many** (`count`), the title as the page's sections are (title large).
 - **One row that scrolls sideways inside the shelf, never the page.** Each thing is as wide as `--lenzi-shelf-item`
   (280 px; on a phone at most 78 % of the width, so the next one peeks in).
-- **A fade at an edge past which there is more**; none where there is nothing more.
+- **A fade at an edge past which there is more**; none where there is nothing more. **None when it holds Liquid Glass**
+  (2026-11-26): the fade is a mask, and a mask makes the row the root of the backdrop of the glass in it, which then
+  bends nothing under it; the row is cut at its edges instead, as the App Store's (the kit's styles).
 - **Arrows** scroll a row's width at a time (less a little, so the last one seen stays in sight), the one with nothing
   past it disabled; **no arrows on a phone**: the thumb scrolls. Smooth, still with reduced motion.
 - **"Show all"** lays every thing out in a grid of the same widths, **"Show fewer"** puts them back in the row. Only

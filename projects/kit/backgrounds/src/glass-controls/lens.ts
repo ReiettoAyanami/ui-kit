@@ -51,7 +51,8 @@ export function glassLens(element: () => HTMLElement | undefined, settings: Lenz
   afterNextRender(() => {
     const target = element();
     if (!target || !refracts(document.defaultView)) return;
-    surface = new LenziLiquidSurface(target, document, () => settings);
+    // on itself, not on a layer: a thumb holds no glass, and its fill lies over its glass (glassPlace)
+    surface = new LenziLiquidSurface(target, document, () => settings, false);
     surface.bending(share);
     surface.build();
     if (typeof ResizeObserver === 'function') {

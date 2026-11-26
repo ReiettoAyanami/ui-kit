@@ -89,9 +89,11 @@ export interface LenziGlassTiles {
  * A glass larger than this, px², has its map made in pieces (lenziGlassPage's pane is as tall as its page; and every
  * card of a page is glass, lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato convertito in liquid glass, come i
  * pannelli"): the pieces of one corner's radius are drawn once and shared by every glass with those corners, and the
- * filter draws a few small pictures instead of one as large as the glass.
+ * filter draws a few small pictures instead of one as large as the glass. Small glass too (2026-11-26, every panel glass,
+ * the previews of the Components page: one picture each took the page from 5 to 10 ms a frame on the RTX, in pieces 7):
+ * only a glass too small or narrow for its corners is one picture.
  */
-export const SLICE_AREA = 40_000;
+export const SLICE_AREA = 4_000;
 
 /** The pictures of the pieces, by what they are made of (the corners, the bezel, the optics): shared by every glass. */
 const PIECES = new Map<string, { map: string[]; scale: number }>();
@@ -109,6 +111,23 @@ function pictureOf(document: Document, data: Uint8ClampedArray, width: number, h
 /** The map, one picture as large as the glass. */
 function wholeTiles(maps: LenziLiquidGlassMaps, document: Document): LenziGlassTiles {
   return { map: [{ href: pictureOf(document, maps.displacement, maps.width, maps.height), x: 0, y: 0, width: maps.width, height: maps.height }], scale: maps.scale };
+}
+
+/**
+ * The whole map of a box, made once for every glass of that size, corners and optics (2026-11-26: every card's preview
+ * of the Components page is a glass now, fifty of one size; each made its own, 275 ms each in headless Chrome).
+ */
+const WHOLES = new Map<string, LenziGlassTiles>();
+
+function sharedWholeTiles(shape: LenziLiquidGlassShape, document: Document): LenziGlassTiles {
+  const key = `${shape.width}x${shape.height}|${shape.radius}|${shape.bezel}|${shape.thickness}|${shape.ior}|${shape.surface}`;
+  let tiles = WHOLES.get(key);
+  if (!tiles) {
+    tiles = wholeTiles(liquidGlassMaps(shape), document);
+    if (WHOLES.size >= MOST_PIECES) WHOLES.delete(WHOLES.keys().next().value!);
+    WHOLES.set(key, tiles);
+  }
+  return tiles;
 }
 
 /**
@@ -189,6 +208,56 @@ export function bendLimit(width: number, height: number, bezel: number): number 
   return Math.max(1, Math.min(width, height) / 2 - bezel / 2);
 }
 
+/**
+ * Where a glass draws its bending. On a layer behind what it holds (its `::before`, the class `lenzi-liquid-layered`;
+ * lenzi, 2026-11-26: "il liquidglass non funziona bene, non funziona con altri layer di liquidglass ... funziona solo con
+ * quello che gli sta sotto direttamente ma non con gli altri livelli"): an element with a backdrop-filter is the root of
+ * the backdrop of every glass inside it (Chromium, the spec's Backdrop Root), so a glass in a glass saw only what the
+ * outer one holds, never the outer glass itself nor what is under it; on a layer, the outer glass is no root and the
+ * inner one bends every level under it. On the glass itself (`self`) where a layer cannot be: a glass that scrolls (its
+ * layer would scroll away with what it holds), a glass that is a root anyway (a mask, a clip-path, a filter, a blend: the
+ * cat's shape), a thumb (it holds no glass, and its own fill lies over its glass). The layer covers the border when the
+ * border is clear and nothing is cut at it (a kit surface whose border shows keeps it over the glass: the layer lies
+ * inside it); its map is the layer's size, its corners the layer's.
+ */
+export interface LenziGlassPlace {
+  layer: boolean;
+  /** How far the layer reaches past the padding box, px (the border it covers). */
+  edge: number;
+  width: number;
+  height: number;
+  radius: number;
+}
+
+/** Where the glass's bending goes (above), from its computed style and its size and corners with its border. */
+export function glassPlace(style: CSSStyleDeclaration | undefined, width: number, height: number, radius: number, layered: boolean): LenziGlassPlace {
+  const self = { layer: false, edge: 0, width, height, radius };
+  if (!layered || !style) return self;
+  const overflow = `${style.overflowX} ${style.overflowY}`;
+  if (/auto|scroll/.test(overflow)) return self;
+  const mask = style.getPropertyValue('mask-image') || style.getPropertyValue('-webkit-mask-image');
+  const blend = style.mixBlendMode || 'normal';
+  if ((mask && mask !== 'none') || (style.clipPath && style.clipPath !== 'none') || (style.filter && style.filter !== 'none') || blend !== 'normal') return self;
+  const top = parseFloat(style.borderTopWidth) || 0;
+  const right = parseFloat(style.borderRightWidth) || 0;
+  const bottom = parseFloat(style.borderBottomWidth) || 0;
+  const left = parseFloat(style.borderLeftWidth) || 0;
+  const covers = /^visible visible$/.test(overflow) && clearColour(style.borderTopColor);
+  if (covers || !(top || right || bottom || left)) return { layer: true, edge: top, width, height, radius };
+  return { layer: true, edge: 0, width: Math.max(2, width - left - right), height: Math.max(2, height - top - bottom), radius: Math.max(0, radius - top) };
+}
+
+function placeKey(place: LenziGlassPlace): string {
+  return place.layer ? `layer ${place.edge} ${place.width}x${place.height} ${place.radius}` : 'self';
+}
+
+/** Whether a computed colour is see-through (no border to keep). */
+function clearColour(colour: string): boolean {
+  if (!colour || colour === 'transparent') return true;
+  const parts = colour.match(/rgba?\(([^)]*)\)/)?.[1]?.split(/[\s,/]+/).filter(Boolean);
+  return parts?.length === 4 && parseFloat(parts[3]!) === 0;
+}
+
 /** Whether this browser draws an SVG filter as a backdrop-filter (only Chromium does). */
 export function refracts(view: Window | null): boolean {
   const brands = (view?.navigator as Navigator & { userAgentData?: { brands?: { brand: string }[] } } | undefined)?.userAgentData?.brands;
@@ -236,11 +305,18 @@ export class LenziLiquidSurface {
   private framesSinceRadius = 0;
   /** The filter draws the glass's tint, its CSS fill is hidden by an inline transparent one. */
   private tinted = false;
+  /** Where its bending is drawn (`glassPlace`), as the filter was drawn for it. */
+  private place = '';
 
+  /**
+   * `layered`: the glass may hold others, so its bending goes on a layer behind what it holds (`glassPlace`); a thumb
+   * says no (it holds none, and its fill lies over its glass).
+   */
   constructor(
     readonly element: HTMLElement,
     private readonly document: Document,
     private readonly settings: () => LenziLiquidGlassSettings,
+    private readonly layered = true,
   ) {}
 
   /** The filter for the glass's size now: its maps drawn, its SVG in the page, then the glass pointed at it. */
@@ -248,11 +324,14 @@ export class LenziLiquidSurface {
     const s = this.settings();
     // its own size, not its box on the screen: a glass that is scaled by an animation keeps the maps of its size
     const box = this.element.getBoundingClientRect();
-    const width = Math.round(this.element.offsetWidth || box.width);
-    const height = Math.round(this.element.offsetHeight || box.height);
-    if (width < 2 || height < 2) return;
-    const radius = this.cornerRadius();
-    this.radius = radius;
+    const outerWidth = Math.round(this.element.offsetWidth || box.width);
+    const outerHeight = Math.round(this.element.offsetHeight || box.height);
+    if (outerWidth < 2 || outerHeight < 2) return;
+    this.radius = this.cornerRadius();
+    // on a layer behind what it holds, or on itself (glassPlace): the maps are the size of what bends
+    const place = glassPlace(this.document.defaultView?.getComputedStyle(this.element), outerWidth, outerHeight, this.radius, this.layered);
+    const { width, height, radius } = place;
+    this.place = placeKey(place);
     const path = s.glassPath;
     // A glass of the app's (`--lenzi-liquid-fill`, the kit's styles give it) has its tint drawn by the filter, under its
     // edge, so the edge's light is never behind the tint (the CSS fill would lie over the filter's output): the fill is
@@ -268,7 +347,7 @@ export class LenziLiquidSurface {
     this.tinted = !!tint;
     if (this.tinted) this.element.style.setProperty('background-color', 'transparent');
     const reach = Math.max(0, s.lightReach);
-    const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.chromaticAberration}|${s.brightness}|${s.distortion}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
+    const key = `${this.place}|${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.lightBase}|${s.chromaticAberration}|${s.brightness}|${s.distortion}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
     if (key === this.size) return;
     this.size = key;
     // A bezel wider than half the glass would bend the whole of it: never more than a third of its smaller side.
@@ -277,7 +356,7 @@ export class LenziLiquidSurface {
     const inside = path ? this.outline(path, width, height) : null;
     const tiles = inside
       ? wholeTiles(liquidGlassOutlineMaps({ width, height, inside, ...optics }), this.document)
-      : slicedTiles(width, height, radius, optics, this.document) ?? wholeTiles(liquidGlassMaps({ width, height, radius, ...optics }), this.document);
+      : slicedTiles(width, height, radius, optics, this.document) ?? sharedWholeTiles({ width, height, radius, ...optics }, this.document);
     const svg = this.svg ?? (this.document.createElementNS(SVG, 'svg') as SVGSVGElement);
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('width', '0');
@@ -363,7 +442,27 @@ export class LenziLiquidSurface {
       this.document.body.append(svg);
       this.svg = svg;
     }
-    this.element.style.setProperty('backdrop-filter', `url(#${this.id})`);
+    this.point(place);
+  }
+
+  /** The glass pointed at its filter: its layer (the kit's styles draw it from these variables), or itself. */
+  private point(place: LenziGlassPlace): void {
+    const style = this.element.style;
+    if (place.layer) {
+      style.removeProperty('backdrop-filter');
+      style.setProperty('--lenzi-liquid-filter', `url(#${this.id})`);
+      style.setProperty('--lenzi-liquid-inset', `${-place.edge}px`);
+      style.setProperty('--lenzi-liquid-radius', `${place.radius}px`);
+      this.element.classList.add('lenzi-liquid-layered');
+    } else {
+      this.unlayer();
+      style.setProperty('backdrop-filter', `url(#${this.id})`);
+    }
+  }
+
+  private unlayer(): void {
+    this.element.classList.remove('lenzi-liquid-layered');
+    for (const name of ['--lenzi-liquid-filter', '--lenzi-liquid-inset', '--lenzi-liquid-radius']) this.element.style.removeProperty(name);
   }
 
   /**
@@ -396,14 +495,20 @@ export class LenziLiquidSurface {
   check(): boolean {
     if (!this.svg || ++this.framesSinceRadius < RADIUS_FRAMES) return false;
     this.framesSinceRadius = 0;
-    // its corners, or its tint (a variable the app changed: the filter draws it)
+    // its corners, or its tint (a variable the app changed: the filter draws it), or where it may lie (it began to
+    // scroll, its border shows now)
     const style = this.document.defaultView?.getComputedStyle(this.element);
-    return this.cornerRadius() !== this.radius || (style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '') !== this.fill;
+    const radius = this.cornerRadius();
+    if (radius !== this.radius || (style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '') !== this.fill) return true;
+    const width = Math.round(this.element.offsetWidth);
+    const height = Math.round(this.element.offsetHeight);
+    return width >= 2 && height >= 2 && placeKey(glassPlace(style, width, height, radius, this.layered)) !== this.place;
   }
 
   destroy(): void {
     this.svg?.remove();
     this.svg = null;
+    this.unlayer();
     this.element.style.removeProperty('backdrop-filter');
     if (this.tinted) this.element.style.removeProperty('background-color');
     this.tinted = false;

@@ -98,7 +98,7 @@ export class ComponentsPage {
 
   protected frame(id: string): SafeResourceUrl {
     let url = this.frames.get(id);
-    if (!url) this.frames.set(id, (url = this.sanitizer.bypassSecurityTrustResourceUrl(`/frame/${id}`)));
+    if (!url) this.frames.set(id, (url = this.sanitizer.bypassSecurityTrustResourceUrl(`/frame/${id}?clear`)));
     return url;
   }
 

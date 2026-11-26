@@ -27,6 +27,15 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   whole a little past half), in its colour (the saturated copy) with a highlight in the light's own colour over it
   (`specularOpacity`). All in the filter: at every frame the page draws, the edge lights on the side a light is under
   it and follows it smoothly. No fixed side, no pointer, no script.
+- **On a layer behind what it holds** (lenzi, 2026-11-26: "il liquidglass non funziona bene, non funziona con altri
+  layer di liquidglass ... funziona solo con quello che gli sta sotto direttamente ma non con gli altri livelli"): the
+  filter is the backdrop-filter of the glass's `::before` (`lenzi-liquid-layered`), not of the glass itself. In
+  Chromium an element with a backdrop-filter is the root of the backdrop of every glass inside it (a Backdrop Root): a
+  glass in a glass saw only what the outer one holds. On a layer, the inner glass bends every level under it, the outer
+  glass too. On the glass itself where a layer cannot be (`glassPlace`): a glass that scrolls (its layer would scroll
+  away), one that is a root anyway (a mask, a clip-path, a filter, a blend: the cat's shape), a control's thumb (it holds
+  no glass, and its fill lies over its glass). The layer covers the border when the border is clear; a border that
+  shows, or one the glass cuts at, keeps the layer inside it.
 - **One filter per glass, made for its size**, again when it changes size or a setting (the maps are as large as it
   is), or its corners (`border-radius`, from any CSS: looked at about twice a second; lenzi, 2026-11-21, "tanti input non
   si aggiornano automaticamente").
@@ -43,6 +52,10 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 - **Over a background**: clear glass needs something behind it to bend (a scene, a picture). On a plain page it is
   only its rim.
 - It is a material like `lenziLit` and `lenziSolid`: never two of them on one element.
+- **Nothing that holds glass is a root of its backdrop**: no mask, filter, opacity under 1 or blend on an element with
+  glass inside it, or that glass bends only what the element holds (it shows its tint and nothing else). A shelf
+  (`LenziShelf`) of glass does not fade at its edges for this (its fade is a mask): it is cut, as the App Store's.
+- **Its `::before` is its layer**: never one of the app's own on a glass.
 
 ## API
 
@@ -66,8 +79,9 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
 | input | `glassViewBox` | the path's view box | `'0 0 100 100'` |
 | function | `liquidGlassMaps(shape)` | the displacement and rim maps, and the scale | |
 | function | `liquidGlassOutlineMaps(outline)` | the same for any shape, from what it covers (one alpha a pixel) | |
+| function | `glassPlace(style, width, height, radius, layered)` | where a glass draws its bending: on its layer or on itself, and the layer's size and corners | |
 | function | `provideLenziLiquidGlass({ selectors?, settings? })` | the whole app of Liquid Glass | |
-| class | `LenziLiquidSurface(element, document, settings)` | one glass: `build()`, `check()` (its corners, now and then), `destroy()` | |
+| class | `LenziLiquidSurface(element, document, settings, layered = true)` | one glass: `build()`, `check()` (its corners and its place, now and then), `destroy()`; `layered` false: always on itself (a thumb) | |
 
 ## Example
 
@@ -89,10 +103,14 @@ come in modo ottimale"; the Human Interface Guidelines, Materials and Color, rea
   o altro, stiamo rifacendo l'interfaccia del kit praticamente"; Apple keeps the content layer solid, lenzi does not):
   what floats (`LENZI_LIQUID_SURFACES`: the top bar and the drawer, dialogs, menus, the panels of selects and
   autocompletes, the "+", `.lenzi-floating`, the pane of `lenziGlassPage`) and the page's own surfaces
-  (`LENZI_LIQUID_PAGE_SURFACES`: cards, `.lenzi-surface`), and every lit surface: `lenziLit` gives itself to the app's
+  (`LENZI_LIQUID_PAGE_SURFACES`: cards, `.lenzi-surface`, the expansion panels but a flat one; lenzi, 2026-11-26:
+  "ancora i pannelli non sono glass, cioé alcuni, ma solo quelli che volevi te"), and every lit surface: `lenziLit` gives itself to the app's
   glass (`adopt`) instead of taking the background's light. `{ pages: false }`: only what floats.
-- **Not glass**: a lamp (`lenziGlow`: a light), a surface kept lit glass (`lenziLit litOnly`: a demo of that material),
-  a menu opened over a window (frosted).
+- **Not glass**: a lamp (`lenziGlow`: a light), a surface kept lit glass (`lenziLit litOnly`: a demo of that material).
+- **Glass on glass** (lenzi, 2026-11-26, above; before, Apple's "avoid ... layering Liquid Glass elements on top of each
+  other" kept a menu over a window frosted): a panel in a panel is glass and bends what is under both; a menu over a
+  window is glass. A panel inside a glass panel takes the light tint (`--lenzi-liquid-tint`): its words already read on
+  the tint of the glass that holds it, and two dark tints made it a dark panel again.
 - **Clear, never frosted** (lenzi, 2026-11-26: "i pannelli di vetro devono tutti essere convertiti in liquid glass,
   adesso sono solo glass blurrati"): what is behind shows sharp through every glass and bends at its edge. Words are
   read on a darker tint: the pane, cards and panels, windows, menus and the drawer take `--lenzi-liquid-tint-large`; the
@@ -121,8 +139,6 @@ come in modo ottimale"; the Human Interface Guidelines, Materials and Color, rea
     the gap: menus 8 + 6 px, the drawer 28 + 12, windows 20 + 16;
   - **a scroll edge effect** instead of a fill under the bar ("use a scroll edge effect to visually elevate controls
     above content"): what scrolls under the bar is blurred and fades at its edge;
-  - **never glass on glass** ("avoid overcrowding or layering Liquid Glass elements on top of each other"): a menu or a
-    select opened over a window stays frosted.
 - A kit or Material surface keeps its border's width, not its colour; a bezel is never wider than a third of the
   surface's smaller side. Snackbars and tooltips stay frosted glass. **Reduce transparency** turns it all off.
 - `LenziLiquidSurface` is one glass, the engine the directive uses too.

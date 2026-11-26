@@ -1,12 +1,13 @@
 import { liquidGlassMaps } from './liquid-glass-maps';
-import { LIGHT_BASE, LIGHT_FLOOR, SLICE_AREA, bendLimit, glassCuts, lightMatrix } from './liquid-surface';
+import { LIGHT_BASE, LIGHT_FLOOR, SLICE_AREA, bendLimit, glassCuts, glassPlace, lightMatrix } from './liquid-surface';
 
 const OPTICS = { bezel: 14, thickness: 28, ior: 1.5, surface: 'squircle' as const };
 
 describe('glassCuts (a large glass in nine pieces, 2026-11-25)', () => {
-  it('a small glass is one picture, a large one nine pieces that cover all of it', () => {
-    expect(glassCuts(200, 120, 24, 14)).toBeNull();
-    expect(SLICE_AREA).toBeGreaterThan(200 * 120);
+  it('a tiny glass is one picture, any other nine pieces that cover all of it (2026-11-26: small glass too)', () => {
+    expect(glassCuts(60, 40, 24, 14)).toBeNull();
+    expect(SLICE_AREA).toBeGreaterThan(60 * 40);
+    expect(glassCuts(258, 144, 11, 24)).not.toBeNull();
     const cuts = glassCuts(900, 2400, 24, 14)!;
     expect(cuts.pieces.length).toBe(9);
     // every px of the glass lies under a piece
@@ -75,5 +76,43 @@ describe('bendLimit (lenzi, 2026-11-26, the word under a capsule mirrored: "cosÃ
     expect(bendLimit(900, 600, 24)).toBe(288);
     // never nothing
     expect(bendLimit(4, 4, 12)).toBe(1);
+  });
+});
+
+describe('glassPlace (lenzi, 2026-11-26: "non funziona con altri layer di liquidglass ... solo con quello che gli sta sotto direttamente")', () => {
+  // a computed style, as the browser gives it
+  const style = (props: Partial<Record<string, string>>) => {
+    const all: Record<string, string> = {
+      overflowX: 'visible',
+      overflowY: 'visible',
+      clipPath: 'none',
+      filter: 'none',
+      mixBlendMode: 'normal',
+      borderTopWidth: '1px',
+      borderRightWidth: '1px',
+      borderBottomWidth: '1px',
+      borderLeftWidth: '1px',
+      borderTopColor: 'rgba(0, 0, 0, 0)',
+      'mask-image': 'none',
+      ...props,
+    };
+    return { ...all, getPropertyValue: (name: string) => all[name] ?? '' } as unknown as CSSStyleDeclaration;
+  };
+
+  it('a glass that may hold glass bends on a layer behind what it holds, over its clear border', () => {
+    expect(glassPlace(style({}), 300, 200, 24, true)).toEqual({ layer: true, edge: 1, width: 300, height: 200, radius: 24 });
+  });
+
+  it('a border that shows, or one cut at, keeps the layer inside it: the maps the size of the inside', () => {
+    expect(glassPlace(style({ borderTopColor: 'rgb(73, 69, 79)' }), 300, 200, 24, true)).toEqual({ layer: true, edge: 0, width: 298, height: 198, radius: 23 });
+    expect(glassPlace(style({ overflowX: 'hidden', overflowY: 'hidden' }), 300, 200, 24, true)).toEqual({ layer: true, edge: 0, width: 298, height: 198, radius: 23 });
+  });
+
+  it('on the glass itself where a layer cannot be: it scrolls, it is a root anyway (a mask), or a thumb', () => {
+    const self = { layer: false, edge: 0, width: 300, height: 200, radius: 24 };
+    expect(glassPlace(style({ overflowY: 'auto' }), 300, 200, 24, true)).toEqual(self);
+    expect(glassPlace(style({ 'mask-image': 'url("cat.svg")' }), 300, 200, 24, true)).toEqual(self);
+    expect(glassPlace(style({ filter: 'blur(2px)' }), 300, 200, 24, true)).toEqual(self);
+    expect(glassPlace(style({}), 300, 200, 24, false)).toEqual(self);
   });
 });

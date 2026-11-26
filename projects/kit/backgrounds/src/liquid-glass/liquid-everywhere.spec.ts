@@ -66,7 +66,7 @@ describe('LenziLiquidEverywhere', () => {
     expect(given.classList.contains('lenzi-liquid-everywhere')).toBe(false);
   });
 
-  it('never puts glass on glass: a menu over a window stays frosted', async () => {
+  it('puts glass on glass too: a menu over a window is glass (lenzi, 2026-11-26: "solo quelli che volevi te")', async () => {
     const glass = TestBed.inject(LenziLiquidEverywhere);
     const menu = add('mat-mdc-menu-panel');
     glass.start();
@@ -76,7 +76,17 @@ describe('LenziLiquidEverywhere', () => {
     await frame();
     await frame();
     expect(dialog.classList.contains('lenzi-liquid-everywhere')).toBe(true);
-    expect(menu.classList.contains('lenzi-liquid-everywhere')).toBe(false);
+    expect(menu.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+  });
+
+  it('makes every panel glass: the expansion panels, but a flat one', async () => {
+    const glass = TestBed.inject(LenziLiquidEverywhere);
+    const panel = add('mat-expansion-panel');
+    const flat = add('mat-expansion-panel lenzi-flat');
+    glass.start();
+    await frame();
+    expect(panel.classList.contains('lenzi-liquid-everywhere')).toBe(true);
+    expect(flat.classList.contains('lenzi-liquid-everywhere')).toBe(false);
   });
 
   it('turns it all off with Reduce transparency, and on again', async () => {

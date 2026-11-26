@@ -10,6 +10,11 @@ body.catalog-frame {
   background: var(--mat-sys-surface);
 }
 
+/* A clear frame (a card's preview on the Components page, which is glass): no colour of its own. */
+body.catalog-frame.catalog-frame-clear {
+  background: transparent;
+}
+
 /* What a demo opens at the bottom of its frame (a snackbar) stays in the part of the frame the page
    shows: FramePage keeps --catalog-frame-cut, how much of the frame is under the window's edge. */
 body.catalog-frame .cdk-global-overlay-wrapper {

@@ -76,8 +76,18 @@ the rule says what, the variable says how much.
     2026-11-26: "opacizzare lievemente (lieve frosting) dietro ... cose che hanno dietro del testo"): windows, menus,
     select and autocomplete panels, the drawer, a bar of actions (`--lenzi-liquid-frost-over`, 3 px), and a little darker
     (`--lenzi-liquid-tint-over`, 64 %; lenzi, 2026-11-26: "fammeli leggermente scuriti"). Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what floats.
-  - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass,
-    never glass on glass.
+  - **Every panel, not only some** (lenzi, 2026-11-26: "ancora i pannelli non sono glass, cioé alcuni, ma solo quelli che
+    volevi te"): the expansion panels (a flat one inside a window has no panel), the preview of a `LenziPreviewCard`, the
+    card of `LenziNotFound` and of `LenziBlockingScreen` too; a panel of the kit is a `.lenzi-surface`. **Glass on glass**:
+    a panel in a panel is glass, a menu over a window is glass. A panel inside a glass panel takes the light tint
+    (`--lenzi-liquid-tint`): its words already read on the tint of the glass that holds it.
+  - **Every glass bends every level under it** (lenzi, 2026-11-26: "il liquidglass non funziona bene, non funziona con
+    altri layer di liquidglass ... funziona solo con quello che gli sta sotto direttamente ma non con gli altri
+    livelli"): its bending is drawn on a layer behind what it holds, so a glass inside it sees through it. **Nothing that
+    holds glass has a mask, a filter, an opacity under 1 or a blend** (each makes it the root of the backdrop of the glass
+    in it, which then bends only what that holds: in Chromium, a Backdrop Root); a shelf of glass is cut at its edges
+    instead of fading.
+  - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass.
   - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti
     scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che ti
     inventi"): bright where a light is under it, on that side, dark over the dark page (a faint line only, so the shape
@@ -94,8 +104,7 @@ the rule says what, the variable says how much.
   - **No colour of its own**: it takes the colours behind it; **only the primary action is coloured glass** (the "+").
   - **Its edges, Apple's way** (lenzi, 2026-11-25: "Fai la stessa cosa anche per i bordi, guarda cosa dice apple e
     replica"): no stroke; corners concentric to what they hold (controls are capsules, a panel's radius is its
-    content's plus the gap); a scroll edge effect under the bar instead of a fill; no glass over a window's glass
-    (a menu opened on a window stays frosted).
+    content's plus the gap); a scroll edge effect under the bar instead of a fill.
   - **The page's title is in the page** (lenzi, 2026-11-25: "togli la barra sopra che non ha senso, metti un titolo
     normale un po' grande"; "il titolo è troppo vicino al lato"): with the bar of pages there is no top bar; the title
     is large and bold at the top of the page's column (`lenziGlassPage`), one per page (a page's own h1 wins).
