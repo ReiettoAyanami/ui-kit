@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, booleanAttribute, computed, inject, input } from '@angular/core';
 
 import { LenziAppShell } from '@lenzi/ui-kit';
 
@@ -29,6 +29,11 @@ import { LenziLiquidEverywhere } from '../liquid-glass/liquid-everywhere';
 export class LenziGlassPage {
   /** A background is behind the page. */
   protected readonly shown = inject(LenziBackgroundPresence).present;
+  /**
+   * The pane behind the page (yes by default). No: a page whose own panels are the glass (a `LenziBento` of tiles, the
+   * catalog's overview, 2026-11-26), so no glass lies on glass; the page keeps its margins and its title.
+   */
+  readonly pane = input(true, { transform: booleanAttribute });
   /**
    * The app is Liquid Glass (`provideLenziLiquidGlass()`): the pane is the kit's glass, the side bar's, frosted to read on
    * (lenzi, 2026-11-25: "I pannelli dietro per esempio devono essere in vetro, ti ho detto come dovevano essere calcolati

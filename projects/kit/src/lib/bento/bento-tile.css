@@ -1,0 +1,46 @@
+/* A panel of the page: the kit's panel corners (concentric with what it holds: its padding plus a pill's half), a
+   border, the page's lowest container colour. In an app of Liquid Glass the kit's styles make it glass instead. */
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 20px;
+  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+  border-radius: var(--lenzi-widget-radius);
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+}
+
+:host(.lenzi-bento-tile-flat) {
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+/* a tile that is a link: its focus shows, its words keep their colour */
+:host(a) {
+  cursor: pointer;
+  outline: none;
+}
+
+:host(a:focus-visible) {
+  outline: var(--lenzi-border-focus) solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+@container lenzi-bento (min-width: 520px) {
+  :host {
+    grid-column: span var(--lenzi-tile-span-medium);
+    grid-row: span var(--lenzi-tile-rows);
+  }
+}
+
+@container lenzi-bento (min-width: 840px) {
+  :host {
+    grid-column: span var(--lenzi-tile-span);
+  }
+}

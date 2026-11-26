@@ -46,7 +46,8 @@ export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '
 /**
  * The kit's glass, one for everything that is glass (lenzi, 2026-11-25: "non c'è niente di costante nell'app ... ti ho
  * detto come dovevano essere calcolati i bordi ma in cima c'è ancora questo che cambia a caso, fallo come la barra di
- * fianco"): the side bar's (LenziGlassTabBar): a squircle bezel 14 px wide, 28 thick; the default optics (lenzi,
+ * fianco"): the side bar's (LenziGlassTabBar): a squircle bezel 24 px wide, 48 thick (2026-11-26: 14 and 28 hid the
+ * bending on a large panel; a third of the bar's width at most, 18); the default optics (lenzi,
  * 2026-11-25: "per il vetro tieni i valori default di apple per ora": kube.io's: refraction 1, blur 0.2, specular
  * opacity 0.5, specular saturation 6), the edge in the colours under it and lit by the light under it (lenzi,
  * 2026-11-26: "la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse").
@@ -54,8 +55,8 @@ export const LENZI_LIQUID_PAGE_SURFACES: readonly string[] = ['.mat-mdc-card', '
 export const LIQUID_EVERYWHERE_SETTINGS: LenziLiquidGlassSettings = {
   ...LIQUID_GLASS_SETTINGS,
   surface: 'squircle',
-  bezel: 14,
-  thickness: 28,
+  bezel: 24,
+  thickness: 48,
 };
 
 export interface LenziLiquidGlassOptions {

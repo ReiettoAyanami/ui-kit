@@ -41,6 +41,7 @@ written from scratch with the kit had to copy its CSS. The kit knows by itself w
 | | Name | What |
 | --- | --- | --- |
 | component | `[lenziGlassPage]` | on the page's `<main>`: the glass pane behind its elements, while there is a background; the title at its top with the shell's bar of pages (class `lenzi-glass-page-titled`) |
+| input | `pane` | `boolean`, `true`: the pane; `false`: none, for a page whose own panels are the glass (a `LenziBento` of tiles: no glass on glass) |
 | function | `lenziOverBackground()` | `Signal<boolean>` (an injection context): the page has a background behind it |
 | service | `LenziBackgroundPresence` | `present` (`Signal<boolean>`), `add()`: used by the backgrounds, never by an app |
 

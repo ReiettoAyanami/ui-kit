@@ -1,4 +1,4 @@
-@if (shown()) {
+@if (shown() && pane()) {
   <!-- Liquid Glass when the app is (provideLenziLiquidGlass: the kit's glass, frosted), lit glass otherwise -->
   <div class="pane lenzi-glass-page-pane" [lenziLit]="!liquid()" aria-hidden="true"></div>
 }

@@ -35,8 +35,6 @@
   z-index: -1;
   border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
   border-radius: var(--lenzi-panel-radius);
-  /* as Liquid Glass (an app of it), frosted as much as the kit's glass, words lie on it */
-  --lenzi-liquid-frost: var(--lenzi-glass-blur);
 }
 
 /* Liquid Glass: where the browser does not bend (not Chromium), frosted all the same */

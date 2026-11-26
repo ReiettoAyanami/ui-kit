@@ -35,6 +35,8 @@ export * from './lib/identity-dot/identity-dot';
 export * from './lib/segmented-bar/segmented-bar';
 export * from './lib/data-table/data-table';
 export * from './lib/schedule-grid/schedule-grid';
+export * from './lib/bento/bento';
+export * from './lib/bento/bento-tile';
 export * from './lib/widget-card/widget-card';
 
 // Feedback

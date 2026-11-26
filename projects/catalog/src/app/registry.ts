@@ -518,6 +518,29 @@ usageLanguage: 'typescript',
 usageLanguage: 'html',
     height: 240,
   },
+  {
+    id: 'bento',
+    name: 'Bento grid',
+    category: 'Layout',
+    summary: 'Tiles of different sizes in one grid, the size saying how much each matters: twelve columns, six, one on a phone.',
+    api: '<lenzi-bento>, <lenzi-bento-tile>, a[lenziBentoTile]',
+    entry: '@lenzi/ui-kit',
+    origin: "the catalog's overview, proposal A (lenzi, 2026-11-26: \"vai con la a\")",
+    files: [...lib('bento', 'bento.ts', 'bento.html', 'bento.css', 'bento.spec.ts', 'bento-tile.ts', 'bento-tile.html', 'bento-tile.css')],
+    ...docs('src/lib/bento'),
+    demo: () => import('./demos/bento-demo/bento-demo').then((m) => m.BentoDemo),
+    controls: [
+      { key: 'span', label: 'The largest tile: columns of twelve', type: 'number', default: 7, min: 1, max: 12, step: 1 },
+      { key: 'rows', label: 'The largest tile: rows', type: 'number', default: 2, min: 1, max: 4, step: 1 },
+    ],
+    usage: (v) => `<lenzi-bento>
+  <lenzi-bento-tile [span]="${v['span']}" [rows]="${v['rows']}">…</lenzi-bento-tile>
+  <lenzi-bento-tile [span]="${12 - Number(v['span']) || 12}">…</lenzi-bento-tile>
+  <a lenziBentoTile [span]="4" routerLink="/components">…</a>
+</lenzi-bento>`,
+    usageLanguage: 'html',
+    height: 520,
+  },
   // Actions and inputs --------------------------------------------------------------------------
   {
     id: 'add-button',

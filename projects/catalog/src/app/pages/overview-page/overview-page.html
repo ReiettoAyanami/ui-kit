@@ -1,44 +1,104 @@
-<!-- The cat, large, in the bottom right corner, partly below the screen, glowing: awake and happy, watching
-     the pointer; petted (the pointer stroking it), it closes its eyes. -->
-<lenzi-cat
-  class="mascot"
-  expression="watching"
-  pettable
-  material="lamp"
-  glowColor="--mat-sys-primary"
-  [drift]="40"
-  [size]="mascot()"
-  [style.bottom.px]="-mascot() / aspect * BELOW"
-/>
+<!-- The overview as a bento of glass tiles over the scene (lenzi, 2026-11-26: proposal A, "vai con la a"): the size of a
+     tile says how much it matters; the tiles are the glass, so the page has no pane behind them. -->
+<main class="page" lenziGlassPage [pane]="false">
+  <lenzi-bento>
+    <lenzi-bento-tile class="hero" [span]="7">
+      <h1 class="title">ui-kit</h1>
+      <p class="lead">
+        lenzi's components in one place: Angular Material 3 reworked into Liquid Glass, the rules every app follows and the
+        notes Claude reads before it writes a page.
+      </p>
+      <div class="actions">
+        <a mat-flat-button routerLink="/components">Open the components</a>
+        <code class="command">{{ command }}</code>
+        <button mat-button type="button" (click)="copy()">{{ copied() ? 'Copied' : 'Copy' }}</button>
+      </div>
+    </lenzi-bento-tile>
 
-<main class="page" lenziGlassPage>
-  <header class="hero">
-    <h1 class="title">ui-kit</h1>
-    <p class="lead">
-      lenzi's components, in one place: Angular Material 3, heavily modified. Dark violet on neutral greys, glass, 2 px
-      borders, Roboto Mono. Imported from substance-tracker and vtiger-reader, so every new app starts from the same pieces
-      and the same rules.
-    </p>
-    <lenzi-figure-grid class="numbers">
-      <lenzi-figure label="Pages of components" [value]="components()" />
-      <lenzi-figure label="Categories" [value]="categories()" />
-    </lenzi-figure-grid>
-  </header>
+    <a lenziBentoTile class="link" [span]="5" routerLink="/scenes">
+      <span class="head"><mat-icon class="icon" aria-hidden="true">landscape</mat-icon><span class="name">Scenes</span></span>
+      <span class="words">Glowing backgrounds as data. The one behind this page is one: make your own in the maker.</span>
+    </a>
 
-  <nav class="sections" aria-label="Sections">
-    @for (section of sections(); track section.link) {
-      <a class="section" [lenziLit]="lit()" [routerLink]="section.link">
-        <mat-icon class="icon" aria-hidden="true">{{ section.icon }}</mat-icon>
-        <span class="section-text">
-          <span class="section-title">{{ section.title }}</span>
-          <span class="section-summary">{{ section.text }}</span>
+    <lenzi-bento-tile class="components" [span]="6" [rows]="2">
+      <div class="head between">
+        <span class="name large">Components</span>
+        <a mat-button routerLink="/components">Every one</a>
+      </div>
+      <lenzi-figure-grid class="numbers">
+        <lenzi-figure label="Pages" [value]="components()" />
+        <lenzi-figure label="Categories" [value]="categories()" />
+      </lenzi-figure-grid>
+      <div class="controls">
+        <lenzi-glass-switch label="Glass" [(checked)]="glass" />
+        <lenzi-glass-segmented label="Period" [options]="periods" [(value)]="period" />
+        <lenzi-glass-slider class="slider" label="Strength" track="wave" [(value)]="strength" />
+      </div>
+      <lenzi-glass-search placeholder="Search the components" (search)="find($event)" />
+      <span class="words">These are the kit's own controls, live: try them.</span>
+    </lenzi-bento-tile>
+
+    @if (shows('variables')) {
+      <a lenziBentoTile class="link" [span]="3" routerLink="/variables">
+        <span class="head"><mat-icon class="icon" aria-hidden="true">tune</mat-icon><span class="name">Variables</span></span>
+        <span class="swatches" aria-hidden="true">
+          @for (swatch of swatches; track swatch) {
+            <span class="swatch" [style.background]="'var(' + swatch + ')'"></span>
+          }
         </span>
+        <span class="words">What each one is for, its value and why.</span>
       </a>
     }
-  </nav>
 
-  <section class="start">
-    <h2 class="heading">How an app takes the kit</h2>
-    <app-code-editor [value]="start" language="markdown" label="How an app takes the kit" [readonly]="true" />
-  </section>
+    <!-- The cat in its own tile (it covered half of the links in the corner), awake, watching the pointer; petted, it
+         closes its eyes. -->
+    <lenzi-bento-tile class="cat-tile" [span]="3" [rows]="2">
+      <span class="name">The cat</span>
+      <span class="words">Pet it.</span>
+      <lenzi-cat class="cat" expression="watching" pettable material="lamp" glowColor="--mat-sys-primary" [drift]="24" [size]="catSize()" />
+    </lenzi-bento-tile>
+
+    @if (shows('rules')) {
+      <a lenziBentoTile class="link" [span]="3" routerLink="/rules">
+        <span class="head"><mat-icon class="icon" aria-hidden="true">rule</mat-icon><span class="name">Rules</span></span>
+        <span class="words">The look and the behaviour every app follows.</span>
+      </a>
+    }
+
+    @if (shows('ai-rules')) {
+      <a lenziBentoTile class="link" [span]="3" routerLink="/ai-rules">
+        <span class="head"><mat-icon class="icon" aria-hidden="true">smart_toy</mat-icon><span class="name">AI rules</span></span>
+        <span class="words">How Claude works with the kit, and how an app takes it.</span>
+      </a>
+    }
+
+    @if (shows('libraries')) {
+      <a lenziBentoTile class="link" [span]="3" routerLink="/libraries">
+        <span class="head"><mat-icon class="icon" aria-hidden="true">inventory_2</mat-icon><span class="name">Libraries</span></span>
+        <span class="words">Every library the apps use, its version and its rules.</span>
+      </a>
+    }
+
+    @if (shows('history')) {
+      <lenzi-bento-tile class="changes" [span]="6">
+        <div class="head between">
+          <span class="name">What changed</span>
+          <a mat-button routerLink="/history">History</a>
+        </div>
+        @if (savesFailure(); as failure) {
+          <lenzi-status-message kind="error" [text]="failure" compact />
+        } @else if (latest(); as saves) {
+          @if (saves.length) {
+            <ul class="saves">
+              @for (save of saves; track save.id) {
+                <li class="save"><span class="what">{{ save.title }}</span><span class="when">{{ save.when }}</span></li>
+              }
+            </ul>
+          } @else {
+            <lenzi-status-message text="Nothing saved from the catalog yet" compact />
+          }
+        }
+      </lenzi-bento-tile>
+    }
+  </lenzi-bento>
 </main>

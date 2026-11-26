@@ -1,0 +1,22 @@
+<lenzi-bento>
+  <lenzi-bento-tile [span]="span()" [rows]="rows()">
+    <h3 class="title">The largest tile</h3>
+    <p class="words">Its size says it matters most: {{ span() }} columns of twelve, {{ rows() }} rows.</p>
+  </lenzi-bento-tile>
+  <lenzi-bento-tile [span]="12 - span() || 12">
+    <h3 class="title">Beside it</h3>
+    <p class="words">The rest of the row.</p>
+  </lenzi-bento-tile>
+  <lenzi-bento-tile [span]="4">
+    <h3 class="title">Four</h3>
+    <p class="words">A third of the row.</p>
+  </lenzi-bento-tile>
+  <a lenziBentoTile [span]="4" href="#bento">
+    <h3 class="title">A link</h3>
+    <p class="words">The whole tile is the link.</p>
+  </a>
+  <lenzi-bento-tile [span]="4">
+    <h3 class="title">Four</h3>
+    <p class="words">On a phone, one column.</p>
+  </lenzi-bento-tile>
+</lenzi-bento>

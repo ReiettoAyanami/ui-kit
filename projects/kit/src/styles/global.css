@@ -528,9 +528,21 @@ html {
    page's colour to read on, and no fill or border of its own (a kit or Material surface loses its border's colour, not
    its width: nothing moves). A .lenzi-surface of the app keeps its own border, which may say something. Each class
    three times: above Material's and the components' own fills. */
+/* The glass's tint and frost are its own, never what holds it: a glass control inside a glass card would take the
+   card's tint. */
+@property --lenzi-liquid-fill {
+  syntax: '*';
+  inherits: false;
+}
+
+@property --lenzi-liquid-frost {
+  syntax: '*';
+  inherits: false;
+}
+
 .lenzi-liquid-everywhere {
-  /* the glass's tint, as a variable: the filter of a frosted glass reads it to draw it (a variable does not move with
-     the surface's own transition of its fill, which it would read halfway; 2026-11-26) */
+  /* the glass's tint, as a variable: the filter reads it and draws it under the edge's light (a variable does not move
+     with the surface's own transition of its fill, which it would read halfway; 2026-11-26) */
   --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint), transparent);
 }
 
@@ -543,17 +555,12 @@ html {
   border-color: transparent;
 }
 
-/* Liquid Glass with words on it is frosted (lenzi, 2026-11-26: "Non c'è ancora nulla che sia stato convertito in liquid
-   glass, come i pannelli o altro": every panel is glass, so it must be read on): the page's pane, its cards and panels
-   (lit surfaces are the app's glass then), windows, menus and the drawer. The filter blurs what is behind as much
-   (--lenzi-liquid-frost) and draws their tint, the bezel clear round them. The bar, the "+" and the controls stay clear. */
+/* Liquid Glass with words on it is clear glass too, never frosted (lenzi, 2026-11-26: "i pannelli di vetro devono tutti
+   essere convertiti in liquid glass, adesso sono solo glass blurrati"): what is behind shows sharp and bends at the
+   edge; the words are read on a darker tint (--lenzi-liquid-tint-large, as larger glass is in Apple's Color: "more
+   opaque in larger elements like sidebars to preserve legibility"): the page's pane, its cards and panels (lit surfaces
+   are the app's glass then), windows, menus and the drawer. The bar, the "+" and the controls keep the light tint. */
 .lenzi-liquid-everywhere:is(.lenzi-glass-page-pane, .lenzi-liquid-lit, .mat-mdc-card, .lenzi-surface, .mat-mdc-dialog-surface, .mat-mdc-menu-panel, .mat-mdc-select-panel, .mat-mdc-autocomplete-panel, .lenzi-shell-drawer) {
-  --lenzi-liquid-frost: var(--lenzi-glass-blur);
-}
-
-/* Larger glass is more opaque, to read on (Apple, Color: Liquid Glass "appears more opaque in larger elements like
-   sidebars to preserve legibility"): the drawer, the windows and a page's pane keep --lenzi-liquid-tint-large. */
-.lenzi-liquid-everywhere:is(.lenzi-shell-drawer, .mat-mdc-dialog-surface, .lenzi-glass-page-pane) {
   --lenzi-liquid-fill: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint-large), transparent);
 }
 

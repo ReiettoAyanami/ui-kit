@@ -89,9 +89,13 @@ come in modo ottimale"; the Human Interface Guidelines, Materials and Color, rea
   glass (`adopt`) instead of taking the background's light. `{ pages: false }`: only what floats.
 - **Not glass**: a lamp (`lenziGlow`: a light), a surface kept lit glass (`lenziLit litOnly`: a demo of that material),
   a menu opened over a window (frosted).
-- **Words on it are read on frosted glass**: the pane, cards and panels, windows, menus and the drawer blur what is
-  behind as much as the kit's glass (`--lenzi-liquid-frost`, the filter's) under their tint (`--lenzi-liquid-fill`); the
-  bar, the "+" and the controls stay clear.
+- **Clear, never frosted** (lenzi, 2026-11-26: "i pannelli di vetro devono tutti essere convertiti in liquid glass,
+  adesso sono solo glass blurrati"): what is behind shows sharp through every glass and bends at its edge. Words are
+  read on a darker tint: the pane, cards and panels, windows, menus and the drawer take `--lenzi-liquid-tint-large`; the
+  bar, the "+" and the controls `--lenzi-liquid-tint`. The tint is drawn by the filter (`--lenzi-liquid-fill`, its own,
+  never inherited) under the edge's light. `--lenzi-liquid-frost` (px) frosts a glass that asks; none does.
+- **The kit's glass**: a squircle bezel 24 px wide, 48 thick (at most a third of the glass's smaller side: 18 on the
+  56 px bar): wide enough that the bending shows on a large panel.
 - **The default optics, the edge in the colours under it** (lenzi, 2026-11-25: "guarda come i bordi prendono il colore
   di quello che sta sotto"; "per il vetro tieni i valori dafault di apple per ora"): kube.io's filter chain: what is
   behind blurred a little (0.2) and bent (refraction 1); on the edge, where the specular map says, a much more saturated

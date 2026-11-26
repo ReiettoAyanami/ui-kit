@@ -24,6 +24,7 @@ export interface SiteEntry {
 }
 
 export const SITE = [
+  // the overview's tile of changes reads the history only while /history is shown (that page's data, served with it)
   { path: '', title: 'ui-kit', always: true },
   { path: 'components', title: 'Components', always: true },
   // the Scenes tab (2026-11-14): everyone makes scenes in the maker ("gli utenti devono finire lí!") and shares

@@ -202,7 +202,7 @@ export class LenziLiquidSurface {
   /** The corners' radius the filter was drawn for, px; and the frames since it was last looked at. */
   private radius = 0;
   private framesSinceRadius = 0;
-  /** Frosted: the filter draws the glass's tint, its CSS fill is hidden by an inline transparent one. */
+  /** The filter draws the glass's tint, its CSS fill is hidden by an inline transparent one. */
   private tinted = false;
 
   constructor(
@@ -222,16 +222,17 @@ export class LenziLiquidSurface {
     const radius = this.cornerRadius();
     this.radius = radius;
     const path = s.glassPath;
-    // A glass with words on it may be frosted (`--lenzi-liquid-frost`, px: a page's pane, a card; lenzi, 2026-11-25: "I
-    // pannelli dietro ... devono essere in vetro, ti ho detto come dovevano essere calcolati i bordi"): its body blurred
-    // as much, and its tint (its CSS fill) drawn by the filter under the edge, so the edge shows as on the clear glass.
-    // The fill is read with the glass's own inline one taken away (it puts a transparent one to hide the CSS's).
+    // A glass of the app's (`--lenzi-liquid-fill`, the kit's styles give it) has its tint drawn by the filter, under its
+    // edge, so the edge's light is never behind the tint (the CSS fill would lie over the filter's output): the fill is
+    // read from the variable (a fill read while it moves, in a transition, would stay) and hidden by an inline
+    // transparent one. The body is clear (lenzi, 2026-11-26: "i pannelli di vetro devono tutti essere convertiti in
+    // liquid glass, adesso sono solo glass blurrati"); `--lenzi-liquid-frost` (px) frosts it, for a glass that asks.
     const style = this.document.defaultView?.getComputedStyle(this.element);
     const frost = Math.max(0, parseFloat(style?.getPropertyValue('--lenzi-liquid-frost') ?? '') || 0);
     if (this.tinted) this.element.style.removeProperty('background-color');
-    // the tint from the kit's variable (`--lenzi-liquid-fill`), else the fill: a fill read while it moves would stay
-    const tint = frost && style ? style.getPropertyValue('--lenzi-liquid-fill').trim() || style.backgroundColor : '';
-    this.tinted = frost > 0;
+    const fill = style?.getPropertyValue('--lenzi-liquid-fill').trim() ?? '';
+    const tint = fill || (frost && style ? style.backgroundColor : '');
+    this.tinted = !!tint;
     if (this.tinted) this.element.style.setProperty('background-color', 'transparent');
     const reach = Math.max(0, s.lightReach);
     const key = `${width}x${height}|${radius}|${s.bezel}|${s.thickness}|${s.ior}|${s.surface}|${s.refraction}|${s.blur}|${s.saturation}|${s.specularOpacity}|${s.specularSaturation}|${reach}|${s.glassViewBox}|${path ?? ''}|${frost}|${tint}`;
@@ -256,14 +257,21 @@ export class LenziLiquidSurface {
     const saturation = Math.max(0, s.saturation);
     const bending = (Number(scale) * this.bend).toFixed(2);
     const shine = Math.max(0, s.specularOpacity);
-    // Frosted: the body bent from a blurred copy, its tint over it.
-    const body = frost
+    // The body: what is behind bent (frosted: from a blurred copy), and the tint over it.
+    const frosted = frost
       ? `<feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="frosted"/>
-  <feDisplacementMap class="lenzi-liquid-glass-bend" in="frosted" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent-frosted"/>
-  <feColorMatrix in="bent-frosted" type="saturate" values="${saturation}" result="clear"/>
+  <feDisplacementMap class="lenzi-liquid-glass-bend" in="frosted" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent-frosted"/>`
+      : '';
+    const body = `${frosted}
+  <feColorMatrix in="${frost ? 'bent-frosted' : 'bent'}" type="saturate" values="${saturation}" result="${tint ? 'clear' : 'refracted'}"/>${
+    tint
+      ? `
   <feFlood style="flood-color: ${tint}" result="tint"/>
   <feBlend in="tint" in2="clear" mode="normal" result="refracted"/>`
-      : `<feColorMatrix in="bent" type="saturate" values="${saturation}" result="refracted"/>`;
+      : ''
+  }`;
+    // the light, gathered round each point: from the frosted copy when it is frosted as far (one blur less)
+    const fromFrost = frost > 0 && frost >= reach;
     // kube.io's chain (lenzi, 2026-11-25: "guarda come i bordi prendono il colore di quello che sta sotto"): what is behind,
     // softened and bent; on the edge a much more saturated copy of it, so the edge takes the colour of what is under it.
     // And only where there is light under it (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci ... la
@@ -279,8 +287,8 @@ export class LenziLiquidSurface {
   <feComponentTransfer in="glint" result="specular"><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
   <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
   ${body}
-  ${frost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
-  <feColorMatrix in="${frost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix()}" result="light"/>
+  ${fromFrost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
+  <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix()}" result="light"/>
   <feComposite in="light" in2="specular" operator="in" result="lit-line"/>
   <feColorMatrix in="bent" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
   <feComposite in="vivid" in2="lit-line" operator="in" result="edge"/>

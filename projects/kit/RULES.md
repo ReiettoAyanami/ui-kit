@@ -69,9 +69,12 @@ the rule says what, the variable says how much.
     glass, come i pannelli o altro, stiamo rifacendo l'interfaccia del kit praticamente"; before, Apple's "Don't use
     Liquid Glass in the content layer" kept them solid): what floats (the top bar, the drawer, windows, menus and select
     panels, the "+", a bar of actions `.lenzi-floating`), the pane behind a page, cards, the app's panels
-    (`.lenzi-surface`) and every lit surface (`lenziLit` gives itself to the app's glass). Those with words on them are
-    frosted to read on. Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what
-    floats.
+    (`.lenzi-surface`) and every lit surface (`lenziLit` gives itself to the app's glass). **Clear, never frosted**
+    (lenzi, 2026-11-26: "i pannelli di vetro devono tutti essere convertiti in liquid glass, adesso sono solo glass
+    blurrati"): what is behind shows sharp and bends at the edge; those with words on them have a darker tint to read
+    on. Lamps (`lenziGlow`) stay lights; a demo of lit glass says `litOnly`. `pages: false`: only what floats.
+  - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass,
+    never glass on glass.
   - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti
     scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che ti
     inventi"): bright where a light is under it, on that side, dark over the dark page (a faint line only, so the shape
