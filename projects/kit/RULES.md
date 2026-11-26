@@ -120,7 +120,8 @@ the rule says what, the variable says how much.
     back, a little past, then home. The switch's and the slider's thumbs alike, and any thumb the kit adds.
   - **Every thumb is a dome** (lenzi, 2026-11-26: "le pillole così voglio che siano più rotonde sopra come una pillola
     vera, senza che si tagli a metà"): a thumb's glass is curved to its middle (`dome`, a circle's profile), no flat
-    middle where what is behind shows cut in two. **But a capsule that slides over words keeps a flat middle**
+    middle where what is behind shows cut in two; **a gentle one, smoothed** (lenzi, 2026-11-26: "la risoluzione delle
+    distorsioni si è abbassata notevolmente": a strong dome magnified the pixels it took into steps). **But a capsule that slides over words keeps a flat middle**
     (`CAPSULE_SETTINGS`: the segmented control's, the tab bar's; lenzi, 2026-11-26: "non so cosa succede con il testo":
     a dome magnifies all that is under it, the words came out large and doubled), and **a thumb never goes over the
     words beside its control** (the slider has room at its ends for its glass).
@@ -128,7 +129,9 @@ the rule says what, the variable says how much.
     selettori, come vedi si taglia e soprattutto fa degli sfarfallii strani prima di arrivare"):
     - **never change size while it moves**: its filter is made for its size, so a size that moves makes a new filter at
       every frame, its maps pictures the browser has not drawn yet: it flickers. It takes its new size at once and only
-      its place and scale move (translate, scale: they leave the filter as it is);
+      its place and scale move (translate, scale: they leave the filter as it is). A shape may turn (a blob knob), its
+      outline at every frame and its bending in a few steps whose maps are kept; the kit writes a new filter only once
+      its pictures are decoded;
     - **never be cut by what holds it**: a scroller (overflow) cuts it, grown on its way, and the focus ring; give it
       room (padding, the same negative margin), or do not scroll where nothing needs to (the segmented control's
       capsule, 2026-11-26, and the glass list's lens);

@@ -15,10 +15,14 @@ animare"). `<lenzi-glass-slider>` takes one as its content, or makes its own.
   white. A dome, as every pill.
 - **Any shape**: `capsule`, `circle`, `bar`, or one of the blobs' (`squircle`, `clover4`, `cookie9`, `flower`, `sunny`
   …, `BLOB_SHAPES`). Its glass may have its own (`lensShape`); by default the shape it has when it is grabbed.
-- **A blob may turn** from shape to shape at rest (`morph`: the shapes it turns through, round; `morphDuration` each):
-  the blobs' own way, their radii mixed, so it never tears. Held, it keeps the shape it had: **its glass never changes
-  shape or size while it moves** (a new filter at every frame flickers: RULES.md, Controls of glass). Still with
-  reduced motion.
+- **A blob may turn** from shape to shape (`morph`: the shapes it turns through, round; `morphDuration` each): the
+  blobs' own way, their radii mixed, so it never tears; **held too** (lenzi, 2026-11-26: "la forma non cambia quando
+  dragghi"): its lens's outline follows it at every frame, its bending in four steps a turn, each step's maps made once
+  and decoded before they are shown (never a frame of glass bent by a picture not drawn yet). Its size never moves.
+  Still with reduced motion.
+- **A gentle dome** (`KNOB_GLASS`: thickness 16, refraction 0.8), smoothed a little after it bends: a dome magnifies all
+  of it and the browser takes the pixels it bends one by one, so a strong one showed them as steps (lenzi, 2026-11-26:
+  "la risoluzione delle distorsioni si è abbassata notevolmente").
 - Its control places it, says when it is held (`held`) and focused (`focused`), and leaves room at its ends for its lens
   (`lensSize`).
 

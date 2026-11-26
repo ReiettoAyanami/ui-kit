@@ -35,8 +35,12 @@ export const KNOB_SIZES = {
 /** How much larger than the knob its lens is, held (lenzi, 2026-11-26: "leggermente più grande del pomello magari 25-50%"). */
 export const KNOB_GROW = 1.35;
 
-/** The knob's glass: the thumbs' (a dome), a little gentler on something this small. */
-export const KNOB_GLASS: LenziLiquidGlassSettings = { ...LENS_SETTINGS, bezel: 10, thickness: 24, refraction: 1.2, blur: 0, specularOpacity: 0.4, specularSaturation: 7 };
+/**
+ * The knob's glass: the thumbs' (a dome), gentle on something this small: a dome magnifies all of it, and the browser
+ * takes the pixels it bends one by one, so a strong one showed them as steps (lenzi, 2026-11-26: "la risoluzione delle
+ * distorsioni si è abbassata notevolmente").
+ */
+export const KNOB_GLASS: LenziLiquidGlassSettings = { ...LENS_SETTINGS, bezel: 10, thickness: 16, refraction: 0.8, blur: 0, specularOpacity: 0.4, specularSaturation: 7 };
 
 const STEPS = 72;
 
@@ -143,11 +147,26 @@ export class LenziGlassKnob {
   /** Where the morph is: which shape, and how far to the next. */
   private shown: { from: BlobShapeName; to: BlobShapeName; mix: number } | null = null;
 
+  /**
+   * The lens in a blob's shape, a share of the way between two: its outline exact (its clip), its bending the nearest of
+   * four steps (a filter only when the step changes; its maps kept).
+   */
+  private shapeLens(at: { from: BlobShapeName; to: BlobShapeName; mix: number }): void {
+    const { width, height } = this.lensSize();
+    this.glass().nativeElement.style.clipPath = `path('${knobOutline(width, height, at.from, at.to, at.mix)}')`;
+    const step = knobOutline(width, height, at.from, at.to, Math.round(at.mix * 4) / 4);
+    if (step === this.lensPath) return;
+    this.lensPath = step;
+    this.lens.refresh();
+  }
+
   constructor() {
     const document = inject(DOCUMENT);
     const view = document.defaultView;
     const still = !!view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    // the blob's outline: still, or turning from shape to shape (only at rest; held, it keeps the one it had)
+    // The blob's outline: still, or turning from shape to shape, at rest and held alike (lenzi, 2026-11-26: "la forma non
+    // cambia quando dragghi"). Held, the lens's outline follows it at every frame (its clip), and its bending in four steps
+    // a turn (each step's maps made once and decoded before it is shown: a glass drawn again never flickers).
     let frame: number | null = null;
     let started = 0;
     const draw = (now: number) => {
@@ -156,7 +175,8 @@ export class LenziGlassKnob {
       if (!isBlobShape(shape)) return;
       const shapes = [shape, ...this.morph().filter((s) => s !== shape && s in BLOB_SHAPES)];
       const { width, height } = this.size();
-      if (shapes.length < 2 || still) {
+      const turning = shapes.length >= 2 && !still;
+      if (!turning) {
         this.shown = { from: shape, to: shape, mix: 0 };
       } else {
         const duration = Math.max(200, this.morphDuration());
@@ -168,36 +188,31 @@ export class LenziGlassKnob {
         this.shown = { from: shapes[i]!, to: shapes[(i + 1) % shapes.length]!, mix: turn * turn * (3 - 2 * turn) };
       }
       this.outline.set(knobOutline(width, height, this.shown.from, this.shown.to, this.shown.mix));
-      if (shapes.length >= 2 && !still && !this.held()) frame = view?.requestAnimationFrame(draw) ?? null;
+      if (this.held() && this.lensShape() === null) this.shapeLens(this.shown);
+      if (turning) frame = view?.requestAnimationFrame(draw) ?? null;
     };
     effect(() => {
-      void [this.shape(), this.morph(), this.size(), this.held()];
+      void [this.shape(), this.morph(), this.size(), this.lensShape()];
       untracked(() => {
         if (frame !== null) view?.cancelAnimationFrame(frame);
-        if (!this.held()) {
-          const now = view?.performance.now() ?? 0;
-          started = started || now;
-          // drawn now (its first outline at once), then at every frame while it turns
-          draw(now);
-        }
+        const now = view?.performance.now() ?? 0;
+        started = started || now;
+        // drawn now (its first outline at once), then at every frame while it turns
+        draw(now);
       });
     });
-    // held: the lens takes the knob's shape now (or its own), one filter for it, then grows; never its size or shape
-    // while it moves (RULES.md: a glass that moves)
+    // held: the lens takes the knob's shape now (or its own), then grows; its size never moves (RULES.md)
     effect(() => {
       const held = this.held();
       untracked(() => {
         if (!held) return;
         const lens = this.lensKind();
-        const { width, height } = this.lensSize();
-        if (isBlobShape(lens)) {
-          const now = this.lensShape() === null && this.shown ? this.shown : { from: lens, to: lens, mix: 0 };
-          this.lensPath = knobOutline(width, height, now.from, now.to, now.mix);
-        } else {
+        if (isBlobShape(lens)) this.shapeLens(this.lensShape() === null && this.shown ? this.shown : { from: lens, to: lens, mix: 0 });
+        else {
           this.lensPath = null;
+          this.glass().nativeElement.style.clipPath = '';
+          this.lens.refresh();
         }
-        this.glass().nativeElement.style.clipPath = this.lensPath ? `path('${this.lensPath}')` : '';
-        this.lens.refresh();
       });
     });
     inject(DestroyRef).onDestroy(() => frame !== null && view?.cancelAnimationFrame(frame));

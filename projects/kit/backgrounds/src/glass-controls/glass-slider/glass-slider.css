@@ -14,6 +14,10 @@
 .track {
   position: relative;
   height: 40px;
+  /* nothing of it is selected or dragged by the browser while it is (it would take the pointer away) */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
   /* Room inside it at the ends for its knob's lens (--lenzi-slider-room, half of it, written by the component): a knob
      never goes over what is beside the slider (lenzi, 2026-11-26: the glass over the "Volume" before it, "non so cosa
      succede con il testo"). The rail and the knob are placed inside the room. */

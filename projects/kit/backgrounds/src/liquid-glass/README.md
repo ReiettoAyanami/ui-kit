@@ -41,6 +41,10 @@ rimanga nascosto fino all'ultimo"). The way: kube.io, "Liquid Glass in the Brows
   away), one that is a root anyway (a mask, a clip-path, a filter, a blend: the cat's shape), a control's thumb (it holds
   no glass, and its fill lies over its glass). The layer covers the border when the border is clear; a border that
   shows, or one the glass cuts at, keeps the layer inside it.
+- **A new filter only once its pictures are decoded** (2026-11-26): until then the glass keeps the one it had, never a
+  frame bent by a picture not drawn yet (the flicker of a glass drawn again). Maps of a shape (a path) are kept, so a
+  blob knob's turning steps are made once. A dome's bending is smoothed a little (0.4 px): it magnifies, and the browser
+  takes the pixels it bends one by one.
 - **One filter per glass, made for its size**, again when it changes size or a setting (the maps are as large as it
   is), or its corners (`border-radius`, from any CSS: looked at about twice a second; lenzi, 2026-11-21, "tanti input non
   si aggiornano automaticamente").

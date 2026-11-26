@@ -100,6 +100,10 @@ export class LenziGlassSlider {
 
   protected down(event: PointerEvent): void {
     if (this.disabled() || event.button !== 0) return;
+    // no text selection and no drag of the browser's own while it is dragged (either takes the pointer away: lenzi,
+    // 2026-11-26, "quando dragghi (spesso tornando indietro) il dragging si disabilita del tutto"); the focus still comes
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).focus?.({ preventScroll: true });
     // Keep the pointer's moves while it is held (a pointer the browser does not know, a test's or a probe's, is let be).
     try {
       (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
@@ -113,7 +117,10 @@ export class LenziGlassSlider {
   }
 
   protected move(event: PointerEvent): void {
-    if (this.dragging()) this.setFrom(event.clientX);
+    if (!this.dragging()) return;
+    // let go where it could not tell (outside the window, a frame): the button is up, so is the drag
+    if (event.pointerType === 'mouse' && event.buttons === 0) return this.up();
+    this.setFrom(event.clientX);
   }
 
   protected up(): void {

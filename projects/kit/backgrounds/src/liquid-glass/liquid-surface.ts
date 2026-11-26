@@ -121,6 +121,39 @@ function wholeTiles(maps: LenziLiquidGlassMaps, document: Document): LenziGlassT
   return { map: [{ href: pictureOf(document, maps.displacement, maps.width, maps.height), x: 0, y: 0, width: maps.width, height: maps.height }], scale: maps.scale };
 }
 
+/** The maps of glass of any shape (a path), by size, optics and path: a knob's blob turns through a few of them, again and again. */
+const OUTLINES = new Map<string, LenziGlassTiles>();
+
+/**
+ * Pictures the browser has decoded already: a filter is given a new one only once it is (2026-11-26: a filter pointed at
+ * a picture not decoded yet is drawn a frame without it, bent by nothing: the flicker of a glass drawn again).
+ */
+const DECODED = new Set<string>();
+const MOST_DECODED = 512;
+
+/** Every picture decoded, then `then` (at once when they are, or when this browser cannot say). */
+function whenDecoded(document: Document, hrefs: readonly string[], then: () => void): void {
+  const View = document.defaultView?.Image;
+  const fresh = hrefs.filter((href) => !DECODED.has(href));
+  if (!fresh.length || !View || typeof View.prototype.decode !== 'function') {
+    then();
+    return;
+  }
+  void Promise.all(
+    fresh.map((href) => {
+      const picture = new View();
+      picture.src = href;
+      return picture.decode().catch(() => undefined);
+    }),
+  ).then(() => {
+    for (const href of fresh) {
+      if (DECODED.size >= MOST_DECODED) DECODED.delete(DECODED.values().next().value!);
+      DECODED.add(href);
+    }
+    then();
+  });
+}
+
 /**
  * A glass's corners (lenzi, 2026-11-26: "i border-radius qui sono impostati male. Usa la formula giusta per ogni tipo
  * arrotondazione differente"): their radii across and down, px (an ellipse's when the gaps round what it holds differ),
@@ -422,6 +455,8 @@ export class LenziLiquidSurface {
   private tinted = false;
   /** Where its bending is drawn (`glassPlace`), as the filter was drawn for it. */
   private place = '';
+  /** The filters asked for: only the last one asked is written (its pictures decoded). */
+  private writes = 0;
 
   /**
    * `layered`: the glass may hold others, so its bending goes on a layer behind what it holds (`glassPlace`); a thumb
@@ -472,9 +507,18 @@ export class LenziLiquidSurface {
     const bezel = s.dome ? Math.max(4, Math.min(width, height) / 2) : Math.min(s.bezel, Math.max(4, Math.min(width, height) / 3));
     // a dome is a circle's profile (a pill's), not the squircle's flat top: it bends evenly to its middle
     const optics = { bezel, thickness: s.thickness, ior: s.ior, surface: s.dome ? ('circle' as const) : s.surface };
-    const inside = path ? this.outline(path, width, height) : null;
-    const tiles = inside
-      ? wholeTiles(liquidGlassOutlineMaps({ width, height, inside, ...optics }), this.document)
+    const inside = path && !OUTLINES.has(`${width}x${height}|${optics.bezel}|${optics.thickness}|${optics.ior}|${optics.surface}|${s.glassViewBox}|${path}`) ? this.outline(path, width, height) : null;
+    const outlineKey = path ? `${width}x${height}|${optics.bezel}|${optics.thickness}|${optics.ior}|${optics.surface}|${s.glassViewBox}|${path}` : '';
+    const known = path ? OUTLINES.get(outlineKey) : undefined;
+    const tiles = known
+      ? known
+      : inside
+      ? (() => {
+          const made = wholeTiles(liquidGlassOutlineMaps({ width, height, inside, ...optics }), this.document);
+          if (OUTLINES.size >= MOST_PIECES) OUTLINES.delete(OUTLINES.keys().next().value!);
+          OUTLINES.set(outlineKey, made);
+          return made;
+        })()
       : slicedTiles(width, height, corner, optics, this.document) ?? sharedWholeTiles(width, height, corner, optics, this.document);
     const svg = this.svg ?? (this.document.createElementNS(SVG, 'svg') as SVGSVGElement);
     svg.setAttribute('aria-hidden', 'true');
@@ -537,12 +581,13 @@ export class LenziLiquidSurface {
     // colour. No side of its own, nothing from script: at every frame the page draws, the edge lights where the light
     // under it is. The line is the map's blue (its colour the glint, its alpha the glint squared: kube.io's). Frosted
     // glass gathers its light from its frosted copy, as far as it is frosted (one blur less for the GPU).
-    svg.innerHTML = `<filter id="${this.id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
+    const markup = `<filter id="${this.id}" x="0" y="0" width="${width}" height="${height}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse">
   <feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0, s.blur)}" result="soft"/>
   ${imagesOf(tiles.map, 'map')}
   <feColorMatrix in="map" type="matrix" values="0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0" result="glint"/>
   ${rough}
   <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
+  ${s.dome ? '<feGaussianBlur in="bent" stdDeviation="0.4" result="bent"/>' : ''}
   ${fringes}
   ${body}
   ${bright}
@@ -558,12 +603,18 @@ export class LenziLiquidSurface {
   <feComponentTransfer in="lit-line" result="highlight"><feFuncA type="linear" slope="${(shine * 2).toFixed(2)}"/></feComponentTransfer>
   <feBlend in="highlight" in2="coloured" mode="screen"/>
 </filter>`;
-    // the filter in the page before the glass points at it (pointed at first, Chromium shows nothing)
-    if (!this.svg) {
-      this.document.body.append(svg);
-      this.svg = svg;
-    }
-    this.point(place);
+    // Its pictures decoded first, then the filter, then the glass pointed at it (pointed at first, Chromium shows nothing):
+    // until then the glass keeps the filter it had, never a frame bent by a picture not drawn yet.
+    const write = ++this.writes;
+    whenDecoded(this.document, tiles.map.map((tile) => tile.href), () => {
+      if (write !== this.writes) return;
+      svg.innerHTML = markup;
+      if (!this.svg) {
+        this.document.body.append(svg);
+        this.svg = svg;
+      }
+      this.point(place);
+    });
   }
 
   /** The glass pointed at its filter: its layer (the kit's styles draw it from these variables), or itself. */
@@ -628,6 +679,8 @@ export class LenziLiquidSurface {
   }
 
   destroy(): void {
+    // a filter still waiting for its pictures is never written
+    this.writes++;
     this.svg?.remove();
     this.svg = null;
     this.unlayer();
