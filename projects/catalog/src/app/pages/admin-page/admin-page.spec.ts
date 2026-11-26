@@ -61,7 +61,7 @@ describe('AdminPage, the pages\' backgrounds', () => {
     expect(titles).not.toContain('Scene maker');
     expect(page.querySelector('.background:last-child .page-address')?.textContent).toBe(`/${EVERY_COMPONENT}`);
     expect(shown('Overview')).toEqual(['Overview', 'Overview on a phone']);
-    expect(shown('Components')).toEqual(['Home', 'Home on a phone']);
+    expect(shown('Components')).toEqual(['Overview', 'Overview on a phone']);
     expect(shown('Rules')).toEqual(['Dusk', 'None']);
     expect(shown('History')).toEqual(['None', 'As on a computer']);
   });

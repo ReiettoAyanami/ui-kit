@@ -36,30 +36,15 @@
   margin-top: 16px;
 }
 
-/* a card at rest says how the piece is written, in the middle of a faint glow of the accent; pointed at, its demo runs
-   in it (the card fills the box with its first child: the words are centred inside it) */
-.resting {
-  background: radial-gradient(80% 90% at 50% 110%, color-mix(in srgb, var(--mat-sys-primary) 22%, transparent), transparent 70%);
+/* a card shows its piece itself: its demo laid out on a screen and shrunk to the card; nothing in it takes the pointer
+   (the card's tap opens the page) */
+.thumb {
+  overflow: hidden;
 }
 
-.center {
-  display: grid;
-  place-items: center;
-  height: 100%;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
-.api {
-  font: var(--mat-sys-body-medium);
-  font-family: 'Roboto Mono', monospace;
-  color: var(--mat-sys-tertiary);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-iframe {
+.screen {
   display: block;
   border: 0;
   pointer-events: none;
+  overflow: hidden;
 }

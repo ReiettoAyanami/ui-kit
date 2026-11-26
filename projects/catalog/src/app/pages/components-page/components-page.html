@@ -23,11 +23,15 @@
       <lenzi-shelf [title]="group.category" [count]="group.total">
         @for (doc of group.docs; track doc.id) {
           <lenzi-preview-card [title]="doc.name" [lines]="[doc.summary]" (opened)="open(doc.id)" (activeChange)="point(doc.id, $event)" [lenziLit]="lit()">
-            @if (live() === doc.id) {
-              <iframe tabindex="-1" [appMiniature]="screen" [title]="doc.name + ', live'" [src]="frame(doc.id)"></iframe>
-            } @else {
-              <div class="resting"><span class="center"><code class="api">{{ doc.api }}</code></span></div>
-            }
+            <div class="thumb" appInViewMargin="300px" (appInView)="seen(doc, $event)">
+              @if (near().has(doc.id) && framed(doc.id)) {
+                <iframe tabindex="-1" class="screen" aria-hidden="true" [appMiniature]="screen" [title]="doc.name" [src]="frame(doc.id)"></iframe>
+              } @else if (near().has(doc.id) && demos().get(doc.id); as demo) {
+                <div class="screen" inert aria-hidden="true" [appMiniature]="screen">
+                  <ng-container *ngComponentOutlet="demo; inputs: inputsOf(doc)" />
+                </div>
+              }
+            </div>
           </lenzi-preview-card>
         }
       </lenzi-shelf>

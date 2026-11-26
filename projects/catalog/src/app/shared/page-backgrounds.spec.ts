@@ -46,13 +46,14 @@ describe('PageBackgrounds', () => {
 
   afterEach(() => server.verify());
 
-  it("draws nothing until it knows; then the catalog's own where the admin chose none: the overview's blobs, the home's on the components", async () => {
+  it("draws nothing until it knows; then the catalog's own where the admin chose none: the overview's blobs, on the components too", async () => {
     expect(backgrounds.sceneFor('', false)).toBeNull();
     server.expectOne({ method: 'GET', url: 'api/backgrounds' }).flush({ pages: {} });
     await settle();
     expect(backgrounds.sceneFor('', false)).toBe(OVERVIEW_SCENE);
     expect(backgrounds.sceneFor('', true)).toBe(OVERVIEW_PHONE_SCENE);
-    expect(backgrounds.sceneFor('components', false)).toBe(HOME_SCENE);
+    expect(backgrounds.sceneFor('components', false)).toBe(OVERVIEW_SCENE);
+    expect(backgrounds.sceneFor('components', true)).toBe(OVERVIEW_PHONE_SCENE);
     expect(backgrounds.sceneFor('rules', false)).toBeNull();
     expect(backgrounds.sceneFor(null, false)).toBeNull();
     expect(backgrounds.of('rules')).toEqual({ computer: null, phone: 'same' });
@@ -89,7 +90,7 @@ describe('PageBackgrounds', () => {
     expect(backgrounds.sceneFor('', false)).toBe(OVERVIEW_SCENE);
     expect(backgrounds.sceneFor('', true)).toBe(OVERVIEW_PHONE_SCENE);
     expect(backgrounds.missing('')).toEqual({ computer: true, phone: false });
-    expect(backgrounds.sceneFor('components', false)).toBe(HOME_SCENE);
+    expect(backgrounds.sceneFor('components', false)).toBe(OVERVIEW_SCENE);
   });
 
   it("without a server: the catalog's own", async () => {

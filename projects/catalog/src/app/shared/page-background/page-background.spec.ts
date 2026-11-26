@@ -52,14 +52,15 @@ describe('PageBackground', () => {
     return { fixture, page, go, phone };
   }
 
-  it("the overview has its blobs (no fleets), the components the home's whole scene, a phone the lighter one; a page without one, nothing", async () => {
+  it("the overview has its blobs (no fleets), the components the same (2026-11-26), a phone the lighter one; a page without one, nothing", async () => {
     const { page, go, phone } = await open();
     phone.set(false);
     await go('/');
     expect(page.querySelector('lenzi-blob-flock-background')).toBeNull();
     expect(page.querySelector('lenzi-blob-background')).not.toBeNull();
     await go('/components');
-    expect(page.querySelector('lenzi-blob-flock-background')).not.toBeNull();
+    expect(page.querySelector('lenzi-blob-flock-background')).toBeNull();
+    expect(page.querySelector('lenzi-blob-background')).not.toBeNull();
 
     phone.set(true);
     await go('/components');
