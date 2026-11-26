@@ -60,7 +60,7 @@ describe('AdminPage, the pages\' backgrounds', () => {
     expect(titles).toContain("A component's page");
     expect(titles).not.toContain('Scene maker');
     expect(page.querySelector('.background:last-child .page-address')?.textContent).toBe(`/${EVERY_COMPONENT}`);
-    expect(shown('Overview')).toEqual(['Home', 'Home on a phone']);
+    expect(shown('Overview')).toEqual(['Overview', 'Overview on a phone']);
     expect(shown('Components')).toEqual(['Home', 'Home on a phone']);
     expect(shown('Rules')).toEqual(['Dusk', 'None']);
     expect(shown('History')).toEqual(['None', 'As on a computer']);
@@ -72,7 +72,7 @@ describe('AdminPage, the pages\' backgrounds', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const options = [...document.querySelectorAll<HTMLElement>('mat-option')];
-    expect(options.map((option) => option.textContent?.trim())).toEqual(['None', 'Home', 'Home on a phone', 'Dusk']);
+    expect(options.map((option) => option.textContent?.trim())).toEqual(['None', 'Home', 'Home on a phone', 'Overview', 'Overview on a phone', 'Dusk']);
     options.find((option) => option.textContent?.trim() === 'Dusk')!.click();
     fixture.detectChanges();
     const put = server.expectOne({ method: 'PUT', url: 'api/backgrounds' });

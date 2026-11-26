@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { LenziScene } from '@lenzi/ui-kit/backgrounds';
 
-import { HOME_PHONE_SCENE, HOME_SCENE } from '../scenes';
+import { HOME_PHONE_SCENE, HOME_SCENE, OVERVIEW_PHONE_SCENE, OVERVIEW_SCENE } from '../scenes';
 import { EVERY_COMPONENT, PageBackgrounds, backgroundKey, choiceOf, choiceValue } from './page-backgrounds';
 import { SavedScene } from './saved-scenes';
 
@@ -46,12 +46,12 @@ describe('PageBackgrounds', () => {
 
   afterEach(() => server.verify());
 
-  it('draws nothing until it knows; then the catalog\'s own where the admin chose none: the home\'s on the overview and the components', async () => {
+  it("draws nothing until it knows; then the catalog's own where the admin chose none: the overview's blobs, the home's on the components", async () => {
     expect(backgrounds.sceneFor('', false)).toBeNull();
     server.expectOne({ method: 'GET', url: 'api/backgrounds' }).flush({ pages: {} });
     await settle();
-    expect(backgrounds.sceneFor('', false)).toBe(HOME_SCENE);
-    expect(backgrounds.sceneFor('', true)).toBe(HOME_PHONE_SCENE);
+    expect(backgrounds.sceneFor('', false)).toBe(OVERVIEW_SCENE);
+    expect(backgrounds.sceneFor('', true)).toBe(OVERVIEW_PHONE_SCENE);
     expect(backgrounds.sceneFor('components', false)).toBe(HOME_SCENE);
     expect(backgrounds.sceneFor('rules', false)).toBeNull();
     expect(backgrounds.sceneFor(null, false)).toBeNull();
@@ -86,8 +86,8 @@ describe('PageBackgrounds', () => {
       },
     });
     await settle();
-    expect(backgrounds.sceneFor('', false)).toBe(HOME_SCENE);
-    expect(backgrounds.sceneFor('', true)).toBe(HOME_PHONE_SCENE);
+    expect(backgrounds.sceneFor('', false)).toBe(OVERVIEW_SCENE);
+    expect(backgrounds.sceneFor('', true)).toBe(OVERVIEW_PHONE_SCENE);
     expect(backgrounds.missing('')).toEqual({ computer: true, phone: false });
     expect(backgrounds.sceneFor('components', false)).toBe(HOME_SCENE);
   });
@@ -95,7 +95,7 @@ describe('PageBackgrounds', () => {
   it("without a server: the catalog's own", async () => {
     server.expectOne('api/backgrounds').flush('no', { status: 502, statusText: 'Bad Gateway' });
     await settle();
-    expect(backgrounds.sceneFor('', false)).toBe(HOME_SCENE);
+    expect(backgrounds.sceneFor('', false)).toBe(OVERVIEW_SCENE);
   });
 
   it('a choice is drawn at once, with the scene of the gallery it names, then saved; taken back if refused', async () => {
@@ -116,7 +116,7 @@ describe('PageBackgrounds', () => {
     expect(backgrounds.sceneFor('', false)).toBeNull();
     server.expectOne({ method: 'PUT', url: 'api/backgrounds' }).flush({ title: 'Sign in first' }, { status: 401, statusText: 'Unauthorized' });
     expect(failed).toBe(true);
-    expect(backgrounds.sceneFor('', false)).toBe(HOME_SCENE);
+    expect(backgrounds.sceneFor('', false)).toBe(OVERVIEW_SCENE);
   });
 
   it("lists the pages that may have one: the site map's but the scenes' own, and every component's page as one", async () => {

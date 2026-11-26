@@ -46,6 +46,11 @@ export interface BlobSettings {
   /** Each blob that never leaves its place (lenzi, 2026-11-15: "an option to make a blob unmovable"), in order. */
   fixed?: readonly (boolean | null | undefined)[];
   /**
+   * Each blob's own wandering, in order: how far it floats from its place, a share of the space; none: `travel`'s
+   * (lenzi, 2026-11-26: "I blob devono stare dietro, ma almeno hoverare non completamente statici").
+   */
+  hovers?: readonly (number | null | undefined)[];
+  /**
    * Each blob's weight, in order (1 when not said): the heavier, the slower it turns ("a weigh parameter so that it
    * spins more/less"); the backgrounds also make it sink and a current carry it less (blobSink, blobCarried).
    */
@@ -79,6 +84,11 @@ export interface LenziBlobSpec {
    */
   blur?: number;
   fixed?: boolean;
+  /**
+   * How far it floats from its place, a share of the space (0.03: it hovers where it is; 0: it stays still but can be
+   * thrown); not said, as far as the background lets every blob wander (lenzi, 2026-11-26: "I blob devono stare dietro, ma almeno hoverare non completamente statici").
+   */
+  hover?: number;
   weight?: number;
   /** Glass that shines too, in its colour (a solid thing that shines is a lamp: `material: 'lamp'`). */
   emitting?: boolean;
@@ -106,13 +116,14 @@ export function paletteOf(colours: readonly string[] | undefined): string[] | nu
 }
 
 /** What the blob field takes from a list of blobs. */
-export function specSettings(specs: readonly LenziBlobSpec[]): Pick<BlobSettings, 'count' | 'sizes' | 'homes' | 'ownShapes' | 'fixed' | 'weights'> {
+export function specSettings(specs: readonly LenziBlobSpec[]): Pick<BlobSettings, 'count' | 'sizes' | 'homes' | 'ownShapes' | 'fixed' | 'hovers' | 'weights'> {
   return {
     count: specs.length,
     sizes: specs.map((spec) => spec.size),
     homes: specs.map((spec) => (typeof spec.x === 'number' && typeof spec.y === 'number' ? { x: spec.x, y: spec.y } : null)),
     ownShapes: specs.map((spec) => (spec.shape && spec.shape in BLOB_SHAPES ? spec.shape : null)),
     fixed: specs.map((spec) => spec.fixed === true),
+    hovers: specs.map((spec) => (typeof spec.hover === 'number' && spec.hover >= 0 ? Math.min(0.5, spec.hover) : null)),
     weights: specs.map((spec) => (typeof spec.weight === 'number' ? spec.weight : null)),
   };
 }
@@ -182,7 +193,7 @@ export function blobsAt(settings: BlobSettings, time: number, width: number, hei
     const homeX = place ? place.x : seededX;
     const homeY = place ? place.y : seededY;
     // a blob made fast does not wander
-    const reach = settings.fixed?.[i] ? 0 : settings.travel * 0.4;
+    const reach = settings.fixed?.[i] ? 0 : (settings.hovers?.[i] ?? settings.travel * 0.4);
     // two slow loops on each axis, never in step: a path that does not repeat for a long time
     const loop = (amplitude: number) => {
       const a = Math.sin(time * (0.11 + 0.13 * random()) + random() * 6.283);

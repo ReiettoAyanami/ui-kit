@@ -6,7 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 
 import { LenziPhone } from '@lenzi/ui-kit';
 
-import { HOME_PHONE_SCENE, HOME_SCENE } from '../scenes';
+import { OVERVIEW_PHONE_SCENE, OVERVIEW_SCENE } from '../scenes';
 import { CurrentBackground } from './current-background';
 
 @Component({ template: '' })
@@ -32,9 +32,10 @@ describe('CurrentBackground', () => {
 
     await router.navigateByUrl('/');
     phone.set(false);
-    expect(current.scene()).toBe(HOME_SCENE);
+    // the overview's own: its blobs that hover (2026-11-26)
+    expect(current.scene()).toBe(OVERVIEW_SCENE);
     phone.set(true);
-    expect(current.scene()).toBe(HOME_PHONE_SCENE);
+    expect(current.scene()).toBe(OVERVIEW_PHONE_SCENE);
     await router.navigateByUrl('/rules');
     expect(current.scene()).toBeNull();
   });

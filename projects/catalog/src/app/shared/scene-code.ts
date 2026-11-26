@@ -84,6 +84,7 @@ export function cleanScene(raw: unknown): LenziScene | null {
       ...(BLOB_SHAPE_NAMES.includes(blob['shape'] as BlobShapeName) ? { shape: blob['shape'] as BlobShapeName } : {}),
       ...lookOf(blob, blob['material']),
       ...(blob['fixed'] === true ? { fixed: true } : {}),
+      ...(isNumber(blob['hover']) ? { hover: clamp(blob['hover'], [0, 0.5]) } : {}),
       ...(isNumber(blob['weight']) ? { weight: clamp(blob['weight'], SCENE_WEIGHTS) } : {}),
       ...(blob['obstacle'] === true ? { obstacle: true } : {}),
     }));

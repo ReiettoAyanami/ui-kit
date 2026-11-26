@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DOCUMENT, DestroyRef, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,15 +12,22 @@ import {
   LenziGlassSegmented,
   LenziGlassSlider,
   LenziGlassSwitch,
+  LenziSceneBackground,
 } from '@lenzi/ui-kit/backgrounds';
 import { LenziCat } from '@lenzi/ui-kit/svgs';
 
 import { CATEGORIES, DOCS } from '../../registry';
+import { HOME_PHONE_SCENE, HOME_SCENE } from '../../scenes';
 import { KitSave, KitServer } from '../../shared/kit-server';
 import { PublicPages } from '../../shared/public-pages';
 
 /** The command that adds the kit to an app. */
 const COMMAND = 'ng add @lenzi/ui-kit';
+/**
+ * The home's scene in its tile is drawn as if behind a window this tall at its shorter side, px, then shrunk to the tile:
+ * its blobs, its glow and its boids look as they did behind the home (drawn at the tile's size they washed it out).
+ */
+const SCENE_SIDE = 640;
 /** How many saves the tile of changes shows. */
 const LATEST = 3;
 const WHEN = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
@@ -45,6 +52,7 @@ const WHEN = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }
     LenziGlassSegmented,
     LenziGlassSlider,
     LenziGlassSwitch,
+    LenziSceneBackground,
     LenziStatusMessage,
     MatButtonModule,
     MatIconModule,
@@ -100,6 +108,13 @@ export class OverviewPage {
     void this.router.navigate(['/components'], { queryParams: { q: text.trim() || null } });
   }
 
+  /** The home's scene, in the Scenes tile: alive, the lighter one on a phone. */
+  protected readonly homeScene = HOME_SCENE;
+  protected readonly homePhoneScene = HOME_PHONE_SCENE;
+  /** Where it is drawn: the tile's size at a window's scale (SCENE_SIDE), and how much it is shrunk to fit the tile. */
+  protected readonly stage = signal({ width: SCENE_SIDE, height: SCENE_SIDE, scale: 1 });
+  private readonly scenesTile = viewChild('scenesTile', { read: ElementRef });
+
   /** The colours the variables' tile shows: the theme's own. */
   protected readonly swatches = ['--mat-sys-primary', '--mat-sys-primary-container', '--mat-sys-tertiary', '--mat-sys-surface-container-highest', '--mat-sys-error'];
 
@@ -109,12 +124,28 @@ export class OverviewPage {
   protected readonly catSize = computed(() => (this.phone() ? 170 : this.wide() ? 230 : 160));
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    // the scene's stage follows its tile's size
+    afterNextRender(() => {
+      const tile = this.scenesTile()?.nativeElement as HTMLElement | undefined;
+      if (!tile || typeof ResizeObserver !== 'function') return;
+      const fit = () => {
+        const width = tile.clientWidth;
+        const height = tile.clientHeight;
+        const scale = Math.min(1, Math.max(0.1, Math.min(width, height) / SCENE_SIDE));
+        this.stage.set({ width: Math.ceil(width / scale), height: Math.ceil(height / scale), scale });
+      };
+      fit();
+      const watch = new ResizeObserver(fit);
+      watch.observe(tile);
+      destroyRef.onDestroy(() => watch.disconnect());
+    });
     const query = inject(DOCUMENT).defaultView?.matchMedia?.('(min-width: 1100px)');
     if (!query) return;
     const fit = () => this.wide.set(query.matches);
     fit();
     query.addEventListener('change', fit);
-    inject(DestroyRef).onDestroy(() => query.removeEventListener('change', fit));
+    destroyRef.onDestroy(() => query.removeEventListener('change', fit));
   }
 
   // What was saved last into the kit (the History page's saves), the newest first: read only while the History page is

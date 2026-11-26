@@ -1,4 +1,4 @@
-import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobHome, blobsAt, blobsBump } from './blob-field';
+import { DEFAULT_BLOBS, MAX_BLOBS, blobEdge, blobHome, blobsAt, blobsBump, specSettings } from './blob-field';
 import { BLOB_SHAPES } from './shapes';
 
 describe('the blobs’ edge, for the flock', () => {
@@ -57,6 +57,22 @@ describe('where the blobs are', () => {
       expect(blob.radius).toBeGreaterThan(94);
       expect(blob.radius).toBeLessThan(106);
     }
+  });
+
+  it('a blob that hovers floats a little round its place, no farther; it moves, unlike a fixed one (2026-11-26)', () => {
+    // lenzi, 2026-11-26: "I blob devono stare dietro, ma almeno hoverare non completamente statici"
+    const specs = [
+      { material: 'lamp' as const, size: 0.1, x: 0.3, y: 0.4, hover: 0.03 },
+      { material: 'glass' as const, size: 0.1, x: 0.7, y: 0.6, fixed: true },
+    ];
+    const settings = { ...DEFAULT_BLOBS, ...specSettings(specs) };
+    const places = [0, 7, 30, 300].map((time) => blobsAt(settings, time, 1000, 800));
+    for (const [hovering, still] of places) {
+      expect(Math.abs(hovering!.x - 300)).toBeLessThanOrEqual(30.5);
+      expect(Math.abs(hovering!.y - 320)).toBeLessThanOrEqual(24.5);
+      expect([still!.x, still!.y]).toEqual([700, 480]);
+    }
+    expect(new Set(places.map(([hovering]) => Math.round(hovering!.x))).size).toBeGreaterThan(1);
   });
 
   it('they stay around the space as they drift', () => {

@@ -39,6 +39,8 @@ contenente boidi, blob, boidi-blob").
   over it (lenzi, 2026-11-15: "under solid blobs you can see the boids still"). Glass that shines covers nothing, and
   its light has the glass's own shape: it melts into glass, never into a lamp of its level ("solid and glass
   interacting").
+- **A blob that hovers where it is** (`hover`, a share of the space: how far it floats from its place; 0.03 floats,
+  `fixed` stays put; lenzi, 2026-11-26: "I blob devono stare dietro, ma almeno hoverare non completamente statici").
 - **A blob that stays put** (`fixed`: it does not wander, it cannot be thrown) and **its weight** (`weight`, 0.25 to
   4: the heavier, the slower it turns; 2026-11-15: "an option to make a blob unmovable and a weigh parameter so
   that it spins more/less"). **The heavier, the more it sinks and the less a current carries it** (2026-11-17:
@@ -100,8 +102,10 @@ contenente boidi, blob, boidi-blob").
 
 ## Rules
 
-- One scene a page, like any background: behind it (`fill="page"`) or behind a box (`fill="box"` in a
-  `.lenzi-backdrop`).
+- One scene behind a page (`fill="page"`); another may fill a box of it (`fill="box"` in a `.lenzi-backdrop`): the
+  catalog's overview has its blobs behind and the home's scene in a tile (lenzi, 2026-11-26: "al posto di metterle
+  come sfondo vorrei applicarlo ad una delle schede della overview"). A scene in a small box looks as behind a window
+  when drawn at a window's size and shrunk (`scale`) to the box.
 - Surfaces over it are `lenziLit` or solid. A page over it is `<main lenziGlassPage>` (the glass pane behind its
   elements); behind the page, the scene tells the page itself (`lenziOverBackground()`).
 - An app keeps its scenes as data (a constant, a file, the server), never as a template full of attributes.
@@ -121,7 +125,7 @@ contenente boidi, blob, boidi-blob").
 `LenziScene`: `{ name?, blobs: LenziBlobSpec[], fleets: { kind: 'boid' | 'blob-boid', material?, emitting?, colour?,
 colours?, tint?, shapes?, count, colonies?, size?, sizeVariety?, maxSpeed?, minSpeed?, separation?, alignment?, cohesion?,
 wander?, follow?, x?, y?, layer? }[], follow?, throwable?, space?, glass?, liquid? }`; `LenziBlobSpec`: `{ material, size, emitting?, colour?, colours?,
-tint?, transparency?, blur?, shape?, x?, y?, layer?, fixed?, weight?, obstacle? }`; a glass fleet takes `tint?`, `transparency?`,
+tint?, transparency?, blur?, shape?, x?, y?, layer?, fixed?, hover?, weight?, obstacle? }`; a glass fleet takes `tint?`, `transparency?`,
 `blur?` too.
 
 ## Example

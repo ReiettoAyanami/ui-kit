@@ -1,5 +1,6 @@
-<!-- The overview as a bento of glass tiles over the scene (lenzi, 2026-11-26: proposal A, "vai con la a"): the size of a
-     tile says how much it matters; the tiles are the glass, so the page has no pane behind them. -->
+<!-- The overview as a bento of glass tiles (lenzi, 2026-11-26: proposal A, "vai con la a"): the size of a tile says how
+     much it matters; the tiles are the glass, so the page has no pane behind them. Behind them its blobs, hovering where
+     they are (OVERVIEW_SCENE, the page's background); the home's scene moves inside the Scenes tile. -->
 <main class="page" lenziGlassPage [pane]="false">
   <lenzi-bento>
     <lenzi-bento-tile class="hero" [span]="7">
@@ -15,10 +16,28 @@
       </div>
     </lenzi-bento-tile>
 
-    <a lenziBentoTile class="link" [span]="5" routerLink="/scenes">
-      <span class="head"><mat-icon class="icon" aria-hidden="true">landscape</mat-icon><span class="name">Scenes</span></span>
-      <span class="words">Glowing backgrounds as data. The one behind this page is one: make your own in the maker.</span>
-    </a>
+    <!-- The home's scene, alive, filling its tile, the words over it (lenzi, 2026-11-26: "al posto di metterle come sfondo
+         vorrei applicarlo ad una delle schede della overview"; "dovrebbe essere l'intera scheda ... e dovresti mettere le
+         scritte sopra"); drawn at a window's size and shrunk to the tile, so it looks as it did behind the home. Loaded
+         once the tile is in sight. -->
+    <lenzi-bento-tile #scenesTile class="scenes lenzi-backdrop" [span]="5">
+      <div class="stage lenzi-backdrop" aria-hidden="true" [style.width.px]="stage().width" [style.height.px]="stage().height" [style.scale]="stage().scale">
+        @defer (on viewport) {
+          <lenzi-scene [scene]="homeScene" [phoneScene]="homePhoneScene" fill="box" />
+        } @placeholder {
+          <div class="scene-waiting"></div>
+        }
+      </div>
+      <div class="shade" aria-hidden="true"></div>
+      <div class="head between over">
+        <span class="head"><mat-icon class="icon" aria-hidden="true">landscape</mat-icon><span class="name">Scenes</span></span>
+        <a mat-button routerLink="/scenes">Every scene</a>
+      </div>
+      <div class="foot over">
+        <span class="words">Glowing backgrounds as data: blobs, boids and blob-boids.</span>
+        <a mat-button routerLink="/scenes/maker">Make one</a>
+      </div>
+    </lenzi-bento-tile>
 
     <lenzi-bento-tile class="components" [span]="6" [rows]="2">
       <div class="head between">

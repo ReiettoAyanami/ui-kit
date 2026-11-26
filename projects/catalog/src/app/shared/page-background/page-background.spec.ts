@@ -29,6 +29,7 @@ describe('PageBackground', () => {
         provideHttpClientTesting(),
         provideRouter([
           { path: '', component: Empty },
+          { path: 'components', component: Empty },
           { path: 'rules', component: Empty },
           { path: 'components/:id', component: Empty },
           { path: 'scenes/maker', component: Empty },
@@ -51,14 +52,17 @@ describe('PageBackground', () => {
     return { fixture, page, go, phone };
   }
 
-  it("the overview has the home's whole scene, a phone the lighter one (only blobs); a page without one, nothing", async () => {
+  it("the overview has its blobs (no fleets), the components the home's whole scene, a phone the lighter one; a page without one, nothing", async () => {
     const { page, go, phone } = await open();
     phone.set(false);
     await go('/');
+    expect(page.querySelector('lenzi-blob-flock-background')).toBeNull();
+    expect(page.querySelector('lenzi-blob-background')).not.toBeNull();
+    await go('/components');
     expect(page.querySelector('lenzi-blob-flock-background')).not.toBeNull();
 
     phone.set(true);
-    await go('/');
+    await go('/components');
     expect(page.querySelector('lenzi-blob-flock-background')).toBeNull();
     expect(page.querySelector('lenzi-blob-background')).not.toBeNull();
 

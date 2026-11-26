@@ -38,14 +38,17 @@ export const EVERY_COMPONENT = 'components/*';
 const SCENE_PAGES: ReadonlySet<string> = new Set(['scenes/maker', 'scene']);
 
 const HOME: PageBackground = { computer: { code: 'home' }, phone: { code: 'home-phone' } };
+const OVERVIEW: PageBackground = { computer: { code: 'overview' }, phone: { code: 'overview-phone' } };
 const NONE: PageBackground = { computer: null, phone: 'same' };
 
 /**
- * The catalog's own background, where the admin did not choose one: the home's scene behind the overview and the
+ * The catalog's own background, where the admin did not choose one: behind the overview its blobs that stay put, of
+ * three materials, the glass liquid (lenzi, 2026-11-26: the home's scene moves inside one of its tiles instead: "al
+ * posto di metterle come sfondo vorrei applicarlo ad una delle schede della overview"); the home's scene behind the
  * components (lenzi, 2026-11-14: "put the same scene that there's on the overview in the background of the
- * components"), the lighter one on a phone; nothing behind the rest.
+ * components"), the lighter ones on a phone; nothing behind the rest.
  */
-export const OWN_BACKGROUNDS: Readonly<Record<string, PageBackground>> = { '': HOME, components: HOME };
+export const OWN_BACKGROUNDS: Readonly<Record<string, PageBackground>> = { '': OVERVIEW, components: HOME };
 
 /** The page whose background an address has: a component's is every component's; a frame or a scene's, none. */
 export function backgroundKey(url: string): string | null {

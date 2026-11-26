@@ -90,6 +90,54 @@
   color: var(--mat-sys-primary);
 }
 
+/* the scenes: the home's scene fills the tile, drawn at a window's size (.stage) and shrunk to it; a shade at the top
+   and the bottom so the words over it read */
+.scenes {
+  justify-content: space-between;
+  min-height: 260px;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.scene-waiting {
+  position: absolute;
+  inset: 0;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    color-mix(in srgb, var(--mat-sys-surface) 72%, transparent),
+    transparent 34%,
+    transparent 58%,
+    color-mix(in srgb, var(--mat-sys-surface) 82%, transparent)
+  );
+  pointer-events: none;
+}
+
+.over {
+  position: relative;
+  z-index: 1;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.foot .words {
+  color: var(--mat-sys-on-surface);
+}
+
 /* the components: their numbers, then the kit's controls, live */
 .components {
   gap: 16px;
@@ -126,7 +174,7 @@
 /* the cat in its tile: low in it, partly below its edge, its name and words over it */
 .cat-tile {
   overflow: hidden;
-  min-height: 240px;
+  min-height: 200px;
 }
 
 .cat-tile > .name,
