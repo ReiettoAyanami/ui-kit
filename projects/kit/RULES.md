@@ -86,7 +86,8 @@ the rule says what, the variable says how much.
     livelli"): its bending is drawn on a layer behind what it holds, so a glass inside it sees through it. **Nothing that
     holds glass has a mask, a filter, an opacity under 1 or a blend** (each makes it the root of the backdrop of the glass
     in it, which then bends only what that holds: in Chromium, a Backdrop Root); a shelf of glass is cut at its edges
-    instead of fading.
+    instead of fading. **Nor an animation of its opacity that keeps filling** (`both`, `forwards`): over, it is still an
+    animation of its opacity, and a root (2026-11-26: the showcase's slide, `backwards` now).
   - **A page of tiles has no pane** (`lenziGlassPage [pane]="false"` with a `LenziBento`): the tiles are the glass.
   - **Its edge is lit by what is under it** (lenzi, 2026-11-26: "i bordi ancora non sono dinamici alle luci, sono tutti
     scattanti e la direzione della luce deve cambiare rispetto a quello che sta sotto, no il mouse o roba che ti
@@ -108,13 +109,21 @@ the rule says what, the variable says how much.
     its edge's line lit all round (`lightBase` 0.45), so it shows on something this small
     (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc.").
     `LenziGlassList`: the chosen entry of a list under a lens of glass, milky white and violet (lenzi, 2026-11-26).
+  - **Knobs are thin, and pieces of their own** (`LenziGlassKnob`; lenzi, 2026-11-26: "i pomelli più fini,
+    leggermente più larghi della barra che hanno sopra, stessa lunghezza, magari leggermente più corti, che si espande
+    gradualmente diventando la lente leggermente più grande del pomello magari 25-50%"; "rendi il pomello la sua entità
+    propria"): a slider's capsule 32 × 14 over its 8 px rail; held, it grows gradually into a lens 1.25 to 1.5 times it
+    (1.35), never more; any shape, a blob's too, which may turn from shape to shape at rest.
   - **Every thumb is a spring** (lenzi, 2026-11-26: "anche le barre di scorrimento devono avere il comportamento a
-    molla"): dragged past an end, it follows less and less, a rubber band (at most a little over half of itself:
-    `OVERSHOOT` for the switch, `SLIDER_OVERSHOOT` for the slider), the value staying at the end; let go, it springs
+    molla"): dragged past an end, it follows less and less, a rubber band (`OVERSHOOT` for the switch, a little over
+    half of itself; `SLIDER_OVERSHOOT` for the slider, 0.4 of its glass), the value staying at the end; let go, it springs
     back, a little past, then home. The switch's and the slider's thumbs alike, and any thumb the kit adds.
-  - **Every pill is a dome** (lenzi, 2026-11-26: "le pillole così voglio che siano più rotonde sopra come una pillola
-    vera, senza che si tagli a metà"): a thumb's or a capsule's glass is curved to its middle (`dome`, a circle's
-    profile), no flat middle where what is behind shows cut in two.
+  - **Every thumb is a dome** (lenzi, 2026-11-26: "le pillole così voglio che siano più rotonde sopra come una pillola
+    vera, senza che si tagli a metà"): a thumb's glass is curved to its middle (`dome`, a circle's profile), no flat
+    middle where what is behind shows cut in two. **But a capsule that slides over words keeps a flat middle**
+    (`CAPSULE_SETTINGS`: the segmented control's, the tab bar's; lenzi, 2026-11-26: "non so cosa succede con il testo":
+    a dome magnifies all that is under it, the words came out large and doubled), and **a thumb never goes over the
+    words beside its control** (the slider has room at its ends for its glass).
   - **What a moving glass must never do** (lenzi, 2026-11-26, the glass list: "ha gli stessi primi problemi degli altri
     selettori, come vedi si taglia e soprattutto fa degli sfarfallii strani prima di arrivare"):
     - **never change size while it moves**: its filter is made for its size, so a size that moves makes a new filter at

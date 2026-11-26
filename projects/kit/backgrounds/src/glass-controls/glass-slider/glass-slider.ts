@@ -1,6 +1,6 @@
-import { Component, ElementRef, booleanAttribute, computed, input, model, numberAttribute, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, booleanAttribute, computed, contentChild, effect, input, model, numberAttribute, signal, viewChild } from '@angular/core';
 
-import { LENS_BENDING, LENS_SETTINGS, glassLens } from '../lens';
+import { LenziGlassKnob, LenziKnobShape } from '../glass-knob/glass-knob';
 
 /** The wave's line, px. */
 const WAVE_STROKE = 4;
@@ -13,15 +13,11 @@ const SETTLE = 260;
  * width; let go, it springs back to the end (lenzi, 2026-11-26: "anche le barre di scorrimento devono avere il
  * comportamento a molla", as the switch's thumb).
  */
-export const SLIDER_OVERSHOOT = 0.6;
+export const SLIDER_OVERSHOOT = 0.4;
 
-/** A thumb's shape: a lying capsule (Apple's), a circle, or an upright bar (Android's). */
-export type LenziSliderThumb = 'capsule' | 'circle' | 'bar';
+/** A thumb's shape: a lying capsule (Apple's), a circle, an upright bar (Android's), or a blob's (`LenziKnobShape`). */
+export type LenziSliderThumb = LenziKnobShape;
 
-/** kube.io's slider's glass: a convex bezel, specular 0.4 and 7, no blur; thicker (30, kube.io's 18: lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc."). */
-const SLIDER_GLASS = { ...LENS_SETTINGS, surface: 'squircle' as const, bezel: 12, thickness: 30, blur: 0, specularOpacity: 0.4, specularSaturation: 7 };
-/** The thumb at rest: milky glass of the same optics (2026-11-26: it was solid white, the glass showed only while dragged). */
-const KNOB_GLASS = { ...SLIDER_GLASS, bezel: 8, thickness: 20 };
 
 /**
  * A slider the way Apple's is, built as kube.io's (lenzi, 2026-11-25: "implementa gli slider ... nel kit come quelli di
@@ -34,7 +30,7 @@ const KNOB_GLASS = { ...SLIDER_GLASS, bezel: 8, thickness: 20 };
  */
 @Component({
   selector: 'lenzi-glass-slider',
-  imports: [],
+  imports: [LenziGlassKnob],
   templateUrl: './glass-slider.html',
   styleUrl: './glass-slider.css',
 })
@@ -84,14 +80,22 @@ export class LenziGlassSlider {
     return span > 0 ? Math.min(1, Math.max(0, (this.value() - this.min()) / span)) : 0;
   });
 
-  private readonly rail = viewChild.required<ElementRef<HTMLElement>>('rail');
-  private readonly glass = viewChild.required<ElementRef<HTMLElement>>('glass');
-  private readonly knob = viewChild.required<ElementRef<HTMLElement>>('knob');
+  /** The rail itself (inside the track's room for its thumbs): where the values lie. */
+  private readonly line = viewChild.required<ElementRef<HTMLElement>>('line');
+  /** The knob the page gives (`<lenzi-glass-knob>` as its content), or its own. */
+  private readonly given = contentChild(LenziGlassKnob);
+  private readonly own = viewChild(LenziGlassKnob);
+  protected readonly hasKnob = computed(() => !!this.given());
+  private readonly knob = computed(() => this.given() ?? this.own() ?? null);
+  /** Room at its ends for its knob's lens, px: half of it. */
+  protected readonly room = computed(() => (this.knob()?.lensSize().width ?? 0) / 2);
+  protected readonly focused = signal(false);
   private settle: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    glassLens(() => this.glass().nativeElement, SLIDER_GLASS, LENS_BENDING.held);
-    glassLens(() => this.knob().nativeElement, KNOB_GLASS, LENS_BENDING.rest);
+    // its knob is held while it is active (dragged, and a moment after), and shows the focus ring with the slider's
+    effect(() => this.knob()?.held.set(this.active()));
+    effect(() => this.knob()?.focused.set(this.focused()));
   }
 
   protected down(event: PointerEvent): void {
@@ -140,11 +144,11 @@ export class LenziGlassSlider {
 
   /** The value at a point of the screen; past an end, the value stays at it and the thumb stretches (a rubber band). */
   private setFrom(x: number): void {
-    const box = this.rail().nativeElement.getBoundingClientRect();
+    const box = this.line().nativeElement.getBoundingClientRect();
     const fraction = box.width > 0 ? (x - box.left) / box.width : 0;
     this.set(this.min() + fraction * (this.max() - this.min()));
     const past = (fraction < 0 ? fraction : fraction > 1 ? fraction - 1 : 0) * box.width;
-    const most = Math.max(1, (this.glass().nativeElement.offsetWidth || 40) * SLIDER_OVERSHOOT);
+    const most = Math.max(1, (this.knob()?.lensSize().width || 40) * SLIDER_OVERSHOOT);
     this.over.set(Math.sign(past) * most * (1 - Math.exp(-Math.abs(past) / most)));
   }
 

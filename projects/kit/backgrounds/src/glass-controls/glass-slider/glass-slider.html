@@ -6,9 +6,9 @@
   [class.active]="active()"
   [class.dragging]="dragging()"
   [class.disabled]="disabled()"
-  [class]="'thumb-' + thumb() + ' lens-' + lens()"
   [style.--lenzi-slider-at]="fraction()"
   [style.--lenzi-slider-over.px]="over()"
+  [style.--lenzi-slider-room.px]="room()"
   [attr.aria-label]="label()"
   [attr.aria-valuemin]="min()"
   [attr.aria-valuemax]="max()"
@@ -20,11 +20,14 @@
   (pointerup)="up()"
   (pointercancel)="up()"
   (keydown)="key($event)"
+  (focus)="focused.set(true)"
+  (blur)="focused.set(false)"
 >
   @if (track() === 'wave') {
     @let wave = waveMask();
     <!-- Android's music player: the fill a wave, flowing; the rest a line -->
     <span
+      #line
       class="rail wave"
       [class.still]="!waveMoving()"
       aria-hidden="true"
@@ -34,8 +37,14 @@
       ><span class="fill"></span><span class="rest"></span
     ></span>
   } @else {
-    <span class="rail" aria-hidden="true"><span class="fill"></span></span>
+    <span #line class="rail" aria-hidden="true"><span class="fill"></span></span>
   }
-  <span #knob class="knob" aria-hidden="true"></span>
-  <span #glass class="lens" aria-hidden="true"></span>
+  <!-- its knob (lenzi, 2026-11-26: "rendi il pomello la sua entità propria"): the page's, or its own of the shapes
+       asked for (thumb, lens) -->
+  <span class="thumb">
+    <ng-content select="lenzi-glass-knob" />
+    @if (!hasKnob()) {
+      <lenzi-glass-knob [shape]="thumb()" [lensShape]="lens()" />
+    }
+  </span>
 </div>

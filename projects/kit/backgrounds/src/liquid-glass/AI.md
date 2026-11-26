@@ -22,3 +22,5 @@
   height (a new filter at every frame: it flickers); give it room in a scroller; never slide its bezel over lines of
   text (lenzi, 2026-11-26: "si taglia e soprattutto fa degli sfarfallii strani prima di arrivare"). RULES.md, Controls of
   glass.
+- An entering animation of something that holds glass (opacity, filter, transform with opacity): `backwards`, never
+  `both` or `forwards` (a filling opacity animation keeps it a backdrop root after it ends).

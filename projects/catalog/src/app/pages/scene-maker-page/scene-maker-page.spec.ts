@@ -346,7 +346,7 @@ describe('SceneMakerPage', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const tint = page.querySelector<HTMLElement>('.window [role=slider][aria-label="Tint"]')!;
-    tint.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 40, right: 100, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    tint.querySelector<HTMLElement>('.rail')!.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 40, right: 100, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
     // pressed and held at 35 of 100 px: the value follows before it is let go
     tint.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 35 }));
     fixture.detectChanges();

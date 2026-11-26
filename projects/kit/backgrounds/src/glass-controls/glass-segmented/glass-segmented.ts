@@ -1,6 +1,6 @@
 import { Component, ElementRef, booleanAttribute, computed, effect, input, model, signal, viewChild } from '@angular/core';
 
-import { LENS_BENDING, glassLens } from '../lens';
+import { CAPSULE_SETTINGS, LENS_BENDING, glassLens } from '../lens';
 
 /** One choice of a segmented control. */
 export interface LenziGlassOption<T = string> {
@@ -42,7 +42,8 @@ export class LenziGlassSegmented<T = string> {
   private settle: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    const lens = glassLens(() => this.pill().nativeElement);
+    // over the words on its way: a flat middle, never a dome (it doubled them)
+    const lens = glassLens(() => this.pill().nativeElement, CAPSULE_SETTINGS);
     effect(() => lens.bending(this.moving() ? LENS_BENDING.held : LENS_BENDING.rest));
   }
 

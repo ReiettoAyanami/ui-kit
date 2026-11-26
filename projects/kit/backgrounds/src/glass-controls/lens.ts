@@ -32,6 +32,14 @@ export const LENS_SETTINGS: LenziLiquidGlassSettings = {
 };
 
 /**
+ * The glass of a capsule that slides over words (a segmented control's, the tab bar's): a flat middle, not a dome (lenzi,
+ * 2026-11-26, a segmented control's capsule and a thumb over a label: "non so cosa succede con il testo": a dome
+ * magnifies what is under all of it, and words under it came out large and doubled). Its middle shows the words as they
+ * are, its bezel bends them at its edge.
+ */
+export const CAPSULE_SETTINGS: LenziLiquidGlassSettings = { ...LENS_SETTINGS, dome: false };
+
+/**
  * How much of its bending a thumb shows at rest and while held (kube.io's: 0.4 and 0.9; 2026-11-26: 0.8 and 1.2, the
  * glass seen at rest too, a thumb's fill there only milky: `--lenzi-glass-rest`).
  */
@@ -41,13 +49,20 @@ export const LENS_BENDING = { rest: 0.8, held: 1.2 } as const;
 export interface LenziGlassLens {
   /** How much of its bending it shows, 0 to 1. */
   bending(share: number): void;
+  /** Its filter again, for settings that changed (a knob's shape, frozen when it is held). */
+  refresh(): void;
 }
 
 /**
  * Makes `element()` a Liquid Glass thumb once it is in the page (Chromium bends; elsewhere the control's CSS blurs).
  * Call it where `inject()` works (a field, a constructor). Redraws when its own size changes.
  */
-export function glassLens(element: () => HTMLElement | undefined, settings: LenziLiquidGlassSettings = LENS_SETTINGS, rest: number = LENS_BENDING.rest): LenziGlassLens {
+export function glassLens(
+  element: () => HTMLElement | undefined,
+  settings: LenziLiquidGlassSettings | (() => LenziLiquidGlassSettings) = LENS_SETTINGS,
+  rest: number = LENS_BENDING.rest,
+): LenziGlassLens {
+  const read = typeof settings === 'function' ? settings : () => settings;
   const document = inject(DOCUMENT);
   const destroyRef = inject(DestroyRef);
   let surface: LenziLiquidSurface | null = null;
@@ -57,7 +72,7 @@ export function glassLens(element: () => HTMLElement | undefined, settings: Lenz
     const target = element();
     if (!target || !refracts(document.defaultView)) return;
     // on itself, not on a layer: a thumb holds no glass, and its fill lies over its glass (glassPlace)
-    surface = new LenziLiquidSurface(target, document, () => settings, false);
+    surface = new LenziLiquidSurface(target, document, read, false);
     surface.bending(share);
     surface.build();
     if (typeof ResizeObserver === 'function') {
@@ -73,6 +88,9 @@ export function glassLens(element: () => HTMLElement | undefined, settings: Lenz
     bending(value: number): void {
       share = value;
       surface?.bending(value);
+    },
+    refresh(): void {
+      surface?.build();
     },
   };
 }

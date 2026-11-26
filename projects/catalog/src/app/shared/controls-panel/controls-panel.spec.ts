@@ -40,7 +40,7 @@ describe('ControlsPanel', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const track = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('lenzi-glass-slider .track')!;
-    track.getBoundingClientRect = () => ({ left: 0, width: 86, top: 0, height: 40, right: 86, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    track.querySelector<HTMLElement>('.rail')!.getBoundingClientRect = () => ({ left: 0, width: 86, top: 0, height: 40, right: 86, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
     // pressed and held at 56 of 86 px (60 on 4 to 90): the value follows before it is let go
     track.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 56 }));
     fixture.detectChanges();

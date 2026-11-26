@@ -7,7 +7,7 @@ import { LenziAppShell, LenziNavEntry } from '@lenzi/ui-kit';
 
 import { LIQUID_EVERYWHERE_SETTINGS } from '../../liquid-glass/liquid-everywhere';
 import { LenziLiquidGlassSettings } from '../../liquid-glass/liquid-surface';
-import { LENS_BENDING, glassLens } from '../lens';
+import { CAPSULE_SETTINGS, LENS_BENDING, glassLens } from '../lens';
 
 const EXACT: IsActiveMatchOptions = { paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' };
 const SUBTREE: IsActiveMatchOptions = { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' };
@@ -85,7 +85,8 @@ export class LenziGlassTabBar {
     // the capsules are Liquid Glass, bending all of their bending; the current page's capsule inside, its own
     glassLens(() => this.capsule().nativeElement, BAR_GLASS, 1);
     glassLens(() => this.rest()?.nativeElement, BAR_GLASS, 1);
-    const glass = glassLens(() => this.lens().nativeElement);
+    // over the icons and names on its way: a flat middle, never a dome
+    const glass = glassLens(() => this.lens().nativeElement, CAPSULE_SETTINGS);
     effect(() => glass.bending(this.moving() ? LENS_BENDING.held : LENS_BENDING.rest));
     // the capsule under the current tab, measured after the tabs are drawn (their widths are their words')
     afterRenderEffect(() => {

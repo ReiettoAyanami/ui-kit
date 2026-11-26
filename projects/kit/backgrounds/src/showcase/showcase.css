@@ -24,7 +24,9 @@
 .slide {
   display: grid;
   min-width: 0;
-  animation: lenzi-showcase-in var(--lenzi-rise-duration) var(--lenzi-rise-easing) both;
+  /* backwards, never both: an animation that keeps filling its opacity keeps the slide the root of the backdrop of the
+     glass in it, which then bent only the slide (2026-11-26: a slider's glass in it lit its edge only by the rail) */
+  animation: lenzi-showcase-in var(--lenzi-rise-duration) var(--lenzi-rise-easing) backwards;
 }
 
 /* it rises into place as every panel that appears (RULES.md, Motion) */

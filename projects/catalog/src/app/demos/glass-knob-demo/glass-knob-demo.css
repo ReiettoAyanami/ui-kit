@@ -1,0 +1,24 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+/* Stripes in the theme's colours behind the control: the glass bends them, and its edge takes their colour. */
+.stage {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  padding: 24px;
+  border-radius: var(--lenzi-panel-radius);
+  background: repeating-linear-gradient(
+    120deg,
+    var(--mat-sys-primary-container) 0 14px,
+    var(--mat-sys-tertiary-container) 14px 28px,
+    var(--mat-sys-surface-container-high) 28px 42px
+  );
+}
+
+/* a slider takes the width it is given: here a column's */
+lenzi-glass-slider {
+  width: min(100%, 420px);
+}

@@ -11,7 +11,7 @@ import {
   LenziSegmentedBar,
   identityColor,
 } from '@lenzi/ui-kit';
-import { LenziGlassSearch, LenziGlassSegmented, LenziGlassSlider, LenziGlassSwitch } from '@lenzi/ui-kit/backgrounds';
+import { LenziGlassKnob, LenziGlassSearch, LenziGlassSegmented, LenziGlassSlider, LenziGlassSwitch } from '@lenzi/ui-kit/backgrounds';
 
 export type UsageKind = 'player' | 'settings' | 'stock' | 'shifts' | 'month' | 'find';
 
@@ -58,6 +58,7 @@ const CODES = ['T1', 'T2', 'T3', 'RW'];
     LenziFigureGrid,
     LenziGlassSearch,
     LenziGlassSegmented,
+    LenziGlassKnob,
     LenziGlassSlider,
     LenziGlassSwitch,
     LenziScheduleGrid,

@@ -1,0 +1,9 @@
+<!-- At rest, the white knob (a blob's outline drawn, turning); held, its lens of glass, grown a little larger. -->
+@if (kind() === 'blob') {
+  <svg class="solid" aria-hidden="true" [attr.viewBox]="'0 0 ' + size().width + ' ' + size().height" [attr.width]="size().width" [attr.height]="size().height">
+    <path [attr.d]="outline()" />
+  </svg>
+} @else {
+  <span class="solid" aria-hidden="true"></span>
+}
+<span #glass class="glass" aria-hidden="true"></span>

@@ -108,6 +108,10 @@ const plain = (name: string, value: Value | undefined, standard: Value) => (valu
 const glassControl = (folder: string) => [...['ts', 'html', 'css', 'spec.ts'].map((extension) => `backgrounds/src/glass-controls/${folder}/${folder}.${extension}`), 'backgrounds/src/glass-controls/lens.ts'];
 const BACKGROUND_FILES = (folder: string) => ['ts', 'html', 'css', 'spec.ts'].map((extension) => `backgrounds/src/${folder}/${folder}.${extension}`);
 const GLOW_FILES = ['backgrounds/src/glow-background/glow-background.ts', 'backgrounds/src/glow-background/glow-background.css', 'backgrounds/src/engine/glow-engine.ts', 'backgrounds/src/engine/color.ts'];
+/** A knob's shapes: the kit's three and the blobs' (LenziGlassKnob, 2026-11-26). */
+const KNOB_SHAPES = ['capsule', 'circle', 'bar', 'squircle', 'triangle', 'pentagon', 'hexagon', 'clover4', 'clover8', 'flower', 'cookie6', 'cookie9', 'cookie12', 'sunny', 'burst'].map(
+  (value) => ({ value, label: value }),
+);
 const ACCENTS = ['--mat-sys-primary', '--mat-sys-tertiary', '--mat-sys-secondary', '--lenzi-status-good'].map((value) => ({ value, label: value }));
 const BASES = [
   { value: '--mat-sys-surface', label: 'the page (--mat-sys-surface)' },
@@ -1814,6 +1818,30 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
     height: 360,
   },
   {
+    id: 'glass-knob',
+    name: 'Glass knob',
+    category: 'Light',
+    summary: "A control's knob: white at rest, any shape (a blob's too, turning), held a lens of glass a little larger.",
+    api: '<lenzi-glass-knob>',
+    entry: '@lenzi/ui-kit/backgrounds',
+    origin: `new in the kit, 2026-11-26 ("rendi il pomello la sua entità propria. Permettendo di cambiare la forma nelle forme dei blob per esempio, permettendo di animare")`,
+    files: [...glassControl('glass-knob')],
+    ...docs('backgrounds/src/glass-controls/glass-knob'),
+    demo: () => import('./demos/glass-knob-demo/glass-knob-demo').then((m) => m.GlassKnobDemo),
+    controls: [
+      { key: 'shape', label: 'Shape', type: 'select', default: 'cookie9', options: KNOB_SHAPES, code: { attr: 'shape', otherwise: 'cookie9' } },
+      { key: 'morph', label: 'A blob turns from shape to shape', type: 'boolean', default: true, code: { match: /\[morph\]=/ } },
+      { key: 'morphDuration', label: 'Each turn (ms)', type: 'number', default: 1600, min: 300, max: 5000, step: 100, code: { match: /\[morphDuration\]="(\d+)"/, otherwise: 1600 } },
+      { key: 'grow', label: 'Its lens, held: how much larger (1.25 to 1.5)', type: 'number', default: 1.35, min: 1, max: 2, step: 0.05, code: { match: /\[grow\]="([\d.]+)"/, otherwise: 1.35 } },
+      { key: 'growDuration', label: 'How long it grows (ms)', type: 'number', default: 240, min: 0, max: 1000, step: 20, code: { match: /\[growDuration\]="(\d+)"/, otherwise: 240 } },
+    ],
+    usage: (v) => `<lenzi-glass-slider label="Played" track="wave" [(value)]="played">
+  <lenzi-glass-knob shape="${v['shape'] ?? 'cookie9'}"${v['morph'] === false ? '' : ` [morph]="['flower', 'clover4', 'sunny']"`}${Number(v['grow'] ?? 1.35) === 1.35 ? '' : ` [grow]="${v['grow']}"`}${Number(v['growDuration'] ?? 240) === 240 ? '' : ` [growDuration]="${v['growDuration']}"`}${Number(v['morphDuration'] ?? 1600) === 1600 ? '' : ` [morphDuration]="${v['morphDuration']}"`} />
+</lenzi-glass-slider>`,
+    usageLanguage: 'html',
+    height: 260,
+  },
+  {
     id: 'glass-slider',
     name: 'Glass slider',
     category: 'Light',
@@ -1827,8 +1855,8 @@ ${v['behind'] === 'none' ? '<!-- nothing behind: no pane, cards solid -->' : v['
     controls: [
       { key: 'track', label: 'Rail', type: 'select', default: 'line', options: [{ value: 'line', label: 'line' }, { value: 'wave', label: 'wave' }], code: { attr: 'track', otherwise: 'line' } },
       { key: 'waveMoving', label: 'The wave flows', type: 'boolean', default: true, code: false },
-      { key: 'thumb', label: 'Solid thumb', type: 'select', default: 'capsule', options: [{ value: 'capsule', label: 'capsule' }, { value: 'circle', label: 'circle' }, { value: 'bar', label: 'bar' }], code: { attr: 'thumb', otherwise: 'capsule' } },
-      { key: 'lens', label: 'Glass thumb', type: 'select', default: 'capsule', options: [{ value: 'capsule', label: 'capsule' }, { value: 'circle', label: 'circle' }, { value: 'bar', label: 'bar' }], code: { attr: 'lens', otherwise: 'capsule' } },
+      { key: 'thumb', label: 'Knob (white, at rest)', type: 'select', default: 'capsule', options: KNOB_SHAPES, code: { attr: 'thumb', otherwise: 'capsule' } },
+      { key: 'lens', label: 'Its glass, held', type: 'select', default: 'capsule', options: KNOB_SHAPES, code: { attr: 'lens', otherwise: 'capsule' } },
     ],
     usage: (v) =>
       `<lenzi-glass-slider label="Volume" [(value)]="volume" [step]="5"${attr('track', v['track'] === 'wave' ? 'wave' : '')}${v['track'] === 'wave' && v['waveMoving'] === false ? ' [waveMoving]="false"' : ''}${attr('thumb', v['thumb'] === 'capsule' ? '' : v['thumb'])}${attr('lens', v['lens'] === 'capsule' ? '' : v['lens'])} />`,

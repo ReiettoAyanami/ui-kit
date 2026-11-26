@@ -1,0 +1,92 @@
+/* A control's knob: white at rest, any shape; held, a lens of Liquid Glass a little larger (--knob-grow), grown
+   gradually. Its box is its lens's (what its control leaves room for); the knob and the lens lie in its middle. Only
+   their scale and opacity move, never their size (a glass that changes size flickers: RULES.md). */
+:host {
+  position: relative;
+  display: block;
+  width: var(--knob-lens-width);
+  height: var(--knob-lens-height);
+  pointer-events: none;
+  /* white, as Apple's, in both themes */
+  --lenzi-glass-thumb: 255 255 255;
+}
+
+.solid,
+.glass {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transition:
+    opacity 140ms ease,
+    transform var(--knob-grow-duration) var(--knob-grow-easing);
+}
+
+.solid {
+  width: var(--knob-width);
+  height: var(--knob-height);
+  transform: translate(-50%, -50%);
+}
+
+span.solid {
+  border-radius: calc(var(--knob-height) / 2);
+  background-color: rgb(var(--lenzi-glass-thumb));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.22);
+}
+
+:host(.shape-circle) span.solid {
+  border-radius: 50%;
+  corner-shape: round;
+}
+
+:host(.shape-bar) span.solid {
+  border-radius: calc(var(--knob-width) / 2);
+}
+
+/* a blob: its outline, white, its shadow round its shape */
+svg.solid {
+  overflow: visible;
+  fill: rgb(var(--lenzi-glass-thumb));
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.25));
+}
+
+/* The lens: its size from the start (its filter made once), shown small as the knob and grown to its size when held. */
+.glass {
+  width: var(--knob-lens-width);
+  height: var(--knob-lens-height);
+  border-radius: var(--knob-lens-radius);
+  background-color: rgb(var(--lenzi-glass-thumb) / 0.1);
+  box-shadow:
+    0 3px 12px rgb(0 0 0 / 0.12),
+    inset 2px 4px 12px rgb(0 0 0 / 0.08),
+    inset -2px -4px 12px rgb(255 255 255 / 0.08);
+  /* where the filter does not bend (not Chromium): a light blur */
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(calc(1 / var(--knob-grow)));
+}
+
+:host(.held) .solid {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(var(--knob-grow));
+}
+
+:host(.held) .glass {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+:host(.focused) span.solid {
+  outline: var(--lenzi-border-focus) solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+:host(.focused) svg.solid {
+  filter: drop-shadow(0 0 0 var(--mat-sys-primary)) drop-shadow(0 0 2px var(--mat-sys-primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solid,
+  .glass {
+    transition: none;
+  }
+}

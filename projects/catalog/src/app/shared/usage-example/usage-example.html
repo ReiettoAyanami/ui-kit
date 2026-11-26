@@ -6,7 +6,11 @@
         <span class="name">Night drive</span>
         <span class="words">The Lamps</span>
       </div>
-      <lenzi-glass-slider label="Played" track="wave" [(value)]="played" [valueText]="played() + ' % played'" />
+      <!-- the knob a blob that turns from shape to shape, grabbed a lens of glass (lenzi, 2026-11-26: "il blob che cambia
+           come pomello e che ha la stessa animazione di quello di adesso") -->
+      <lenzi-glass-slider label="Played" track="wave" [(value)]="played" [valueText]="played() + ' % played'">
+        <lenzi-glass-knob shape="cookie9" [morph]="['flower', 'clover4', 'sunny']" />
+      </lenzi-glass-slider>
       <div class="row">
         <span class="name">Volume</span>
         <lenzi-glass-slider class="grow" label="Volume" [(value)]="volume" [step]="5" />

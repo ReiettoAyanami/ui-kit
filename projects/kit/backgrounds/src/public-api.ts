@@ -32,6 +32,7 @@ export * from './glass-controls/glass-slider/glass-slider';
 export * from './glass-controls/glass-search/glass-search';
 export * from './glass-controls/glass-tab-bar/glass-tab-bar';
 export * from './glass-controls/glass-list/glass-list';
+export * from './glass-controls/glass-knob/glass-knob';
 export * from './showcase/showcase';
 export * from './showcase/showcase-slide';
 

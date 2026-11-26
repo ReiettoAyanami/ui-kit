@@ -384,6 +384,14 @@ export const LIGHT_BASE = 0;
  */
 export const LIGHT_EASE = '0 0.028 0.104 0.216 0.352 0.5 0.648 0.784 0.896 0.972 1';
 
+/**
+ * How the line narrows with its light (lenzi, 2026-11-26: "è possibile al termine del nostro highlight diminuire
+ * gradualmente la larghezza dell'highlight"): the line's profile across the edge (the map's blue, 1 at its middle, 1 px
+ * in, fading over about 1.4 px each side) is kept where it is above 1 − the light, × TAPER: a full light shows all of it,
+ * a fading one only its middle, thinner and thinner to a hair where the highlight ends.
+ */
+export const TAPER = 1.6;
+
 /** The light's colour matrix: its colour what is behind halfway to white, its alpha how bright that is (luminance). */
 export function lightMatrix(floor = LIGHT_FLOOR, gain = LIGHT_GAIN, base = LIGHT_BASE): string {
   const g = (n: number) => +(n * gain).toFixed(4);
@@ -533,7 +541,6 @@ export class LenziLiquidSurface {
   <feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0, s.blur)}" result="soft"/>
   ${imagesOf(tiles.map, 'map')}
   <feColorMatrix in="map" type="matrix" values="0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0" result="glint"/>
-  <feComponentTransfer in="glint" result="specular"><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
   ${rough}
   <feDisplacementMap class="lenzi-liquid-glass-bend" in="soft" in2="map" scale="${bending}" xChannelSelector="R" yChannelSelector="G" result="bent"/>
   ${fringes}
@@ -542,7 +549,9 @@ export class LenziLiquidSurface {
   ${fromFrost ? '' : `<feGaussianBlur in="SourceGraphic" stdDeviation="${reach}" result="around"/>`}
   <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="matrix" values="${lightMatrix(LIGHT_FLOOR, LIGHT_GAIN, Math.max(0, s.lightBase))}" result="light"/>
   <feComponentTransfer in="light" result="light"><feFuncA type="table" tableValues="${LIGHT_EASE}"/></feComponentTransfer>
-  <feComposite in="light" in2="specular" operator="in" result="lit-line"/>
+  <feComposite in="glint" in2="light" operator="arithmetic" k2="${TAPER}" k3="${TAPER}" k4="${-TAPER}" result="taper"/>
+  <feComponentTransfer in="taper" result="taper"><feFuncA type="gamma" exponent="2"/></feComponentTransfer>
+  <feComposite in="light" in2="taper" operator="in" result="lit-line"/>
   <feColorMatrix in="${fromFrost ? 'frosted' : 'around'}" type="saturate" values="${Math.max(0, s.specularSaturation)}" result="vivid"/>
   <feComposite in="vivid" in2="lit-line" operator="in" result="edge"/>
   <feBlend in="edge" in2="refracted" mode="normal" result="coloured"/>
