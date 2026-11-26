@@ -541,6 +541,47 @@ usageLanguage: 'html',
     usageLanguage: 'html',
     height: 520,
   },
+  {
+    id: 'showcase',
+    name: 'Showcase',
+    category: 'Layout',
+    summary: 'One large slide at a time, live, the list of every slide beside it; they take turns by themselves, and hold when pointed at.',
+    api: '<lenzi-showcase>, ng-template[lenziShowcaseSlide]',
+    entry: '@lenzi/ui-kit',
+    origin: 'the catalog\'s components, proposal F (lenzi, 2026-11-26: "nella vetrina ci circolano i pezzi / vari esempi di come utilizzarli")',
+    files: [...lib('showcase', 'showcase.ts', 'showcase.html', 'showcase.css', 'showcase.spec.ts', 'showcase-slide.ts')],
+    ...docs('src/lib/showcase'),
+    demo: () => import('./demos/showcase-demo/showcase-demo').then((m) => m.ShowcaseDemo),
+    controls: [{ key: 'seconds', label: 'Seconds a slide stays', type: 'number', default: 7, min: 2, max: 20, step: 1, code: { match: /\[interval\]="(\d+)000"/, otherwise: 7 } }],
+    usage: (v) => `<lenzi-showcase label="Pieces of the kit in use"${Number(v['seconds']) === 7 ? '' : ` [interval]="${v['seconds']}000"`}>
+  <ng-template lenziShowcaseSlide="Glass slider" caption="A player's volume">
+    <lenzi-glass-slider label="Volume" track="wave" [(value)]="volume" />
+  </ng-template>
+  <ng-template lenziShowcaseSlide="Glass switch" caption="A list of settings">…</ng-template>
+</lenzi-showcase>`,
+    usageLanguage: 'html',
+    height: 560,
+  },
+  {
+    id: 'shelf',
+    name: 'Shelf',
+    category: 'Layout',
+    summary: 'Things of one kind in a row that scrolls sideways, under a title and how many; "Show all" lays them out in a grid.',
+    api: '<lenzi-shelf>',
+    entry: '@lenzi/ui-kit',
+    origin: 'the catalog\'s components, proposal E (lenzi, 2026-11-26: "Mi piace la E")',
+    files: [...component('shelf')],
+    ...docs('src/lib/shelf'),
+    demo: () => import('./demos/shelf-demo/shelf-demo').then((m) => m.ShelfDemo),
+    controls: [{ key: 'item', label: 'Width of a thing (px)', type: 'number', default: 280, min: 160, max: 420, step: 20, code: { match: /--lenzi-shelf-item\]="'(\d+)px'"/, otherwise: 280 } }],
+    usage: (v) => `<lenzi-shelf title="Scenes" [count]="scenes.length"${Number(v['item']) === 280 ? '' : ` [style.--lenzi-shelf-item]="'${v['item']}px'"`}>
+  @for (scene of scenes; track scene.id) {
+    <lenzi-preview-card [title]="scene.name" [lines]="[scene.blobs]" (opened)="open(scene)">…</lenzi-preview-card>
+  }
+</lenzi-shelf>`,
+    usageLanguage: 'html',
+    height: 420,
+  },
   // Actions and inputs --------------------------------------------------------------------------
   {
     id: 'add-button',

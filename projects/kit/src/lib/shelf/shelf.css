@@ -1,0 +1,84 @@
+/* A title over a row of things that scrolls sideways (the page never does): each child as wide as
+   --lenzi-shelf-item, a fade at an edge past which there is more. Expanded, the same children in a grid. */
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+}
+
+.count {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.arrows {
+  display: flex;
+}
+
+/* the row: a little room round its children, so a focus ring or a pointed card's surface is never cut */
+.row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--lenzi-shelf-item, 280px);
+  gap: var(--lenzi-shelf-gap, 12px);
+  align-items: start;
+  margin: -6px;
+  padding: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  --lenzi-shelf-fade: 48px;
+}
+
+.row::-webkit-scrollbar {
+  display: none;
+}
+
+.row.after {
+  mask-image: linear-gradient(to right, black calc(100% - var(--lenzi-shelf-fade)), transparent);
+}
+
+.row.before {
+  mask-image: linear-gradient(to right, transparent, black var(--lenzi-shelf-fade));
+}
+
+.row.before.after {
+  mask-image: linear-gradient(to right, transparent, black var(--lenzi-shelf-fade), black calc(100% - var(--lenzi-shelf-fade)), transparent);
+}
+
+:host(.lenzi-shelf-expanded) .row {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--lenzi-shelf-item, 280px)), 1fr));
+  overflow: visible;
+}
+
+/* a phone scrolls with the thumb: no arrows */
+@media (max-width: 599px) {
+  .arrows {
+    display: none;
+  }
+
+  .row {
+    grid-auto-columns: min(var(--lenzi-shelf-item, 280px), 78%);
+  }
+}

@@ -1,0 +1,78 @@
+/* A small screen laid out on the showcase's panel: no panel of its own (never glass on glass). */
+:host {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.row.between {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.track,
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font: var(--mat-sys-title-medium);
+}
+
+.name.large {
+  font: var(--mat-sys-headline-small);
+}
+
+.words {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: var(--lenzi-border) solid var(--mat-sys-outline-variant);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}

@@ -1,20 +1,38 @@
-<main class="page" lenziGlassPage>
+<!-- Proposal F (2026-11-26): the showcase on top, the pieces in use taking turns; under it a shelf a category. The
+     showcase and the cards are the glass, so the page has no pane behind them (never glass on glass). -->
+<main class="page" lenziGlassPage [pane]="false">
   <lenzi-glass-search class="search" placeholder="Search the components" [value]="q() ?? ''" (search)="search($event)" />
 
-  @for (group of groups(); track group.category) {
-    <section class="group">
-      <h2 class="category">{{ group.category }}</h2>
-      <div class="cards">
-        @for (doc of group.docs; track doc.id) {
-          <a class="card" [lenziLit]="lit()" [routerLink]="['/components', doc.id]">
-            <span class="name">{{ doc.name }}</span>
-            <span class="summary">{{ doc.summary }}</span>
-            <code class="api">{{ doc.api }}</code>
-          </a>
-        }
-      </div>
-    </section>
-  } @empty {
-    <lenzi-status-message [text]="q() ? 'Nothing with “' + q() + '” in the kit' : 'No components to show'" />
+  @if (!q() && examples().length) {
+    <lenzi-showcase class="showcase" label="Pieces of the kit in use" [lenziLit]="lit()">
+      @for (example of examples(); track example.kind) {
+        <ng-template [lenziShowcaseSlide]="example.name" [caption]="example.caption">
+          <div class="slide">
+            <app-usage-example [kind]="example.kind" />
+            <div class="slide-foot">
+              <a mat-flat-button [routerLink]="['/components', example.piece]">Open {{ example.name }}</a>
+            </div>
+          </div>
+        </ng-template>
+      }
+    </lenzi-showcase>
   }
+
+  <div class="shelves">
+    @for (group of groups(); track group.category) {
+      <lenzi-shelf [title]="group.category" [count]="group.total">
+        @for (doc of group.docs; track doc.id) {
+          <lenzi-preview-card [title]="doc.name" [lines]="[doc.summary]" (opened)="open(doc.id)" (activeChange)="point(doc.id, $event)" [lenziLit]="lit()">
+            @if (live() === doc.id) {
+              <iframe tabindex="-1" [appMiniature]="screen" [title]="doc.name + ', live'" [src]="frame(doc.id)"></iframe>
+            } @else {
+              <div class="resting"><span class="center"><code class="api">{{ doc.api }}</code></span></div>
+            }
+          </lenzi-preview-card>
+        }
+      </lenzi-shelf>
+    } @empty {
+      <lenzi-status-message [text]="q() ? 'Nothing with “' + q() + '” in the kit' : 'No components to show'" />
+    }
+  </div>
 </main>

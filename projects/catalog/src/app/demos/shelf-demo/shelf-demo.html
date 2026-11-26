@@ -1,0 +1,7 @@
+<lenzi-shelf title="Scenes" [count]="cards.length" [style.--lenzi-shelf-item]="width()" (expandedChange)="expanded($event)">
+  @for (card of cards; track card.name) {
+    <lenzi-preview-card [title]="card.name" [lines]="card.lines" (opened)="opened(card.name)">
+      <div class="picture" [style.background]="card.color"></div>
+    </lenzi-preview-card>
+  }
+</lenzi-shelf>

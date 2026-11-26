@@ -1,0 +1,28 @@
+<!-- Its title and how many, then the arrows and "Show all" (only when some of it is out of sight); under them the row,
+     its children side by side, or all of them in a grid. -->
+<div class="head">
+  <h2 class="title">
+    {{ title() }}
+    @if (count() !== null) {
+      <span class="count">{{ count() }}</span>
+    }
+  </h2>
+  @if (!expanded() && (before() || after())) {
+    <span class="arrows">
+      <button mat-icon-button type="button" [attr.aria-label]="'Back along ' + title()" [disabled]="!before()" (click)="scroll(-1)">
+        <mat-icon aria-hidden="true">chevron_left</mat-icon>
+      </button>
+      <button mat-icon-button type="button" [attr.aria-label]="'On along ' + title()" [disabled]="!after()" (click)="scroll(1)">
+        <mat-icon aria-hidden="true">chevron_right</mat-icon>
+      </button>
+    </span>
+  }
+  @if (expanded() || before() || after()) {
+    <button mat-button type="button" class="all" [attr.aria-expanded]="expanded()" (click)="toggle()">
+      {{ expanded() ? 'Show fewer' : 'Show all' }}
+    </button>
+  }
+</div>
+<div #row class="row" [class.before]="before()" [class.after]="after()" (scroll)="measure()">
+  <ng-content />
+</div>

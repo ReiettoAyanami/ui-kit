@@ -1,0 +1,79 @@
+<!-- Small screens of the kit's pieces, live: the name of each thing bold on top, its facts under it, one a line. -->
+@switch (kind()) {
+  @case ('player') {
+    <div class="screen player">
+      <div class="track">
+        <span class="name">Night drive</span>
+        <span class="words">The Lamps</span>
+      </div>
+      <lenzi-glass-slider label="Played" track="wave" [(value)]="played" [valueText]="played() + ' % played'" />
+      <div class="row">
+        <span class="name">Volume</span>
+        <lenzi-glass-slider class="grow" label="Volume" [(value)]="volume" [step]="5" />
+      </div>
+      <lenzi-glass-segmented label="Output" [options]="outputs" [(value)]="output" />
+    </div>
+  }
+  @case ('settings') {
+    <div class="screen list">
+      @for (setting of settings; track setting.name) {
+        <div class="item">
+          <span class="text">
+            <span class="name">{{ setting.name }}</span>
+            <span class="words">{{ setting.words }}</span>
+          </span>
+          <lenzi-glass-switch [label]="setting.name" [(checked)]="setting.on" />
+        </div>
+      }
+    </div>
+  }
+  @case ('stock') {
+    <div class="screen">
+      <span class="name large">Coffee beans</span>
+      <lenzi-figure-grid>
+        <lenzi-figure label="Stock" value="264 g" />
+        <lenzi-figure label="Last price"><lenzi-delta [ratio]="0.33" good="down" /></lenzi-figure>
+        <lenzi-figure label="Bought this month" value="12 boxes" />
+        <lenzi-figure label="Lasts" value="5 weeks" />
+      </lenzi-figure-grid>
+    </div>
+  }
+  @case ('shifts') {
+    <div class="screen">
+      <lenzi-schedule-grid nameHeader="Person" label="Shifts of this week" [days]="week" [rows]="people" [highlight]="2" />
+    </div>
+  }
+  @case ('month') {
+    <div class="screen">
+      <div class="row between">
+        <span class="name large">November</span>
+        <lenzi-glass-segmented label="Period" [options]="periods" [(value)]="period" />
+      </div>
+      <lenzi-figure label="Spent" value="€1,100.00" />
+      <lenzi-segmented-bar label="Spent in November: €1,100.00" [segments]="spent" max="1400" />
+      <div class="legend">
+        @for (part of spent; track part.id) {
+          <lenzi-figure [label]="part.label!" [value]="'€' + part.value + '.00'" />
+        }
+      </div>
+    </div>
+  }
+  @case ('find') {
+    <div class="screen">
+      <lenzi-glass-search placeholder="Search shifts" [(value)]="query" />
+      <div class="list">
+        @for (shift of found(); track shift.who + shift.when) {
+          <div class="item">
+            <span class="text">
+              <span class="name">{{ shift.name }}</span>
+              <span class="words">{{ shift.who }}</span>
+              <span class="words">{{ shift.when }}</span>
+            </span>
+          </div>
+        } @empty {
+          <span class="words">No shift with “{{ query() }}”</span>
+        }
+      </div>
+    </div>
+  }
+}

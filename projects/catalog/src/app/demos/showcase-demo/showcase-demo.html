@@ -1,0 +1,7 @@
+<lenzi-showcase label="Pieces of the kit in use" [interval]="interval()" (indexChange)="shown($event)">
+  @for (slide of slides; track slide.kind) {
+    <ng-template [lenziShowcaseSlide]="slide.name" [caption]="slide.caption">
+      <app-usage-example [kind]="slide.kind" />
+    </ng-template>
+  }
+</lenzi-showcase>

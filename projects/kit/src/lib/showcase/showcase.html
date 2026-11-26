@@ -1,0 +1,42 @@
+<!-- The slide on show, made anew when it changes (so it rises in, and only it runs); beside it the list of every slide,
+     the current one's bar filling for as long as it stays. The bar is the clock: when it fills, the next slide. -->
+<div class="layout">
+<div class="stage" [attr.aria-live]="running() ? 'off' : 'polite'">
+  @for (slide of current() ? [current()!] : []; track shown()) {
+    <div class="slide" role="group" aria-roledescription="slide" [attr.aria-label]="shown() + 1 + ' of ' + slides().length + ': ' + slide.name()">
+      <ng-container [ngTemplateOutlet]="slide.template" />
+    </div>
+  }
+</div>
+
+<div class="side">
+  <div class="tabs" role="tablist" [attr.aria-label]="label()">
+    @for (slide of slides(); track slide; let i = $index) {
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.current]="i === shown()"
+        [attr.aria-selected]="i === shown()"
+        [attr.tabindex]="i === shown() ? 0 : -1"
+        (click)="go(i)"
+        (keydown)="key($event, i)"
+      >
+        <span class="name">{{ slide.name() }}</span>
+        @if (slide.caption()) {
+          <span class="caption">{{ slide.caption() }}</span>
+        }
+        @if (i === shown()) {
+          <span class="clock" aria-hidden="true"><span class="fill" [class.running]="running()" (animationend)="next()"></span></span>
+        }
+      </button>
+    }
+  </div>
+  @if (slides().length > 1) {
+    <button mat-button type="button" class="pause" (click)="toggle()">
+      <mat-icon aria-hidden="true">{{ paused() ? 'play_arrow' : 'pause' }}</mat-icon>
+      {{ paused() ? 'Play' : 'Pause' }}
+    </button>
+  }
+</div>
+</div>

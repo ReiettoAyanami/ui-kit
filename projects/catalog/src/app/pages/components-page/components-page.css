@@ -1,87 +1,65 @@
 .page {
   box-sizing: border-box;
-  max-width: 1040px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 8px 16px 64px;
 }
 
 .search {
   max-width: 560px;
-  margin: 8px 0 8px;
 }
 
-.category {
-  margin: 24px 0 12px;
-  font: var(--mat-sys-title-large);
-  color: var(--mat-sys-primary);
+.showcase {
+  margin-top: 8px;
 }
 
-.cards {
+/* a slide: the example in the middle, the way to its page under it */
+.slide {
   display: grid;
-  gap: 12px;
+  grid-template-rows: 1fr auto;
+  gap: 16px;
+  min-width: 0;
 }
 
-@media (min-width: 720px) {
-  .cards {
-    grid-template-columns: 1fr 1fr;
-  }
+.slide-foot {
+  display: flex;
+  justify-content: center;
 }
 
-@media (min-width: 1100px) {
-  .cards {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-
-/* A card per page: the name bold, what it is under it, then how it is used. */
-.card {
+.shelves {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  gap: 28px;
+  margin-top: 16px;
+}
+
+/* a card at rest says how the piece is written, in the middle of a faint glow of the accent; pointed at, its demo runs
+   in it (the card fills the box with its first child: the words are centred inside it) */
+.resting {
+  background: radial-gradient(80% 90% at 50% 110%, color-mix(in srgb, var(--mat-sys-primary) 22%, transparent), transparent 70%);
+}
+
+.center {
+  display: grid;
+  place-items: center;
+  height: 100%;
   padding: 16px;
-  border: var(--lenzi-border) solid var(--mat-sys-outline-variant);
-  border-radius: var(--lenzi-panel-radius);
-  color: inherit;
-  text-decoration: none;
-  transition: background-color 150ms linear;
-}
-
-/* Solid without a background; lit, the glass shows (RULES.md, 2026-11-17). */
-.card:not(.lenzi-lit) {
-  background: var(--mat-sys-surface-container-low);
-}
-
-.card:not(.lenzi-lit):hover,
-.card:not(.lenzi-lit):focus-visible {
-  background: var(--mat-sys-surface-container);
-}
-
-.card:hover,
-.card:focus-visible {
-  outline: none;
-}
-
-/* lit: the border says it, as the overview's cards */
-.card.lenzi-lit:hover {
-  border-color: var(--mat-sys-primary);
-}
-
-.card:focus-visible {
-  border-color: var(--mat-sys-primary);
-}
-
-.name {
-  font: var(--mat-sys-title-medium);
-}
-
-.summary {
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
+  box-sizing: border-box;
 }
 
 .api {
-  font: var(--mat-sys-body-small);
+  font: var(--mat-sys-body-medium);
+  font-family: 'Roboto Mono', monospace;
   color: var(--mat-sys-tertiary);
+  text-align: center;
   overflow-wrap: anywhere;
+}
+
+iframe {
+  display: block;
+  border: 0;
+  pointer-events: none;
 }
