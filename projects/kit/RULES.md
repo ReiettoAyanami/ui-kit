@@ -109,6 +109,15 @@ the rule says what, the variable says how much.
     its edge's line lit all round (`lightBase` 0.45), so it shows on something this small
     (lenzi, 2026-11-26: "configura gli elementi più piccoli per fare in modo che l'effetto liquidglass si veda meglio, come lo slider, toggle ecc.").
     `LenziGlassList`: the chosen entry of a list under a lens of glass, milky white and violet (lenzi, 2026-11-26).
+  - **Where a moving lens lands is the app's choice, or the control's** (lenzi, 2026-11-27: "vorrei che avessero una
+    proprietà upon_landing: <material>, che determina se il pomello deve diventare lente o diventare solido/vetro solido"):
+    the segmented control's capsule, the tab bar's, the glass list's lens land `liquid` (a lens of clear glass), `milky`
+    (the kit's default) or `solid`, light (white, the words on it dark) or dark (the page's highest surface):
+    `provideLenziGlassLanding({ material, tone })` for the app, `landing` and `landingTone` on a control. On their way they
+    are always clear glass.
+  - **The tab bar's lens goes everywhere it has tabs** (lenzi, 2026-11-27: "qui la lente non ci va, falla spostare anche
+    qua"): from the pages' capsule to the rest's (Admin) and back; the capsules' glass is apart from them, behind, so the
+    lens slides over both glasses and under the tabs, and sees them.
   - **Knobs are thin, and pieces of their own** (`LenziGlassKnob`; lenzi, 2026-11-26: "i pomelli più fini,
     leggermente più larghi della barra che hanno sopra, stessa lunghezza, magari leggermente più corti, che si espande
     gradualmente diventando la lente leggermente più grande del pomello magari 25-50%"; "rendi il pomello la sua entità

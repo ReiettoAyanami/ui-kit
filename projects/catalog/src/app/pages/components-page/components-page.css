@@ -48,3 +48,18 @@
   pointer-events: none;
   overflow: hidden;
 }
+
+/* a piece that acts on the whole page: its emblem, large, in the middle of its card's preview */
+.emblem {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--mat-sys-primary);
+}
+
+.emblem mat-icon {
+  width: 56px;
+  height: 56px;
+  font-size: 56px;
+}
+

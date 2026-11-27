@@ -4,6 +4,10 @@
 
 ## Rules
 
+- **The lens goes to the rest too** (lenzi, 2026-11-27: "qui la lente non ci va, falla spostare anche qua"): Admin, Settings, any
+  link apart from the pages; it slides from one capsule to the other. The capsules' glass is apart from them, behind
+  (one per capsule, as large as it): the lens lies over both and under the tabs. Its size is taken at once and drawn as
+  it was, then grown or shrunk by its scale (FLIP), never a size that moves.
 - **Capsules of glass floating at the bottom** (Apple, HIG Tab bars: "A tab bar floats above content at the bottom of
   the screen. Its items rest on a Liquid Glass background"; lenzi, 2026-11-25: "una barra orizzontale (magari da usare
   su mobile invece che su web, ma in realtà anche su web deve funzionare e può essere un'alternativa) ... come il
@@ -32,6 +36,8 @@
 | input | `orientation` | `'auto' \| 'horizontal' \| 'vertical'` | `'auto'` | auto: upright when the shell says so |
 | output | `navigated` | `LenziNavEntry` | | a link was tapped |
 | output | `pressed` | `string` | | a button entry's id |
+| input | `landing` | `'liquid' \| 'milky' \| 'solid'`: what its lens becomes where it lands (lenzi, 2026-11-27: "upon_landing: <material>") | the app's (`provideLenziGlassLanding`), milky |
+| input | `landingTone` | `'light' \| 'dark'`: a solid landing's colour | the app's, light |
 
 The entries are `LenziNavList`'s (`LenziNavEntry`). Height: `--lenzi-tab-bar-height` (60 px on a phone, 52 px wider); upright, its width: `--lenzi-tab-rail-width` (56 px) and its gap `--lenzi-tab-rail-gap` (4 px).
 

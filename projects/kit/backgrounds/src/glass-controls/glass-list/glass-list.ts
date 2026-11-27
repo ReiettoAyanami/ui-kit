@@ -16,6 +16,7 @@ import {
   viewChildren,
 } from '@angular/core';
 
+import { LenziLandingMaterial, LenziLandingTone, resolveLanding } from '../landing';
 import { LENS_BENDING, LENS_SETTINGS, glassLens } from '../lens';
 import { LenziLiquidGlassSettings } from '../../liquid-glass/liquid-surface';
 
@@ -55,7 +56,7 @@ export const GLASS_LIST_LENS: LenziLiquidGlassSettings = {
   imports: [NgTemplateOutlet],
   templateUrl: './glass-list.html',
   styleUrl: './glass-list.css',
-  host: { class: 'lenzi-glass-list' },
+  host: { class: 'lenzi-glass-list', '[attr.data-landing]': 'landed().material', '[attr.data-tone]': 'landed().tone' },
 })
 export class LenziGlassList {
   readonly items = input.required<readonly LenziGlassListItem[]>();
@@ -65,6 +66,11 @@ export class LenziGlassList {
   readonly selected = model(0);
   /** Shown under the chosen entry's words, given its index (a bar that fills, a count). */
   readonly extra = input<TemplateRef<{ $implicit: number }> | null>(null);
+  /** What its lens becomes where it lands (the app's, `provideLenziGlassLanding`, by default): a lens, milky, solid. */
+  readonly landing = input<LenziLandingMaterial | null>(null);
+  /** A solid landing's colour. */
+  readonly landingTone = input<LenziLandingTone | null>(null);
+  protected readonly landed = resolveLanding(this.landing, this.landingTone);
 
   /** The chosen index, kept inside the entries there are. */
   protected readonly current = computed(() => {

@@ -12,24 +12,37 @@
 }
 
 .bar {
+  position: relative;
   display: flex;
   gap: 8px;
   align-items: stretch;
 }
 
+/* A capsule lays its tabs out; its glass is apart, behind it (.glass), so the current page's lens slides from one capsule
+   to the other over both glasses and under the tabs (lenzi, 2026-11-27: "qui la lente non ci va, falla spostare anche
+   qua"). Nothing of it makes a layer of its own (the lens must lie between its glass and its tabs). */
 .capsule {
   position: relative;
   display: flex;
   box-sizing: border-box;
   height: var(--lenzi-tab-bar-height);
   padding: 4px;
-  /* Liquid Glass of its own (the filter is set on it in Chromium); no stroke, its edge is light; a light tint of the
-     page to read on. Elsewhere the kit's frosted glass. */
   border: none;
+  border-radius: calc(var(--lenzi-tab-bar-height) / 2);
+}
+
+/* A capsule's glass: Liquid Glass of its own (the filter is set on it in Chromium); no stroke, its edge is light; a light
+   tint of the page to read on. Elsewhere the kit's frosted glass. As large as its capsule (measured). */
+.glass {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
   border-radius: calc(var(--lenzi-tab-bar-height) / 2);
   background-color: color-mix(in srgb, var(--mat-sys-surface) var(--lenzi-liquid-tint), transparent);
   backdrop-filter: var(--lenzi-glass-filter);
   box-shadow: 0 8px 28px rgb(0 0 0 / 0.32);
+  pointer-events: none;
 }
 
 .pages {
@@ -112,13 +125,13 @@
   }
 }
 
-/* The current page's capsule: glass under a solid fill; on its way to another tab the fill goes to 10% and it grows
-   over the tabs (it bends them), then settles behind its tab. */
+/* The current page's lens: glass under a fill where it lands (milky by default, `landing`); on its way to another tab the
+   fill goes to 10% and it grows over the tabs (it bends them), then settles behind its tab. Drawn round its middle
+   (translate), so its scale grows it from there. */
 .pill {
   position: absolute;
   z-index: 0;
-  top: 4px;
-  bottom: 4px;
+  top: 0;
   left: 0;
   border-radius: calc(var(--lenzi-tab-bar-height) / 2 - 4px * var(--lenzi-concentric, 1));
   /* at rest milky glass, not solid (2026-11-26: the glass seen on small things) */
@@ -137,25 +150,51 @@
 .pill.placed {
   transition:
     translate 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
-    width 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
-    height 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
-    transform 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    transform 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    scale 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
     background-color 160ms ease,
     opacity 160ms ease;
+}
+
+/* its size changed: it is drawn as it was at once, then its scale goes to 1 (above) */
+.pill.placed.flipping {
+  transition:
+    translate 420ms cubic-bezier(0.3, 1.25, 0.6, 1),
+    scale 220ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    background-color 160ms ease,
+    opacity 160ms ease;
+}
+
+/* Where it lands (lenzi, 2026-11-27: "upon_landing: <material>"): milky (above), a lens of clear glass, or solid, light or
+   dark (as a slider's knob). */
+:host([data-landing='liquid']) .pill {
+  background-color: color-mix(in srgb, var(--lenzi-glass-pill) 6%, transparent);
+}
+
+:host([data-landing='solid'][data-tone='light']) .pill {
+  background-color: rgb(255 255 255);
+}
+
+:host([data-landing='solid'][data-tone='light']) .bar:not(.moving) .tab.current {
+  color: #1d1b20;
+}
+
+:host([data-landing='solid'][data-tone='dark']) .pill {
+  background-color: var(--mat-sys-surface-container-highest);
 }
 
 .pill.shown {
   opacity: 1;
 }
 
-.moving .pill {
+.bar.moving .pill {
   z-index: 2;
   background-color: color-mix(in srgb, var(--lenzi-glass-pill) 10%, transparent);
   box-shadow:
     0 4px 16px rgb(0 0 0 / 0.16),
     inset 2px 5px 16px rgb(0 0 0 / 0.08),
     inset -2px -5px 16px rgb(255 255 255 / 0.08);
-  transform: scale(1.12);
+  scale: 1.12;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -181,6 +220,10 @@
   width: var(--lenzi-tab-rail-width);
   height: auto;
   padding: var(--lenzi-tab-rail-gap);
+  border-radius: calc(var(--lenzi-tab-rail-width) / 2);
+}
+
+:host(.upright) .glass {
   border-radius: calc(var(--lenzi-tab-rail-width) / 2);
 }
 
@@ -213,10 +256,6 @@
 }
 
 :host(.upright) .pill {
-  top: 0;
-  right: var(--lenzi-tab-rail-gap);
-  bottom: auto;
-  left: var(--lenzi-tab-rail-gap);
   border-radius: 50%;
   corner-shape: round;
 }

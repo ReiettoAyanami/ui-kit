@@ -2,7 +2,6 @@ import { Component, Type, computed, inject, input, signal } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 
 import { LenziPreviewCard, LenziShelf, LenziStatusMessage } from '@lenzi/ui-kit';
@@ -19,11 +18,18 @@ import { USAGE_EXAMPLES, UsageExampleView } from '../../shared/usage-example/usa
 const DEMO_SCREEN = 440;
 
 /**
- * The demos that act on the whole page (the app's shell, its glass page, its appearance) or bring a page's own title (an
- * h1, which takes the place of the page's: not found, a blocking screen): shown in a frame of their own, so that they
- * change only it. The rest are made in their card.
+ * The pieces that act on the whole page (a shell, a page of glass, a bar, the appearance, a page that is not found, a
+ * blocking screen): their card shows an emblem, never their demo in a frame (lenzi, 2026-11-27: "nelle schede non usare
+ * degli iframe, prende troppa memoria e la pagina lagga, metti solo l'elemento singolo o un'icona rappresentativa").
  */
-const FRAMED: ReadonlySet<string> = new Set(['app-shell', 'glass-page', 'glass-tab-bar', 'appearance', 'not-found', 'blocking-screen']);
+const EMBLEMS: Readonly<Record<string, string>> = {
+  'app-shell': 'web',
+  'glass-page': 'layers',
+  'glass-tab-bar': 'tab',
+  appearance: 'contrast',
+  'not-found': 'search_off',
+  'blocking-screen': 'block',
+};
 
 /**
  * Every page of the kit (lenzi, 2026-11-26, proposal F: "Fai la f, ma nella vetrina ci circolano i pezzi / vari esempi
@@ -62,7 +68,6 @@ export class ComponentsPage {
 
   private readonly router = inject(Router);
   private readonly publicPages = inject(PublicPages);
-  private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly screen = DEMO_SCREEN;
 
@@ -90,17 +95,9 @@ export class ComponentsPage {
   protected readonly demos = signal<ReadonlyMap<string, Type<unknown>>>(new Map());
   private readonly inputs = new Map<string, { values: Values }>();
 
-  private readonly frames = new Map<string, SafeResourceUrl>();
-
-  /** A demo that acts on the whole page is shown in a frame of its own (`FRAMED`). */
-  protected framed(id: string): boolean {
-    return FRAMED.has(id);
-  }
-
-  protected frame(id: string): SafeResourceUrl {
-    let url = this.frames.get(id);
-    if (!url) this.frames.set(id, (url = this.sanitizer.bypassSecurityTrustResourceUrl(`/frame/${id}?clear`)));
-    return url;
+  /** A piece that acts on the whole page shows its emblem (`EMBLEMS`), not its demo. */
+  protected emblem(id: string): string | null {
+    return EMBLEMS[id] ?? null;
   }
 
   /** The card came near the window, or went: its demo is made, loaded the first time, or put away. */
@@ -111,7 +108,7 @@ export class ComponentsPage {
       else next.delete(doc.id);
       return next;
     });
-    if (near && !FRAMED.has(doc.id) && !this.demos().has(doc.id)) {
+    if (near && !(doc.id in EMBLEMS) && !this.demos().has(doc.id)) {
       void doc.demo().then((type) => this.demos.update((demos) => new Map(demos).set(doc.id, type)));
     }
   }

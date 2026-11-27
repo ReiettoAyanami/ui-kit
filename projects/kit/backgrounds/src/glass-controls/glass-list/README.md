@@ -36,6 +36,8 @@ bianchina/violacea").
 | input | `extra` | `TemplateRef<{ $implicit: number }> \| null`: under the chosen entry's words | `null` |
 | method | `choose(index)` | the lens slides there | |
 | const | `GLASS_LIST_LENS` | the lens's glass (`LENS_SETTINGS`, bezel 14, thickness 32, refraction 1.2) | |
+| input | `landing` | `'liquid' \| 'milky' \| 'solid'`: what its lens becomes where it lands (lenzi, 2026-11-27: "upon_landing: <material>") | the app's (`provideLenziGlassLanding`), milky |
+| input | `landingTone` | `'light' \| 'dark'`: a solid landing's colour | the app's, light |
 
 ## Example
 

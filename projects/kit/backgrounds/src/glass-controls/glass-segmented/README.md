@@ -22,6 +22,8 @@
 | model | `value` | `T \| null` | `null` (the first) |
 | input | `label` | `string` | required (for a screen reader) |
 | input | `disabled` | `boolean` | `false` |
+| input | `landing` | `'liquid' \| 'milky' \| 'solid'`: what its lens becomes where it lands (lenzi, 2026-11-27: "upon_landing: <material>") | the app's (`provideLenziGlassLanding`), milky |
+| input | `landingTone` | `'light' \| 'dark'`: a solid landing's colour | the app's, light |
 
 Sizes: every choice as wide as the widest (at least `--lenzi-segment-min-width`, 64 px); `--lenzi-segment-height`
 (28 px, 32 with its track, as every toggle of the kit). Wider than its place, it scrolls.

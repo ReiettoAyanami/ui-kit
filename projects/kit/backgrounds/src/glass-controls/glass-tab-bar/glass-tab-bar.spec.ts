@@ -50,7 +50,7 @@ describe('LenziGlassTabBar', () => {
     const { fixture, router, element } = await make();
     await router.navigateByUrl('/components');
     fixture.detectChanges();
-    expect(element.querySelector('.capsule.pages')?.classList.contains('moving')).toBe(true);
+    expect(element.querySelector('.bar')?.classList.contains('moving')).toBe(true);
   });
 
   it('the rest apart, a button says its id', async () => {
@@ -73,7 +73,8 @@ describe('LenziGlassTabBar', () => {
     // never by left or top: the browser moves a translate apart from the page (lenzi, 2026-11-25: "L'animazione del menu lagga")
     expect(pill.style.left).toBe('');
     expect(pill.style.top).toBe('');
-    expect(pill.style.translate).toMatch(/^0(px)? -?\d+(\.\d+)?px$/);
+    // its middle, in the bar (it is drawn round it)
+    expect(pill.style.translate).toMatch(/^-?\d+(\.\d+)?(px)? -?\d+(\.\d+)?px$/);
     expect(pill.style.height).not.toBe('');
   });
 
@@ -83,7 +84,7 @@ describe('LenziGlassTabBar', () => {
     tabs()[1]!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
     expect(tabs()[1]!.classList.contains('current')).toBe(true);
-    expect(element.querySelector('.capsule.pages')?.classList.contains('moving')).toBe(true);
+    expect(element.querySelector('.bar')?.classList.contains('moving')).toBe(true);
     await fixture.whenStable();
     fixture.detectChanges();
     expect(router.url).toBe('/components');

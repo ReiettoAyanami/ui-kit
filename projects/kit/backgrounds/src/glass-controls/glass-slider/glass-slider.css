@@ -9,6 +9,8 @@
   /* the thumb at rest: white, as the switch's when it arrives (lenzi, 2026-11-26: "il toggle non diventa piú bianco
      all'arrivo"); glass while dragged */
   --lenzi-glass-rest: 1;
+  /* how long the fill's end and the rest's start fade, px */
+  --lenzi-slider-fade: 12px;
 }
 
 .track {
@@ -46,9 +48,14 @@
 
 .fill {
   display: block;
-  width: calc(var(--lenzi-slider-at) * 100%);
+  /* the line's fill reaches almost to the knob's far end (lenzi, 2026-11-27: "mettere una barra che termina quasi alla
+     fine del pomello"), its last px fading under it */
+  width: calc(var(--lenzi-slider-at) * 100% + var(--lenzi-slider-knob, 0px) * 0.42);
   height: 100%;
   background-color: var(--mat-sys-primary);
+  /* its end fades, never a cut (lenzi, 2026-11-26: "sfuma la fine della barra, nell'ultimo punto perché vederla così è
+     brutto da vedere": under the knob's lens, magnified) */
+  mask: linear-gradient(to right, #000 calc(100% - var(--lenzi-slider-fade)), transparent);
 }
 
 /* The wave (track="wave"): the fill shows through a wave of one length, repeated and flowing along; the rest of the
@@ -64,7 +71,10 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: calc(var(--lenzi-slider-at) * 100%);
-  mask: var(--lenzi-wave) 0 50% / var(--lenzi-wave-length) var(--lenzi-wave-height) repeat-x;
+  mask:
+    var(--lenzi-wave) 0 50% / var(--lenzi-wave-length) var(--lenzi-wave-height) repeat-x,
+    linear-gradient(to right, #000 calc(100% - var(--lenzi-slider-fade)), transparent);
+  mask-composite: intersect;
   animation: lenzi-slider-wave 1.4s linear infinite;
 }
 
@@ -81,11 +91,14 @@
   border-radius: 2px;
   background-color: color-mix(in srgb, var(--mat-sys-on-surface) 22%, transparent);
   transform: translateY(-50%);
+  /* and the rest of the rail rises out of it, as softly */
+  mask: linear-gradient(to right, transparent, #000 var(--lenzi-slider-fade));
 }
 
 @keyframes lenzi-slider-wave {
   to {
-    mask-position: var(--lenzi-wave-length) 50%;
+    /* the wave flows; its fading end stays */
+    mask-position: var(--lenzi-wave-length) 50%, 0 0;
   }
 }
 

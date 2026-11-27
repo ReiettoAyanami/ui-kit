@@ -1,15 +1,40 @@
-<nav class="bar" [attr.aria-label]="label()">
-  <div #capsule class="capsule pages" [class.moving]="moving()">
+<nav #bar class="bar" [class.moving]="moving()" [attr.aria-label]="label()">
+  <!-- The capsules' glass, behind them and apart from them: the current page's lens slides from one capsule to the other
+       (lenzi, 2026-11-27: "qui la lente non ci va, falla spostare anche qua"), over both glasses and under the tabs. -->
+  <span
+    #pagesGlass
+    class="glass"
+    aria-hidden="true"
+    [style.translate]="(glasses().pages?.left ?? 0) + 'px ' + (glasses().pages?.top ?? 0) + 'px'"
+    [style.width.px]="glasses().pages?.width ?? 0"
+    [style.height.px]="glasses().pages?.height ?? 0"
+  ></span>
+  @if (bottom().length) {
     <span
-      #lens
-      class="pill"
+      #restGlass
+      class="glass"
       aria-hidden="true"
-      [class.shown]="pill() !== null"
-      [class.placed]="placed()"
-      [style.translate]="upright() ? '0 ' + (pill()?.top ?? 0) + 'px' : (pill()?.left ?? 0) + 'px 0'"
-      [style.width.px]="upright() ? null : (pill()?.width ?? 0)"
-      [style.height.px]="upright() ? (pill()?.height ?? 0) : null"
+      [style.translate]="(glasses().rest?.left ?? 0) + 'px ' + (glasses().rest?.top ?? 0) + 'px'"
+      [style.width.px]="glasses().rest?.width ?? 0"
+      [style.height.px]="glasses().rest?.height ?? 0"
     ></span>
+  }
+  <span
+    #lens
+    class="pill"
+    aria-hidden="true"
+    [class.shown]="pill() !== null"
+    [class.placed]="placed()"
+    [class.flipping]="flipping()"
+    [style.translate]="((pill()?.left ?? 0) + (pill()?.width ?? 0) / 2) + 'px ' + ((pill()?.top ?? 0) + (pill()?.height ?? 0) / 2) + 'px'"
+    [style.width.px]="pill()?.width ?? 0"
+    [style.height.px]="pill()?.height ?? 0"
+    [style.margin-left.px]="-(pill()?.width ?? 0) / 2"
+    [style.margin-top.px]="-(pill()?.height ?? 0) / 2"
+    [style.transform]="flip()"
+  ></span>
+
+  <div #capsule class="capsule pages" (scroll)="measure()">
     @for (entry of pages(); track key(entry); let i = $index) {
       @if (entry.link !== undefined) {
         <a
@@ -38,25 +63,28 @@
   </div>
 
   @if (bottom().length) {
-    <!-- the rest, apart from the pages -->
+    <!-- the rest, apart from the pages; the lens goes here too when its page is the current one -->
     <div #rest class="capsule rest">
-      @for (entry of bottom(); track key(entry)) {
+      @for (entry of bottom(); track key(entry); let j = $index) {
         @if (entry.link !== undefined) {
           <a
+            #tab
             class="tab"
-          [matTooltip]="upright() ? entry.label : ''"
-          matTooltipPosition="right"
+            [matTooltip]="upright() ? entry.label : ''"
+            matTooltipPosition="right"
+            [class.current]="pages().length + j === active()"
             [routerLink]="entry.link"
-            routerLinkActive="current"
+            routerLinkActive
             ariaCurrentWhenActive="page"
             [routerLinkActiveOptions]="match(entry)"
-            (click)="follow(entry)"
+            (isActiveChange)="routeActive(pages().length + j, $event)"
+            (click)="follow(entry, pages().length + j)"
           >
             <mat-icon class="icon" aria-hidden="true">{{ entry.icon }}</mat-icon>
             <span class="name">{{ entry.label }}</span>
           </a>
         } @else {
-          <button type="button" class="tab" [matTooltip]="upright() ? entry.label : ''" matTooltipPosition="right" (click)="press(entry)">
+          <button #tab type="button" class="tab" [matTooltip]="upright() ? entry.label : ''" matTooltipPosition="right" (click)="press(entry)">
             <mat-icon class="icon" aria-hidden="true">{{ entry.icon }}</mat-icon>
             <span class="name">{{ entry.label }}</span>
           </button>

@@ -7,7 +7,16 @@ import { LenziAppShell, LenziNavEntry } from '@lenzi/ui-kit';
 
 import { LIQUID_EVERYWHERE_SETTINGS } from '../../liquid-glass/liquid-everywhere';
 import { LenziLiquidGlassSettings } from '../../liquid-glass/liquid-surface';
+import { LenziLandingMaterial, LenziLandingTone, resolveLanding } from '../landing';
 import { CAPSULE_SETTINGS, LENS_BENDING, glassLens } from '../lens';
+
+/** A box in the bar, px. */
+interface Box {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
 
 const EXACT: IsActiveMatchOptions = { paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' };
 const SUBTREE: IsActiveMatchOptions = { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' };
@@ -35,7 +44,7 @@ const SETTLE = 420;
 @Component({
   selector: 'lenzi-glass-tab-bar',
   imports: [MatIconModule, MatTooltipModule, RouterLink, RouterLinkActive],
-  host: { '[class.upright]': 'upright()' },
+  host: { '[class.upright]': 'upright()', '[attr.data-landing]': 'landed().material', '[attr.data-tone]': 'landed().tone' },
   templateUrl: './glass-tab-bar.html',
   styleUrl: './glass-tab-bar.css',
 })
@@ -51,6 +60,11 @@ export class LenziGlassTabBar {
    * navigation 'bar'), lying elsewhere.
    */
   readonly orientation = input<'auto' | 'horizontal' | 'vertical'>('auto');
+  /** What its lens becomes where it lands (the app's, `provideLenziGlassLanding`, by default): a lens, milky, solid. */
+  readonly landing = input<LenziLandingMaterial | null>(null);
+  /** A solid landing's colour. */
+  readonly landingTone = input<LenziLandingTone | null>(null);
+  protected readonly landed = resolveLanding(this.landing, this.landingTone);
 
   /** A link was tapped. */
   readonly navigated = output<LenziNavEntry>();
@@ -59,8 +73,16 @@ export class LenziGlassTabBar {
 
   /** The current page's tab, -1 when the current page is none of them. */
   protected readonly active = signal(-1);
-  /** Where the current page's capsule is in the bar, px. */
-  protected readonly pill = signal<{ left: number; top: number; width: number; height: number } | null>(null);
+  /** Where the current page's lens is in the bar, px: its middle (it is drawn round it) and its size. */
+  protected readonly pill = signal<Box | null>(null);
+  /** Where the capsules' glass is in the bar, px. */
+  protected readonly glasses = signal<{ pages: Box | null; rest: Box | null }>({ pages: null, rest: null });
+  /**
+   * The lens changing size on its way (a tab of another width): it takes its new size at once (one filter) and is drawn
+   * as large as it was, then grows or shrinks to it by its scale (FLIP; RULES.md: a glass that moves never changes size).
+   */
+  protected readonly flip = signal('none');
+  protected readonly flipping = signal(false);
   /** The capsule has been drawn where it is once: from then on it slides (the first time it is just there). */
   protected readonly placed = signal(false);
   /** On its way to another tab: the capsule is glass. */
@@ -70,8 +92,11 @@ export class LenziGlassTabBar {
   /** The tabs whose page the router says is the current one (the capsule may have set off before it says so). */
   private readonly routed = new Set<number>();
   private readonly router = inject(Router);
+  private readonly bar = viewChild.required<ElementRef<HTMLElement>>('bar');
   private readonly capsule = viewChild.required<ElementRef<HTMLElement>>('capsule');
   private readonly rest = viewChild<ElementRef<HTMLElement>>('rest');
+  private readonly pagesGlass = viewChild.required<ElementRef<HTMLElement>>('pagesGlass');
+  private readonly restGlass = viewChild<ElementRef<HTMLElement>>('restGlass');
   private readonly lens = viewChild.required<ElementRef<HTMLElement>>('lens');
   private readonly resized = signal(0);
   private settle: ReturnType<typeof setTimeout> | null = null;
@@ -82,28 +107,64 @@ export class LenziGlassTabBar {
   protected readonly upright = computed(() => this.orientation() === 'vertical' || (this.orientation() === 'auto' && !!this.shell?.tabsUpright()));
 
   constructor() {
-    // the capsules are Liquid Glass, bending all of their bending; the current page's capsule inside, its own
-    glassLens(() => this.capsule().nativeElement, BAR_GLASS, 1);
-    glassLens(() => this.rest()?.nativeElement, BAR_GLASS, 1);
+    // the capsules' glass, Liquid Glass bending all of its bending, behind them; the current page's lens over it, its own
+    glassLens(() => this.pagesGlass().nativeElement, BAR_GLASS, 1);
+    glassLens(() => this.restGlass()?.nativeElement, BAR_GLASS, 1);
     // over the icons and names on its way: a flat middle, never a dome
     const glass = glassLens(() => this.lens().nativeElement, CAPSULE_SETTINGS);
     effect(() => glass.bending(this.moving() ? LENS_BENDING.held : LENS_BENDING.rest));
-    // the capsule under the current tab, measured after the tabs are drawn (their widths are their words')
+    // the lens under the current tab and the glass under each capsule, measured after the tabs are drawn (their widths
+    // are their words')
     afterRenderEffect(() => {
       this.resized();
       this.upright();
-      const tab = this.tabs()[this.active()]?.nativeElement;
-      const box = tab ? { left: tab.offsetLeft, top: tab.offsetTop, width: tab.offsetWidth, height: tab.offsetHeight } : null;
-      const now = untracked(this.pill);
-      if (box?.left !== now?.left || box?.top !== now?.top || box?.width !== now?.width || box?.height !== now?.height) this.pill.set(box);
-      if (box && !untracked(this.placed)) setTimeout(() => this.placed.set(true), 50);
+      this.active();
+      this.tabs();
+      untracked(() => this.measure());
     });
     afterRenderEffect(() => {
       if (typeof ResizeObserver !== 'function') return;
       const observer = new ResizeObserver(() => this.resized.update((n) => n + 1));
+      observer.observe(this.bar().nativeElement);
       observer.observe(this.capsule().nativeElement);
+      const rest = this.rest()?.nativeElement;
+      if (rest) observer.observe(rest);
       return () => observer.disconnect();
     });
+  }
+
+  /** Where the capsules' glass and the current tab's lens are in the bar now (again when the pages scroll). */
+  protected measure(): void {
+    const bar = this.bar().nativeElement;
+    const boxOf = (element: HTMLElement | undefined): Box | null =>
+      element ? { left: element.offsetLeft, top: element.offsetTop, width: element.offsetWidth, height: element.offsetHeight } : null;
+    const glasses = { pages: boxOf(this.capsule().nativeElement), rest: boxOf(this.rest()?.nativeElement) };
+    const was = this.glasses();
+    if (JSON.stringify(glasses) !== JSON.stringify(was)) this.glasses.set(glasses);
+    const tab = this.tabs()[this.active()]?.nativeElement;
+    let box: Box | null = null;
+    if (tab) {
+      const outer = bar.getBoundingClientRect();
+      const inner = tab.getBoundingClientRect();
+      box = { left: inner.left - outer.left, top: inner.top - outer.top, width: tab.offsetWidth, height: tab.offsetHeight };
+    }
+    const now = this.pill();
+    if (box?.left === now?.left && box?.top === now?.top && box?.width === now?.width && box?.height === now?.height) return;
+    // another size on its way: drawn as large as it was, then to its own (FLIP), its filter made once
+    if (box && now && this.placed() && (box.width !== now.width || box.height !== now.height)) {
+      this.flipping.set(true);
+      this.flip.set(`scale(${(now.width / box.width).toFixed(4)}, ${(now.height / box.height).toFixed(4)})`);
+      this.pill.set(box);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          this.flipping.set(false);
+          this.flip.set('none');
+        }),
+      );
+    } else {
+      this.pill.set(box);
+    }
+    if (box && !this.placed()) setTimeout(() => this.placed.set(true), 50);
   }
 
   protected match(entry: LenziNavEntry): IsActiveMatchOptions {

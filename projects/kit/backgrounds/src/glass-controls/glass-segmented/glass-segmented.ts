@@ -1,5 +1,6 @@
 import { Component, ElementRef, booleanAttribute, computed, effect, input, model, signal, viewChild } from '@angular/core';
 
+import { LenziLandingMaterial, LenziLandingTone, resolveLanding } from '../landing';
 import { CAPSULE_SETTINGS, LENS_BENDING, glassLens } from '../lens';
 
 /** One choice of a segmented control. */
@@ -23,6 +24,7 @@ const SETTLE = 380;
 @Component({
   selector: 'lenzi-glass-segmented',
   imports: [],
+  host: { '[attr.data-landing]': 'landed().material', '[attr.data-tone]': 'landed().tone' },
   templateUrl: './glass-segmented.html',
   styleUrl: './glass-segmented.css',
 })
@@ -33,6 +35,11 @@ export class LenziGlassSegmented<T = string> {
   /** What is chosen, for a screen reader. */
   readonly label = input.required<string>();
   readonly disabled = input(false, { transform: booleanAttribute });
+  /** What its capsule becomes where it lands (the app's, `provideLenziGlassLanding`, by default): a lens, milky, solid. */
+  readonly landing = input<LenziLandingMaterial | null>(null);
+  /** A solid landing's colour. */
+  readonly landingTone = input<LenziLandingTone | null>(null);
+  protected readonly landed = resolveLanding(this.landing, this.landingTone);
 
   /** On its way: the pill is glass. */
   protected readonly moving = signal(false);

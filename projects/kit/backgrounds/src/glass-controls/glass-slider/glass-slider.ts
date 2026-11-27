@@ -89,6 +89,8 @@ export class LenziGlassSlider {
   private readonly knob = computed(() => this.given() ?? this.own() ?? null);
   /** Room at its ends for its knob's lens, px: half of it. */
   protected readonly room = computed(() => (this.knob()?.lensSize().width ?? 0) / 2);
+  /** Its knob's width at rest, px: the line's fill reaches almost to its far end. */
+  protected readonly knobWidth = computed(() => this.knob()?.size().width ?? 0);
   protected readonly focused = signal(false);
   private settle: ReturnType<typeof setTimeout> | null = null;
 

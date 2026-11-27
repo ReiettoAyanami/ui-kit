@@ -9,7 +9,7 @@
   at the end; let go, it springs back, a little past, then home. The glass a dome, as every pill.
 - **Its knob never goes over what is beside it**: room inside its ends for half its lens (lenzi, 2026-11-26: the glass
   over the "Volume" before it, "non so cosa succede con il testo").
-- **A thin capsule rail**, the accent up to the value; **its knob a `LenziGlassKnob`** (lenzi, 2026-11-26: "rendi il
+- **A thin capsule rail**, the accent up to the value, **its end fading** over 12 px, never a cut, and the rest of the rail rising as softly (lenzi, 2026-11-26: "sfuma la fine della barra, nell'ultimo punto": magnified under the knob's lens it was ugly, `--lenzi-slider-fade`); **its knob a `LenziGlassKnob`** (lenzi, 2026-11-26: "rendi il
   pomello la sua entità propria"): the page's, as its content, or its own of the shapes `thumb` and `lens` ask for
   (the kit's thin capsule by default, 32 × 14, held a lens 1.35 times it: "i pomelli più fini ... la lente leggermente
   più grande del pomello"). See the knob's page.
