@@ -3,21 +3,10 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
 import { provideLenziKit } from '@lenzi/ui-kit';
-import { LenziGlassLanding, provideLenziGlassLanding, provideLenziLiquidGlass } from '@lenzi/ui-kit/backgrounds';
+import { provideLenziLiquidGlass } from '@lenzi/ui-kit/backgrounds';
 import { lenziErrorInterceptor } from '@lenzi/ui-kit/http';
 
 import { routes } from './app.routes';
-
-/**
- * Where the moving lenses land, by the port the catalog is served on (lenzi, 2026-11-27: "Su 4310 mettimi un esempio con
- * le liquid al landing, sul 4320 una con solido al landing, ma fallo scuro e non bianco al landing"): two copies of the
- * catalog side by side, `npx ng serve catalog --port 4310` and `--port 4320`. Elsewhere the kit's own (milky).
- */
-const LANDING_BY_PORT: Record<string, Partial<LenziGlassLanding>> = {
-  '4310': { material: 'liquid' },
-  '4320': { material: 'solid', tone: 'dark' },
-};
-const landing = typeof location === 'undefined' ? undefined : LANDING_BY_PORT[location.port];
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -30,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     // componenti liquidglass"): the top bar, menus, selects, windows, the "+" (Apple: the layer of controls, not the
     // content).
     provideLenziLiquidGlass(),
-    ...(landing ? [provideLenziGlassLanding(landing)] : []),
+    // The moving lenses land as the kit's default: liquid, a lens of clear glass (one option a branch: lenzi,
+    // 2026-11-27, "le tre opzioni su 3 branch diversi").
   ],
 };

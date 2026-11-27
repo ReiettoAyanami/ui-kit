@@ -19,14 +19,17 @@ export interface LenziGlassLanding {
   tone: LenziLandingTone;
 }
 
-/** The app's landing, unless a control says its own: milky, light. */
+/**
+ * The app's landing, unless a control says its own: liquid, a lens of clear glass (one option a branch: lenzi,
+ * 2026-11-27, "le tre opzioni su 3 branch diversi").
+ */
 export const LENZI_GLASS_LANDING = new InjectionToken<LenziGlassLanding>('LENZI_GLASS_LANDING', {
-  factory: () => ({ material: 'milky', tone: 'light' }),
+  factory: () => ({ material: 'liquid', tone: 'light' }),
 });
 
 /** Every moving lens of the app lands so (each control may still say its own: `landing`, `landingTone`). */
 export function provideLenziGlassLanding(landing: Partial<LenziGlassLanding>): EnvironmentProviders {
-  return makeEnvironmentProviders([{ provide: LENZI_GLASS_LANDING, useValue: { material: 'milky', tone: 'light', ...landing } }]);
+  return makeEnvironmentProviders([{ provide: LENZI_GLASS_LANDING, useValue: { material: 'liquid', tone: 'light', ...landing } }]);
 }
 
 /**
