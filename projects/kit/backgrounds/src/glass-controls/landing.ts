@@ -19,7 +19,10 @@ export interface LenziGlassLanding {
   tone: LenziLandingTone;
 }
 
-/** The app's landing, unless a control says its own: milky, light. */
+/**
+ * The app's landing, unless a control says its own: milky, light (one option a branch: lenzi, 2026-11-27, "le tre
+ * opzioni su 3 branch diversi").
+ */
 export const LENZI_GLASS_LANDING = new InjectionToken<LenziGlassLanding>('LENZI_GLASS_LANDING', {
   factory: () => ({ material: 'milky', tone: 'light' }),
 });
