@@ -112,7 +112,7 @@ the rule says what, the variable says how much.
   - **Where a moving lens lands is the app's choice, or the control's** (lenzi, 2026-11-27: "vorrei che avessero una
     proprietà upon_landing: <material>, che determina se il pomello deve diventare lente o diventare solido/vetro solido"):
     the segmented control's capsule, the tab bar's, the glass list's lens land `liquid` (a lens of clear glass), `milky`
-    (the kit's default) or `solid`, light (white, the words on it dark) or dark (the page's highest surface):
+    or `solid`, light (white, the words on it dark) or dark (the page's highest surface, the kit's default):
     `provideLenziGlassLanding({ material, tone })` for the app, `landing` and `landingTone` on a control. On their way they
     are always clear glass.
   - **The tab bar's lens goes everywhere it has tabs** (lenzi, 2026-11-27: "qui la lente non ci va, falla spostare anche
